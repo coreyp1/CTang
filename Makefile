@@ -998,7 +998,7 @@ $(APP_DIR)/tang: \
 $(APP_DIR)/libtestLibrary.so: \
 				test/libtestLibrary.cpp \
 				$(APP_DIR)/$(TARGET) \
-				include/tang.h
+				include/tang/tang.h
 	@echo "\n### Compiling Test Library ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -shared -o $@ $< $(LDFLAGS) -fPIC
@@ -1128,10 +1128,8 @@ install: ## Install the library globally, requires sudo
 	@echo "/usr/local/lib/$(SUITE)" > /etc/ld.so.conf.d/$(SUITE)-$(PROJECT)$(BRANCH).conf
 	# Installing the headers.
 	@mkdir -p /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
-	@cp include/tang.h /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)/
 	@cp include/tang/*.h /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
 	@cp build/generated/*.h /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
-	@cp build/generated/*.hh /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
 	# Installing the pkg-config files.
 	@mkdir -p /usr/local/share/pkgconfig
 	@cat pkgconfig/$(SUITE)-$(PROJECT).pc | sed 's/(SUITE)/$(SUITE)/g; s/(PROJECT)/$(PROJECT)/g; s/(BRANCH)/$(BRANCH)/g; s/(VERSION)/$(VERSION)/g' > /usr/local/share/pkgconfig/$(SUITE)-$(PROJECT)$(BRANCH).pc
