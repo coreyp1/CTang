@@ -15,6 +15,7 @@ extern "C" {
 #endif // __cplusplus
 
 #include <stdbool.h>
+#include <cutil/vector.h>
 #include "tang/unicodeString.h"
 
 typedef struct GTA_Program GTA_Program;
@@ -24,6 +25,7 @@ typedef struct GTA_Context {
   GTA_Program * program;
   GTA_Unicode_String * output;
   GTA_Computed_Value * result;
+  GCU_Vector64 * stack;
 } GTA_Context;
 
 GTA_Context * gta_context_create(GTA_Program * program);

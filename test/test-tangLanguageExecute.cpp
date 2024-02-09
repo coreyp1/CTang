@@ -14,7 +14,7 @@ TEST(Tang, Program) {
   gcu_memory_reset_counts();
   GTA_Program * program = gta_program_create("");
   ASSERT_NE(program, nullptr);
-  gta_program_bytecode_print(program);
+  //gta_program_bytecode_print(program);
   GTA_Context context;
   ASSERT_TRUE(gta_program_execute(program, &context));
   ASSERT_NE(context.result, nullptr);
@@ -26,6 +26,7 @@ TEST(Tang, Program) {
 
 
 int main(int argc, char **argv) {
+  /*
   cout <<
     (GTA_BIG_ENDIAN ? "Big Endian" : "Little Endian") << endl;
   cout <<
@@ -38,6 +39,7 @@ int main(int argc, char **argv) {
     (GTA_ARM ? "ARM" : "Not ARM") << endl;
   cout <<
     (GTA_ARM64 ? "ARM64" : "Not ARM64") << endl;
+  */
 
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

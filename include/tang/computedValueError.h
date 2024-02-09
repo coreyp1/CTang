@@ -19,6 +19,8 @@ extern GTA_Computed_Value_VTable gta_computed_value_error_vtable;
 
 extern GTA_Computed_Value * gta_computed_value_error_not_implemented;
 
+extern GTA_Computed_Value * gta_computed_value_error_out_of_memory;
+
 typedef struct GTA_Computed_Value_Error {
   GTA_Computed_Value base;
   char * message;

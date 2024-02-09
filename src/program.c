@@ -3,6 +3,7 @@
 #include "tang/program.h"
 #include "tang/tangLanguage.h"
 #include "tang/astNodeBlock.h"
+#include "tang/virtualMachine.h"
 
 GTA_Program * gta_program_create(const char * code) {
   GTA_Program * program = gcu_malloc(sizeof(GTA_Program));
@@ -147,7 +148,7 @@ bool gta_program_execute(GTA_Program * program, GTA_Context * context) {
 }
 
 bool gta_program_execute_bytecode(GTA_MAYBE_UNUSED(GTA_Program * program), GTA_MAYBE_UNUSED(GTA_Context * context)) {
-  return false;
+  return gta_virtual_machine_execute_bytecode(context, program);
 }
 
 bool gta_program_execute_binary(GTA_MAYBE_UNUSED(GTA_Program * program), GTA_MAYBE_UNUSED(GTA_Context * context)) {

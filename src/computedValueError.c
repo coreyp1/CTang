@@ -34,7 +34,7 @@ static GTA_Computed_Value_Error gta_computed_value_error_not_implemented_singlet
     .vtable = &gta_computed_value_error_vtable,
     .is_true = false,
     .is_error = true,
-    .is_temporary = true,
+    .is_temporary = false,
     .requires_deep_copy = false,
     .is_singleton = true,
     .is_a_reference = false,
@@ -42,7 +42,21 @@ static GTA_Computed_Value_Error gta_computed_value_error_not_implemented_singlet
   .message = "Not implemented",
 };
 
+static GTA_Computed_Value_Error gta_computed_value_error_out_of_memory_singleton = {
+  .base = {
+    .vtable = &gta_computed_value_error_vtable,
+    .is_true = false,
+    .is_error = true,
+    .is_temporary = false,
+    .requires_deep_copy = false,
+    .is_singleton = true,
+    .is_a_reference = false,
+  },
+  .message = "Out of memory",
+};
+
 GTA_Computed_Value * gta_computed_value_error_not_implemented = (GTA_Computed_Value *)&gta_computed_value_error_not_implemented_singleton;
+GTA_Computed_Value * gta_computed_value_error_out_of_memory = (GTA_Computed_Value *)&gta_computed_value_error_out_of_memory_singleton;
 
 char * gta_computed_value_error_to_string(GTA_Computed_Value * self) {
   GTA_Computed_Value_Error * error = (GTA_Computed_Value_Error *)self;
