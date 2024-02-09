@@ -12,18 +12,11 @@
 extern "C" {
 #endif // __cplusplus
 
-#include "tang/bytecode.h"
 #include "tang/context.h"
 #include "tang/computedValue.h"
+#include "tang/program.h"
 
-GTA_Computed_Value * gta_virtual_machine_execute_bytecode(GTA_Context* context, GTA_Bytecode* bytecode);
-
-
-
-
-
-
-
+GTA_Computed_Value * gta_virtual_machine_execute_bytecode(GTA_Context* context, GTA_Program * program);
 
 #ifdef __cplusplus
 }

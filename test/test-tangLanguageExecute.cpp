@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <cutil/memory.h>
 #include <iostream>
 
 #include "tang/tang.h"
@@ -10,12 +11,17 @@
 using namespace std;
 
 TEST(Tang, Program) {
+  gcu_memory_reset_counts();
   GTA_Program * program = gta_program_create("");
-  cout << "Program: " << (void *)program->ast << endl;
+  ASSERT_NE(program, nullptr);
+  gta_program_bytecode_print(program);
   GTA_Context context;
-  gta_program_execute(program, &context);
+  ASSERT_TRUE(gta_program_execute(program, &context));
+  ASSERT_NE(context.result, nullptr);
+  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context.result));
   gta_program_destroy(program);
   gta_context_destroy_in_place(&context);
+  ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
 }
 
 

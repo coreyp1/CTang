@@ -10,6 +10,7 @@ extern "C" {
 #endif //__cplusplus
 
 typedef struct GTA_Ast_Node GTA_Ast_Node;
+typedef struct GTA_Bytecode_Compiler_Context GTA_Bytecode_Compiler_Context;
 
 #include <stdbool.h>
 #include <cutil/float.h>
@@ -78,7 +79,7 @@ typedef struct {
    * @param self The node to compile.
    * @param compiler The compiler to compile the node to.
    */
-  void (*compile_to_bytecode)(GTA_Ast_Node * self, void * compiler);
+  bool (*compile_to_bytecode)(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
   /**
    * Destroys the node and all of its children.
    *
@@ -165,6 +166,19 @@ GTA_Ast_Node * gta_ast_node_create(GTA_PARSER_LTYPE location);
 void gta_ast_node_destroy(GTA_Ast_Node * self);
 
 /**
+ * Compile the AST node to bytecode.
+ *
+ * The vtable's compile_to_bytecode function is called to compile the node.  This
+ * function serves as a general dispatch function, and should be used in
+ * preference to calling the vtable's compile_to_bytecode function directly.
+ *
+ * @param self The node to compile.
+ * @param context Contextual information for the compile process.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
+
+/**
  * Print the AST node and all of its children to stdout.
  *
  * The vtable's print function is called to print the node.  This function serves
@@ -220,6 +234,15 @@ GTA_Ast_Node * gta_ast_node_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Varia
  *   the callback function.  This value can be modified by the callback.
  */
 void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+
+/**
+ * Compile a NULL node to bytecode.
+ *
+ * @param self The node to compile.
+ * @param context Contextual information for the compile process.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_null_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
 
 /**
  * The destroy function for the GTA_Ast_Node class when the node is a null.

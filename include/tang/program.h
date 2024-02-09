@@ -53,7 +53,7 @@ bool gta_program_execute_bytecode(GTA_Program * program, GTA_Context * context);
 
 bool gta_program_execute_binary(GTA_Program * program, GTA_Context * context);
 
-
+void gta_program_bytecode_print(GTA_Program * program);
 
 #ifdef __cplusplus
 }

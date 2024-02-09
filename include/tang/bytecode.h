@@ -26,112 +26,114 @@ typedef GCU_Vector64 GTA_Bytecode_Vector;
  * will have been pushed onto the stack first, followed by the rhs.
  */
 typedef enum GTA_Bytecode {
-  POP,            ///< Pop a val
-  PEEK,           ///< Stack # (from fp): push val from stack #
-  POKE,           ///< Stack # (from fp): Copy a val, store @ stack #
-  COPY,           ///< Stack # (from fp): Deep copy val @ stack #, store @
+  GTA_BYTECODE_RETURN,         ///< Get stack #, pop return val, pop (stack #) times,
+                               ///<   push val, restore fp, restore pc
+  GTA_BYTECODE_NULL,           ///< Push a null onto the stack
+
+
+  GTA_BYTECODE_POP,            ///< Pop a val
+  GTA_BYTECODE_PEEK,           ///< Stack # (from fp): push val from stack #
+  GTA_BYTECODE_POKE,           ///< Stack # (from fp): Copy a val, store @ stack #
+  GTA_BYTECODE_COPY,           ///< Stack # (from fp): Deep copy val @ stack #, store @
                   ///<   stack #
-  JMP,            ///< PC #: set pc to PC #
-  JMPF_S,         ///< PC #: read val, if false, set pc to PC #
-  JMPF_I,         ///< PC #: read val, if false, set pc to PC #
-  JMPF_POP,       ///< PC #: pop val, if false, set pc to PC #
-  JMPT_S,         ///< PC #: read val, if true, set pc to PC #
-  JMPT_I,         ///< PC #: read val, if true, set pc to PC #
-  JMPT_POP,       ///< PC #: pop val, if true, set pc to PC #
-  NULLVAL,        ///< Push a null onto the stack
-  INTEGER,        ///< Push an integer onto the stack
-  FLOAT,          ///< Push a floating point number onto the stack
-  BOOLEAN,        ///< Push a boolean onto the stack
-  STRING,         ///< Get len, char string: push string
-  ARRAY,          ///< Get len, pop `len` items, putting them into an array
+  GTA_BYTECODE_JMP,            ///< PC #: set pc to PC #
+  GTA_BYTECODE_JMPF_S,         ///< PC #: read val, if false, set pc to PC #
+  GTA_BYTECODE_JMPF_I,         ///< PC #: read val, if false, set pc to PC #
+  GTA_BYTECODE_JMPF_POP,       ///< PC #: pop val, if false, set pc to PC #
+  GTA_BYTECODE_JMPT_S,         ///< PC #: read val, if true, set pc to PC #
+  GTA_BYTECODE_JMPT_I,         ///< PC #: read val, if true, set pc to PC #
+  GTA_BYTECODE_JMPT_POP,       ///< PC #: pop val, if true, set pc to PC #
+  GTA_BYTECODE_INTEGER,        ///< Push an integer onto the stack
+  GTA_BYTECODE_FLOAT,          ///< Push a floating point number onto the stack
+  GTA_BYTECODE_BOOLEAN,        ///< Push a boolean onto the stack
+  GTA_BYTECODE_STRING,         ///< Get len, char string: push string
+  GTA_BYTECODE_ARRAY,          ///< Get len, pop `len` items, putting them into an array
                   ///<   with the last array item popped first
-  MAP,            ///< Get len, pop `len` value then key pairs, putting them
+  GTA_BYTECODE_MAP,            ///< Get len, pop `len` value then key pairs, putting them
                   ///<   into a map
-  LIBRARY,        ///< Pop name, push Library identified by name
-  LIBRARYSAVE,    ///< Get index, save top of stack to library[index]
-  LIBRARYCOPY,    ///< Get index, load from library[index]
-  FUNCTION,       ///< Get argc, PC#: push function(argc, PC #)
-  ASSIGNINDEX,    ///< Pop index, pop collection, pop value,
+  GTA_BYTECODE_LIBRARY,        ///< Pop name, push Library identified by name
+  GTA_BYTECODE_LIBRARYSAVE,    ///< Get index, save top of stack to library[index]
+  GTA_BYTECODE_LIBRARYCOPY,    ///< Get index, load from library[index]
+  GTA_BYTECODE_FUNCTION,       ///< Get argc, PC#: push function(argc, PC #)
+  GTA_BYTECODE_ASSIGNINDEX,    ///< Pop index, pop collection, pop value,
                   ///<   push (collection[index] = value)
-  ADD_SS,         ///< Push lhs + rhs
-  ADD_SI,         ///< Push lhs + rhs
-  ADD_IS,         ///< Push lhs + rhs
-  ADD_II,         ///< Push lhs + rhs
-  SUBTRACT_SS,    ///< Push lhs - rhs
-  SUBTRACT_SI,    ///< Push lhs - rhs
-  SUBTRACT_IS,    ///< Push lhs - rhs
-  SUBTRACT_II,    ///< Push lhs - rhs
-  MULTIPLY_SS,    ///< Push lhs * rhs
-  MULTIPLY_SI,    ///< Push lhs * rhs
-  MULTIPLY_IS,    ///< Push lhs * rhs
-  MULTIPLY_II,    ///< Push lhs * rhs
-  DIVIDE_SS,      ///< Push lhs / rhs
-  DIVIDE_SI,      ///< Push lhs / rhs
-  DIVIDE_IS,      ///< Push lhs / rhs
-  DIVIDE_II,      ///< Push lhs / rhs
-  MODULO_SS,      ///< Push lhs % rhs
-  MODULO_SI,      ///< Push lhs % rhs
-  MODULO_IS,      ///< Push lhs % rhs
-  MODULO_II,      ///< Push lhs % rhs
-  NEGATIVE_S,     ///< Push negative val
-  NEGATIVE_I,     ///< Push negative val
-  NOT_S,          ///< Push logical not of val
-  NOT_I,          ///< Push logical not of val
-  LT_SS,          ///< Push lhs < rhs
-  LT_SI,          ///< Push lhs < rhs
-  LT_IS,          ///< Push lhs < rhs
-  LT_II,          ///< Push lhs < rhs
-  LTE_SS,         ///< Push lhs <= rhs
-  LTE_SI,         ///< Push lhs <= rhs
-  LTE_IS,         ///< Push lhs <= rhs
-  LTE_II,         ///< Push lhs <= rhs
-  GT_SS,          ///< Push lhs > rhs
-  GT_SI,          ///< Push lhs > rhs
-  GT_IS,          ///< Push lhs > rhs
-  GT_II,          ///< Push lhs > rhs
-  GTE_SS,         ///< Push lhs >= rhs
-  GTE_SI,         ///< Push lhs >= rhs
-  GTE_IS,         ///< Push lhs >= rhs
-  GTE_II,         ///< Push lhs >= rhs
-  EQ_SS,          ///< Push lhs == rhs
-  EQ_SI,          ///< Push lhs == rhs
-  EQ_IS,          ///< Push lhs == rhs
-  EQ_II,          ///< Push lhs == rhs
-  NEQ_SS,         ///< Push lhs != rhs
-  NEQ_SI,         ///< Push lhs != rhs
-  NEQ_IS,         ///< Push lhs != rhs
-  NEQ_II,         ///< Push lhs != rhs
-  PERIOD_SS,      ///< Push lhs.rhs
-  PERIOD_SI,      ///< Push lhs.rhs
-  PERIOD_IS,      ///< Push lhs.rhs
-  PERIOD_II,      ///< Push lhs.rhs
-  INDEX_SS,       ///< Push collection[index]
-  INDEX_SI,       ///< Push collection[index]
-  INDEX_IS,       ///< Push collection[index]
-  INDEX_II,       ///< Push collection[index]
-  SLICE,          ///< Pop skip, pop end, pop begin, pop collection,
+  GTA_BYTECODE_ADD_SS,         ///< Push lhs + rhs
+  GTA_BYTECODE_ADD_SI,         ///< Push lhs + rhs
+  GTA_BYTECODE_ADD_IS,         ///< Push lhs + rhs
+  GTA_BYTECODE_ADD_II,         ///< Push lhs + rhs
+  GTA_BYTECODE_SUBTRACT_SS,    ///< Push lhs - rhs
+  GTA_BYTECODE_SUBTRACT_SI,    ///< Push lhs - rhs
+  GTA_BYTECODE_SUBTRACT_IS,    ///< Push lhs - rhs
+  GTA_BYTECODE_SUBTRACT_II,    ///< Push lhs - rhs
+  GTA_BYTECODE_MULTIPLY_SS,    ///< Push lhs * rhs
+  GTA_BYTECODE_MULTIPLY_SI,    ///< Push lhs * rhs
+  GTA_BYTECODE_MULTIPLY_IS,    ///< Push lhs * rhs
+  GTA_BYTECODE_MULTIPLY_II,    ///< Push lhs * rhs
+  GTA_BYTECODE_DIVIDE_SS,      ///< Push lhs / rhs
+  GTA_BYTECODE_DIVIDE_SI,      ///< Push lhs / rhs
+  GTA_BYTECODE_DIVIDE_IS,      ///< Push lhs / rhs
+  GTA_BYTECODE_DIVIDE_II,      ///< Push lhs / rhs
+  GTA_BYTECODE_MODULO_SS,      ///< Push lhs % rhs
+  GTA_BYTECODE_MODULO_SI,      ///< Push lhs % rhs
+  GTA_BYTECODE_MODULO_IS,      ///< Push lhs % rhs
+  GTA_BYTECODE_MODULO_II,      ///< Push lhs % rhs
+  GTA_BYTECODE_NEGATIVE_S,     ///< Push negative val
+  GTA_BYTECODE_NEGATIVE_I,     ///< Push negative val
+  GTA_BYTECODE_NOT_S,          ///< Push logical not of val
+  GTA_BYTECODE_NOT_I,          ///< Push logical not of val
+  GTA_BYTECODE_LT_SS,          ///< Push lhs < rhs
+  GTA_BYTECODE_LT_SI,          ///< Push lhs < rhs
+  GTA_BYTECODE_LT_IS,          ///< Push lhs < rhs
+  GTA_BYTECODE_LT_II,          ///< Push lhs < rhs
+  GTA_BYTECODE_LTE_SS,         ///< Push lhs <= rhs
+  GTA_BYTECODE_LTE_SI,         ///< Push lhs <= rhs
+  GTA_BYTECODE_LTE_IS,         ///< Push lhs <= rhs
+  GTA_BYTECODE_LTE_II,         ///< Push lhs <= rhs
+  GTA_BYTECODE_GT_SS,          ///< Push lhs > rhs
+  GTA_BYTECODE_GT_SI,          ///< Push lhs > rhs
+  GTA_BYTECODE_GT_IS,          ///< Push lhs > rhs
+  GTA_BYTECODE_GT_II,          ///< Push lhs > rhs
+  GTA_BYTECODE_GTE_SS,         ///< Push lhs >= rhs
+  GTA_BYTECODE_GTE_SI,         ///< Push lhs >= rhs
+  GTA_BYTECODE_GTE_IS,         ///< Push lhs >= rhs
+  GTA_BYTECODE_GTE_II,         ///< Push lhs >= rhs
+  GTA_BYTECODE_EQ_SS,          ///< Push lhs == rhs
+  GTA_BYTECODE_EQ_SI,          ///< Push lhs == rhs
+  GTA_BYTECODE_EQ_IS,          ///< Push lhs == rhs
+  GTA_BYTECODE_EQ_II,          ///< Push lhs == rhs
+  GTA_BYTECODE_NEQ_SS,         ///< Push lhs != rhs
+  GTA_BYTECODE_NEQ_SI,         ///< Push lhs != rhs
+  GTA_BYTECODE_NEQ_IS,         ///< Push lhs != rhs
+  GTA_BYTECODE_NEQ_II,         ///< Push lhs != rhs
+  GTA_BYTECODE_PERIOD_SS,      ///< Push lhs.rhs
+  GTA_BYTECODE_PERIOD_SI,      ///< Push lhs.rhs
+  GTA_BYTECODE_PERIOD_IS,      ///< Push lhs.rhs
+  GTA_BYTECODE_PERIOD_II,      ///< Push lhs.rhs
+  GTA_BYTECODE_INDEX_SS,       ///< Push collection[index]
+  GTA_BYTECODE_INDEX_SI,       ///< Push collection[index]
+  GTA_BYTECODE_INDEX_IS,       ///< Push collection[index]
+  GTA_BYTECODE_INDEX_II,       ///< Push collection[index]
+  GTA_BYTECODE_SLICE,          ///< Pop skip, pop end, pop begin, pop collection,
                   ///<   push collection[begin:end:skip]
-  GETITERATOR_SI, ///< Save collection iterator to a stack index
-  GETITERATOR_II, ///< Save collection iterator to a stack index
-  ITERATORNEXT_II,///< Use the iterator at supplied index to calculate the
+  GTA_BYTECODE_GETITERATOR_SI, ///< Save collection iterator to a stack index
+  GTA_BYTECODE_GETITERATOR_II, ///< Save collection iterator to a stack index
+  GTA_BYTECODE_ITERATORNEXT_II,///< Use the iterator at supplied index to calculate the
                   ///<   next value, then store at 2nd supplied stack index
-  ISITERATOREND_I,///< Push bool(is val[at stack index] == iterator end)
-  CASTINTEGER_S,  ///< Typecast to int, push
-  CASTINTEGER_I,  ///< Typecast to int, push
-  CASTFLOAT_S,    ///< Typecast to float, push
-  CASTFLOAT_I,    ///< Typecast to float, push
-  CASTBOOLEAN_S,  ///< Typecast to boolean, push
-  CASTBOOLEAN_I,  ///< Typecast to boolean, push
-  CASTSTRING_S,   ///< Typecast to string, push
-  CASTSTRING_I,   ///< Typecast to string, push
-  CALLFUNC,       ///< Get argc, Pop a function, execute function if argc
+  GTA_BYTECODE_ISITERATOREND_I,///< Push bool(is val[at stack index] == iterator end)
+  GTA_BYTECODE_CASTINTEGER_S,  ///< Typecast to int, push
+  GTA_BYTECODE_CASTINTEGER_I,  ///< Typecast to int, push
+  GTA_BYTECODE_CASTFLOAT_S,    ///< Typecast to float, push
+  GTA_BYTECODE_CASTFLOAT_I,    ///< Typecast to float, push
+  GTA_BYTECODE_CASTBOOLEAN_S,  ///< Typecast to boolean, push
+  GTA_BYTECODE_CASTBOOLEAN_I,  ///< Typecast to boolean, push
+  GTA_BYTECODE_CASTSTRING_S,   ///< Typecast to string, push
+  GTA_BYTECODE_CASTSTRING_I,   ///< Typecast to string, push
+  GTA_BYTECODE_CALLFUNC,       ///< Get argc, Pop a function, execute function if argc
                   ///<   matches.
-  CALLFUNC_I,     ///< Get argc, get index, execute function at index if argc
+  GTA_BYTECODE_CALLFUNC_I,     ///< Get argc, get index, execute function at index if argc
                   ///<   matches.
-  RETURN,         ///< Get stack #, pop return val, pop (stack #) times,
-                  ///< push val, restore fp, restore pc
-  PRINT_S,        ///< Pop val, print(val), push error or NULL
-  PRINT_I,        ///< Pop val, print(val), push error or NULL
+  GTA_BYTECODE_PRINT_S,        ///< Pop val, print(val), push error or NULL
+  GTA_BYTECODE_PRINT_I,        ///< Pop val, print(val), push error or NULL
 } GTA_Bytecode;
 
 /**
@@ -139,7 +141,7 @@ typedef enum GTA_Bytecode {
  *
  * @param bytecode The bytecode to print.
  */
-void gta_bytecode_print(GTA_Bytecode* bytecode);
+void gta_bytecode_print(GTA_Bytecode_Vector * bytecode);
 
 #ifdef __cplusplus
 }

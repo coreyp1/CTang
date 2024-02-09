@@ -3,10 +3,13 @@
 #include <cutil/memory.h>
 #include "tang/astNode.h"
 #include "tang/macros.h"
+#include "tang/bytecode.h"
+#include "tang/bytecodeCompilerContext.h"
+#include "tang/program.h"
 
 GTA_Ast_Node_VTable gta_ast_node_null_vtable = {
   .name = "Null",
-  .compile_to_bytecode = 0,
+  .compile_to_bytecode = gta_ast_node_null_compile_to_bytecode,
   .destroy = gta_ast_node_null_destroy,
   .print = gta_ast_node_null_print,
   .simplify = gta_ast_node_null_simplify,
@@ -27,6 +30,12 @@ void gta_ast_node_destroy(GTA_Ast_Node * self) {
     : gta_ast_node_null_destroy(self);
 }
 
+bool gta_ast_node_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  return self->vtable->compile_to_bytecode
+    ? self->vtable->compile_to_bytecode(self, context)
+    : gta_ast_node_null_compile_to_bytecode(self, context);
+}
+
 void gta_ast_node_print(GTA_Ast_Node * self, const char * indent) {
   self->vtable->print
     ? self->vtable->print(self, indent)
@@ -43,6 +52,10 @@ void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback,
   self->vtable->walk
     ? self->vtable->walk(self, callback, data, return_value)
     : gta_ast_node_null_walk(self, callback, data, return_value);
+}
+
+bool gta_ast_node_null_compile_to_bytecode(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_Bytecode_Compiler_Context * context) {
+  return gcu_vector64_append(context->program->bytecode, GCU_TYPE64_UI64(GTA_BYTECODE_NULL));
 }
 
 void gta_ast_node_null_destroy(GTA_Ast_Node * self) {

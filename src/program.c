@@ -2,6 +2,7 @@
 #include <cutil/memory.h>
 #include "tang/program.h"
 #include "tang/tangLanguage.h"
+#include "tang/astNodeBlock.h"
 
 GTA_Program * gta_program_create(const char * code) {
   GTA_Program * program = gcu_malloc(sizeof(GTA_Program));
@@ -34,15 +35,75 @@ GTA_Program * gta_program_create_with_flags(const char * code, uint64_t flags) {
 }
 
 bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * code, uint64_t flags) {
-  GTA_Ast_Node * ast = gta_tang_parse(code);
+  // Initialize the program data structure.
   *program = (GTA_Program) {
     .code = code,
-    .ast = ast,
+    .ast = 0,
     .bytecode = 0,
     .binary = 0,
     .flags = flags,
   };
-  return true;
+
+  // Either parse the code into an AST or create a null AST.
+  program->ast = gta_tang_parse(code);
+  if (!program->ast) {
+    program->ast = gta_ast_node_create((GTA_PARSER_LTYPE) {
+      .first_line = 0,
+      .first_column = 0,
+      .last_line = 0,
+      .last_column = 0,
+    });
+  }
+  if (!program->ast) {
+    // If there is no AST, then there is no program.
+    return false;
+  }
+
+  // First, compile the AST into bytecode.
+  GCU_Vector64 * bytecode = gcu_vector64_create(0);
+  bool no_memory_error = true;
+  if (bytecode) {
+    GTA_Bytecode_Compiler_Context context;
+    if (!gta_bytecode_compiler_context_create_in_place(&context, program)) {
+      gcu_vector64_destroy(bytecode);
+      bytecode = 0;
+    }
+    else {
+      program->bytecode = bytecode;
+      if (!gta_ast_node_compile_to_bytecode(program->ast, &context)) {
+        gcu_vector64_destroy(bytecode);
+        program->bytecode = 0;
+      }
+      gta_bytecode_compiler_context_destroy_in_place(&context);
+    }
+    if (program->bytecode) {
+      size_t length = gcu_vector64_count(program->bytecode);
+
+      // Make sure that the bytecode terminates with a RETURN instruction.
+      // Replace an ending POP instruction with a RETURN instruction.
+      if (program->bytecode->data[length - 1].ui64 == GTA_BYTECODE_POP) {
+        program->bytecode->data[length - 1].ui64 = GTA_BYTECODE_RETURN;
+      }
+
+      // Add a NULL and RETURN instruction, in case there are any jumps to the
+      // end of the bytecode.
+      // If the AST is simply an expression, then the NULL is not necessary.
+      if (GTA_AST_IS_BLOCK(program->ast)) {
+        no_memory_error &= gcu_vector64_append(program->bytecode, GCU_TYPE64_UI64(GTA_BYTECODE_NULL));
+      }
+      no_memory_error &= gcu_vector64_append(program->bytecode, GCU_TYPE64_UI64(GTA_BYTECODE_RETURN));
+      // If there was a memory error, then the bytecode is not valid.
+      if (!no_memory_error) {
+        gcu_vector64_destroy(program->bytecode);
+        program->bytecode = 0;
+      }
+    }
+  }
+
+  // Second, try to compile the AST to a binary.
+  // TODO: Implement this.
+
+  return program->bytecode || program->binary;
 }
 
 void gta_program_destroy(GTA_Program * self) {
@@ -93,3 +154,6 @@ bool gta_program_execute_binary(GTA_MAYBE_UNUSED(GTA_Program * program), GTA_MAY
   return false;
 }
 
+void gta_program_bytecode_print(GTA_Program * self) {
+  gta_bytecode_print(self->bytecode);
+}

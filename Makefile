@@ -1,7 +1,7 @@
 CXX := g++
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g
 CC := cc
-CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O3 -g `pkg-config --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
+CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O0 -g `pkg-config --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
 LDFLAGS := -L /usr/lib -lstdc++ -lm `pkg-config --libs --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
 BUILD := ./build
 OBJ_DIR := $(BUILD)/objects
@@ -302,9 +302,9 @@ DEP_TANGLANGUAGE = \
 
 DEP_CONTEXT = \
 	include/tang/context.h \
-	include/tang/program.h \
 	$(DEP_MACROS) \
-	$(DEP_COMPUTEDVALUE)
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_UNICODESTRING)
 
 DEP_PROGRAM = \
 	include/tang/program.h \
@@ -317,11 +317,9 @@ DEP_PROGRAM = \
 
 DEP_VIRTUALMACHINE = \
 	include/tang/virtualMachine.h \
-	$(DEP_ASTNODE) \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_MACROS) \
 	$(DEP_CONTEXT) \
-	$(DEP_UNICODESTRING) \
 	$(DEP_BYTECODE)
 
 
@@ -478,10 +476,12 @@ $(LIBOBJECTS) :
 
 $(OBJ_DIR)/astNode.o: \
 	src/astNode.c \
-	$(DEP_ASTNODE)
-#				$(DEP_MACROS) \
-#				$(DEP_OPCODE) \
-#				$(DEP_PROGRAM)
+	$(DEP_ASTNODE) \
+	$(DEP_MACROS) \
+	$(DEP_BYTECODE) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_BYTECODECOMPILERCONTEXT) \
+	$(DEP_PROGRAM)
 
 $(OBJ_DIR)/astNodeArray.o: \
 	src/astNodeArray.c \
@@ -677,8 +677,7 @@ $(OBJ_DIR)/bytecode.o: \
 $(OBJ_DIR)/bytecodeCompilerContext.o: \
 	src/bytecodeCompilerContext.c \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
-	$(DEP_ASTNODE) \
-	$(DEP_BYTECODE)
+	$(DEP_PROGRAM)
 
 $(OBJ_DIR)/computedValue.o: \
 	src/computedValue.c \
@@ -694,7 +693,8 @@ $(OBJ_DIR)/program.o: \
 	$(DEP_PROGRAM) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_CONTEXT) \
-	$(DEP_TANGLANGUAGE)
+	$(DEP_TANGLANGUAGE) \
+	$(DEP_ASTNODEBLOCK)
 
 $(OBJ_DIR)/virtualMachine.o: \
 	src/virtualMachine.c \

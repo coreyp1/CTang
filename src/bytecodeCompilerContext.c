@@ -1,14 +1,15 @@
 
 #include <cutil/memory.h>
 #include "tang/bytecodeCompilerContext.h"
+#include "tang/program.h"
 
-GTA_Bytecode_Compiler_Context * gta_bytecode_compiler_context_create(GTA_Bytecode_Vector * bytecode) {
+GTA_Bytecode_Compiler_Context * gta_bytecode_compiler_context_create(GTA_Program * program) {
   GTA_Bytecode_Compiler_Context * context = gcu_malloc(sizeof(GTA_Bytecode_Compiler_Context));
   if (!context) {
     return 0;
   }
 
-  if (!gta_bytecode_compiler_context_create_in_place(context, bytecode)) {
+  if (!gta_bytecode_compiler_context_create_in_place(context, program)) {
     gcu_free(context);
     return 0;
   }
@@ -16,8 +17,8 @@ GTA_Bytecode_Compiler_Context * gta_bytecode_compiler_context_create(GTA_Bytecod
   return context;
 }
 
-bool gta_bytecode_compiler_context_create_in_place(GTA_Bytecode_Compiler_Context * context, GTA_Bytecode_Vector * bytecode) {
-  context->bytecode = bytecode;
+bool gta_bytecode_compiler_context_create_in_place(GTA_Bytecode_Compiler_Context * context, GTA_Program * program) {
+  context->program = program;
   return true;
 }
 
