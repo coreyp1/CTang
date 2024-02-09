@@ -7,17 +7,9 @@
 
 GTA_Ast_Node * gta_tang_parse(const char * source) {
   GTA_Ast_Node * primary = gta_tang_primary_parse(source);
-  if (primary) {
-    GTA_Ast_Node * simplified = gta_tang_simplify(primary);
-    if (simplified) {
-      gta_ast_node_destroy(primary);
-      return simplified;
-    }
-    else {
-      return primary;
-    }
-  }
-  return 0;
+  return primary
+    ? gta_tang_simplify(primary)
+    : 0;
 }
 
 GTA_Ast_Node * gta_tang_primary_parse(const char * source) {

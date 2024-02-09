@@ -212,6 +212,7 @@ void gta_parser_data_destroy(GTA_Parser_Data * data);
 %code top {
 #include <limits.h>
 #include <string.h>
+#include <stdio.h>
 #include <cutil/memory.h>
 #include "tangParser.h"
 #include "tang/tangScanner.h"

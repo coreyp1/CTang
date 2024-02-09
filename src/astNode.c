@@ -18,9 +18,11 @@ GTA_Ast_Node_VTable gta_ast_node_null_vtable = {
 
 GTA_Ast_Node *gta_ast_node_create(GTA_PARSER_LTYPE location) {
   GTA_Ast_Node * self = gcu_malloc(sizeof(GTA_Ast_Node));
-  self->vtable = &gta_ast_node_null_vtable;
-  self->location = location;
-  self->possible_type = GTA_AST_POSSIBLE_TYPE_NULL;
+  *self = (GTA_Ast_Node) {
+    .vtable = &gta_ast_node_null_vtable,
+    .location = location,
+    .possible_type = GTA_AST_POSSIBLE_TYPE_NULL,
+  };
   return self;
 }
 
