@@ -15,24 +15,17 @@ GTA_Ast_Node * gta_tang_parse(const char * source) {
 
 GTA_Ast_Node * gta_tang_primary_parse(const char * source) {
   GTA_Ast_Node * ast = 0;
-  GTA_Parser_Data * data = 0;
   GTA_Parser_Error parseError = 0;
-  data = gta_parser_data_create(&data);
-  if (!data) {
-    return 0;
-  }
 
   yyscan_t scanner;
   YY_BUFFER_STATE state;
   if (gta_flexlex_init(&scanner)) {
-    gta_parser_data_destroy(data);
     return 0;
   }
 
   state = gta_flex_scan_string(source, scanner);
-  GTA_Parser_parse(scanner, &ast, &data, &parseError);
+  GTA_Parser_parse(scanner, &ast, &parseError);
 
-  gta_parser_data_destroy(data);
   gta_flex_delete_buffer(state, scanner);
   gta_flexlex_destroy(scanner);
   return ast;

@@ -51,7 +51,6 @@
 // https://www.gnu.org/software/bison/manual/bison.html#index-_0025parse_002dparam-3
 %parse-param { yyscan_t * scanner }
 %parse-param { GTA_Ast_Node * * ast }
-%parse-param { GTA_Parser_Data * * data }
 %parse-param { GTA_Parser_Error * parseError }
 
 // Add a prefix to token names
@@ -160,6 +159,13 @@
 %destructor {
   gcu_free((void *)$$.str);
 } IDENTIFIER STRING TEMPLATESTRING QUICKPRINTBEGINANDSTRING
+%destructor {
+  gcu_vector64_destroy($$);
+} statements functionDeclarationArguments expressionList mapList
+%destructor {
+  gta_ast_node_destroy($$);
+} expression libraryExpression statement codeBlock openStatement closedStatement optionalExpression slice
+
 
 // Code sections.
 // https://www.gnu.org/software/bison/manual/bison.html#g_t_0025code-Summary
@@ -182,24 +188,6 @@ typedef void* yyscan_t;
 
 typedef const char * GTA_Parser_Error;
 
-typedef struct GTA_Parser_Data {
-  // This hash holds all the ast nodes that have been created but not assigned
-  // to a higher-level structure.
-  GCU_Hash8 * unassigned_ast_nodes;
-  // This hash holds all the statement vectors that have been created but not
-  // assigned to a higher-level structure.
-  GCU_Hash8 * unassigned_statements;
-  // This hash holds all of the function declaration argument vectors that have
-  // been created but not assigned to a higher-level structure.
-  GCU_Hash8 * unassigned_functionDeclarationArguments;
-  // This hash holds all of the expression lists that have been created but not
-  // assigned to a higher-level structure.
-  GCU_Hash8 * unassigned_expressionLists;
-  // This hash holds all of the map lists that have been created but not
-  // assigned to a higher-level structure.
-  GCU_Hash8 * unassigned_mapLists;
-} GTA_Parser_Data;
-
 /**
  * For "string" expressions, we need to store the string type and the string
  */
@@ -208,9 +196,6 @@ typedef struct {
   size_t len;
   GTA_String_Type type;
 } GTA_Parser_Unicode_String;
-
-GTA_Parser_Data * gta_parser_data_create();
-void gta_parser_data_destroy(GTA_Parser_Data * data);
 
 }
 
@@ -230,7 +215,7 @@ static GTA_Parser_Error ErrorOutOfMemory = "Out of memory/Memory allocation erro
 // static GTA_Parser_Error ErrorStringError = true;
 // static GTA_Parser_Error ErrorUnexpectedScriptEnd = true;
 
-void GTA_Parser_error(GTA_PARSER_LTYPE * yylloc, yyscan_t * scanner, GTA_Ast_Node * * ast, GTA_Parser_Data * * data, GTA_Parser_Error * parseError, const char * yymsg);
+void GTA_Parser_error(GTA_PARSER_LTYPE * yylloc, yyscan_t * scanner, GTA_Ast_Node * * ast, GTA_Parser_Error * parseError, const char * yymsg);
 
 // We must provide the yylex() function.
 // yylex() arguments are defined in the bison .y file.
@@ -244,24 +229,6 @@ static int GTA_Parser_lex(GTA_PARSER_STYPE * yylval_param, GTA_PARSER_LTYPE * yy
   return gta_scanner_get_next_token(yylval_param, yylloc_param, yyscanner);
 }
 
-
-// Helper cleanup function for hash8 of ast nodes.
-static void hash8_ast_node_cleanup(GCU_Hash8 * hash) {
-  GCU_Hash8_Iterator iter = gcu_hash8_iterator_get(hash);
-  while (iter.exists) {
-    gta_ast_node_destroy((GTA_Ast_Node *)iter.hash);
-    iter = gcu_hash8_iterator_next(iter);
-  }
-}
-
-// Helper cleanup function for hash8 of vector64.
-static void hash8_vector64_cleanup(GCU_Hash8 * hash) {
-  GCU_Hash8_Iterator iter = gcu_hash8_iterator_get(hash);
-  while (iter.exists) {
-    gcu_vector64_destroy((GCU_Vector64 *)iter.hash);
-    iter = gcu_hash8_iterator_next(iter);
-  }
-}
 
 // Helper cleanup function for vector64 of pointers.
 static void vector64_pointer_cleanup(GCU_Vector64 * vector) {
@@ -284,72 +251,6 @@ static void vector64_map_pair_cleanup(GCU_Vector64 * vector) {
     gta_ast_node_destroy((GTA_Ast_Node *)((GTA_Ast_Node_Map_Pair *)vector->data[i].p)->node);
     gcu_free((void *)vector->data[i].p);
   }
-}
-
-void gta_parser_data_destroy(GTA_Parser_Data * data) {
-  if (!data) {
-    return;
-  }
-  gcu_hash8_destroy(data->unassigned_ast_nodes);
-  gcu_hash8_destroy(data->unassigned_statements);
-  gcu_hash8_destroy(data->unassigned_functionDeclarationArguments);
-  gcu_hash8_destroy(data->unassigned_expressionLists);
-  gcu_hash8_destroy(data->unassigned_mapLists);
-  gcu_free(data);
-}
-
-GTA_Parser_Data * gta_parser_data_create() {
-  GTA_Parser_Data * data = gcu_malloc(sizeof(GTA_Parser_Data));
-  if (!data) {
-    return 0;
-  }
-
-  data->unassigned_ast_nodes = gcu_hash8_create(0);
-  if (!data->unassigned_ast_nodes) {
-    gcu_free(data);
-    return 0;
-  }
-  data->unassigned_ast_nodes->cleanup = hash8_ast_node_cleanup;
-
-  data->unassigned_statements = gcu_hash8_create(0);
-  if (!data->unassigned_statements) {
-    gcu_hash8_destroy(data->unassigned_ast_nodes);
-    gcu_free(data);
-    return 0;
-  }
-  data->unassigned_statements->cleanup = hash8_ast_node_cleanup;
-
-  data->unassigned_functionDeclarationArguments = gcu_hash8_create(0);
-  if (!data->unassigned_functionDeclarationArguments) {
-    gcu_hash8_destroy(data->unassigned_ast_nodes);
-    gcu_hash8_destroy(data->unassigned_statements);
-    gcu_free(data);
-    return 0;
-  }
-  data->unassigned_functionDeclarationArguments->cleanup = hash8_vector64_cleanup;
-
-  data->unassigned_expressionLists = gcu_hash8_create(0);
-  if (!data->unassigned_expressionLists) {
-    gcu_hash8_destroy(data->unassigned_ast_nodes);
-    gcu_hash8_destroy(data->unassigned_statements);
-    gcu_hash8_destroy(data->unassigned_functionDeclarationArguments);
-    gcu_free(data);
-    return 0;
-  }
-  data->unassigned_expressionLists->cleanup = hash8_vector64_cleanup;
-
-  data->unassigned_mapLists = gcu_hash8_create(0);
-  if (!data->unassigned_mapLists) {
-    gcu_hash8_destroy(data->unassigned_ast_nodes);
-    gcu_hash8_destroy(data->unassigned_statements);
-    gcu_hash8_destroy(data->unassigned_functionDeclarationArguments);
-    gcu_hash8_destroy(data->unassigned_expressionLists);
-    gcu_free(data);
-    return 0;
-  }
-  data->unassigned_mapLists->cleanup = hash8_vector64_cleanup;
-
-  return data;
 }
 
 #define LOCATION(A, B)              \
@@ -397,14 +298,6 @@ GTA_Parser_Data * gta_parser_data_create() {
   if (!Z) {                                \
     parseError = &ErrorOutOfMemory;        \
     break;                                 \
-  }                                        \
-  gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)A); \
-  gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)B); \
-  if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)Z, GCU_TYPE8_B(false))) { \
-    gta_ast_node_destroy(Z);               \
-    parseError = &ErrorOutOfMemory;        \
-    Z = 0;                                 \
-    break;                                 \
   }
 
 #define UNARY_TEMPLATE(X,AA,B,BB,Z)        \
@@ -421,13 +314,6 @@ GTA_Parser_Data * gta_parser_data_create() {
   Z = (GTA_Ast_Node *)gta_ast_node_cast_create(A, X, location); \
   if (!Z) {                                \
     parseError = &ErrorOutOfMemory;        \
-    break;                                 \
-  }                                        \
-  gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)A); \
-  if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)Z, GCU_TYPE8_B(false))) { \
-    gta_ast_node_destroy(Z);               \
-    parseError = &ErrorOutOfMemory;        \
-    Z = 0;                                 \
     break;                                 \
   }
 
@@ -448,7 +334,6 @@ GTA_Parser_Data * gta_parser_data_create() {
 program
   : expression
     {
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$1);
       *ast = (GTA_Ast_Node *)$1;
     }
   | statements
@@ -459,12 +344,6 @@ program
       *ast = (GTA_Ast_Node *)gta_ast_node_block_create($1, @1);
       if (!*ast) {
         parseError = &ErrorOutOfMemory;
-      }
-      gcu_hash8_remove((*data)->unassigned_statements, (uint64_t)$1);
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)*ast, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy(*ast);
-        parseError = &ErrorOutOfMemory;
-        *ast = 0;
       }
     }
   | EOF_
@@ -484,12 +363,6 @@ functionDeclarationArguments
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_functionDeclarationArguments, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gcu_vector64_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
       $$->cleanup = vector64_pointer_cleanup;
     }
   | IDENTIFIER
@@ -506,23 +379,15 @@ functionDeclarationArguments
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_functionDeclarationArguments, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gcu_vector64_destroy($$);
-        gcu_free((void *)identifier);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
       $$->cleanup = vector64_pointer_cleanup;
+
       gcu_vector64_append($$, GCU_TYPE64_P((void *)identifier));
-      //$$ = std::vector<const char *>{$1};
     }
   | functionDeclarationArguments "," IDENTIFIER
     {
       // Verify that there have been no memory errors.
       VERIFY1($1,$$);
 
-      // Copy the identifier.
       const char * identifier = $3.str;
 
       if (!gcu_vector64_append($1, GCU_TYPE64_P((void *)identifier))) {
@@ -548,14 +413,7 @@ expressionList
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_expressionLists, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gcu_vector64_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
       $$->cleanup = vector64_ast_node_cleanup;
-      // $$ = std::vector<GTA_Ast_Node *>{};
     }
   | expression
     {
@@ -567,16 +425,8 @@ expressionList
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_expressionLists, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gcu_vector64_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
       $$->cleanup = vector64_ast_node_cleanup;
       gcu_vector64_append($$, GCU_TYPE64_P($1));
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$1);
-      // $$ = std::vector<GTA_Ast_Node *>{$1};
     }
   | expressionList "," expression
     {
@@ -589,9 +439,6 @@ expressionList
         break;
       }
       $$ = $1;
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-      // $1.push_back($3);
-      // $$ = $1;
     }
   ;
 
@@ -603,7 +450,6 @@ mapList
       // Verify that there have been no memory errors.
       VERIFY1($3,$$);
 
-      // Copy the identifier.
       const char * identifier = $1.str;
 
       // Base case.  Create a vector to hold additional entries.
@@ -613,22 +459,13 @@ mapList
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_mapLists, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gcu_vector64_destroy($$);
-        gcu_free((void *)identifier);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // Set the cleanup function.
       $$->cleanup = vector64_map_pair_cleanup;
 
       // Create the pair.
       GTA_Ast_Node_Map_Pair * pair = gcu_malloc(sizeof(GTA_Ast_Node_Map_Pair));
       if (!pair) {
         gcu_free((void *)identifier);
-        // Not removing the vector because it will be removed when the cleanup
-        // happens.
+        gcu_vector64_destroy($$);
         parseError = &ErrorOutOfMemory;
         $$ = 0;
         break;
@@ -640,19 +477,17 @@ mapList
       if (!gcu_vector64_append($$, GCU_TYPE64_P((void *)pair))) {
         gcu_free(pair);
         gcu_free((void *)identifier);
-        // Not removing vector.  See above.
+        gcu_vector64_destroy($$);
         parseError = &ErrorOutOfMemory;
         $$ = 0;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
     }
   | mapList "," IDENTIFIER ":" expression
     {
       // Verify that there have been no memory errors.
       VERIFY2($1,$5,$$)
 
-      // Copy the identifier.
       const char * identifier = $3.str;
 
       // Create the pair.
@@ -674,7 +509,6 @@ mapList
         $$ = 0;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
 
       $$ = $1;
     }
@@ -694,17 +528,10 @@ statements
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_statements, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gcu_vector64_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
       $$->cleanup = vector64_ast_node_cleanup;
 
       // Space already reserved.
       gcu_vector64_append($$, GCU_TYPE64_P($1));
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$1);
     }
   | statements statement
     {
@@ -716,7 +543,6 @@ statements
         $$ = 0;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$2);
       $$ = $1;
     }
   ;
@@ -743,25 +569,6 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      // It is ok to remove tracking of the ast nodes because, if there is an
-      // error setting the unassigned status of the if-else node, then the
-      // destroy will be called on the if-else node, which will destroy the
-      // ast nodes.
-      // Now, the code is written with this provision, but in reality, since
-      // we are removing 3 nodes from the hash *before* adding the if-else
-      // node, there is no way for the if-else node to trigger a memory error.
-      // Nevertheless, we will code the "safer" way.
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$7);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeIfElse>($3, $5, $7, @1+@7);
     }
   | "while" "(" expression ")" closedStatement
     {
@@ -774,16 +581,6 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeWhile>($3, $5, @1+@5);
     }
   | "do" statement "while" "(" expression ")" ";"
     {
@@ -796,16 +593,6 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$2);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeDoWhile>($5, $2, @1+@7);
     }
   | "for" "(" optionalExpression ";" optionalExpression ";" optionalExpression ")" closedStatement
     {
@@ -818,25 +605,12 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$7);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$9);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeFor>($3, $5, $7, $9, @1+@9);
     }
   | "for" "(" IDENTIFIER ":" expression ")" closedStatement
     {
       // Verify that there have been no memory errors.
       VERIFY2($5,$7,$$);
 
-      // Copy the identifier.
       const char * identifier = $3.str;
 
       LOCATION(@1, @7);
@@ -846,23 +620,12 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$7);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeRangedFor>(std::make_shared<GTA_Ast_NodeIdentifier>($3, @3), $5, $7, @1+@7);
     }
   | "function" IDENTIFIER "(" functionDeclarationArguments ")" codeBlock
     {
       // Verify that there have been no memory errors.
       VERIFY2($4,$6,$$);
 
-      // Copy the identifier.
       const char * identifier = $2.str;
 
       LOCATION(@1, @6);
@@ -872,16 +635,6 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$4);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$6);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeFunctionDeclaration>($2, $4, $6, @1+@6);
     }
   | codeBlock
   | "return" ";"
@@ -894,14 +647,6 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeReturn>(std::make_shared<GTA_Ast_Node>(@1+@2), @1+@2);
     }
   | "return" expression ";"
     {
@@ -914,15 +659,6 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$2);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeReturn>($2, @1+@3);
     }
   | "break" ";"
     {
@@ -934,12 +670,6 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeBreak>(@1+@2);
     }
   | "continue" ";"
     {
@@ -951,13 +681,6 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeContinue>(@1+@2);
     }
   | expression ";"
   | TEMPLATESTRING
@@ -977,13 +700,6 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodePrint>(GTA_Ast_NodePrint::Default, std::make_shared<GTA_Ast_NodeString>($1, @1), @1);
     }
   | QUICKPRINTBEGINANDSTRING expression QUICKPRINTEND
     {
@@ -1024,10 +740,9 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
+      block->cleanup = vector64_ast_node_cleanup;
       gcu_vector64_append(block, GCU_TYPE64_P((void *)print_preceding));
       gcu_vector64_append(block, GCU_TYPE64_P((void *)$2));
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$2);
-      block->cleanup = vector64_ast_node_cleanup;
 
       $$ = (GTA_Ast_Node *)gta_ast_node_block_create(block, location);
       if (!$$) {
@@ -1035,18 +750,6 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeBlock>(vector<shared_ptr<GTA_Ast_Node>>{
-      //   // The Template String.
-      //   std::make_shared<GTA_Ast_NodePrint>(GTA_Ast_NodePrint::Default, std::make_shared<GTA_Ast_NodeString>($1, @1), @1),
-      //   // The Quick Print Expression.
-      //   std::make_shared<GTA_Ast_NodePrint>(GTA_Ast_NodePrint::Default, $2, @2+@3)
-      // }, @1+@3);
     }
   | QUICKPRINTBEGIN expression QUICKPRINTEND
     {
@@ -1060,22 +763,12 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$2);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodePrint>(GTA_Ast_NodePrint::Default, $2, @1+@3);
     }
   | "use" IDENTIFIER ";"
     {
       // Verify that there have been no memory errors.
       VERIFY($$);
 
-      // Copy the identifier.
       const char * identifier = $2.str;
 
       LOCATION(@1, @3);
@@ -1091,20 +784,12 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeUse>(std::make_shared<GTA_Ast_NodeLibrary>($2, @1), $2, @1+@3);
     }
   | "use" libraryExpression "as" IDENTIFIER ";"
     {
       // Verify that there have been no memory errors.
       VERIFY1($2,$$);
 
-      // Copy the identifier.
       const char * identifier = $4.str;
 
       LOCATION(@1, @5);
@@ -1113,13 +798,6 @@ closedStatement
         gcu_free((void *)identifier);
         parseError = &ErrorOutOfMemory;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeUse>($2, $4, @1+@5);
     }
   ;
 
@@ -1129,7 +807,6 @@ libraryExpression
       // Verify that there have been no memory errors.
       VERIFY($$);
 
-      // Copy the identifier.
       const char * identifier = $1.str;
 
       $$ = (GTA_Ast_Node *)gta_ast_node_library_create(identifier, @1);
@@ -1137,20 +814,12 @@ libraryExpression
         gcu_free((void *)identifier);
         parseError = &ErrorOutOfMemory;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeLibrary>($1, @1);
     }
   | libraryExpression "." IDENTIFIER
     {
       // Verify that there have been no memory errors.
       VERIFY1($1,$$);
 
-      // Copy the identifier.
       const char * identifier = $3.str;
 
       LOCATION(@1, @3);
@@ -1159,14 +828,6 @@ libraryExpression
         gcu_free((void *)identifier);
         parseError = &ErrorOutOfMemory;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$1);
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodePeriod>($1, $3, @1+@3);
     }
   ;
 
@@ -1183,16 +844,6 @@ openStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeIfElse>($3, $5, @1+@5);
     }
   | "if" "(" expression ")" closedStatement "else" openStatement
     {
@@ -1205,17 +856,6 @@ openStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$7);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeIfElse>($3, $5, $7, @1+@7);
     }
   | "while" "(" expression ")" openStatement
     {
@@ -1228,16 +868,6 @@ openStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeWhile>($3, $5, @1+@5);
     }
   | "for" "(" optionalExpression ";" optionalExpression ";" optionalExpression ")" openStatement
     {
@@ -1250,18 +880,6 @@ openStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$7);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$9);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeFor>($3, $5, $7, $9, @1+@9);
     }
   | "for" "(" IDENTIFIER ":" expression ")" openStatement
     {
@@ -1278,16 +896,6 @@ openStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$7);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeRangedFor>(std::make_shared<GTA_Ast_NodeIdentifier>($3, @3), $5, $7, @1+@7);
     }
   ;
 
@@ -1309,13 +917,6 @@ optionalExpression
       if (!$$) {
         parseError = &ErrorOutOfMemory;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_Node>(Tang::location{});
     }
   | expression
   ;
@@ -1333,18 +934,6 @@ slice
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$1);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$7);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeSlice>($1, $3, $5, $7, @1+@8);
     }
   | expression "[" optionalExpression ":" optionalExpression "]"
     {
@@ -1357,17 +946,6 @@ slice
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$1);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeSlice>($1, $3, $5, std::make_shared<GTA_Ast_Node>(Tang::location{}), @1+@6);
     }
   ;
 
@@ -1397,13 +975,6 @@ codeBlock
         gcu_vector64_destroy(vector);
         parseError = &ErrorOutOfMemory;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeBlock>(std::vector<shared_ptr<GTA_Ast_Node>>{}, @1+@2);
     }
   | "{" statements "}"
     {
@@ -1416,15 +987,6 @@ codeBlock
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_statements, (uint64_t)$2);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeBlock>($2, @1+@3);
     }
   ;
 
@@ -1440,13 +1002,6 @@ expression
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<Tang::GTA_Ast_Node>(@1);
     }
   | IDENTIFIER
     {
@@ -1462,13 +1017,6 @@ expression
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<Tang::GTA_Ast_NodeIdentifier>($1, @1);
     }
   | INTEGER
     {
@@ -1480,13 +1028,6 @@ expression
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<Tang::GTA_Ast_NodeInteger>($1, @1);
     }
   | FLOAT
     {
@@ -1498,13 +1039,6 @@ expression
         parseError = &ErrorOutOfMemory;
         break;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeFloat>($1, @1);
     }
   | BOOLEAN
     {
@@ -1515,13 +1049,6 @@ expression
       if (!$$) {
         parseError = &ErrorOutOfMemory;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeBoolean>($1, @1);
     }
   | STRING
     {
@@ -1540,13 +1067,6 @@ expression
         gta_unicode_string_destroy(string);
         parseError = &ErrorOutOfMemory;
       }
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeString>($1.first, $1.second, @1);
     }
   | expression "=" expression
     {
@@ -1558,91 +1078,66 @@ expression
       if (!$$) {
         parseError = &ErrorOutOfMemory;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$1);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeAssign>($1, $3, @2);
     }
   | expression "+" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_ADD,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::Add, $1, $3, @2);
     }
   | expression "-" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_SUBTRACT,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::Subtract, $1, $3, @2);
     }
   | expression "*" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_MULTIPLY,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::Multiply, $1, $3, @2);
     }
   | expression "/" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_DIVIDE,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::Divide, $1, $3, @2);
     }
   | expression "%" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_MODULO,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::Modulo, $1, $3, @2);
     }
   | "-" expression %prec UMINUS
     {
       UNARY_TEMPLATE(GTA_UNARY_TYPE_NEGATIVE,@1,$2,@2,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeUnary>(GTA_Ast_NodeUnary::Negative, $2, @1);
     }
   | "!" expression
     {
       UNARY_TEMPLATE(GTA_UNARY_TYPE_NOT,@1,$2,@2,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeUnary>(GTA_Ast_NodeUnary::Not, $2, @1);
     }
   | expression "<" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_LESS_THAN,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::LessThan, $1, $3, @2);
     }
   | expression "<=" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_LESS_THAN_EQUAL,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::LessThanEqual, $1, $3, @2);
     }
   | expression ">" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_GREATER_THAN,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::GreaterThan, $1, $3, @2);
     }
   | expression ">=" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_GREATER_THAN_EQUAL,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::GreaterThanEqual, $1, $3, @2);
     }
   | expression "==" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_EQUAL,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::Equal, $1, $3, @2);
     }
   | expression "!=" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_NOT_EQUAL,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::NotEqual, $1, $3, @2);
     }
   | expression "&&" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_AND,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::And, $1, $3, @2);
     }
   | expression "||" expression
     {
       BINARY_TEMPLATE(GTA_BINARY_TYPE_OR,$1,@1,$3,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeBinary>(GTA_Ast_NodeBinary::Or, $1, $3, @2);
     }
   | slice
   | "(" expression ")"
@@ -1655,22 +1150,18 @@ expression
   | expression "as" "int"
     {
       CAST_TEMPLATE(GTA_CAST_TYPE_INTEGER,$1,@1,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeCast>(GTA_Ast_NodeCast::Integer, $1, @2+@3);
     }
   | expression "as" "float"
     {
       CAST_TEMPLATE(GTA_CAST_TYPE_FLOAT,$1,@1,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeCast>(GTA_Ast_NodeCast::Float, $1, @2+@3);
     }
   | expression "as" "boolean"
     {
       CAST_TEMPLATE(GTA_CAST_TYPE_BOOLEAN,$1,@1,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeCast>(GTA_Ast_NodeCast::Boolean, $1, @2+@3);
     }
   | expression "as" "string"
     {
       CAST_TEMPLATE(GTA_CAST_TYPE_STRING,$1,@1,@3,$$);
-      // $$ = std::make_shared<GTA_Ast_NodeCast>(GTA_Ast_NodeCast::String, $1, @2+@3);
     }
   | "print" "(" expression ")"
     {
@@ -1682,22 +1173,12 @@ expression
       if (!$$) {
         parseError = &ErrorOutOfMemory;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodePrint>(GTA_Ast_NodePrint::Default, $3, @1+@4);
     }
   | expression "." IDENTIFIER
     {
       // Verify that there have been no memory errors.
       VERIFY1($1,$$);
 
-      // Copy the identifier.
       const char * identifier = $3.str;
 
       LOCATION(@1, @3);
@@ -1706,15 +1187,6 @@ expression
         gcu_free((void *)identifier);
         parseError = &ErrorOutOfMemory;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$1);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodePeriod>($1, $3, @2);
     }
   |  "[" expressionList "]"
     {
@@ -1727,15 +1199,6 @@ expression
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_expressionLists, (uint64_t)$2);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeArray>($2, @1+@3);
     }
   | "{" ":" "}"
     {
@@ -1754,14 +1217,6 @@ expression
         gcu_vector64_destroy(vector);
         parseError = &ErrorOutOfMemory;
       }
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeMap>(std::vector<std::pair<const char *, GTA_Ast_Node *>>{}, @1+@3);
     }
   | "{" mapList "}"
     {
@@ -1773,15 +1228,6 @@ expression
       if (!$$) {
         parseError = &ErrorOutOfMemory;
       }
-      gcu_hash8_remove((*data)->unassigned_mapLists, (uint64_t)$2);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeMap>($2, @1+@3);
     }
   | expression "[" expression "]"
     {
@@ -1794,16 +1240,6 @@ expression
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$1);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeIndex>($1, $3, @2+@4);
     }
   | expression "(" expressionList ")"
     {
@@ -1816,16 +1252,6 @@ expression
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$1);
-      gcu_hash8_remove((*data)->unassigned_expressionLists, (uint64_t)$3);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeFunctionCall>($1, $3, @2+@4);
     }
   | expression "?" expression ":" expression
     {
@@ -1838,24 +1264,13 @@ expression
         parseError = &ErrorOutOfMemory;
         break;
       }
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$1);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$3);
-      gcu_hash8_remove((*data)->unassigned_ast_nodes, (uint64_t)$5);
-
-      if (!gcu_hash8_set((*data)->unassigned_ast_nodes, (uint64_t)$$, GCU_TYPE8_B(false))) {
-        gta_ast_node_destroy($$);
-        $$ = 0;
-        parseError = &ErrorOutOfMemory;
-        break;
-      }
-      // $$ = std::make_shared<GTA_Ast_NodeTernary>($1, $3, $5, @2+@4);
     }
   ;
 
 %%
 
 // https://www.gnu.org/software/bison/manual/bison.html#YYERROR
-void GTA_Parser_error(GTA_PARSER_LTYPE * yylloc, GTA_MAYBE_UNUSED(yyscan_t * scanner), GTA_Ast_Node * * ast, GTA_MAYBE_UNUSED(GTA_Parser_Data * * data), GTA_Parser_Error * parseError, const char * yymsg) {
+void GTA_Parser_error(GTA_PARSER_LTYPE * yylloc, GTA_MAYBE_UNUSED(yyscan_t * scanner), GTA_Ast_Node * * ast, GTA_Parser_Error * parseError, const char * yymsg) {
   *parseError = yymsg;
   if (*ast) {
     gta_ast_node_destroy(*ast);
