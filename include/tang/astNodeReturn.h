@@ -37,7 +37,7 @@ typedef struct GTA_Ast_Node_Return {
  * @param location The location of the return statement in the source code.
  * @return The new GTA_Ast_Node_Return object or NULL on failure.
  */
-GTA_Ast_Node_Return * gta_ast_node_return_create(GTA_Ast_Node * expression, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Return * gta_ast_node_return_create(GTA_Ast_Node * expression, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Return object.
@@ -71,7 +71,7 @@ void gta_ast_node_return_print(GTA_Ast_Node * self, const char * indent);
  *   expression.
  * @return The simplified GTA_Ast_Node_Return object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_return_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_return_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Return object.

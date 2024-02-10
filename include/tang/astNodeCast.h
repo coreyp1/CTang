@@ -52,7 +52,7 @@ typedef struct GTA_Ast_Node_Cast {
  * @param location The location of the cast in the source code.
  * @return The new GTA_Ast_Node_Cast object or NULL on failure.
  */
-GTA_Ast_Node_Cast * gta_ast_node_cast_create(GTA_Ast_Node * expression, GTA_Cast_Type type, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Cast * gta_ast_node_cast_create(GTA_Ast_Node * expression, GTA_Cast_Type type, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Cast object.
@@ -85,7 +85,7 @@ void gta_ast_node_cast_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use for simplification.
  * @return The simplified GTA_Ast_Node_Cast object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_cast_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_cast_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Cast object.

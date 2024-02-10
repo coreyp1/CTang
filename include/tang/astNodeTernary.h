@@ -47,7 +47,7 @@ typedef struct GTA_Ast_Node_Ternary {
  * @param location The location of the ternary operation in the source code.
  * @return The new GTA_Ast_Node_Ternary object or NULL on failure.
  */
-GTA_Ast_Node_Ternary * gta_ast_node_ternary_create(GTA_Ast_Node * condition, GTA_Ast_Node * ifTrue, GTA_Ast_Node * ifFalse, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Ternary * gta_ast_node_ternary_create(GTA_Ast_Node * condition, GTA_Ast_Node * ifTrue, GTA_Ast_Node * ifFalse, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Ternary object.
@@ -80,7 +80,7 @@ void gta_ast_node_ternary_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use for simplification.
  * @return The simplified GTA_Ast_Node_Ternary object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_ternary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_ternary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Ternary object.

@@ -66,7 +66,7 @@ typedef struct GTA_Ast_Node_Binary {
  * @param location The location of the binary operation in the source code.
  * @return The new GTA_Ast_Node_Binary object or NULL on failure.
  */
-GTA_Ast_Node_Binary * gta_ast_node_binary_create(GTA_Ast_Node * lhs, GTA_Ast_Node * rhs, GTA_Binary_Type operator_type, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Binary * gta_ast_node_binary_create(GTA_Ast_Node * lhs, GTA_Ast_Node * rhs, GTA_Binary_Type operator_type, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Binary object.
@@ -99,7 +99,7 @@ void gta_ast_node_binary_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use for simplification.
  * @return The simplified GTA_Ast_Node_Binary object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_binary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_binary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Binary object.

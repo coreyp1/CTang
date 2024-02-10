@@ -27,6 +27,7 @@
 #include <stddef.h>
 #include <cutil/vector.h>
 #include "tang/libver.h"
+#include "tang/macros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -113,7 +114,7 @@ typedef enum {
  * @param type The type of string being created.
  * @return A pointer to the Unicode String object, or NULL if there was an error.
  */
-GTA_Unicode_String * gta_unicode_string_create(const char * source, size_t length, GTA_String_Type type);
+GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_create(const char * source, size_t length, GTA_String_Type type);
 
 /**
  * Construct a new Unicode String object and adopt ownership of the source
@@ -125,7 +126,7 @@ GTA_Unicode_String * gta_unicode_string_create(const char * source, size_t lengt
  * @return A pointer to the Unicode String object, or NULL if there was an error.
 
 */
-GTA_Unicode_String * gta_unicode_string_create_and_adopt(const char * source, size_t length, GTA_String_Type type);
+GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_create_and_adopt(const char * source, size_t length, GTA_String_Type type);
 
 /**
  * Destroy a Unicode String object.
@@ -140,7 +141,7 @@ void gta_unicode_string_destroy(GTA_Unicode_String * string);
  * @param string2 The second string.
  * @return A pointer to the new string, or NULL if there was an error.
  */
-GTA_Unicode_String * gta_unicode_string_concat(const GTA_Unicode_String * string1, const GTA_Unicode_String * string2);
+GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_concat(const GTA_Unicode_String * string1, const GTA_Unicode_String * string2);
 
 /**
  * Get the substring of a Unicode String.
@@ -150,7 +151,7 @@ GTA_Unicode_String * gta_unicode_string_concat(const GTA_Unicode_String * string
  * @param grapheme_count The number of graphemes in the substring.
  * @return A pointer to the new string, or NULL if there was an error.
  */
-GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * string, size_t grapheme_start, size_t grapheme_count);
+GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * string, size_t grapheme_start, size_t grapheme_count);
 
 
 #ifdef __cplusplus

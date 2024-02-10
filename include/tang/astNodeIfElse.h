@@ -47,7 +47,7 @@ typedef struct GTA_Ast_Node_If_Else {
  * @param location The location of the if-else statement in the source code.
  * @return The new GTA_Ast_Node_If_Else object or NULL on failure.
  */
-GTA_Ast_Node_If_Else * gta_ast_node_if_else_create(GTA_Ast_Node * condition, GTA_Ast_Node * ifBlock, GTA_Ast_Node * elseBlock, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_If_Else * gta_ast_node_if_else_create(GTA_Ast_Node * condition, GTA_Ast_Node * ifBlock, GTA_Ast_Node * elseBlock, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_If_Else object.
@@ -80,7 +80,7 @@ void gta_ast_node_if_else_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use for simplification.
  * @return The simplified GTA_Ast_Node_If_Else object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_if_else_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_if_else_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_If_Else object.

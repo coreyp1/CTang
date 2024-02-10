@@ -18,6 +18,17 @@ extern "C" {
 #endif //__cplusplus
 
 /**
+ * A cross-compiler macro for declaring a function as no discard.
+ */
+#if defined(__cplusplus) && __cplusplus >= 201703L
+#define GTA_NO_DISCARD [[nodiscard]]
+#elif defined(__GNUC__) || defined(__clang__)
+#define GTA_NO_DISCARD __attribute__((warn_unused_result))
+#else
+#define GTA_NO_DISCARD
+#endif
+
+/**
  * A cross-compiler macro for marking a function parameter as unused.
  */
 #define GTA_MAYBE_UNUSED(X) __attribute__((unused)) X

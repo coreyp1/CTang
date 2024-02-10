@@ -110,12 +110,13 @@ all: $(APP_DIR)/$(TARGET) #$(APP_DIR)/tang ## Build the shared library
 ####################################################################
 DEP_LIBVER = \
 	include/tang/libver.h
-DEP_UNICODESTRING = \
-	include/tang/unicodeString.h
-DEP_LOCATION = \
-  include/tang/location.h
 DEP_MACROS = \
 	include/tang/macros.h
+DEP_UNICODESTRING = \
+	include/tang/unicodeString.h \
+	$(DEP_MACROS)
+DEP_LOCATION = \
+  include/tang/location.h
 DEP_BYTECODE = \
 	include/tang/bytecode.h
 DEP_BYTECODECOMPILERCONTEXT = \
@@ -298,7 +299,8 @@ DEP_ASTNODE_ALL = \
 	$(DEP_ASTNODEWHILE)
 
 DEP_COMPUTEDVALUE = \
-	include/tang/computedValue.h
+	include/tang/computedValue.h \
+	$(DEP_MACROS)
 DEP_COMPUTEDVALUEERROR = \
   include/tang/computedValueError.h \
 	$(DEP_COMPUTEDVALUE)

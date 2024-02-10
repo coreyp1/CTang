@@ -47,7 +47,7 @@ typedef struct GTA_Ast_Node_Ranged_For {
  * @param location The location of the ranged for loop in the source code.
  * @return The new GTA_Ast_Node_Ranged_For object or NULL on failure.
  */
-GTA_Ast_Node_Ranged_For * gta_ast_node_ranged_for_create(const char * identifier, GTA_Ast_Node * expression, GTA_Ast_Node * block, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Ranged_For * gta_ast_node_ranged_for_create(const char * identifier, GTA_Ast_Node * expression, GTA_Ast_Node * block, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Ranged_For object.
@@ -80,7 +80,7 @@ void gta_ast_node_ranged_for_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use for simplification.
  * @return The simplified GTA_Ast_Node_Ranged_For object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_ranged_for_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_ranged_for_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Ranged_For object.

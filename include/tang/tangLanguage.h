@@ -14,9 +14,9 @@ extern "C" {
 #include "tang/astNode.h"
 
 
-GTA_Ast_Node * gta_tang_parse(const char * source);
-GTA_Ast_Node * gta_tang_primary_parse(const char * source);
-GTA_Ast_Node * gta_tang_simplify(GTA_Ast_Node * node);
+GTA_NO_DISCARD GTA_Ast_Node * gta_tang_parse(const char * source);
+GTA_NO_DISCARD GTA_Ast_Node * gta_tang_primary_parse(const char * source);
+GTA_NO_DISCARD GTA_Ast_Node * gta_tang_simplify(GTA_Ast_Node * node);
 size_t gta_tang_node_count(GTA_Ast_Node * node);
 
 #ifdef __cplusplus

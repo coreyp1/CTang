@@ -37,7 +37,7 @@ typedef struct GTA_Ast_Node_String {
  * @param location The location of the string in the source code.
  * @return The new GTA_Ast_Node_String object or NULL on failure.
  */
-GTA_Ast_Node_String * gta_ast_node_string_create(GTA_Unicode_String * string, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_String * gta_ast_node_string_create(GTA_Unicode_String * string, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_String object.
@@ -70,7 +70,7 @@ void gta_ast_node_string_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use for simplification.
  * @return The simplified GTA_Ast_Node_String object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_string_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_string_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_String object.

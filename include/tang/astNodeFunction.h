@@ -49,7 +49,7 @@ typedef struct GTA_Ast_Node_Function {
  * @param location The location of the function in the source code.
  * @return The new GTA_Ast_Node_Function object or NULL on failure.
  */
-GTA_Ast_Node_Function * gta_ast_node_function_create(const char * identifier, GCU_Vector64 * parameters, GTA_Ast_Node * block, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Function * gta_ast_node_function_create(const char * identifier, GCU_Vector64 * parameters, GTA_Ast_Node * block, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Function object.
@@ -82,7 +82,7 @@ void gta_ast_node_function_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use when simplifying the function.
  * @return The simplified GTA_Ast_Node_Function object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_function_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_function_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Function object.

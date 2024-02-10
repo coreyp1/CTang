@@ -42,7 +42,7 @@ typedef struct GTA_Ast_Node_Use {
  * @param location The location of the use statement in the source code.
  * @return The new GTA_Ast_Node_Use object or NULL on failure.
  */
-GTA_Ast_Node_Use * gta_ast_node_use_create(const char * identifier, GTA_Ast_Node * expression, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Use * gta_ast_node_use_create(const char * identifier, GTA_Ast_Node * expression, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Use object.
@@ -76,7 +76,7 @@ void gta_ast_node_use_print(GTA_Ast_Node * self, const char * indent);
  *   statement.
  * @return The simplified GTA_Ast_Node_Use object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_use_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_use_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Use object.

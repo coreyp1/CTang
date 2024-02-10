@@ -32,7 +32,7 @@ typedef struct GTA_Ast_Node_Continue {
  * @param location The location of the continue in the source code.
  * @return The new GTA_Ast_Node_Continue object or NULL on failure.
  */
-GTA_Ast_Node_Continue * gta_ast_node_continue_create(GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Continue * gta_ast_node_continue_create(GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Continue object.
@@ -65,7 +65,7 @@ void gta_ast_node_continue_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use for simplification.
  * @return The simplified GTA_Ast_Node_Continue object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_continue_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_continue_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Continue object.

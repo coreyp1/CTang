@@ -42,7 +42,7 @@ typedef struct GTA_Ast_Node_Do_While {
  * @param location The location of the do-while loop in the source code.
  * @return The new GTA_Ast_Node_Do_While object or NULL on failure.
  */
-GTA_Ast_Node_Do_While * gta_ast_node_do_while_create(GTA_Ast_Node * condition, GTA_Ast_Node * block, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Do_While * gta_ast_node_do_while_create(GTA_Ast_Node * condition, GTA_Ast_Node * block, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Do_While object.
@@ -75,7 +75,7 @@ void gta_ast_node_do_while_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The map of variables to their values.
  * @return The simplified GTA_Ast_Node_Do_While object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_do_while_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_do_while_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Do_While object.

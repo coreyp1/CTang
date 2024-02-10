@@ -42,7 +42,7 @@ typedef struct GTA_Ast_Node_Index {
  * @param location The location of the index operation in the source code.
  * @return The new GTA_Ast_Node_Index object or NULL on failure.
  */
-GTA_Ast_Node_Index * gta_ast_node_index_create(GTA_Ast_Node * lhs, GTA_Ast_Node * rhs, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Index * gta_ast_node_index_create(GTA_Ast_Node * lhs, GTA_Ast_Node * rhs, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Index object.
@@ -76,7 +76,7 @@ void gta_ast_node_index_print(GTA_Ast_Node * self, const char * indent);
  *   operation.
  * @return The simplified GTA_Ast_Node_Index object or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_index_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_index_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Index object.

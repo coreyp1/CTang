@@ -42,7 +42,7 @@ typedef struct GTA_Ast_Node_Period {
  * @param location The location of the period operation in the source code.
  * @return The new GTA_Ast_Node_Period object or NULL on failure.
  */
-GTA_Ast_Node_Period * gta_ast_node_period_create(GTA_Ast_Node * lhs, const char * rhs, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Period * gta_ast_node_period_create(GTA_Ast_Node * lhs, const char * rhs, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Period object.
@@ -75,7 +75,7 @@ void gta_ast_node_period_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use when simplifying the node.
  * @return The simplified node or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_period_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_period_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Period object.

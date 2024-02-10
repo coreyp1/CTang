@@ -116,7 +116,7 @@ typedef struct GTA_Program {
  * @param code The code to create the program from.
  * @return The new program or null if the program could not be created.
  */
-GTA_Program * gta_program_create(const char * code);
+GTA_NO_DISCARD GTA_Program * gta_program_create(const char * code);
 
 /**
  * Create a new program from the given code in the memory location provided.
@@ -142,7 +142,7 @@ bool gta_program_create_in_place(GTA_Program * program, const char * code);
  * @param flags The flags to create the program with.
  * @return The new program or null if the program could not be created.
  */
-GTA_Program * gta_program_create_with_flags(const char * code, GTA_Program_Flags flags);
+GTA_NO_DISCARD GTA_Program * gta_program_create_with_flags(const char * code, GTA_Program_Flags flags);
 
 /**
  * Create a new program from the given code with the given flags in the memory

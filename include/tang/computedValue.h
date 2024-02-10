@@ -12,6 +12,7 @@ extern "C" {
 #endif // __cplusplus
 
 #include <cutil/vector.h>
+#include "tang/macros.h"
 
 typedef struct GTA_Computed_Value GTA_Computed_Value;
 typedef struct GTA_Computed_Value_VTable GTA_Computed_Value_VTable;
@@ -297,7 +298,7 @@ extern GTA_Computed_Value * gta_computed_value_null;
  *
  * @return A new computed value or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_create();
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_create();
 
 /**
  * Destroys a computed value.
@@ -316,7 +317,7 @@ void gta_computed_value_destroy(GTA_Computed_Value * self);
  * @param self The object to copy.
  * @return A deep copy of the object or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_deep_copy(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_deep_copy(GTA_Computed_Value * self);
 
 /**
  * Gets a string representation of a computed value.
@@ -329,7 +330,7 @@ GTA_Computed_Value * gta_computed_value_deep_copy(GTA_Computed_Value * self);
  * @return A string representation of the object or NULL if the operation
  *   failed.
  */
-char * gta_computed_value_to_string(GTA_Computed_Value * self);
+GTA_NO_DISCARD char * gta_computed_value_to_string(GTA_Computed_Value * self);
 
 /**
  * Assigns a value to an index of a computed value.
@@ -341,7 +342,7 @@ char * gta_computed_value_to_string(GTA_Computed_Value * self);
  * @param other The value to assign.
  * @return The modified object or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other);
 
 /**
  * Adds two values together.
@@ -353,7 +354,7 @@ GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed_Value * self, 
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Subtracts two values.
@@ -365,7 +366,7 @@ GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Compu
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Multiplies two values together.
@@ -377,7 +378,7 @@ GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Divides two values.
@@ -389,7 +390,7 @@ GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Computes the modulo of two values.
@@ -401,7 +402,7 @@ GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Co
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Computes the negative of a value.
@@ -411,7 +412,7 @@ GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Co
  * @param self The value to negate.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self);
 
 /**
  * Computes the logical `and` of two values.
@@ -423,7 +424,7 @@ GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self);
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_logical_and(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Computes the logical `or` of two values.
@@ -435,7 +436,7 @@ GTA_Computed_Value * gta_computed_value_logical_and(GTA_Computed_Value * self, G
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_logical_or(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Computes the logical `not` of a value.
@@ -445,7 +446,7 @@ GTA_Computed_Value * gta_computed_value_logical_or(GTA_Computed_Value * self, GT
  * @param self The value to negate.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_logical_not(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not(GTA_Computed_Value * self);
 
 /**
  * Compares two values to see if the first is less than or equal to the
@@ -458,7 +459,7 @@ GTA_Computed_Value * gta_computed_value_logical_not(GTA_Computed_Value * self);
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Compares two values to see if they are equal.
@@ -470,7 +471,7 @@ GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Gets a value from a computed value using a period identifier.
@@ -481,7 +482,7 @@ GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Com
  * @param identifier The identifier to get.
  * @return The value of the identifier or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value * self, const char * identifier);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value * self, const char * identifier);
 
 /**
  * Gets a value from a computed value using an index.
@@ -492,7 +493,7 @@ GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value * self, const 
  * @param index The index to get.
  * @return The value of the index or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_index(GTA_Computed_Value * self, GTA_Computed_Value * index);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_index(GTA_Computed_Value * self, GTA_Computed_Value * index);
 
 /**
  * Gets a slice of a computed value.
@@ -505,7 +506,7 @@ GTA_Computed_Value * gta_computed_value_index(GTA_Computed_Value * self, GTA_Com
  * @param step The step of the slice.
  * @return The slice of the object or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step);
 
 /**
  * Gets an iterator from a computed value.
@@ -515,7 +516,7 @@ GTA_Computed_Value * gta_computed_value_slice(GTA_Computed_Value * self, GTA_Com
  * @param self The object to get the value from.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_iterator_get(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_get(GTA_Computed_Value * self);
 
 /**
  * Advance an iterator to the next value.
@@ -525,7 +526,7 @@ GTA_Computed_Value * gta_computed_value_iterator_get(GTA_Computed_Value * self);
  * @param self The object to get the value from.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_iterator_next(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next(GTA_Computed_Value * self);
 
 /**
  * Casts a computed value to a different type.
@@ -537,7 +538,7 @@ GTA_Computed_Value * gta_computed_value_iterator_next(GTA_Computed_Value * self)
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool reverse);
 
 /**
  * Calls a computed value as a function.
@@ -548,7 +549,7 @@ GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Comp
  * @param arguments The arguments to call with.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_call(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments);
 
 /**
  * Destroys a computed value of the NULL class.
@@ -567,7 +568,7 @@ void gta_computed_value_null_destroy(GTA_Computed_Value * self);
  * @param self The object to copy.
  * @return A deep copy of the object or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_null_deep_copy(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_deep_copy(GTA_Computed_Value * self);
 
 /**
  * Gets a string representation of a computed value of the NULL class.
@@ -580,7 +581,7 @@ GTA_Computed_Value * gta_computed_value_null_deep_copy(GTA_Computed_Value * self
  * @return A string representation of the object or NULL if the operation
  *   failed.
  */
-char * gta_computed_value_null_to_string(GTA_Computed_Value * self);
+GTA_NO_DISCARD char * gta_computed_value_null_to_string(GTA_Computed_Value * self);
 
 /**
  * Generic "not implemented" version of the `assign_index` method for the
@@ -591,7 +592,7 @@ char * gta_computed_value_null_to_string(GTA_Computed_Value * self);
  * @param other The value to assign.
  * @return The modified object or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_assign_index_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other);
 
 /**
  * Generic "not implemented" version of the `add` method for the virtual table.
@@ -601,7 +602,7 @@ GTA_Computed_Value * gta_computed_value_assign_index_not_implemented(GTA_Compute
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Generic "not implemented" version of the `subtract` method for the virtual
@@ -612,7 +613,7 @@ GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_Computed_Value *
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_subtract_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Generic "not implemented" version of the `multiply` method for the virtual
@@ -623,7 +624,7 @@ GTA_Computed_Value * gta_computed_value_subtract_not_implemented(GTA_Computed_Va
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_multiply_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Generic "not implemented" version of the `divide` method for the virtual
@@ -634,7 +635,7 @@ GTA_Computed_Value * gta_computed_value_multiply_not_implemented(GTA_Computed_Va
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_divide_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Generic "not implemented" version of the `modulo` method for the virtual
@@ -645,7 +646,7 @@ GTA_Computed_Value * gta_computed_value_divide_not_implemented(GTA_Computed_Valu
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Generic "not implemented" version of the `negative` method for the virtual
@@ -654,7 +655,7 @@ GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GTA_Computed_Valu
  * @param self The value to negate.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_negative_not_implemented(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_implemented(GTA_Computed_Value * self);
 
 /**
  * Generic "not implemented" version of the `logical_and` method for the virtual
@@ -665,7 +666,7 @@ GTA_Computed_Value * gta_computed_value_negative_not_implemented(GTA_Computed_Va
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_logical_and_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Generic "not implemented" version of the `logical_or` method for the virtual
@@ -676,7 +677,7 @@ GTA_Computed_Value * gta_computed_value_logical_and_not_implemented(GTA_Computed
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_logical_or_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Generic "not implemented" version of the `logical_not` method for the virtual
@@ -685,7 +686,7 @@ GTA_Computed_Value * gta_computed_value_logical_or_not_implemented(GTA_Computed_
  * @param self The value to negate.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_logical_not_not_implemented(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not_not_implemented(GTA_Computed_Value * self);
 
 /**
  * Generic "not implemented" version of the `less_than` method for the virtual
@@ -696,7 +697,7 @@ GTA_Computed_Value * gta_computed_value_logical_not_not_implemented(GTA_Computed
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_less_than_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Generic "not implemented" version of the `equal` method for the virtual
@@ -707,7 +708,7 @@ GTA_Computed_Value * gta_computed_value_less_than_not_implemented(GTA_Computed_V
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Generic "not implemented" version of the `period` method for the virtual
@@ -717,7 +718,7 @@ GTA_Computed_Value * gta_computed_value_equal_not_implemented(GTA_Computed_Value
  * @param identifier The identifier to get.
  * @return The value of the identifier or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_period_not_implemented(GTA_Computed_Value * self, const char * identifier);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period_not_implemented(GTA_Computed_Value * self, const char * identifier);
 
 /**
  * Generic "not implemented" version of the `index` method for the virtual
@@ -727,7 +728,7 @@ GTA_Computed_Value * gta_computed_value_period_not_implemented(GTA_Computed_Valu
  * @param index The index to get.
  * @return The value of the index or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_index_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * index);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_index_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * index);
 
 /**
  * Generic "not implemented" version of the `slice` method for the virtual
@@ -739,7 +740,7 @@ GTA_Computed_Value * gta_computed_value_index_not_implemented(GTA_Computed_Value
  * @param step The step of the slice.
  * @return The slice of the object or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_slice_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_slice_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step);
 
 /**
  * Generic "not implemented" version of the `iterator_get` method for the
@@ -748,7 +749,7 @@ GTA_Computed_Value * gta_computed_value_slice_not_implemented(GTA_Computed_Value
  * @param self The object to get the value from.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_iterator_get_not_implemented(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_get_not_implemented(GTA_Computed_Value * self);
 
 /**
  * Generic "not implemented" version of the `iterator_next` method for the
@@ -757,7 +758,7 @@ GTA_Computed_Value * gta_computed_value_iterator_get_not_implemented(GTA_Compute
  * @param self The object to get the value from.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_iterator_next_not_implemented(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next_not_implemented(GTA_Computed_Value * self);
 
 /**
  * Generic "not implemented" version of the `cast` method for the virtual
@@ -768,7 +769,7 @@ GTA_Computed_Value * gta_computed_value_iterator_next_not_implemented(GTA_Comput
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool reverse);
 
 /**
  * Generic "not implemented" version of the `call` method for the virtual
@@ -778,7 +779,7 @@ GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_Computed_Value 
  * @param arguments The arguments to call with.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_call_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments);
 
 #ifdef __cplusplus
 }

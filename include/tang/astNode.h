@@ -152,7 +152,7 @@ typedef struct GTA_Ast_Node {
  * @param location The location of the node in the source code.
  * @return The new AST node or NULL on failure.
  */
-GTA_Ast_Node * gta_ast_node_create(GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_create(GTA_PARSER_LTYPE location);
 
 /**
  * Destroy the AST node and all of its children.
@@ -216,7 +216,7 @@ void gta_ast_node_print(GTA_Ast_Node * self, const char * indent);
  *   The calling function should destroy the original node if it is no longer
  *   needed.
  */
-GTA_Ast_Node * gta_ast_node_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Generalized function to walk the AST.  The callback function is called for
@@ -269,7 +269,7 @@ void gta_ast_node_null_print(GTA_Ast_Node * self, const char * indent);
  *   The calling function should destroy the original node if it is no longer
  *   needed.
  */
-GTA_Ast_Node * gta_ast_node_null_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_null_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * The walk function for the GTA_Ast_Node class when the node is a null.
