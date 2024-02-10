@@ -111,6 +111,7 @@ extern "C" {
 #define GTA_AST_IS_INTEGER(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_integer_vtable)
 #define GTA_AST_IS_LIBRARY(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_library_vtable)
 #define GTA_AST_IS_MAP(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_map_vtable)
+#define GTA_AST_IS_PARSE_ERROR(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_parse_error_vtable)
 #define GTA_AST_IS_PERIOD(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_period_vtable)
 #define GTA_AST_IS_PRINT(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_print_vtable)
 #define GTA_AST_IS_RANGED_FOR(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_ranged_for_vtable)

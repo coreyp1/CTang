@@ -2,6 +2,7 @@ CXX := g++
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g
 CC := cc
 CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O0 -g `pkg-config --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
+# -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
 LDFLAGS := -L /usr/lib -lstdc++ -lm `pkg-config --libs --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
 BUILD := ./build
 OBJ_DIR := $(BUILD)/objects
@@ -43,6 +44,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/astNodeLibrary.o \
 	$(OBJ_DIR)/astNodeMap.o \
 	$(OBJ_DIR)/astNodePeriod.o \
+	$(OBJ_DIR)/astNodeParseError.o \
 	$(OBJ_DIR)/astNodePrint.o \
 	$(OBJ_DIR)/astNodeRangedFor.o \
 	$(OBJ_DIR)/astNodeReturn.o \
@@ -210,6 +212,9 @@ DEP_ASTNODELIBRARY = \
 DEP_ASTNODEMAP = \
 	include/tang/astNodeMap.h \
 	$(DEP_ASTNODE)
+DEP_ASTNODEPARSEERROR = \
+	include/tang/astNodeParseError.h \
+	$(DEP_ASTNODE)
 DEP_ASTNODEPERIOD = \
 	include/tang/astNodePeriod.h \
 	$(DEP_ASTNODE) \
@@ -280,6 +285,7 @@ DEP_ASTNODE_ALL = \
 	$(DEP_ASTNODEINTEGER) \
 	$(DEP_ASTNODELIBRARY) \
 	$(DEP_ASTNODEMAP) \
+	$(DEP_ASTNODEPARSEERROR) \
 	$(DEP_ASTNODEPERIOD) \
 	$(DEP_ASTNODEPRINT) \
 	$(DEP_ASTNODERANGEDFOR) \
@@ -605,6 +611,10 @@ $(OBJ_DIR)/astNodeMap.o: \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_OPCODE)
 
+$(OBJ_DIR)/astNodeParseError.o: \
+	src/astNodeParseError.c \
+	$(DEP_ASTNODEPARSEERROR)
+
 $(OBJ_DIR)/astNodePeriod.o: \
 	src/astNodePeriod.c \
 	$(DEP_ASTNODEPERIOD) \
@@ -672,7 +682,8 @@ $(OBJ_DIR)/tangLanguage.o: \
 	src/tangLanguage.c \
 	$(DEP_TANGLANGUAGE) \
 	$(DEP_MACROS) \
-	$(DEP_ASTNODEIDENTIFIER)
+	$(DEP_ASTNODEIDENTIFIER) \
+	$(DEP_ASTNODEPARSEERROR)
 
 $(OBJ_DIR)/bytecode.o: \
 	src/bytecode.c \
@@ -699,6 +710,7 @@ $(OBJ_DIR)/program.o: \
 	$(DEP_CONTEXT) \
 	$(DEP_TANGLANGUAGE) \
 	$(DEP_ASTNODEBLOCK) \
+	$(DEP_ASTNODEPARSEERROR) \
 	$(DEP_VIRTUALMACHINE)
 
 $(OBJ_DIR)/virtualMachine.o: \

@@ -3,6 +3,7 @@
 #include "tang/program.h"
 #include "tang/tangLanguage.h"
 #include "tang/astNodeBlock.h"
+#include "tang/astNodeParseError.h"
 #include "tang/virtualMachine.h"
 
 GTA_Program * gta_program_create(const char * code) {
@@ -54,6 +55,12 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * 
       .last_line = 0,
       .last_column = 0,
     });
+  }
+  else if (GTA_AST_IS_PARSE_ERROR(program->ast)) {
+    // If the AST is a parse error, then the program is not valid.
+    gta_ast_node_destroy(program->ast);
+    program->ast = 0;
+    return false;
   }
   if (!program->ast) {
     // If there is no AST, then there is no program.

@@ -10,14 +10,21 @@
 
 using namespace std;
 
-TEST(Default, Empty) {
+TEST(EdgeCase, InvalidSyntax) {
+  gcu_memory_reset_counts();
+  GTA_Program * program = gta_program_create("invalid syntax :(");
+  ASSERT_FALSE(program);
+  ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+}
+
+TEST(EdgeCase, Empty) {
   gcu_memory_reset_counts();
   GTA_Program * program = gta_program_create("");
-  ASSERT_NE(program, nullptr);
+  ASSERT_TRUE(program);
   //gta_program_bytecode_print(program);
   GTA_Context context;
   ASSERT_TRUE(gta_program_execute(program, &context));
-  ASSERT_NE(context.result, nullptr);
+  ASSERT_TRUE(context.result);
   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context.result));
   gta_program_destroy(program);
   gta_context_destroy_in_place(&context);
@@ -27,11 +34,11 @@ TEST(Default, Empty) {
 TEST(SingleValue, Null) {
   gcu_memory_reset_counts();
   GTA_Program * program = gta_program_create("null");
-  ASSERT_NE(program, nullptr);
+  ASSERT_TRUE(program);
   //gta_program_bytecode_print(program);
   GTA_Context context;
   ASSERT_TRUE(gta_program_execute(program, &context));
-  ASSERT_NE(context.result, nullptr);
+  ASSERT_TRUE(context.result);
   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context.result));
   gta_program_destroy(program);
   gta_context_destroy_in_place(&context);

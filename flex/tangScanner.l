@@ -68,18 +68,18 @@
 // yyleng is the length of the currently matched token.
 // yytext is a C-string containing the matched text.
 // https://www.cs.virginia.edu/~cr4bd/flex-manual/User-Values.html#User-Values
-#define YY_USER_ACTION {                   \
+#define YY_USER_ACTION {                     \
   yylloc->first_line = yylloc->last_line;    \
   yylloc->first_column = yylloc->last_column;\
-  for (int i = 0; i < yyleng; ++i) {       \
-    if (yytext[i] == '\n') {               \
-      yylloc->last_column = 0;     \
-      ++yylloc->last_line;         \
-    }                                      \
-    else {                                 \
-      ++yylloc->last_column;       \
-    }                                      \
-  }                                        \
+  for (int i = 0; i < yyleng; ++i) {         \
+    if (yytext[i] == '\n') {                 \
+      yylloc->last_column = 0;               \
+      ++yylloc->last_line;                   \
+    }                                        \
+    else {                                   \
+      ++yylloc->last_column;                 \
+    }                                        \
+  }                                          \
 }
 
 #define CLEANUP_BUFFER        \

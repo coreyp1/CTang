@@ -24,6 +24,7 @@
 #include "tang/astNodeInteger.h"
 #include "tang/astNodeLibrary.h"
 #include "tang/astNodeMap.h"
+#include "tang/astNodeParseError.h"
 #include "tang/astNodePeriod.h"
 #include "tang/astNodePrint.h"
 #include "tang/astNodeRangedFor.h"

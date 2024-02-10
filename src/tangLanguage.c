@@ -4,6 +4,7 @@
 #include "flexTangScanner.h"
 #include "tang/macros.h"
 #include "tang/astNodeIdentifier.h"
+#include "tang/astNodeParseError.h"
 
 GTA_Ast_Node * gta_tang_parse(const char * source) {
   GTA_Ast_Node * primary = gta_tang_primary_parse(source);

@@ -155,6 +155,12 @@
 %right UMINUS AS "!"
 %left "(" ")" "[" "]" "."
 
+// Destructors allow us to clean up memory when an error is encountered.
+// https://www.gnu.org/software/bison/manual/html_node/Destructor-Decl.html
+%destructor {
+  gcu_free((void *)$$.str);
+} IDENTIFIER STRING TEMPLATESTRING QUICKPRINTBEGINANDSTRING
+
 // Code sections.
 // https://www.gnu.org/software/bison/manual/bison.html#g_t_0025code-Summary
 // `requires` will be included in the .h file.
@@ -174,7 +180,7 @@ typedef void* yyscan_t;
 
 #define YY_DECL int gta_scanner_get_next_token(YYSTYPE * yylval, YYLTYPE * yylloc, yyscan_t yyscanner)
 
-typedef bool GTA_Parser_Error;
+typedef const char * GTA_Parser_Error;
 
 typedef struct GTA_Parser_Data {
   // This hash holds all the ast nodes that have been created but not assigned
@@ -219,11 +225,10 @@ void gta_parser_data_destroy(GTA_Parser_Data * data);
 #include "tang/astNodeAll.h"
 #include "tang/macros.h"
 
-static GTA_Parser_Error ErrorOutOfMemory = true;
+static GTA_Parser_Error ErrorOutOfMemory = "Out of memory/Memory allocation error";
 // static GTA_Parser_Error ErrorOctalOutOfBounds = true;
 // static GTA_Parser_Error ErrorStringError = true;
 // static GTA_Parser_Error ErrorUnexpectedScriptEnd = true;
-static GTA_Parser_Error ErrorUnknown = true;
 
 void GTA_Parser_error(GTA_PARSER_LTYPE * yylloc, yyscan_t * scanner, GTA_Ast_Node * * ast, GTA_Parser_Data * * data, GTA_Parser_Error * parseError, const char * yymsg);
 
@@ -1850,8 +1855,10 @@ expression
 %%
 
 // https://www.gnu.org/software/bison/manual/bison.html#YYERROR
-void GTA_Parser_error(GTA_MAYBE_UNUSED(GTA_PARSER_LTYPE * yylloc), GTA_MAYBE_UNUSED(yyscan_t * scanner), GTA_MAYBE_UNUSED(GTA_Ast_Node * * ast), GTA_MAYBE_UNUSED(GTA_Parser_Data * * data), GTA_Parser_Error * parseError, GTA_MAYBE_UNUSED(const char * yymsg)) {
-  if (!parseError) {
-    parseError = &ErrorUnknown;
+void GTA_Parser_error(GTA_PARSER_LTYPE * yylloc, GTA_MAYBE_UNUSED(yyscan_t * scanner), GTA_Ast_Node * * ast, GTA_MAYBE_UNUSED(GTA_Parser_Data * * data), GTA_Parser_Error * parseError, const char * yymsg) {
+  *parseError = yymsg;
+  if (*ast) {
+    gta_ast_node_destroy(*ast);
+    *ast = (GTA_Ast_Node *)gta_ast_node_parse_error_create(yymsg, *yylloc);
   }
 }
