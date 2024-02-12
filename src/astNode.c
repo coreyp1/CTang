@@ -1,11 +1,14 @@
 
 #include <stdio.h>
+#include <string.h>
 #include <cutil/memory.h>
+#include <cutil/type.h>
 #include "tang/astNode.h"
 #include "tang/macros.h"
 #include "tang/bytecode.h"
 #include "tang/bytecodeCompilerContext.h"
 #include "tang/program.h"
+#include "tang/computedValue.h"
 
 GTA_Ast_Node_VTable gta_ast_node_null_vtable = {
   .name = "Null",
@@ -16,7 +19,7 @@ GTA_Ast_Node_VTable gta_ast_node_null_vtable = {
   .walk = gta_ast_node_null_walk,
 };
 
-GTA_Ast_Node *gta_ast_node_create(GTA_PARSER_LTYPE location) {
+GTA_Ast_Node * GTA_CALL gta_ast_node_create(GTA_PARSER_LTYPE location) {
   GTA_Ast_Node * self = gcu_malloc(sizeof(GTA_Ast_Node));
   *self = (GTA_Ast_Node) {
     .vtable = &gta_ast_node_null_vtable,
@@ -26,10 +29,16 @@ GTA_Ast_Node *gta_ast_node_create(GTA_PARSER_LTYPE location) {
   return self;
 }
 
-void gta_ast_node_destroy(GTA_Ast_Node * self) {
+void GTA_CALL gta_ast_node_destroy(GTA_Ast_Node * self) {
   self->vtable->destroy
     ? self->vtable->destroy(self)
     : gta_ast_node_null_destroy(self);
+}
+
+bool gta_ast_node_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  return self->vtable->compile_to_binary
+    ? self->vtable->compile_to_binary(self, context)
+    : gta_ast_node_null_compile_to_binary(self, context);
 }
 
 bool gta_ast_node_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
@@ -56,11 +65,39 @@ void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback,
     : gta_ast_node_null_walk(self, callback, data, return_value);
 }
 
+typedef union Function_Converter {
+  void (*f)(void);
+  uint64_t i;
+} Function_Converter;
+
+bool gta_ast_node_null_compile_to_binary(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
+  GCU_Vector8 * v = context->binary_vector;
+#if defined(GTA_X86_64)
+  // 64-bit x86
+  // Assembly to call gta_computed_value_create_null():
+  //   mov rax, gta_computed_value_create_null
+  //   call rax
+  bool success = GTA_BINARY_WRITE1(v, 0x48)
+    && GTA_BINARY_WRITE1(v, 0xB8)
+    && GTA_BINARY_WRITE4(v, 0xDE, 0xAD, 0xBE, 0xEF)
+    && GTA_BINARY_WRITE4(v, 0xDE, 0xAD, 0xBE, 0xEF)
+    && GTA_BINARY_WRITE1(v, 0xFF)
+    && GTA_BINARY_WRITE1(v, 0xD0);
+  if (!success) {
+    return false;
+  }
+  Function_Converter f = {.f = (void (*)(void))gta_computed_value_create};
+  memcpy(&v->data[v->count - 10], &f.i, 8);
+  return true;
+#endif
+  return false;
+}
+
 bool gta_ast_node_null_compile_to_bytecode(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_Bytecode_Compiler_Context * context) {
   return gcu_vector64_append(context->program->bytecode, GCU_TYPE64_UI64(GTA_BYTECODE_NULL));
 }
 
-void gta_ast_node_null_destroy(GTA_Ast_Node * self) {
+void GTA_CALL gta_ast_node_null_destroy(GTA_Ast_Node * self) {
   gcu_free(self);
 }
 

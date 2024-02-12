@@ -18,6 +18,31 @@ extern "C" {
 #endif //__cplusplus
 
 /**
+ * Declaring the calling convention (for consistency).
+ *
+ * ARM and ARM64 use the AAPCS calling convention.  The ARM EABI is a
+ * standard for ARM architecture processors that defines a common
+ * application binary interface for simple, high-performance, and
+ * efficient embedded systems with a focus on reducing memory usage.
+ *
+ * The x86 and x86-64 use the cdecl calling convention.  The cdecl
+ * calling convention is the default calling convention for x86 and
+ * x86-64 C and C++ programs.  It is used by many C and C++ compilers
+ * for the x86 and x86-64 architectures.
+ *
+ * The Windows API uses the stdcall calling convention.  We want to use
+ * the cdecl calling convention for the library, so we need to declare
+ * the calling convention for the functions.
+ */
+#if defined(ARM) || defined(ARM64)
+#define GTA_CALL __attribute__((pcs("aapcs")))
+#elif defined(_WIN32) || defined(_WIN64)
+#define GTA_CALL __cdecl
+#else
+#define GTA_CALL
+#endif
+
+/**
  * A cross-compiler macro for declaring a function as no discard.
  */
 #if defined(__cplusplus) && __cplusplus >= 201703L

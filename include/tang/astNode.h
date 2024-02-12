@@ -11,6 +11,7 @@ extern "C" {
 
 typedef struct GTA_Ast_Node GTA_Ast_Node;
 typedef struct GTA_Bytecode_Compiler_Context GTA_Bytecode_Compiler_Context;
+typedef struct GTA_Binary_Compiler_Context GTA_Binary_Compiler_Context;
 
 #include <stdbool.h>
 #include <cutil/float.h>
@@ -20,6 +21,7 @@ typedef struct GTA_Bytecode_Compiler_Context GTA_Bytecode_Compiler_Context;
 #include "tangParser.h"
 #include "tang/unicodeString.h"
 #include "tang/bytecodeCompilerContext.h"
+#include "tang/binaryCompilerContext.h"
 
 /**
  * Callback function signature required by the gta_ast_node_walk() function.
@@ -74,10 +76,19 @@ typedef struct {
    */
   const char * name;
   /**
+   * Compiles the node to binary.
+   *
+   * @param self The node to compile.
+   * @param context Contextual information for the compile process.
+   * @return True on success, false on failure.
+   */
+  bool (*compile_to_binary)(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+  /**
    * Compiles the node to bytecode.
    *
    * @param self The node to compile.
    * @param compiler The compiler to compile the node to.
+   * @return True on success, false on failure.
    */
   bool (*compile_to_bytecode)(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
   /**
@@ -85,7 +96,7 @@ typedef struct {
    *
    * @param self The node to destroy.
    */
-  void (*destroy)(GTA_Ast_Node * self);
+  void (GTA_CALL *destroy)(GTA_Ast_Node * self);
   /**
    * Prints the node and all of its children to stdout.
    *
@@ -152,7 +163,7 @@ typedef struct GTA_Ast_Node {
  * @param location The location of the node in the source code.
  * @return The new AST node or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_create(GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node * GTA_CALL gta_ast_node_create(GTA_PARSER_LTYPE location);
 
 /**
  * Destroy the AST node and all of its children.
@@ -163,7 +174,20 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_create(GTA_PARSER_LTYPE location);
  *
  * @param self The node to destroy.
  */
-void gta_ast_node_destroy(GTA_Ast_Node * self);
+void GTA_CALL gta_ast_node_destroy(GTA_Ast_Node * self);
+
+/**
+ * Compile the AST node to binary.
+ *
+ * The vtable's compile_to_binary function is called to compile the node.  This
+ * function serves as a general dispatch function, and should be used in
+ * preference to calling the vtable's compile_to_binary function directly.
+ *
+ * @param self The node to compile.
+ * @param context Contextual information for the compile process.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
 
 /**
  * Compile the AST node to bytecode.
@@ -236,6 +260,15 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_simplify(GTA_Ast_Node * self, GTA_Ast
 void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 /**
+ * Compile a NULL node to binary.
+ *
+ * @param self The node to compile.
+ * @param context Contextual information for the compile process.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_null_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+
+/**
  * Compile a NULL node to bytecode.
  *
  * @param self The node to compile.
@@ -249,7 +282,7 @@ bool gta_ast_node_null_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Com
  *
  * @param self The node to destroy.
  */
-void gta_ast_node_null_destroy(GTA_Ast_Node * self);
+void GTA_CALL gta_ast_node_null_destroy(GTA_Ast_Node * self);
 
 /**
  * The print function for the GTA_Ast_Node class when the node is a null.

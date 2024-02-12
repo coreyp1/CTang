@@ -1,11 +1,26 @@
 
-#include <stdlib.h>
+// Include the correct header file for the platform.
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#endif
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <errno.h>
+#include <string.h>
+#include <stdio.h>
 #include <cutil/memory.h>
 #include "tang/program.h"
 #include "tang/tangLanguage.h"
 #include "tang/astNodeBlock.h"
 #include "tang/astNodeParseError.h"
 #include "tang/virtualMachine.h"
+#include "tang/binaryCompilerContext.h"
 
 static void gta_program_compile_bytecode(GTA_Program * program) {
   GCU_Vector64 * bytecode = gcu_vector64_create(0);
@@ -50,7 +65,102 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
 }
 
 static void gta_program_compile_binary(GTA_Program * program) {
-  (void) program;
+  GTA_Binary_Compiler_Context * context = gta_binary_compiler_context_create(program);
+  if (!context) {
+    return;
+  }
+
+  bool no_memory_error = true;
+#ifdef GTA_X86_64
+  // 64-bit x86
+  // https://defuse.ca/online-x86-assembler.htm
+  // Set up the beginning of the function:
+  //   push rbp
+  //   mov rbp, rsp
+  no_memory_error
+    &= GTA_BINARY_WRITE1(context->binary_vector, 0x55)
+    && GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xE5);
+
+#elif defined(GTA_X86)
+  // 32-bit x86
+  // Set up the beginning of the function:
+  //   push ebp
+  //   mov ebp, esp
+  no_memory_error
+    &= GTA_BINARY_WRITE1(context->binary_vector, 0x55)
+    && GTA_BINARY_WRITE2(context->binary_vector, 0x89, 0xE5);
+
+#else
+  // Not supported.
+  gta_binary_compiler_context_destroy(context);
+  return;
+#endif
+
+  // Actually compile the AST to binary.
+  no_memory_error &= gta_ast_node_compile_to_binary(program->ast, context);
+
+#ifdef GTA_X86_64
+  // 64-bit x86
+  // Set up the end of the function:
+  //   add rsp, 8
+  //   ret
+  no_memory_error
+    &= GTA_BINARY_WRITE4(context->binary_vector, 0x48, 0x83, 0xC4, 0x08)
+    && GTA_BINARY_WRITE1(context->binary_vector, 0xC3);
+#elif defined(GTA_X86)
+  // 32-bit x86
+  // Set up the end of the function:
+  //   pop ebp
+  //   ret
+  no_memory_error
+    && GTA_BINARY_WRITE1(context->binary_vector, 0x5D)
+    && GTA_BINARY_WRITE1(context->binary_vector, 0xC3);
+#endif
+
+  if (!no_memory_error) {
+    gta_binary_compiler_context_destroy(context);
+    return;
+  }
+
+  // Copy the binary to executable memory.
+  size_t length = gcu_vector8_count(context->binary_vector);
+#ifdef _WIN32
+  program->binary = VirtualAlloc(0, length, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+  if (program->binary) {
+    memcpy(program->binary, context->binary_vector->data, length);
+  }
+#else
+#if !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
+  // neither MAP_ANONYMOUS nor MAP_ANON are defined
+  // so we must use a file descriptor
+  int fd = open("/dev/zero", O_RDWR);
+  program->binary = mmap(0, length, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+  close(fd);
+#else
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+  program->binary = mmap(0, length, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#endif // !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
+  if (program->binary != MAP_FAILED) {
+    memcpy(program->binary, context->binary_vector->data, length);
+    if (mprotect(program->binary, length, PROT_EXEC | PROT_READ) != 0) {
+      munmap(program->binary, length);
+      program->binary = 0;
+    }
+    else {
+      // dump the binary to stderr
+      fprintf(stderr, "Binary: %p\n", program->binary);
+      fwrite(context->binary_vector->data, 1, length, stderr);
+      fprintf(stderr, "\n");
+    }
+  }
+#endif
+  // Correct JUMP instructions to point to the correct location in the binary.
+  // TODO: implement this.
+
+
+  gta_binary_compiler_context_destroy(context);
 }
 
 GTA_Program * gta_program_create(const char * code) {
@@ -147,10 +257,15 @@ void gta_program_destroy_in_place(GTA_Program * self) {
     gta_ast_node_destroy(self->ast);
   }
   if (self->bytecode) {
-    gcu_free(self->bytecode);
+    gcu_vector64_destroy(self->bytecode);
   }
   if (self->binary) {
-    gcu_free(self->binary);
+#ifdef _WIN32
+    VirtualFree(self->binary, 0, MEM_RELEASE);
+#else
+    size_t length = gcu_vector8_count(self->binary);
+    munmap(self->binary, length);
+#endif // _WIN32
   }
 }
 
@@ -171,7 +286,16 @@ bool gta_program_execute_bytecode(GTA_MAYBE_UNUSED(GTA_Program * program), GTA_M
   return gta_virtual_machine_execute_bytecode(context, program);
 }
 
+typedef union Function_Converter {
+  GTA_Computed_Value * GTA_CALL (*f)(void);
+  void * b;
+} Function_Converter;
+
 bool gta_program_execute_binary(GTA_MAYBE_UNUSED(GTA_Program * program), GTA_MAYBE_UNUSED(GTA_Context * context)) {
+  if (program->binary) {
+    context->result = (Function_Converter){.b = program->binary}.f();
+    return true;
+  }
   return false;
 }
 

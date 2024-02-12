@@ -54,6 +54,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/astNodeUnary.o \
 	$(OBJ_DIR)/astNodeUse.o \
 	$(OBJ_DIR)/astNodeWhile.o \
+	$(OBJ_DIR)/binaryCompilerContext.o \
 	$(OBJ_DIR)/bytecode.o \
 	$(OBJ_DIR)/bytecodeCompilerContext.o \
 	$(OBJ_DIR)/computedValue.o \
@@ -121,6 +122,9 @@ DEP_BYTECODE = \
 	include/tang/bytecode.h
 DEP_BYTECODECOMPILERCONTEXT = \
 	include/tang/bytecodeCompilerContext.h \
+	$(DEP_MACROS)
+DEP_BINARYCOMPILERCONTEXT = \
+	include/tang/binaryCompilerContext.h \
 	$(DEP_MACROS)
 
 DEP_ASTNODE = \
@@ -687,6 +691,10 @@ $(OBJ_DIR)/tangLanguage.o: \
 	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_ASTNODEPARSEERROR)
 
+$(OBJ_DIR)/binaryCompilerContext.o : \
+	src/binaryCompilerContext.c \
+	$(DEP_BINARYCOMPILERCONTEXT) \
+
 $(OBJ_DIR)/bytecode.o: \
 	src/bytecode.c \
 	$(DEP_BYTECODE)
@@ -1109,11 +1117,17 @@ test: \
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1 --gtest_fail_fast
 	@echo "\033[0;32m"
-	@echo "########################################"
-	@echo "### Running Language Execution tests ###"
-	@echo "########################################"
+	@echo "###################################################"
+	@echo "### Running Language Execution tests (Bytecode) ###"
+	@echo "###################################################"
 	@echo "\033[0m"
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageExecute --gtest_brief=1
+	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecute --gtest_brief=1
+	@echo "\033[0;32m"
+	@echo "###################################################"
+	@echo "### Running Language Execution tests (Binary)   ###"
+	@echo "###################################################"
+	@echo "\033[0m"
+	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecute --gtest_brief=1
 #	@echo "\033[0;32m"
 #	@echo "############################"
 #	@echo "### Running normal tests ###"
