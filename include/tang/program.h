@@ -90,7 +90,7 @@ typedef struct GTA_Program {
   /**
    * The bytecode for the program, if it was generated.
    */
-  GTA_Bytecode_Vector * bytecode;
+  GTA_VectorX * bytecode;
   /**
    * The binary for the program, if it was generated.
    */

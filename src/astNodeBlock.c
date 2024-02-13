@@ -13,7 +13,7 @@ GTA_Ast_Node_VTable gta_ast_node_block_vtable = {
   .walk = gta_ast_node_block_walk,
 };
 
-GTA_Ast_Node_Block * gta_ast_node_block_create(GCU_Vector64 * statements, GTA_PARSER_LTYPE location) {
+GTA_Ast_Node_Block * gta_ast_node_block_create(GTA_VectorX * statements, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Block * self = gcu_malloc(sizeof(GTA_Ast_Node_Block));
   if (!self) {
     return 0;
@@ -27,7 +27,7 @@ GTA_Ast_Node_Block * gta_ast_node_block_create(GCU_Vector64 * statements, GTA_PA
 
 void gta_ast_node_block_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Block * block = (GTA_Ast_Node_Block *) self;
-  gcu_vector64_destroy(block->statements);
+  GTA_VECTORX_DESTROY(block->statements);
   gcu_free(self);
 }
 
@@ -41,8 +41,8 @@ void gta_ast_node_block_print(GTA_Ast_Node * self, const char * indent) {
   memcpy(new_indent + indent_len, "  ", 3);
   printf("%s%s:\n", indent, self->vtable->name);
   GTA_Ast_Node_Block * block = (GTA_Ast_Node_Block *) self;
-  for (size_t i = 0; i < gcu_vector64_count(block->statements); ++i) {
-    GTA_Ast_Node * statement = (GTA_Ast_Node *)block->statements->data[i].p;
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(block->statements); ++i) {
+    GTA_Ast_Node * statement = (GTA_Ast_Node *)GTA_TYPEX_P(block->statements->data[i]);
     gta_ast_node_print(statement, new_indent);
   }
   gcu_free(new_indent);
@@ -50,11 +50,11 @@ void gta_ast_node_block_print(GTA_Ast_Node * self, const char * indent) {
 
 GTA_Ast_Node * gta_ast_node_block_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Block * block = (GTA_Ast_Node_Block *) self;
-  for (size_t i = 0; i < gcu_vector64_count(block->statements); ++i) {
-    GTA_Ast_Node * simplified_statement = gta_ast_node_simplify((GTA_Ast_Node *)block->statements->data[i].p, variable_map);
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(block->statements); ++i) {
+    GTA_Ast_Node * simplified_statement = gta_ast_node_simplify((GTA_Ast_Node *)GTA_TYPEX_P(block->statements->data[i]), variable_map);
     if (simplified_statement) {
-      gta_ast_node_destroy((GTA_Ast_Node *)block->statements->data[i].p);
-      block->statements->data[i].p = simplified_statement;
+      gta_ast_node_destroy((GTA_Ast_Node *)GTA_TYPEX_P(block->statements->data[i]));
+      GTA_TYPEX_P(block->statements->data[i]) = simplified_statement;
     }
   }
   return 0;
@@ -63,8 +63,8 @@ GTA_Ast_Node * gta_ast_node_block_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
 void gta_ast_node_block_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
   GTA_Ast_Node_Block * block = (GTA_Ast_Node_Block *) self;
-  for (size_t i = 0; i < gcu_vector64_count(block->statements); ++i) {
-    GTA_Ast_Node * statement = (GTA_Ast_Node *)block->statements->data[i].p;
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(block->statements); ++i) {
+    GTA_Ast_Node * statement = (GTA_Ast_Node *)GTA_TYPEX_P(block->statements->data[i]);
     gta_ast_node_walk(statement, callback, data, return_value);
   }
 }

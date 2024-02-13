@@ -12,10 +12,13 @@
 #ifndef GTA_MACROS_H
 #define GTA_MACROS_H
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
+
+#include <stdint.h>
+#include <cutil/float.h>
+#include <cutil/vector.h>
 
 /**
  * Declaring the calling convention (for consistency).
@@ -121,6 +124,66 @@ extern "C" {
 #define GTA_IA64 1
 #else
 #define GTA_IA64 0
+#endif
+
+/**
+ * Define the type for integers based on the system architecture.
+ */
+#if GTA_32_BIT
+typedef int32_t GTA_Integer;
+typedef uint32_t GTA_UInteger;
+#elif GTA_64_BIT
+typedef int64_t GTA_Integer;
+typedef uint64_t GTA_UInteger;
+#else
+#error "Unsupported architecture"
+#endif
+
+/**
+ * Define the type for floats based on the system architecture.
+ */
+#if GTA_32_BIT
+typedef GCU_float32_t GTA_Float;
+#elif GTA_64_BIT
+typedef GCU_float64_t GTA_Float;
+#else
+#error "Unsupported architecture"
+#endif
+
+/**
+ * Define the bytecode vector type based on the system architecture.
+ */
+#if GTA_32_BIT
+typedef GCU_Vector32 GTA_Bytecode_Vector;
+#define GTA_VECTORX_CREATE gcu_vector32_create
+#define GTA_VECTORX_DESTROY gcu_vector32_destroy
+#define GTA_VECTORX_APPEND gcu_vector32_append
+#define GTA_VECTORX_COUNT gcu_vector32_count
+#define GTA_TYPEX_UI(X) (X).ui32
+#define GTA_TYPEX_I(X) (X).i32
+#define GTA_TYPEX_F(X) (X).f32
+#define GTA_TYPEX_P(X) (X).p
+#define GTA_TYPEX_MAKE_UI(X) GCU_TYPE32_UI32(X)
+#define GTA_TYPEX_MAKE_I(X) GCU_TYPE32_I32(X)
+#define GTA_TYPEX_MAKE_F(X) GCU_TYPE32_F32(X)
+#define GTA_TYPEX_MAKE_P(X) GCU_TYPE32_P(X)
+#elif GTA_64_BIT
+typedef GCU_Vector64 GTA_VectorX;
+typedef GCU_Type64_Union GTA_TypeX_Union;
+#define GTA_VECTORX_CREATE gcu_vector64_create
+#define GTA_VECTORX_DESTROY gcu_vector64_destroy
+#define GTA_VECTORX_APPEND gcu_vector64_append
+#define GTA_VECTORX_COUNT gcu_vector64_count
+#define GTA_TYPEX_UI(X) (X).ui64
+#define GTA_TYPEX_I(X) (X).i64
+#define GTA_TYPEX_F(X) (X).f
+#define GTA_TYPEX_P(X) (X).p
+#define GTA_TYPEX_MAKE_UI(X) GCU_TYPE64_UI64(X)
+#define GTA_TYPEX_MAKE_I(X) GCU_TYPE64_I64(X)
+#define GTA_TYPEX_MAKE_F(X) GCU_TYPE64_F(X)
+#define GTA_TYPEX_MAKE_P(X) GCU_TYPE64_P(X)
+#else
+#error "Unsupported architecture"
 #endif
 
 /**

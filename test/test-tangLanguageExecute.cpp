@@ -7,6 +7,7 @@
 #include "tang/program.h"
 #include "tang/context.h"
 #include "tang/bytecode.h"
+#include <tang/computedValueAll.h>
 
 using namespace std;
 
@@ -43,6 +44,33 @@ TEST(SingleValue, Null) {
   gta_program_destroy(program);
   gta_context_destroy_in_place(&context);
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+}
+
+  // auto p1 = tang->compileScript("3");
+  // EXPECT_EQ(*p1.execute().result, (integer_t)3);
+  // auto p2 = tang->compileScript("42");
+  // EXPECT_EQ(*p2.execute().result, (integer_t)42);
+  // auto p3 = tang->compileScript("-42");
+  // EXPECT_EQ(*p3.execute().result, (integer_t)-42);
+  // auto p4 = tang->compileScript("-42");
+  // EXPECT_EQ(*p4.execute().result, (float_t)-42.0);
+  // auto p5 = tang->compileScript("-42");
+  // EXPECT_NE(*p5.execute().result, (float_t)-42.5);
+
+TEST(Declare, Integer) {
+  {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create("3");
+    ASSERT_TRUE(program);
+    GTA_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context.result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context.result)->value, 3);
+    gta_program_destroy(program);
+    gta_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
 }
 
 

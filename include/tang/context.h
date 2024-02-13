@@ -16,7 +16,8 @@ extern "C" {
 
 #include <stdbool.h>
 #include <cutil/vector.h>
-#include "tang/unicodeString.h"
+#include <tang/macros.h>
+#include <tang/unicodeString.h>
 
 typedef struct GTA_Program GTA_Program;
 typedef struct GTA_Computed_Value GTA_Computed_Value;
@@ -43,7 +44,7 @@ typedef struct GTA_Context {
   /**
    * The stack used for execution.
    */
-  GCU_Vector64 * stack;
+  GTA_VectorX * stack;
 } GTA_Context;
 
 /**

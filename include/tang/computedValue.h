@@ -12,11 +12,11 @@ extern "C" {
 #endif // __cplusplus
 
 #include <cutil/vector.h>
-#include "tang/macros.h"
+#include <tang/macros.h>
 
 typedef struct GTA_Computed_Value GTA_Computed_Value;
 typedef struct GTA_Computed_Value_VTable GTA_Computed_Value_VTable;
-typedef GCU_Vector64 GTA_Computed_Value_Vector;
+typedef GTA_VectorX GTA_Computed_Value_Vector;
 
 /**
  * Virtual table for the computed value class.
@@ -556,6 +556,8 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call(GTA_Computed_Value *
  *
  * Calls the `destroy` method of the virtual table.
  *
+ * @see gta_computed_value_destroy
+ *
  * @param self The object to destroy.
  */
 void gta_computed_value_null_destroy(GTA_Computed_Value * self);
@@ -564,6 +566,8 @@ void gta_computed_value_null_destroy(GTA_Computed_Value * self);
  * Performs a deep copy of a computed value of the NULL class.
  *
  * Calls the `deep_copy` method of the virtual table.
+ *
+ * @see gta_computed_value_deep_copy
  *
  * @param self The object to copy.
  * @return A deep copy of the object or NULL if the operation failed.
@@ -576,6 +580,8 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_deep_copy(GTA_Comput
  * Calls the `to_string` method of the virtual table.
  *
  * The caller is responsible for freeing the returned string.
+ *
+ * @see gta_computed_value_to_string
  *
  * @param self The object to convert.
  * @return A string representation of the object or NULL if the operation

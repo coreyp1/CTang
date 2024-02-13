@@ -14,7 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_array_vtable = {
   .walk = gta_ast_node_array_walk,
 };
 
-GTA_Ast_Node_Array * gta_ast_node_array_create(GCU_Vector64 * elements, GTA_PARSER_LTYPE location) {
+GTA_Ast_Node_Array * gta_ast_node_array_create(GTA_VectorX * elements, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Array * self = gcu_malloc(sizeof(GTA_Ast_Node_Array));
   if (!self) {
     return 0;
@@ -28,7 +28,7 @@ GTA_Ast_Node_Array * gta_ast_node_array_create(GCU_Vector64 * elements, GTA_PARS
 
 void gta_ast_node_array_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
-  gcu_vector64_destroy(array->elements);
+  GTA_VECTORX_DESTROY(array->elements);
   gcu_free(self);
 }
 
@@ -42,7 +42,7 @@ void gta_ast_node_array_print(GTA_Ast_Node * self, const char * indent) {
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "  ", 3);
   printf("%s%s\n", indent, self->vtable->name);
-  for (size_t i = 0; i < gcu_vector64_count(array->elements); i++) {
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(array->elements); i++) {
     gta_ast_node_print((GTA_Ast_Node *) array->elements->data[i].p, new_indent);
   }
   gcu_free(new_indent);
@@ -50,7 +50,7 @@ void gta_ast_node_array_print(GTA_Ast_Node * self, const char * indent) {
 
 GTA_Ast_Node * gta_ast_node_array_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
-  for (size_t i = 0; i < gcu_vector64_count(array->elements); ++i) {
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(array->elements); ++i) {
     GTA_Ast_Node * element = (GTA_Ast_Node *) array->elements->data[i].p;
     GTA_Ast_Node * simplified = gta_ast_node_simplify(element, variable_map);
     if (simplified) {
@@ -64,7 +64,7 @@ GTA_Ast_Node * gta_ast_node_array_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
 void gta_ast_node_array_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
-  for (size_t i = 0; i < gcu_vector64_count(array->elements); ++i) {
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(array->elements); ++i) {
     GTA_Ast_Node * element = (GTA_Ast_Node *) array->elements->data[i].p;
     gta_ast_node_walk(element, callback, data, return_value);
   }

@@ -9,7 +9,8 @@
 extern "C" {
 #endif
 
-#include "tang/astNode.h"
+#include <tang/macros.h>
+#include <tang/astNode.h>
 
 /**
  * The vtable for the GTA_Ast_Node_Block class.
@@ -27,7 +28,7 @@ typedef struct GTA_Ast_Node_Block {
   /**
    * The statements in the block.
    */
-  GCU_Vector64 * statements;
+  GTA_VectorX * statements;
 } GTA_Ast_Node_Block;
 
 /**
@@ -37,7 +38,7 @@ typedef struct GTA_Ast_Node_Block {
  * @param location The location of the block in the source code.
  * @return The new GTA_Ast_Node_Block object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node_Block * gta_ast_node_block_create(GCU_Vector64 * statements, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Block * gta_ast_node_block_create(GTA_VectorX * statements, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Block object.

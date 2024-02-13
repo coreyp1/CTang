@@ -9,7 +9,8 @@
 extern "C" {
 #endif //__cplusplus
 
-#include "tang/astNode.h"
+#include <tang/macros.h>
+#include <tang/astNode.h>
 
 /**
  * The vtable for the GTA_Ast_Node_Function_Call class.
@@ -33,7 +34,7 @@ typedef struct GTA_Ast_Node_Function_Call {
    *
    * This is a vector of GTA_Ast_Node objects.
    */
-  GCU_Vector64 * arguments;
+  GTA_VectorX * arguments;
 } GTA_Ast_Node_Function_Call;
 
 /**
@@ -44,7 +45,7 @@ typedef struct GTA_Ast_Node_Function_Call {
  * @param location The location of the function call in the source code.
  * @return The new GTA_Ast_Node_Function_Call object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node_Function_Call * gta_ast_node_function_call_create(GTA_Ast_Node * lhs, GCU_Vector64 * arguments, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Function_Call * gta_ast_node_function_call_create(GTA_Ast_Node * lhs, GTA_VectorX * arguments, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Function_Call object.

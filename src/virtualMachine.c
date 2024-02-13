@@ -7,12 +7,12 @@ bool gta_virtual_machine_execute_bytecode(GTA_Context* context, GTA_Program * pr
   if (!context || !program || !program->bytecode) {
     return false;
   }
-  GCU_Type64_Union * current = program->bytecode->data;
-  GCU_Type64_Union * next = current;
+  GTA_TypeX_Union * current = program->bytecode->data;
+  GTA_TypeX_Union * next = current;
   // Unlike x86, the stack grows upwards.
   // Push the "old" base pointer, which is in this case, 0, will signal the
   // "return" instruction to halt the program.
-  if (!gcu_vector64_append(context->stack, GCU_TYPE64_UI64(0))) {
+  if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_UI(0))) {
     context->result = gta_computed_value_error_out_of_memory;
     return false;
   }
@@ -28,23 +28,23 @@ bool gta_virtual_machine_execute_bytecode(GTA_Context* context, GTA_Program * pr
   while (next) {
     current = next;
     ++next;
-    switch ((*current).ui64) {
+    switch (GTA_TYPEX_UI(*current)) {
       case GTA_BYTECODE_RETURN: {
-        context->result = context->stack->data[--*sp].p;
+        context->result = GTA_TYPEX_P(context->stack->data[--*sp]);
         // Pop the base pointer.
-        bp = context->stack->data[--*sp].ui64;
+        bp = GTA_TYPEX_UI(context->stack->data[--*sp]);
         // Pop the return address.
         // Because the return address is the last entry of the calling frame,
         // and it is possible that we are in the outermost frame, then we
         // need to verify that we are not reading into memory that doesn't
         // belong to us.
         next = *sp > 0
-          ? context->stack->data[--*sp].p
+          ? GTA_TYPEX_P(context->stack->data[--*sp])
           : 0;
         break;
       }
       case GTA_BYTECODE_NULL: {
-        if (!gcu_vector64_append(context->stack, GCU_TYPE64_P(gta_computed_value_null))) {
+        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(gta_computed_value_null))) {
           context->result = gta_computed_value_error_out_of_memory;
         }
         break;

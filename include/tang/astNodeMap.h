@@ -9,7 +9,8 @@
 extern "C" {
 #endif //__cplusplus
 
-#include "tang/astNode.h"
+#include <tang/macros.h>
+#include <tang/astNode.h>
 
 /**
  * The vtable for the GTA_Ast_Node_Map class.
@@ -37,7 +38,7 @@ typedef struct GTA_Ast_Node_Map {
    *
    * This is a vector of GTA_Ast_Node_Map_Pair objects.
    */
-  GCU_Vector64 * pairs;
+  GTA_VectorX * pairs;
 } GTA_Ast_Node_Map;
 
 /**
@@ -47,7 +48,7 @@ typedef struct GTA_Ast_Node_Map {
  * @param location The location of the map in the source code.
  * @return The new GTA_Ast_Node_Map object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node_Map * gta_ast_node_map_create(GCU_Vector64 * pairs, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Map * gta_ast_node_map_create(GTA_VectorX * pairs, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Map object.

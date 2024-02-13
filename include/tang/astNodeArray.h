@@ -9,7 +9,8 @@
 extern "C" {
 #endif //__cplusplus
 
-#include "tang/astNode.h"
+#include <tang/macros.h>
+#include <tang/astNode.h>
 
 /**
  * The vtable for the GTA_Ast_Node_Array class.
@@ -27,7 +28,7 @@ typedef struct GTA_Ast_Node_Array {
   /**
    * The elements of the array.
    */
-  GCU_Vector64 * elements;
+  GTA_VectorX * elements;
 } GTA_Ast_Node_Array;
 
 /**
@@ -37,7 +38,7 @@ typedef struct GTA_Ast_Node_Array {
  * @param location The location of the array in the source code.
  * @return The new GTA_Ast_Node_Array object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node_Array * gta_ast_node_array_create(GCU_Vector64 * elements, GTA_PARSER_LTYPE location);
+GTA_NO_DISCARD GTA_Ast_Node_Array * gta_ast_node_array_create(GTA_VectorX * elements, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Array object.

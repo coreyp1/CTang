@@ -59,6 +59,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/bytecodeCompilerContext.o \
 	$(OBJ_DIR)/computedValue.o \
 	$(OBJ_DIR)/computedValueError.o \
+	$(OBJ_DIR)/computedValueInteger.o \
 	$(OBJ_DIR)/context.o \
 	$(OBJ_DIR)/program.o \
 	$(OBJ_DIR)/tangLanguage.o \
@@ -119,7 +120,8 @@ DEP_UNICODESTRING = \
 DEP_LOCATION = \
   include/tang/location.h
 DEP_BYTECODE = \
-	include/tang/bytecode.h
+	include/tang/bytecode.h \
+	$(DEP_MACROS)
 DEP_BYTECODECOMPILERCONTEXT = \
 	include/tang/bytecodeCompilerContext.h \
 	$(DEP_MACROS)
@@ -131,7 +133,6 @@ DEP_ASTNODE = \
 	include/tang/astNode.h \
 	$(GEN_DIR)/tangParser.h \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
-	$(DEP_MACROS) \
 	$(DEP_LOCATION)
 DEP_ASTNODEIDENTIFIER = \
 	include/tang/astNodeIdentifier.h \
@@ -141,7 +142,8 @@ DEP_ASTNODESTRING = \
 	$(DEP_ASTNODE)
 DEP_ASTNODEARRAY = \
 	include/tang/astNodeArray.h \
-	$(DEP_ASTNODE)
+	$(DEP_ASTNODE) \
+	$(DEP_MACROS)
 DEP_ASTNODEASSIGN = \
 	include/tang/astNodeAssign.h \
 	$(DEP_ASTNODE) \
@@ -159,7 +161,8 @@ DEP_ASTNODEBINARY = \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEBLOCK = \
 	include/tang/astNodeBlock.h \
-	$(DEP_ASTNODE)
+	$(DEP_ASTNODE) \
+	$(DEP_MACROS)
 DEP_ASTNODEBOOLEAN = \
 	include/tang/astNodeBoolean.h \
 	$(DEP_ASTNODE)
@@ -189,7 +192,8 @@ DEP_ASTNODEFOR = \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEFUNCTION = \
 	include/tang/astNodeFunction.h \
-	$(DEP_ASTNODE)
+	$(DEP_ASTNODE) \
+	$(DEP_MACROS)
 DEP_ASTNODEFUNCTIONCALL = \
 	include/tang/astNodeFunctionCall.h \
 	$(DEP_ASTNODE) \
@@ -216,7 +220,8 @@ DEP_ASTNODELIBRARY = \
 	$(DEP_ASTNODE)
 DEP_ASTNODEMAP = \
 	include/tang/astNodeMap.h \
-	$(DEP_ASTNODE)
+	$(DEP_ASTNODE) \
+	$(DEP_MACROS)
 DEP_ASTNODEPARSEERROR = \
 	include/tang/astNodeParseError.h \
 	$(DEP_ASTNODE)
@@ -308,10 +313,13 @@ DEP_COMPUTEDVALUE = \
 DEP_COMPUTEDVALUEERROR = \
   include/tang/computedValueError.h \
 	$(DEP_COMPUTEDVALUE)
+DEP_COMPUTEDVALUEINTEGER = \
+	include/tang/computedValueInteger.h
 
 DEP_COMPUTEDVALUEALL = \
 	$(DEP_COMPUTEDVALUE) \
-	$(DEP_COMPUTEDVALUEERROR)
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_COMPUTEDVALUEINTEGER)
 
 DEP_TANGLANGUAGE = \
 	$(DEP_ASTNODE)
@@ -711,6 +719,11 @@ $(OBJ_DIR)/computedValue.o: \
 
 $(OBJ_DIR)/computedValueError.o: \
 	src/computedValueError.c \
+	$(DEP_COMPUTEDVALUEERROR)
+
+$(OBJ_DIR)/computedValueInteger.o: \
+	src/computedValueInteger.c \
+	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUEERROR)
 
 $(OBJ_DIR)/program.o: \

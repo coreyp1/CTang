@@ -23,41 +23,41 @@
 #include "tang/binaryCompilerContext.h"
 
 static void gta_program_compile_bytecode(GTA_Program * program) {
-  GCU_Vector64 * bytecode = gcu_vector64_create(0);
+  GTA_VectorX * bytecode = GTA_VECTORX_CREATE(0);
   bool no_memory_error = true;
   if (bytecode) {
     GTA_Bytecode_Compiler_Context context;
     if (!gta_bytecode_compiler_context_create_in_place(&context, program)) {
-      gcu_vector64_destroy(bytecode);
+      GTA_VECTORX_DESTROY(bytecode);
       bytecode = 0;
     }
     else {
       program->bytecode = bytecode;
       if (!gta_ast_node_compile_to_bytecode(program->ast, &context)) {
-        gcu_vector64_destroy(bytecode);
+        GTA_VECTORX_DESTROY(bytecode);
         program->bytecode = 0;
       }
       gta_bytecode_compiler_context_destroy_in_place(&context);
     }
     if (program->bytecode) {
-      size_t length = gcu_vector64_count(program->bytecode);
+      size_t length = GTA_VECTORX_COUNT(program->bytecode);
 
       // Make sure that the bytecode terminates with a RETURN instruction.
       // Replace an ending POP instruction with a RETURN instruction.
-      if (program->bytecode->data[length - 1].ui64 == GTA_BYTECODE_POP) {
-        program->bytecode->data[length - 1].ui64 = GTA_BYTECODE_RETURN;
+      if (GTA_TYPEX_UI(program->bytecode->data[length - 1]) == GTA_BYTECODE_POP) {
+        GTA_TYPEX_UI(program->bytecode->data[length - 1]) = GTA_BYTECODE_RETURN;
       }
 
       // Add a NULL and RETURN instruction, in case there are any jumps to the
       // end of the bytecode.
       // If the AST is simply an expression, then the NULL is not necessary.
       if (GTA_AST_IS_BLOCK(program->ast)) {
-        no_memory_error &= gcu_vector64_append(program->bytecode, GCU_TYPE64_UI64(GTA_BYTECODE_NULL));
+        no_memory_error &= GTA_VECTORX_APPEND(program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
       }
-      no_memory_error &= gcu_vector64_append(program->bytecode, GCU_TYPE64_UI64(GTA_BYTECODE_RETURN));
+      no_memory_error &= GTA_VECTORX_APPEND(program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_RETURN));
       // If there was a memory error, then the bytecode is not valid.
       if (!no_memory_error) {
-        gcu_vector64_destroy(program->bytecode);
+        GTA_VECTORX_DESTROY(program->bytecode);
         program->bytecode = 0;
       }
     }
@@ -255,7 +255,7 @@ void gta_program_destroy_in_place(GTA_Program * self) {
     gta_ast_node_destroy(self->ast);
   }
   if (self->bytecode) {
-    gcu_vector64_destroy(self->bytecode);
+    GTA_VECTORX_DESTROY(self->bytecode);
   }
   if (self->binary) {
 #ifdef _WIN32

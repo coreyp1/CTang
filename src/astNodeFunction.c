@@ -14,7 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_function_vtable = {
   .walk = gta_ast_node_function_walk,
 };
 
-GTA_Ast_Node_Function * gta_ast_node_function_create(const char * identifier, GCU_Vector64 * parameters, GTA_Ast_Node * block, GTA_PARSER_LTYPE location) {
+GTA_Ast_Node_Function * gta_ast_node_function_create(const char * identifier, GTA_VectorX * parameters, GTA_Ast_Node * block, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Function * self = gcu_malloc(sizeof(GTA_Ast_Node_Function));
   if (!self) {
     return 0;
@@ -29,7 +29,7 @@ GTA_Ast_Node_Function * gta_ast_node_function_create(const char * identifier, GC
 
 void gta_ast_node_function_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
-  gcu_vector64_destroy(function->parameters);
+  GTA_VECTORX_DESTROY(function->parameters);
   gta_ast_node_destroy(function->block);
   gcu_free((void *)function->identifier);
   gcu_free(self);
@@ -55,8 +55,8 @@ void gta_ast_node_function_print(GTA_Ast_Node * self, const char * indent) {
 
   printf("%s%s: %s\n", indent, self->vtable->name, function->identifier);
   printf("%s  Parameters:\n", indent);
-  for (size_t i = 0; i < gcu_vector64_count(function->parameters); i++) {
-    printf("%s%s\n", new_indent, (char *)function->parameters->data[i].p);
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(function->parameters); i++) {
+    printf("%s%s\n", new_indent, (char *)GTA_TYPEX_P(function->parameters->data[i]));
   }
   function->block->vtable->print(function->block, small_indent);
   gcu_free(new_indent);

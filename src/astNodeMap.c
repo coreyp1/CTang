@@ -14,7 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_map_vtable = {
   .walk = gta_ast_node_map_walk,
 };
 
-GTA_Ast_Node_Map * gta_ast_node_map_create(GCU_Vector64 * pairs, GTA_PARSER_LTYPE location) {
+GTA_Ast_Node_Map * gta_ast_node_map_create(GTA_VectorX * pairs, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Map * self = gcu_malloc(sizeof(GTA_Ast_Node_Map));
   if (!self) {
     return 0;
@@ -28,7 +28,7 @@ GTA_Ast_Node_Map * gta_ast_node_map_create(GCU_Vector64 * pairs, GTA_PARSER_LTYP
 
 void gta_ast_node_map_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *) self;
-  gcu_vector64_destroy(map->pairs);
+  GTA_VECTORX_DESTROY(map->pairs);
   gcu_free(self);
 }
 
@@ -42,8 +42,8 @@ void gta_ast_node_map_print(GTA_Ast_Node * self, const char * indent) {
   memcpy(new_indent + indent_len, "    ", 5);
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *) self;
   printf("%s%s\n", indent, self->vtable->name);
-  for (size_t i = 0; i < gcu_vector64_count(map->pairs); ++i) {
-    GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)map->pairs->data[i].p;
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(map->pairs); ++i) {
+    GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)GTA_TYPEX_P(map->pairs->data[i]);
     printf("%s  Key: %s:\n", indent, pair->str);
     printf("%s  Value:\n", indent);
     gta_ast_node_print(pair->node, new_indent);
@@ -53,8 +53,8 @@ void gta_ast_node_map_print(GTA_Ast_Node * self, const char * indent) {
 
 GTA_Ast_Node * gta_ast_node_map_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *) self;
-  for (size_t i = 0; i < gcu_vector64_count(map->pairs); ++i) {
-    GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)map->pairs->data[i].p;
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(map->pairs); ++i) {
+    GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)GTA_TYPEX_P(map->pairs->data[i]);
     GTA_Ast_Node * simplified = gta_ast_node_simplify(pair->node, variable_map);
     if (simplified) {
       gta_ast_node_destroy(pair->node);
@@ -67,8 +67,8 @@ GTA_Ast_Node * gta_ast_node_map_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_V
 void gta_ast_node_map_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *) self;
-  for (size_t i = 0; i < gcu_vector64_count(map->pairs); ++i) {
-    GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)map->pairs->data[i].p;
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(map->pairs); ++i) {
+    GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)GTA_TYPEX_P(map->pairs->data[i]);
     callback(pair->node, data, return_value);
   }
 }
