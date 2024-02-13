@@ -150,9 +150,7 @@ static void gta_program_compile_binary(GTA_Program * program) {
     }
     else {
       // dump the binary to stderr
-      fprintf(stderr, "Binary: %p\n", program->binary);
-      fwrite(context->binary_vector->data, 1, length, stderr);
-      fprintf(stderr, "\n");
+      // fwrite(context->binary_vector->data, 1, length, stderr);
     }
   }
 #endif
