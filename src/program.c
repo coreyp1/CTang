@@ -102,10 +102,10 @@ static void gta_program_compile_binary(GTA_Program * program) {
 #ifdef GTA_X86_64
   // 64-bit x86
   // Set up the end of the function:
-  //   add rsp, 8
+  //   leave
   //   ret
   no_memory_error
-    &= GTA_BINARY_WRITE4(context->binary_vector, 0x48, 0x83, 0xC4, 0x08)
+    &= GTA_BINARY_WRITE1(context->binary_vector, 0xC9)
     && GTA_BINARY_WRITE1(context->binary_vector, 0xC3);
 #elif defined(GTA_X86)
   // 32-bit x86
