@@ -180,6 +180,14 @@ extern "C" {
 #define GTA_COMPUTED_VALUE_IS_MAP(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_map_vtable)
 #define GTA_COMPUTED_VALUE_IS_FUNCTION(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_function_vtable)
 #define GTA_COMPUTED_VALUE_IS_LIBRARY(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_library_vtable)
+/**
+ * @}
+ */
+
+/**
+ * Macros for dealing with x86 and x86-64 assembly.
+ */
+#define GTA_X86_RAX
 
 
 #ifdef __cplusplus
