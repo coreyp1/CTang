@@ -7,7 +7,7 @@
 
 GTA_Ast_Node_VTable gta_ast_node_integer_vtable = {
   .name = "Integer",
-  .compile_to_bytecode = 0,
+  .compile_to_bytecode = gta_ast_node_integer_compile_to_bytecode,
   .destroy = gta_ast_node_integer_destroy,
   .print = gta_ast_node_integer_print,
   .simplify = gta_ast_node_integer_simplify,
@@ -19,10 +19,14 @@ GTA_Ast_Node_Integer * gta_ast_node_integer_create(int64_t integer, GTA_PARSER_L
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_integer_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_INTEGER;
-  self->value = integer;
+  *self = (GTA_Ast_Node_Integer) {
+    .base = {
+      .vtable = &gta_ast_node_integer_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_INTEGER,
+    },
+    .value = integer,
+  };
   return self;
 }
 
@@ -41,4 +45,10 @@ GTA_Ast_Node * gta_ast_node_integer_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node * sel
 
 void gta_ast_node_integer_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
+}
+
+bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) self;
+  return GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_INTEGER))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_I(integer->value));
 }

@@ -9,7 +9,9 @@
 extern "C" {
 #endif //__cplusplus
 
-#include "tang/astNode.h"
+#include <tang/astNode.h>
+#include <tang/bytecodeCompilerContext.h>
+#include <tang/binaryCompilerContext.h>
 
 /**
  * The vtable for the GTA_Ast_Node_Integer class.
@@ -78,6 +80,19 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_integer_simplify(GTA_Ast_Node * self,
  * @param return_value The return value of the walk, populated by the callback.
  */
 void gta_ast_node_integer_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+
+/**
+ * Compiles a GTA_Ast_Node_Integer object to bytecode.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_bytecode()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_bytecode
+ *
+ * @param self The GTA_Ast_Node_Integer object.
+ * @param context The compiler state to use for compilation.
+ */
+bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

@@ -40,13 +40,7 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
       gta_bytecode_compiler_context_destroy_in_place(&context);
     }
     if (program->bytecode) {
-      size_t length = GTA_VECTORX_COUNT(program->bytecode);
-
-      // Make sure that the bytecode terminates with a RETURN instruction.
-      // Replace an ending POP instruction with a RETURN instruction.
-      if (GTA_TYPEX_UI(program->bytecode->data[length - 1]) == GTA_BYTECODE_POP) {
-        GTA_TYPEX_UI(program->bytecode->data[length - 1]) = GTA_BYTECODE_RETURN;
-      }
+      //size_t length = GTA_VECTORX_COUNT(program->bytecode);
 
       // Add a NULL and RETURN instruction, in case there are any jumps to the
       // end of the bytecode.

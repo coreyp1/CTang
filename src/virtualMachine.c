@@ -1,7 +1,7 @@
 
 #include <stdio.h>
-#include "tang/virtualMachine.h"
-#include "tang/computedValueAll.h"
+#include <tang/virtualMachine.h>
+#include <tang/computedValueAll.h>
 
 bool gta_virtual_machine_execute_bytecode(GTA_Context* context, GTA_Program * program) {
   if (!context || !program || !program->bytecode) {
@@ -47,6 +47,17 @@ bool gta_virtual_machine_execute_bytecode(GTA_Context* context, GTA_Program * pr
         if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(gta_computed_value_null))) {
           context->result = gta_computed_value_error_out_of_memory;
         }
+        break;
+      }
+      case GTA_BYTECODE_INTEGER: {
+        GTA_Computed_Value_Integer * integer = gta_computed_value_integer_create(GTA_TYPEX_I(*next));
+        if (!integer) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(integer))) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        ++next;
         break;
       }
     }

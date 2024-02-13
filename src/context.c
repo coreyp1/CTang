@@ -1,7 +1,8 @@
 
 #include <cutil/memory.h>
-#include "tang/context.h"
-#include "tang/macros.h"
+#include <tang/context.h>
+#include <tang/macros.h>
+#include <tang/computedValue.h>
 
 GTA_Context * gta_context_create(GTA_Program * program) {
   GTA_Context * context = gcu_malloc(sizeof(GTA_Context));
@@ -43,5 +44,8 @@ void gta_context_destroy(GTA_Context * self) {
 
 void gta_context_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Context * self)) {
   GTA_VECTORX_DESTROY(self->stack);
+  if (self->result) {
+    gta_computed_value_destroy(self->result);
+  }
   gta_unicode_string_destroy(self->output);
 }
