@@ -53,6 +53,11 @@ typedef struct GTA_Binary_Compiler_Context{
    * The program that the binary compiler is compiling.
    */
   GTA_Program * program;
+  /**
+   * Tracking the current stack depth so that the stack can be properly byte
+   * aligned.
+   */
+  size_t stack_depth;
 } GTA_Binary_Compiler_Context;
 
 /**

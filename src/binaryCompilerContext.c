@@ -16,6 +16,7 @@ GTA_Binary_Compiler_Context * gta_binary_compiler_context_create(GTA_Program * p
     .program = program,
     .binary_vector = binary_vector,
     .binary = 0,
+    .stack_depth = 0,
   };
   return context;
 }
