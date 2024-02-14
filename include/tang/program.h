@@ -19,7 +19,7 @@ extern "C" {
 #include "tang/context.h"
 #include "tang/macros.h"
 
-typedef struct GTA_Context GTA_Context;
+typedef struct GTA_Execution_Context GTA_Execution_Context;
 
 /**
  * The flags for a program.
@@ -190,7 +190,7 @@ void gta_program_destroy_in_place(GTA_Program * program);
  * @param context The context to execute the program with.
  * @return True if the program executed successfully, false otherwise.
  */
-bool gta_program_execute(GTA_Program * program, GTA_Context * context);
+bool gta_program_execute(GTA_Program * program, GTA_Execution_Context * context);
 
 /**
  * Execute the given program with the given context using the bytecode.
@@ -199,7 +199,7 @@ bool gta_program_execute(GTA_Program * program, GTA_Context * context);
  * @param context The context to execute the program with.
  * @return True if the program executed successfully, false otherwise.
  */
-bool gta_program_execute_bytecode(GTA_Program * program, GTA_Context * context);
+bool gta_program_execute_bytecode(GTA_Program * program, GTA_Execution_Context * context);
 
 /**
  * Execute the given program with the given context using the binary.
@@ -208,7 +208,7 @@ bool gta_program_execute_bytecode(GTA_Program * program, GTA_Context * context);
  * @param context The context to execute the program with.
  * @return True if the program executed successfully, false otherwise.
  */
-bool gta_program_execute_binary(GTA_Program * program, GTA_Context * context);
+bool gta_program_execute_binary(GTA_Program * program, GTA_Execution_Context * context);
 
 /**
  * Print the bytecode for the given program.

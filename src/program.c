@@ -276,8 +276,8 @@ void gta_program_destroy_in_place(GTA_Program * self) {
   }
 }
 
-bool gta_program_execute(GTA_Program * program, GTA_Context * context) {
-  if (!gta_context_create_in_place(context, program)) {
+bool gta_program_execute(GTA_Program * program, GTA_Execution_Context * context) {
+  if (!gta_execution_context_create_in_place(context, program)) {
     return false;
   }
   if (program->binary) {
@@ -289,7 +289,7 @@ bool gta_program_execute(GTA_Program * program, GTA_Context * context) {
   return false;
 }
 
-bool gta_program_execute_bytecode(GTA_Program * program, GTA_Context * context) {
+bool gta_program_execute_bytecode(GTA_Program * program, GTA_Execution_Context * context) {
   return gta_virtual_machine_execute_bytecode(context, program);
 }
 
@@ -298,7 +298,7 @@ typedef union Function_Converter {
   void * b;
 } Function_Converter;
 
-bool gta_program_execute_binary(GTA_MAYBE_UNUSED(GTA_Program * program), GTA_MAYBE_UNUSED(GTA_Context * context)) {
+bool gta_program_execute_binary(GTA_MAYBE_UNUSED(GTA_Program * program), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   if (program->binary) {
     context->result = (Function_Converter){.b = program->binary}.f();
     return true;

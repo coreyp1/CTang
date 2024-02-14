@@ -3,7 +3,7 @@
 #include <tang/virtualMachine.h>
 #include <tang/computedValueAll.h>
 
-bool gta_virtual_machine_execute_bytecode(GTA_Context* context, GTA_Program * program) {
+bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context, GTA_Program * program) {
   if (!context || !program || !program->bytecode) {
     return false;
   }

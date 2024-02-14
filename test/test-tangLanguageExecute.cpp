@@ -23,12 +23,12 @@ TEST(EdgeCase, Empty) {
   GTA_Program * program = gta_program_create("");
   ASSERT_TRUE(program);
   //gta_program_bytecode_print(program);
-  GTA_Context context;
+  GTA_Execution_Context context;
   ASSERT_TRUE(gta_program_execute(program, &context));
   ASSERT_TRUE(context.result);
   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context.result));
   gta_program_destroy(program);
-  gta_context_destroy_in_place(&context);
+  gta_bytecode_execution_context_destroy_in_place(&context);
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
 }
 
@@ -37,12 +37,12 @@ TEST(SingleValue, Null) {
   GTA_Program * program = gta_program_create("null");
   ASSERT_TRUE(program);
   //gta_program_bytecode_print(program);
-  GTA_Context context;
+  GTA_Execution_Context context;
   ASSERT_TRUE(gta_program_execute(program, &context));
   ASSERT_TRUE(context.result);
   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context.result));
   gta_program_destroy(program);
-  gta_context_destroy_in_place(&context);
+  gta_bytecode_execution_context_destroy_in_place(&context);
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
 }
 
@@ -62,13 +62,13 @@ TEST(Declare, Integer) {
     gcu_memory_reset_counts();
     GTA_Program * program = gta_program_create("3");
     ASSERT_TRUE(program);
-    GTA_Context context;
+    GTA_Execution_Context context;
     ASSERT_TRUE(gta_program_execute(program, &context));
     ASSERT_TRUE(context.result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context.result));
     ASSERT_EQ(((GTA_Computed_Value_Integer *)context.result)->value, 3);
     gta_program_destroy(program);
-    gta_context_destroy_in_place(&context);
+    gta_bytecode_execution_context_destroy_in_place(&context);
     ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
   }
 }

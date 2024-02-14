@@ -4,13 +4,13 @@
 #include <tang/macros.h>
 #include <tang/computedValue.h>
 
-GTA_Context * gta_context_create(GTA_Program * program) {
-  GTA_Context * context = gcu_malloc(sizeof(GTA_Context));
+GTA_Execution_Context * gta_execution_context_create(GTA_Program * program) {
+  GTA_Execution_Context * context = gcu_malloc(sizeof(GTA_Execution_Context));
   if (!context) {
     return 0;
   }
 
-  if (!gta_context_create_in_place(context, program)) {
+  if (!gta_execution_context_create_in_place(context, program)) {
     gcu_free(context);
     return 0;
   }
@@ -18,8 +18,8 @@ GTA_Context * gta_context_create(GTA_Program * program) {
   return context;
 }
 
-bool gta_context_create_in_place(GTA_Context * context, GTA_Program * program) {
-  *context = (GTA_Context) {
+bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_Program * program) {
+  *context = (GTA_Execution_Context) {
     .program = program,
     .output = 0,
     .result = 0,
@@ -37,12 +37,12 @@ bool gta_context_create_in_place(GTA_Context * context, GTA_Program * program) {
   return true;
 }
 
-void gta_context_destroy(GTA_Context * self) {
-  gta_context_destroy_in_place(self);
+void gta_execution_context_destroy(GTA_Execution_Context * self) {
+  gta_bytecode_execution_context_destroy_in_place(self);
   gcu_free(self);
 }
 
-void gta_context_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Context * self)) {
+void gta_bytecode_execution_context_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Execution_Context * self)) {
   GTA_VECTORX_DESTROY(self->stack);
   if (self->result) {
     gta_computed_value_destroy(self->result);
