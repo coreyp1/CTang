@@ -60,7 +60,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/computedValue.o \
 	$(OBJ_DIR)/computedValueError.o \
 	$(OBJ_DIR)/computedValueInteger.o \
-	$(OBJ_DIR)/context.o \
+	$(OBJ_DIR)/executionContext.o \
 	$(OBJ_DIR)/program.o \
 	$(OBJ_DIR)/tangLanguage.o \
 	$(OBJ_DIR)/virtualMachine.o \
@@ -324,8 +324,8 @@ DEP_COMPUTEDVALUEALL = \
 DEP_TANGLANGUAGE = \
 	$(DEP_ASTNODE)
 
-DEP_CONTEXT = \
-	include/tang/context.h \
+DEP_EXECUTIONCONTEXT = \
+	include/tang/executionContext.h \
 	$(DEP_MACROS) \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_UNICODESTRING)
@@ -336,14 +336,14 @@ DEP_PROGRAM = \
 	$(DEP_BYTECODE) \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_MACROS) \
-	$(DEP_CONTEXT) \
+	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_UNICODESTRING)
 
 DEP_VIRTUALMACHINE = \
 	include/tang/virtualMachine.h \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_MACROS) \
-	$(DEP_CONTEXT) \
+	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_BYTECODE)
 
 
@@ -731,7 +731,7 @@ $(OBJ_DIR)/program.o: \
 	src/program.c \
 	$(DEP_PROGRAM) \
 	$(DEP_COMPUTEDVALUEERROR) \
-	$(DEP_CONTEXT) \
+	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_TANGLANGUAGE) \
 	$(DEP_ASTNODEBLOCK) \
 	$(DEP_ASTNODEPARSEERROR) \
@@ -882,9 +882,9 @@ $(OBJ_DIR)/computedExpressionString.o: \
 				$(DEP_COMPUTEDEXPRESSIONITERATOREND) \
 				$(DEP_COMPUTEDEXPRESSIONSTRING)
 
-$(OBJ_DIR)/context.o: \
-	src/context.c \
-	$(DEP_CONTEXT)
+$(OBJ_DIR)/executionContext.o: \
+	src/executionContext.c \
+	$(DEP_EXECUTIONCONTEXT)
 
 $(OBJ_DIR)/error.o: \
 				src/error.c \
@@ -1066,7 +1066,7 @@ $(APP_DIR)/testTangLanguageExecute: \
 	test/test-tangLanguageExecute.cpp \
 	$(DEP_ASTNODE_ALL) \
 	$(DEP_PROGRAM) \
-	$(DEP_CONTEXT) \
+	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_BYTECODE)
 	@echo "\n### Compiling Tang Language Execution Test ###"
 	@mkdir -p $(@D)

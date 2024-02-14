@@ -252,7 +252,6 @@ typedef GCU_Type64_Union GTA_TypeX_Union;
  */
 #define GTA_X86_RAX
 
-
 #ifdef __cplusplus
 }
 #endif //__cplusplus

@@ -15,12 +15,13 @@
 #include <string.h>
 #include <stdio.h>
 #include <cutil/memory.h>
-#include "tang/program.h"
-#include "tang/tangLanguage.h"
-#include "tang/astNodeBlock.h"
-#include "tang/astNodeParseError.h"
-#include "tang/virtualMachine.h"
-#include "tang/binaryCompilerContext.h"
+#include <tang/program.h>
+#include <tang/tangLanguage.h>
+#include <tang/astNodeBlock.h>
+#include <tang/astNodeParseError.h>
+#include <tang/virtualMachine.h>
+#include <tang/binaryCompilerContext.h>
+#include <tang/executionContext.h>
 
 static void gta_program_compile_bytecode(GTA_Program * program) {
   GTA_VectorX * bytecode = GTA_VECTORX_CREATE(0);
@@ -81,14 +82,24 @@ static void gta_program_compile_binary(GTA_Program * program) {
   // Each execution will put the result in rax.  It is up to
   // the caller to move the result to the correct location.
 
-  // Set up the beginning of the function:
-  //   push rbp
-  //   mov rbp, rsp
   no_memory_error
+    // Set up the beginning of the function:
+    //   push rbp
+    //   mov rbp, rsp
     &= GTA_BINARY_WRITE1(context->binary_vector, 0x55)
     && GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xE5)
-  //  mov r15, rdi
-    && GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0xFF);
+    // Push r15 and r14 onto the stack.
+    // Because they are each 8 bytes, we do not need to adjust the stack
+    // pointer in order to maintain 16-byte alignment.
+    //   push r15
+    //   push r14
+    && GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x57)
+    && GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x56)
+    //   mov r15, rdi
+    && GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0xFF)
+    //   lea r14, [r15 + offsetof(GTA_Binary_Execution_Context, result)]
+    && GTA_BINARY_WRITE3(context->binary_vector, 0x4D, 0x8D, 0x77)
+    && GTA_BINARY_WRITE1(context->binary_vector, (uint8_t)(size_t)(&((GTA_Execution_Context *)0)->result));
 
 #elif defined(GTA_X86)
   // 32-bit x86
@@ -110,11 +121,16 @@ static void gta_program_compile_binary(GTA_Program * program) {
 
 #ifdef GTA_X86_64
   // 64-bit x86
+  // Pop r15 and r14 off the stack.
+  //   pop r14
+  //   pop r15
+  no_memory_error
+    &= GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x5E)
+    && GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x5F)
   // Set up the end of the function:
   //   leave
   //   ret
-  no_memory_error
-    &= GTA_BINARY_WRITE1(context->binary_vector, 0xC9)
+    && GTA_BINARY_WRITE1(context->binary_vector, 0xC9)
     && GTA_BINARY_WRITE1(context->binary_vector, 0xC3);
 #elif defined(GTA_X86)
   // 32-bit x86
@@ -294,13 +310,13 @@ bool gta_program_execute_bytecode(GTA_Program * program, GTA_Execution_Context *
 }
 
 typedef union Function_Converter {
-  GTA_Computed_Value * GTA_CALL (*f)(void);
+  GTA_Computed_Value * GTA_CALL (*f)(GTA_Execution_Context *);
   void * b;
 } Function_Converter;
 
-bool gta_program_execute_binary(GTA_MAYBE_UNUSED(GTA_Program * program), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+bool gta_program_execute_binary(GTA_MAYBE_UNUSED(GTA_Program * program), GTA_Execution_Context * context) {
   if (program->binary) {
-    context->result = (Function_Converter){.b = program->binary}.f();
+    context->result = (Function_Converter){.b = program->binary}.f(context);
     return true;
   }
   return false;
