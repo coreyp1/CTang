@@ -611,6 +611,7 @@ $(OBJ_DIR)/astNodeIndex.o: \
 $(OBJ_DIR)/astNodeInteger.o: \
 	src/astNodeInteger.c \
 	$(DEP_ASTNODEINTEGER) \
+	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_OPCODE)
 
 $(OBJ_DIR)/astNodeLibrary.o: \

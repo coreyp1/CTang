@@ -68,12 +68,27 @@ static void gta_program_compile_binary(GTA_Program * program) {
 #ifdef GTA_X86_64
   // 64-bit x86
   // https://defuse.ca/online-x86-assembler.htm
+  // Callee-saved registers: rbp, rbx, r12, r13, r14, r15
+  // Caller-saved registers: rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11
+  // __cdecl argument registers: rdi, rsi, rdx, rcx, r8, r9
+  // __cdecl return register: rax
+  // __cdecl stack: rbp
+  // Function will be called with arguments:
+  //   (GTA_Binary_Execution_Context * context)
+  // Setup will pre-populate registers with:
+  //   r15 = context (rdi)
+  //   r14 = &context->result
+  // Each execution will put the result in rax.  It is up to
+  // the caller to move the result to the correct location.
+
   // Set up the beginning of the function:
   //   push rbp
   //   mov rbp, rsp
   no_memory_error
     &= GTA_BINARY_WRITE1(context->binary_vector, 0x55)
-    && GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xE5);
+    && GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xE5)
+  //  mov r15, rdi
+    && GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0xFF);
 
 #elif defined(GTA_X86)
   // 32-bit x86
@@ -144,7 +159,7 @@ static void gta_program_compile_binary(GTA_Program * program) {
     }
     else {
       // dump the binary to stderr
-      // fwrite(context->binary_vector->data, 1, length, stderr);
+      //fwrite(context->binary_vector->data, 1, length, stderr);
     }
   }
 #endif
@@ -274,7 +289,7 @@ bool gta_program_execute(GTA_Program * program, GTA_Context * context) {
   return false;
 }
 
-bool gta_program_execute_bytecode(GTA_MAYBE_UNUSED(GTA_Program * program), GTA_MAYBE_UNUSED(GTA_Context * context)) {
+bool gta_program_execute_bytecode(GTA_Program * program, GTA_Context * context) {
   return gta_virtual_machine_execute_bytecode(context, program);
 }
 

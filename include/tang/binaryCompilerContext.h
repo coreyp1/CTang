@@ -19,19 +19,34 @@ extern "C" {
   (gcu_vector8_append(X, GCU_TYPE8_UI8(A)))
 
 #define GTA_BINARY_WRITE2(X,A,B) \
-  (gcu_vector8_append(X, GCU_TYPE8_UI8(A)) \
-   && gcu_vector8_append(X, GCU_TYPE8_UI8(B)))
+  GTA_BINARY_WRITE1(X, A) \
+  && GTA_BINARY_WRITE1(X, B)
 
 #define GTA_BINARY_WRITE3(X,A,B,C) \
-  (gcu_vector8_append(X, GCU_TYPE8_UI8(A)) \
-   && gcu_vector8_append(X, GCU_TYPE8_UI8(B)) \
-   && gcu_vector8_append(X, GCU_TYPE8_UI8(C)))
+  GTA_BINARY_WRITE1(X, A) \
+  && GTA_BINARY_WRITE2(X, B, C)
 
 #define GTA_BINARY_WRITE4(X,A,B,C,D) \
-  (gcu_vector8_append(X, GCU_TYPE8_UI8(A)) \
-   && gcu_vector8_append(X, GCU_TYPE8_UI8(B)) \
-   && gcu_vector8_append(X, GCU_TYPE8_UI8(C)) \
-   && gcu_vector8_append(X, GCU_TYPE8_UI8(D)))
+  GTA_BINARY_WRITE2(X, A, B) \
+  && GTA_BINARY_WRITE2(X, C, D)
+
+#define GTA_BINARY_WRITE8(X,A,B,C,D,E,F,G,H) \
+  GTA_BINARY_WRITE4(X, A, B, C, D) \
+  && GTA_BINARY_WRITE4(X, E, F, G, H)
+
+/**
+ * Helper union for converting between function pointers and integers.
+ */
+typedef union GTA_JIT_Function_Converter {
+  void (*f)(void);
+  GTA_UInteger i;
+} GTA_JIT_Function_Converter;
+
+/**
+ * Convert a function pointer to an integer.
+ */
+#define GTA_JIT_FUNCTION_CONVERTER(F) \
+  ((GTA_JIT_Function_Converter){.f = (void (*)(void))(F)}.i)
 
 /**
  * The context for the binary compiler.
