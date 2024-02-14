@@ -13,11 +13,11 @@
 extern "C" {
 #endif // __cplusplus
 
-#include "tang/astNode.h"
-#include "tang/bytecode.h"
-#include "tang/computedValue.h"
-#include "tang/context.h"
-#include "tang/macros.h"
+#include <tang/astNode.h>
+#include <tang/bytecode.h>
+#include <tang/computedValue.h>
+#include <tang/executionContext.h>
+#include <tang/macros.h>
 
 typedef struct GTA_Execution_Context GTA_Execution_Context;
 

@@ -12,9 +12,9 @@
 extern "C" {
 #endif // __cplusplus
 
-#include "tang/context.h"
-#include "tang/computedValue.h"
-#include "tang/program.h"
+#include <tang/executionContext.h>
+#include <tang/computedValue.h>
+#include <tang/program.h>
 
 bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context, GTA_Program * program);
 
