@@ -30,6 +30,10 @@ extern "C" {
   GTA_BINARY_WRITE2(X, A, B) \
   && GTA_BINARY_WRITE2(X, C, D)
 
+#define GTA_BINARY_WRITE5(X,A,B,C,D,E) \
+  GTA_BINARY_WRITE3(X, A, B, C) \
+  && GTA_BINARY_WRITE2(X, D, E)
+
 #define GTA_BINARY_WRITE8(X,A,B,C,D,E,F,G,H) \
   GTA_BINARY_WRITE4(X, A, B, C, D) \
   && GTA_BINARY_WRITE4(X, E, F, G, H)

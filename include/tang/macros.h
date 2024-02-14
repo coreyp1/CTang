@@ -176,11 +176,11 @@ typedef GCU_Type64_Union GTA_TypeX_Union;
 #define GTA_VECTORX_COUNT gcu_vector64_count
 #define GTA_TYPEX_UI(X) (X).ui64
 #define GTA_TYPEX_I(X) (X).i64
-#define GTA_TYPEX_F(X) (X).f
+#define GTA_TYPEX_F(X) (X).f64
 #define GTA_TYPEX_P(X) (X).p
 #define GTA_TYPEX_MAKE_UI(X) GCU_TYPE64_UI64(X)
 #define GTA_TYPEX_MAKE_I(X) GCU_TYPE64_I64(X)
-#define GTA_TYPEX_MAKE_F(X) GCU_TYPE64_F(X)
+#define GTA_TYPEX_MAKE_F(X) GCU_TYPE64_F64(X)
 #define GTA_TYPEX_MAKE_P(X) GCU_TYPE64_P(X)
 #else
 #error "Unsupported architecture"

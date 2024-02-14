@@ -88,6 +88,61 @@ TEST(Declare, Integer) {
   }
 }
 
+TEST(Declare, Float) {
+  {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create("3.14");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context.result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context.result)->value, 3.14);
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create("42.0");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context.result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context.result)->value, 42.0);
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create("-42.0");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context.result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context.result)->value, -42.0);
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create("0.");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context.result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context.result)->value, 0.);
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
 
 int main(int argc, char **argv) {
   /*

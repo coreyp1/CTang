@@ -59,6 +59,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/bytecodeCompilerContext.o \
 	$(OBJ_DIR)/computedValue.o \
 	$(OBJ_DIR)/computedValueError.o \
+	$(OBJ_DIR)/computedValueFloat.o \
 	$(OBJ_DIR)/computedValueInteger.o \
 	$(OBJ_DIR)/executionContext.o \
 	$(OBJ_DIR)/program.o \
@@ -313,12 +314,17 @@ DEP_COMPUTEDVALUE = \
 DEP_COMPUTEDVALUEERROR = \
   include/tang/computedValueError.h \
 	$(DEP_COMPUTEDVALUE)
+DEP_COMPUTEDVALUEFLOAT = \
+	include/tang/computedValueFloat.h \
+	$(DEP_COMPUTEDVALUE)
 DEP_COMPUTEDVALUEINTEGER = \
-	include/tang/computedValueInteger.h
+	include/tang/computedValueInteger.h \
+	$(DEP_COMPUTEDVALUE)
 
 DEP_COMPUTEDVALUEALL = \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_COMPUTEDVALUEINTEGER)
 
 DEP_TANGLANGUAGE = \
@@ -722,10 +728,17 @@ $(OBJ_DIR)/computedValueError.o: \
 	src/computedValueError.c \
 	$(DEP_COMPUTEDVALUEERROR)
 
+$(OBJ_DIR)/computedValueFloat.o: \
+	src/computedValueFloat.c \
+	$(DEP_COMPUTEDVALUEFLOAT) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_COMPUTEDVALUEINTEGER)
+
 $(OBJ_DIR)/computedValueInteger.o: \
 	src/computedValueInteger.c \
 	$(DEP_COMPUTEDVALUEINTEGER) \
-	$(DEP_COMPUTEDVALUEERROR)
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_COMPUTEDVALUEFLOAT)
 
 $(OBJ_DIR)/program.o: \
 	src/program.c \
@@ -1131,15 +1144,15 @@ test: \
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1 --gtest_fail_fast
 	@echo "\033[0;32m"
-	@echo "###################################################"
-	@echo "### Running Language Execution tests (Bytecode) ###"
-	@echo "###################################################"
+	@echo "#################################################"
+	@echo "### Running Bytecode Language Execution tests ###"
+	@echo "#################################################"
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecute --gtest_brief=1
 	@echo "\033[0;32m"
-	@echo "###################################################"
-	@echo "### Running Language Execution tests (Binary)   ###"
-	@echo "###################################################"
+	@echo "#################################################"
+	@echo "### Running Binary Language Execution tests   ###"
+	@echo "#################################################"
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecute --gtest_brief=1
 #	@echo "\033[0;32m"

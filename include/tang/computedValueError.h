@@ -31,6 +31,11 @@ extern GTA_Computed_Value * gta_computed_value_error_not_implemented;
 extern GTA_Computed_Value * gta_computed_value_error_out_of_memory;
 
 /**
+ * Generic "invalid bytecode" singleton error value.
+ */
+extern GTA_Computed_Value * gta_computed_value_error_invalid_bytecode;
+
+/**
  * Represents an error value.
  */
 typedef struct GTA_Computed_Value_Error {

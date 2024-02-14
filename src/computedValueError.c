@@ -55,8 +55,22 @@ static GTA_Computed_Value_Error gta_computed_value_error_out_of_memory_singleton
   .message = "Out of memory",
 };
 
+static GTA_Computed_Value_Error gta_computed_value_error_invalid_bytecode_singleton = {
+  .base = {
+    .vtable = &gta_computed_value_error_vtable,
+    .is_true = false,
+    .is_error = true,
+    .is_temporary = false,
+    .requires_deep_copy = false,
+    .is_singleton = false,
+    .is_a_reference = false,
+  },
+  .message = "Invalid opcode",
+};
+
 GTA_Computed_Value * gta_computed_value_error_not_implemented = (GTA_Computed_Value *)&gta_computed_value_error_not_implemented_singleton;
 GTA_Computed_Value * gta_computed_value_error_out_of_memory = (GTA_Computed_Value *)&gta_computed_value_error_out_of_memory_singleton;
+GTA_Computed_Value * gta_computed_value_error_invalid_bytecode = (GTA_Computed_Value *)&gta_computed_value_error_invalid_bytecode_singleton;
 
 char * gta_computed_value_error_to_string(GTA_Computed_Value * self) {
   GTA_Computed_Value_Error * error = (GTA_Computed_Value_Error *)self;
