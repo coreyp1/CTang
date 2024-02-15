@@ -22,7 +22,6 @@ TEST(Syntax, Empty) {
   gcu_memory_reset_counts();
   GTA_Program * program = gta_program_create("");
   ASSERT_TRUE(program);
-  //gta_program_bytecode_print(program);
   GTA_Execution_Context context;
   ASSERT_TRUE(gta_program_execute(program, &context));
   ASSERT_TRUE(context.result);
@@ -36,7 +35,6 @@ TEST(Declare, Null) {
   gcu_memory_reset_counts();
   GTA_Program * program = gta_program_create("null");
   ASSERT_TRUE(program);
-  //gta_program_bytecode_print(program);
   GTA_Execution_Context context;
   ASSERT_TRUE(gta_program_execute(program, &context));
   ASSERT_TRUE(context.result);
@@ -203,21 +201,6 @@ TEST(Declare, String) {
 
 
 int main(int argc, char **argv) {
-  /*
-  cout <<
-    (GTA_BIG_ENDIAN ? "Big Endian" : "Little Endian") << endl;
-  cout <<
-    (GTA_32_BIT ? "32-bit" : "64-bit") << endl;
-  cout <<
-    (GTA_X86 ? "x86" : "Not x86") << endl;
-  cout <<
-    (GTA_X86_64 ? "x86_64" : "Not x86_64") << endl;
-  cout <<
-    (GTA_ARM ? "ARM" : "Not ARM") << endl;
-  cout <<
-    (GTA_ARM64 ? "ARM64" : "Not ARM64") << endl;
-  */
-
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
