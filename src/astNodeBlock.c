@@ -2,11 +2,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
-#include "tang/astNodeBlock.h"
+#include <tang/astNodeBlock.h>
+#include <tang/computedValue.h>
+#include <tang/binaryCompilerContext.h>
 
 GTA_Ast_Node_VTable gta_ast_node_block_vtable = {
   .name = "Block",
-  .compile_to_bytecode = 0,
+  .compile_to_bytecode = gta_ast_node_block_compile_to_bytecode,
+  .compile_to_binary = gta_ast_node_block_compile_to_binary,
   .destroy = gta_ast_node_block_destroy,
   .print = gta_ast_node_block_print,
   .simplify = gta_ast_node_block_simplify,
@@ -67,4 +70,50 @@ void gta_ast_node_block_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
     GTA_Ast_Node * statement = (GTA_Ast_Node *)GTA_TYPEX_P(block->statements->data[i]);
     gta_ast_node_walk(statement, callback, data, return_value);
   }
+}
+
+bool gta_ast_node_block_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_Block * block = (GTA_Ast_Node_Block *) self;
+  if (!GTA_VECTORX_COUNT(block->statements)) {
+    return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count) && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
+  }
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(block->statements); ++i) {
+    GTA_Ast_Node * statement = (GTA_Ast_Node *)GTA_TYPEX_P(block->statements->data[i]);
+    if (!gta_ast_node_compile_to_bytecode(statement, context)) {
+      return false;
+    }
+    if (i < GTA_VECTORX_COUNT(block->statements) - 1) {
+      if (!(GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP)))) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool gta_ast_node_block_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  GTA_Ast_Node_Block * block = (GTA_Ast_Node_Block *) self;
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(block->statements); ++i) {
+    GTA_Ast_Node * statement = (GTA_Ast_Node *)GTA_TYPEX_P(block->statements->data[i]);
+    if (!gta_ast_node_compile_to_binary(statement, context)) {
+      return false;
+    }
+    if (i < GTA_VECTORX_COUNT(block->statements) - 1) {
+      if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 1)) {
+        return false;
+      }
+      // The result of the previous operation is in rax.  We need to delete it.
+      //   mov rdi, rax
+      GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xC7);
+      //   mov rax, gcu_computed_value_destroy
+      GTA_BINARY_WRITE2(context->binary_vector, 0x48, 0xB8);
+      GTA_BINARY_WRITE8(context->binary_vector, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0);
+      GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_destroy);
+      memcpy(&context->binary_vector->data[context->binary_vector->count - 8], &fp, 8);
+      //   call rax
+      GTA_BINARY_WRITE2(context->binary_vector, 0xff, 0xd0);
+    }
+  }
+  return true;
 }

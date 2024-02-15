@@ -199,6 +199,64 @@ TEST(Declare, String) {
   }
 }
 
+TEST(Declare, Block) {
+  if (false) {
+    // Empty block.
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create("{}");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context.result));
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  if (false) {
+    // Block with a single statement.
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create("{3;}");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context.result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context.result)->value, 3);
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  if (false) {
+    // Block with multiple statements.
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create("{3; 4;}");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context.result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context.result)->value, 4);
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // Block with multiple statements of different types.
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(R"(3; 4; "foo";)");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context.result));
+    ASSERT_STREQ(((GTA_Computed_Value_String *)context.result)->value->buffer, "foo");
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

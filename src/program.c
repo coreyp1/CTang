@@ -41,14 +41,6 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
       gta_bytecode_compiler_context_destroy_in_place(&context);
     }
     if (program->bytecode) {
-      //size_t length = GTA_VECTORX_COUNT(program->bytecode);
-
-      // Add a NULL and RETURN instruction, in case there are any jumps to the
-      // end of the bytecode.
-      // If the AST is simply an expression, then the NULL is not necessary.
-      if (GTA_AST_IS_BLOCK(program->ast)) {
-        no_memory_error &= GTA_VECTORX_APPEND(program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
-      }
       no_memory_error &= GTA_VECTORX_APPEND(program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_RETURN));
       // If there was a memory error, then the bytecode is not valid.
       if (!no_memory_error) {

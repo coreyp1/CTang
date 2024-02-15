@@ -80,6 +80,11 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context, GTA_Pr
         }
         break;
       }
+      case GTA_BYTECODE_POP: {
+        GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[--*sp]);
+        gta_computed_value_destroy(value);
+        break;
+      }
       default: {
         context->result = gta_computed_value_error_invalid_bytecode;
         break;

@@ -58,7 +58,7 @@ bool gta_ast_node_string_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compi
   (void)context;
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
   GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 33)) {
+  if (!gcu_vector8_reserve(v, v->count + 29)) {
     return false;
   }
 #if GTA_X86_64
@@ -70,7 +70,7 @@ bool gta_ast_node_string_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compi
   memcpy(&v->data[v->count - 8], &string->string, 8);
   //   mov rsi, 0x0
   GTA_BINARY_WRITE2(v, 0x48, 0xC7);
-  GTA_BINARY_WRITE9(v, 0xC6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+  GTA_BINARY_WRITE5(v, 0xC6, 0x00, 0x00, 0x00, 0x00);
   //   mov rax, gta_computed_value_string_create
   GTA_BINARY_WRITE2(v, 0x48, 0xB8);
   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
