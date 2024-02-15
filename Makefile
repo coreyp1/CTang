@@ -1159,13 +1159,14 @@ $(APP_DIR)/testTangLanguageParse: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
-$(APP_DIR)/testTangLanguageExecute: \
-	test/test-tangLanguageExecute.cpp \
+$(APP_DIR)/testTangLanguageExecuteSimple: \
+	test/test-tangLanguageExecuteSimple.cpp \
 	$(DEP_ASTNODE_ALL) \
+	$(DEP_COMPUTEDVALUE_ALL) \
 	$(DEP_PROGRAM) \
 	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_BYTECODE)
-	@echo "\n### Compiling Tang Language Execution Test ###"
+	@echo "\n### Compiling Tang Language Execution Simple Test ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
@@ -1211,7 +1212,7 @@ test: \
 				$(APP_DIR)/$(TARGET) \
 				$(APP_DIR)/testUnicodeString \
 				$(APP_DIR)/testTangLanguageParse \
-				$(APP_DIR)/testTangLanguageExecute
+				$(APP_DIR)/testTangLanguageExecuteSimple
 #				$(APP_DIR)/libtestLibrary.so \
 #				$(APP_DIR)/test \
 #				$(APP_DIR)/tang
@@ -1228,17 +1229,17 @@ test: \
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1 --gtest_fail_fast
 	@echo "\033[0;32m"
-	@echo "#################################################"
-	@echo "### Running Bytecode Language Execution tests ###"
-	@echo "#################################################"
+	@echo "########################################################"
+	@echo "### Running Bytecode Language Execution Simple tests ###"
+	@echo "########################################################"
 	@echo "\033[0m"
-	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecute --gtest_brief=1
+	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
 	@echo "\033[0;32m"
-	@echo "#################################################"
-	@echo "### Running Binary Language Execution tests   ###"
-	@echo "#################################################"
+	@echo "########################################################"
+	@echo "### Running Binary Language Execution Simple tests   ###"
+	@echo "########################################################"
 	@echo "\033[0m"
-	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecute --gtest_brief=1
+	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
 #	@echo "\033[0;32m"
 #	@echo "############################"
 #	@echo "### Running normal tests ###"
