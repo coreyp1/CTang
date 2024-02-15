@@ -88,7 +88,7 @@ bool gta_ast_node_null_compile_to_binary(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), 
 }
 
 bool gta_ast_node_null_compile_to_bytecode(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_Bytecode_Compiler_Context * context) {
-  return GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
+  return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count) && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
 }
 
 void GTA_CALL gta_ast_node_null_destroy(GTA_Ast_Node * self) {

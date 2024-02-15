@@ -18,6 +18,9 @@ extern "C" {
 
 typedef struct GTA_Program GTA_Program;
 
+#define GTA_BYTECODE_APPEND(X,Y) \
+  GTA_VECTORX_APPEND(X, GTA_TYPEX_MAKE_UI(Y))
+
 /**
  * The bytecode compiler context.
  *
@@ -29,6 +32,14 @@ typedef struct GTA_Bytecode_Compiler_Context {
    * The program being compiled.
    */
   GTA_Program * program;
+  /**
+   * Bytecode offsets.
+   *
+   * Some bytecode instructions have different sizes, so we need to keep track
+   * of the offsets of the bytecode instructions so that we can navigate
+   * the bytecode later.
+   */
+  GTA_VectorX * bytecode_offsets;
 } GTA_Bytecode_Compiler_Context;
 
 /**

@@ -18,7 +18,14 @@ GTA_Bytecode_Compiler_Context * gta_bytecode_compiler_context_create(GTA_Program
 }
 
 bool gta_bytecode_compiler_context_create_in_place(GTA_Bytecode_Compiler_Context * context, GTA_Program * program) {
-  context->program = program;
+  GTA_VectorX * bytecode_offsets = GTA_VECTORX_CREATE(32);
+  if (!bytecode_offsets) {
+    return false;
+  }
+  *context = (GTA_Bytecode_Compiler_Context) {
+    .program = program,
+    .bytecode_offsets = bytecode_offsets,
+  };
   return true;
 }
 
@@ -28,5 +35,5 @@ void gta_bytecode_compiler_context_destroy(GTA_Bytecode_Compiler_Context * conte
 }
 
 void gta_bytecode_compiler_context_destroy_in_place(GTA_Bytecode_Compiler_Context * context) {
-  (void)context;
+  GTA_VECTORX_DESTROY(context->bytecode_offsets);
 }

@@ -50,7 +50,7 @@ void gta_ast_node_float_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
 
 bool gta_ast_node_float_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;
-  return GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_FLOAT))
+  return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count) && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_FLOAT))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_F(float_node->value));
 
   return false;
