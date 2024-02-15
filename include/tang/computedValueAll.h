@@ -8,6 +8,7 @@
 #define G_TANG_COMPUTED_VALUE_ALL_H
 
 #include <tang/computedValue.h>
+#include <tang/computedValueBoolean.h>
 #include <tang/computedValueError.h>
 #include <tang/computedValueFloat.h>
 #include <tang/computedValueInteger.h>

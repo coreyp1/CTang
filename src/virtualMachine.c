@@ -26,8 +26,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context, GTA_Pr
 
   // Execute the bytecode.
   while (next) {
-    current = next;
-    ++next;
+    current = next++;
     switch (GTA_TYPEX_UI(*current)) {
       case GTA_BYTECODE_RETURN: {
         context->result = GTA_TYPEX_P(context->stack->data[--*sp]);
@@ -43,10 +42,24 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context, GTA_Pr
           : 0;
         break;
       }
-      case GTA_BYTECODE_NULL: {
-        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(gta_computed_value_null))) {
+      case GTA_BYTECODE_BOOLEAN: {
+        // Use boolean singletons to avoid memory allocation.
+        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(GTA_TYPEX_B(*(next++))
+          ? gta_computed_value_boolean_true
+          : gta_computed_value_boolean_false))) {
           context->result = gta_computed_value_error_out_of_memory;
         }
+        break;
+      }
+      case GTA_BYTECODE_FLOAT: {
+        GTA_Computed_Value_Float * float_value = gta_computed_value_float_create(GTA_TYPEX_F(*next));
+        if (!float_value) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(float_value))) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        ++next;
         break;
       }
       case GTA_BYTECODE_INTEGER: {
@@ -60,15 +73,10 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context, GTA_Pr
         ++next;
         break;
       }
-      case GTA_BYTECODE_FLOAT: {
-        GTA_Computed_Value_Float * float_value = gta_computed_value_float_create(GTA_TYPEX_F(*next));
-        if (!float_value) {
+      case GTA_BYTECODE_NULL: {
+        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(gta_computed_value_null))) {
           context->result = gta_computed_value_error_out_of_memory;
         }
-        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(float_value))) {
-          context->result = gta_computed_value_error_out_of_memory;
-        }
-        ++next;
         break;
       }
       default: {

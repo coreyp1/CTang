@@ -163,10 +163,12 @@ typedef GCU_Vector32 GTA_Bytecode_Vector;
 #define GTA_TYPEX_I(X) (X).i32
 #define GTA_TYPEX_F(X) (X).f32
 #define GTA_TYPEX_P(X) (X).p
+#define GTA_TYPEX_B(X) (X).b
 #define GTA_TYPEX_MAKE_UI(X) GCU_TYPE32_UI32(X)
 #define GTA_TYPEX_MAKE_I(X) GCU_TYPE32_I32(X)
 #define GTA_TYPEX_MAKE_F(X) GCU_TYPE32_F32(X)
 #define GTA_TYPEX_MAKE_P(X) GCU_TYPE32_P(X)
+#define GTA_TYPEX_MAKE_B(X) GCU_TYPE32_B(X)
 #elif GTA_64_BIT
 typedef GCU_Vector64 GTA_VectorX;
 typedef GCU_Type64_Union GTA_TypeX_Union;
@@ -178,10 +180,12 @@ typedef GCU_Type64_Union GTA_TypeX_Union;
 #define GTA_TYPEX_I(X) (X).i64
 #define GTA_TYPEX_F(X) (X).f64
 #define GTA_TYPEX_P(X) (X).p
+#define GTA_TYPEX_B(X) (X).b
 #define GTA_TYPEX_MAKE_UI(X) GCU_TYPE64_UI64(X)
 #define GTA_TYPEX_MAKE_I(X) GCU_TYPE64_I64(X)
 #define GTA_TYPEX_MAKE_F(X) GCU_TYPE64_F64(X)
 #define GTA_TYPEX_MAKE_P(X) GCU_TYPE64_P(X)
+#define GTA_TYPEX_MAKE_B(X) GCU_TYPE64_B(X)
 #else
 #error "Unsupported architecture"
 #endif

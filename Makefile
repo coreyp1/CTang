@@ -58,6 +58,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/bytecode.o \
 	$(OBJ_DIR)/bytecodeCompilerContext.o \
 	$(OBJ_DIR)/computedValue.o \
+	$(OBJ_DIR)/computedValueBoolean.o \
 	$(OBJ_DIR)/computedValueError.o \
 	$(OBJ_DIR)/computedValueFloat.o \
 	$(OBJ_DIR)/computedValueInteger.o \
@@ -311,6 +312,9 @@ DEP_ASTNODE_ALL = \
 DEP_COMPUTEDVALUE = \
 	include/tang/computedValue.h \
 	$(DEP_MACROS)
+DEP_COMPUTEDVALUEBOOLEAN = \
+	include/tang/computedValueBoolean.h \
+	$(DEP_COMPUTEDVALUE)
 DEP_COMPUTEDVALUEERROR = \
   include/tang/computedValueError.h \
 	$(DEP_COMPUTEDVALUE)
@@ -545,6 +549,7 @@ $(OBJ_DIR)/astNodeBlock.o: \
 $(OBJ_DIR)/astNodeBoolean.o: \
 	src/astNodeBoolean.c \
 	$(DEP_ASTNODEBOOLEAN) \
+	$(DEP_COMPUTEDVALUEBOOLEAN) \
 	$(DEP_OPCODE)
 
 $(OBJ_DIR)/astNodeBreak.o: \
@@ -723,6 +728,11 @@ $(OBJ_DIR)/computedValue.o: \
 	src/computedValue.c \
   $(DEP_COMPUTEDVALUE) \
 	$(DEP_MACROS)
+
+$(OBJ_DIR)/computedValueBoolean.o: \
+	src/computedValueBoolean.c \
+	$(DEP_COMPUTEDVALUEBOOLEAN) \
+	$(DEP_COMPUTEDVALUEERROR)
 
 $(OBJ_DIR)/computedValueError.o: \
 	src/computedValueError.c \

@@ -85,6 +85,34 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_boolean_simplify(GTA_Ast_Node * self,
  */
 void gta_ast_node_boolean_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
+/**
+ * Compiles a GTA_Ast_Node_Boolean object to binary.
+ *
+ * This function should not be called directly. Use
+ * gta_ast_node_compile_to_binary() instead.
+ *
+ * @see gta_ast_node_compile_to_binary()
+ *
+ * @param self The GTA_Ast_Node_Boolean object to compile.
+ * @param context The compilation context to use.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_boolean_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+
+/**
+ * Compiles a GTA_Ast_Node_Boolean object to bytecode.
+ *
+ * This function should not be called directly. Use
+ * gta_ast_node_compile_to_bytecode() instead.
+ *
+ * @see gta_ast_node_compile_to_bytecode()
+ *
+ * @param self The GTA_Ast_Node_Boolean object to compile.
+ * @param context The compilation context to use.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_boolean_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
+
 #ifdef __cplusplus
 }
 #endif //__cplusplus

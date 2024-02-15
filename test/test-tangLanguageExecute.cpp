@@ -11,14 +11,14 @@
 
 using namespace std;
 
-TEST(EdgeCase, InvalidSyntax) {
+TEST(Syntax, InvalidSyntax) {
   gcu_memory_reset_counts();
   GTA_Program * program = gta_program_create("invalid syntax :(");
   ASSERT_FALSE(program);
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
 }
 
-TEST(EdgeCase, Empty) {
+TEST(Syntax, Empty) {
   gcu_memory_reset_counts();
   GTA_Program * program = gta_program_create("");
   ASSERT_TRUE(program);
@@ -32,7 +32,7 @@ TEST(EdgeCase, Empty) {
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
 }
 
-TEST(SingleValue, Null) {
+TEST(Declare, Null) {
   gcu_memory_reset_counts();
   GTA_Program * program = gta_program_create("null");
   ASSERT_TRUE(program);
@@ -44,6 +44,35 @@ TEST(SingleValue, Null) {
   gta_program_destroy(program);
   gta_bytecode_execution_context_destroy_in_place(&context);
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+}
+
+TEST(Declare, Boolean) {
+  {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create("true");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context.result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context.result)->value);
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create("false");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context.result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context.result)->value);
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
 }
 
 TEST(Declare, Integer) {

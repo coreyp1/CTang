@@ -27,8 +27,10 @@ extern "C" {
 typedef enum GTA_Bytecode {
   GTA_BYTECODE_RETURN,         ///< Get stack #, pop return val, pop (stack #) times,
                                ///<   push val, restore fp, restore pc
-  GTA_BYTECODE_NULL,           ///< Push a null onto the stack
+  GTA_BYTECODE_BOOLEAN,        ///< Push a boolean onto the stack
+  GTA_BYTECODE_FLOAT,          ///< Push a floating point number onto the stack
   GTA_BYTECODE_INTEGER,        ///< Push an integer onto the stack
+  GTA_BYTECODE_NULL,           ///< Push a null onto the stack
 
 
   GTA_BYTECODE_POP,            ///< Pop a val
@@ -43,8 +45,6 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_JMPT_S,         ///< PC #: read val, if true, set pc to PC #
   GTA_BYTECODE_JMPT_I,         ///< PC #: read val, if true, set pc to PC #
   GTA_BYTECODE_JMPT_POP,       ///< PC #: pop val, if true, set pc to PC #
-  GTA_BYTECODE_FLOAT,          ///< Push a floating point number onto the stack
-  GTA_BYTECODE_BOOLEAN,        ///< Push a boolean onto the stack
   GTA_BYTECODE_STRING,         ///< Get len, char string: push string
   GTA_BYTECODE_ARRAY,          ///< Get len, pop `len` items, putting them into an array
                   ///<   with the last array item popped first
