@@ -165,6 +165,7 @@ typedef GCU_Hash32_Iterator GTA_Bytecode_Hash_Iterator;
 #define GTA_VECTORX_DESTROY gcu_vector32_destroy
 #define GTA_VECTORX_APPEND gcu_vector32_append
 #define GTA_VECTORX_COUNT gcu_vector32_count
+#define GTA_VECTORX_RESERVE gcu_vector32_reserve
 #define GTA_HASHX_CREATE gcu_hash32_create
 #define GTA_HASHX_DESTROY gcu_hash32_destroy
 #define GTA_HASHX_SET gcu_hash32_set
@@ -195,6 +196,7 @@ typedef GCU_Hash64_Iterator GTA_HashX_Iterator;
 #define GTA_VECTORX_DESTROY gcu_vector64_destroy
 #define GTA_VECTORX_APPEND gcu_vector64_append
 #define GTA_VECTORX_COUNT gcu_vector64_count
+#define GTA_VECTORX_RESERVE gcu_vector64_reserve
 #define GTA_HASHX_CREATE gcu_hash64_create
 #define GTA_HASHX_DESTROY gcu_hash64_destroy
 #define GTA_HASHX_SET gcu_hash64_set

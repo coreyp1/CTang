@@ -61,11 +61,10 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
 
 static void gta_program_compile_binary(GTA_Program * program) {
   GTA_Binary_Compiler_Context * context = gta_binary_compiler_context_create(program);
-  if (!context) {
+  if (!context || !gcu_vector8_reserve(context->binary_vector, 1024)) {
     return;
   }
 
-  bool no_memory_error = true;
 #ifdef GTA_X86_64
   // 64-bit x86
   // https://defuse.ca/online-x86-assembler.htm
@@ -82,24 +81,23 @@ static void gta_program_compile_binary(GTA_Program * program) {
   // Each execution will put the result in rax.  It is up to
   // the caller to move the result to the correct location.
 
-  no_memory_error
-    // Set up the beginning of the function:
-    //   push rbp
-    //   mov rbp, rsp
-    &= GTA_BINARY_WRITE1(context->binary_vector, 0x55)
-    && GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xE5)
-    // Push r15 and r14 onto the stack.
-    // Because they are each 8 bytes, we do not need to adjust the stack
-    // pointer in order to maintain 16-byte alignment.
-    //   push r15
-    //   push r14
-    && GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x57)
-    && GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x56)
-    //   mov r15, rdi
-    && GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0xFF)
-    //   lea r14, [r15 + offsetof(GTA_Binary_Execution_Context, result)]
-    && GTA_BINARY_WRITE3(context->binary_vector, 0x4D, 0x8D, 0x77)
-    && GTA_BINARY_WRITE1(context->binary_vector, (uint8_t)(size_t)(&((GTA_Execution_Context *)0)->result));
+  // Set up the beginning of the function:
+  //   push rbp
+  //   mov rbp, rsp
+  GTA_BINARY_WRITE1(context->binary_vector, 0x55);
+  GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xE5);
+  // Push r15 and r14 onto the stack.
+  // Because they are each 8 bytes, we do not need to adjust the stack
+  // pointer in order to maintain 16-byte alignment.
+  //   push r15
+  //   push r14
+  GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x57);
+  GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x56);
+  //   mov r15, rdi
+  GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0xFF);
+  //   lea r14, [r15 + offsetof(GTA_Binary_Execution_Context, result)]
+  GTA_BINARY_WRITE3(context->binary_vector, 0x4D, 0x8D, 0x77);
+  GTA_BINARY_WRITE1(context->binary_vector, (uint8_t)(size_t)(&((GTA_Execution_Context *)0)->result));
 
 #elif defined(GTA_X86)
   // 32-bit x86
@@ -117,21 +115,27 @@ static void gta_program_compile_binary(GTA_Program * program) {
 #endif
 
   // Actually compile the AST to binary.
-  no_memory_error &= gta_ast_node_compile_to_binary(program->ast, context);
+  if (!gta_ast_node_compile_to_binary(program->ast, context)) {
+    gta_binary_compiler_context_destroy(context);
+    return;
+  }
 
 #ifdef GTA_X86_64
   // 64-bit x86
+  if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 6)) {
+    gta_binary_compiler_context_destroy(context);
+    return;
+  }
   // Pop r15 and r14 off the stack.
   //   pop r14
   //   pop r15
-  no_memory_error
-    &= GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x5E)
-    && GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x5F)
+  GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x5E);
+  GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x5F);
   // Set up the end of the function:
   //   leave
   //   ret
-    && GTA_BINARY_WRITE1(context->binary_vector, 0xC9)
-    && GTA_BINARY_WRITE1(context->binary_vector, 0xC3);
+  GTA_BINARY_WRITE1(context->binary_vector, 0xC9);
+  GTA_BINARY_WRITE1(context->binary_vector, 0xC3);
 #elif defined(GTA_X86)
   // 32-bit x86
   // Set up the end of the function:
@@ -141,11 +145,6 @@ static void gta_program_compile_binary(GTA_Program * program) {
     && GTA_BINARY_WRITE1(context->binary_vector, 0x5D)
     && GTA_BINARY_WRITE1(context->binary_vector, 0xC3);
 #endif
-
-  if (!no_memory_error) {
-    gta_binary_compiler_context_destroy(context);
-    return;
-  }
 
   // Copy the binary to executable memory.
   size_t length = gcu_vector8_count(context->binary_vector);

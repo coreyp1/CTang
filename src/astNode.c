@@ -68,20 +68,18 @@ void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback,
 
 bool gta_ast_node_null_compile_to_binary(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
   GCU_Vector8 * v = context->binary_vector;
-#if defined(GTA_X86_64)
+  if (!gcu_vector8_reserve(v, v->count + 12)) {
+    return false;
+  }
+#if GTA_X86_64
   // 64-bit x86
   // Assembly to call gta_computed_value_create():
   //   mov rax, gta_computed_value_create
+  GTA_BINARY_WRITE2(v, 0x48, 0xB8);
+  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
   //   call rax
-  bool success = GTA_BINARY_WRITE1(v, 0x48)
-    && GTA_BINARY_WRITE1(v, 0xB8)
-    && GTA_BINARY_WRITE4(v, 0xDE, 0xAD, 0xBE, 0xEF)
-    && GTA_BINARY_WRITE4(v, 0xDE, 0xAD, 0xBE, 0xEF)
-    && GTA_BINARY_WRITE1(v, 0xFF)
-    && GTA_BINARY_WRITE1(v, 0xD0);
-  if (!success) {
-    return false;
-  }
+  GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+
   GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_create);
   memcpy(&v->data[v->count - 10], &fp, 8);
   return true;

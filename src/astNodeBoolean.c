@@ -54,26 +54,22 @@ bool gta_ast_node_boolean_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
 bool gta_ast_node_boolean_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;
   GCU_Vector8 * v = context->binary_vector;
+  if (!gcu_vector8_reserve(v, v->count + 22)) {
+    return false;
+  }
 #if defined(GTA_X86_64)
   // 64-bit x86
   // Assembly to call gta_computed_value_integer_create():
-  bool success
-    // mov rdi, boolean->value
-    =  GTA_BINARY_WRITE2(v, 0x48, 0xBF)
-    && GTA_BINARY_WRITE8(v, boolean->value ? 0x01 : 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
-    // mov rax, gta_computed_value_integer_create
-    && GTA_BINARY_WRITE2(v, 0x48, 0xB8)
-    && GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-    if (success) {
-      GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_boolean_create);
-      memcpy(&v->data[v->count - 8], &fp, 8);
-    }
-  success
-    // call rax
-    =  GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
-  if (!success) {
-    return false;
-  }
+  //   mov rdi, boolean->value
+  GTA_BINARY_WRITE2(v, 0x48, 0xBF);
+  GTA_BINARY_WRITE8(v, boolean->value ? 0x01 : 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+  //   mov rax, gta_computed_value_integer_create
+  GTA_BINARY_WRITE2(v, 0x48, 0xB8);
+  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_boolean_create);
+  memcpy(&v->data[v->count - 8], &fp, 8);
+  //   call rax
+  GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
   return true;
 #endif
   return false;
