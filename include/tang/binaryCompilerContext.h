@@ -38,6 +38,14 @@ extern "C" {
   GTA_BINARY_WRITE4(X, A, B, C, D) \
   && GTA_BINARY_WRITE4(X, E, F, G, H)
 
+#define GTA_BINARY_WRITE9(X,A,B,C,D,E,F,G,H,I) \
+  GTA_BINARY_WRITE5(X, A, B, C, D, E) \
+  && GTA_BINARY_WRITE4(X, F, G, H, I)
+
+#define GTA_BINARY_WRITE16(X,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P) \
+  GTA_BINARY_WRITE8(X, A, B, C, D, E, F, G, H) \
+  && GTA_BINARY_WRITE8(X, I, J, K, L, M, N, O, P)
+
 /**
  * Helper union for converting between function pointers and integers.
  */

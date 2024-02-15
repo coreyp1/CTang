@@ -53,10 +53,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context, GTA_Pr
       }
       case GTA_BYTECODE_FLOAT: {
         GTA_Computed_Value_Float * float_value = gta_computed_value_float_create(GTA_TYPEX_F(*next));
-        if (!float_value) {
-          context->result = gta_computed_value_error_out_of_memory;
-        }
-        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(float_value))) {
+        if (!float_value || !GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(float_value))) {
           context->result = gta_computed_value_error_out_of_memory;
         }
         ++next;
@@ -64,10 +61,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context, GTA_Pr
       }
       case GTA_BYTECODE_INTEGER: {
         GTA_Computed_Value_Integer * integer = gta_computed_value_integer_create(GTA_TYPEX_I(*next));
-        if (!integer) {
-          context->result = gta_computed_value_error_out_of_memory;
-        }
-        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(integer))) {
+        if (!integer || !GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(integer))) {
           context->result = gta_computed_value_error_out_of_memory;
         }
         ++next;
@@ -75,6 +69,13 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context, GTA_Pr
       }
       case GTA_BYTECODE_NULL: {
         if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(gta_computed_value_null))) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        break;
+      }
+      case GTA_BYTECODE_STRING: {
+        GTA_Computed_Value_String * string = gta_computed_value_string_create(GTA_TYPEX_P(*next++), false);
+        if (!string || !GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(string))) {
           context->result = gta_computed_value_error_out_of_memory;
         }
         break;

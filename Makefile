@@ -62,6 +62,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/computedValueError.o \
 	$(OBJ_DIR)/computedValueFloat.o \
 	$(OBJ_DIR)/computedValueInteger.o \
+	$(OBJ_DIR)/computedValueString.o \
 	$(OBJ_DIR)/executionContext.o \
 	$(OBJ_DIR)/program.o \
 	$(OBJ_DIR)/tangLanguage.o \
@@ -324,12 +325,17 @@ DEP_COMPUTEDVALUEFLOAT = \
 DEP_COMPUTEDVALUEINTEGER = \
 	include/tang/computedValueInteger.h \
 	$(DEP_COMPUTEDVALUE)
+DEP_COMPUTEDVALUESTRING = \
+	include/tang/computedValueString.h \
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_UNICODESTRING)
 
 DEP_COMPUTEDVALUEALL = \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEFLOAT) \
-	$(DEP_COMPUTEDVALUEINTEGER)
+	$(DEP_COMPUTEDVALUEINTEGER) \
+	$(DEP_COMPUTEDVALUESTRING)
 
 DEP_TANGLANGUAGE = \
 	$(DEP_ASTNODE)
@@ -674,7 +680,8 @@ $(OBJ_DIR)/astNodeString.o: \
 	src/astNodeString.c \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_OPCODE) \
-	$(DEP_UNICODESTRING)
+	$(DEP_UNICODESTRING) \
+	$(DEP_COMPUTEDVALUESTRING)
 
 $(OBJ_DIR)/astNodeTernary.o: \
 	src/astNodeTernary.c \
@@ -749,6 +756,12 @@ $(OBJ_DIR)/computedValueInteger.o: \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEFLOAT)
+
+$(OBJ_DIR)/computedValueString.o: \
+	src/computedValueString.c \
+	$(DEP_COMPUTEDVALUESTRING) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_UNICODESTRING)
 
 $(OBJ_DIR)/program.o: \
 	src/program.c \

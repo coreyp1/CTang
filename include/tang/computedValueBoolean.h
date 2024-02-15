@@ -42,7 +42,7 @@ typedef struct GTA_Computed_Value_Boolean {
  * @param value The boolean value of the computed value.
  * @return The initialized object or NULL if an error occurred.
  */
-GTA_Computed_Value_Boolean * gta_computed_value_boolean_create(bool value);
+GTA_Computed_Value_Boolean * GTA_CALL gta_computed_value_boolean_create(bool value);
 
 /**
  * Destroys a GTA_Computed_Value_Boolean object.
@@ -54,7 +54,7 @@ GTA_Computed_Value_Boolean * gta_computed_value_boolean_create(bool value);
  *
  * @param self The object to destroy.
  */
-void gta_computed_value_boolean_destroy(GTA_Computed_Value * self);
+void GTA_CALL gta_computed_value_boolean_destroy(GTA_Computed_Value * self);
 
 /**
  * Deep copy a computed value for a boolean.

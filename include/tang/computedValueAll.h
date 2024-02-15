@@ -12,5 +12,7 @@
 #include <tang/computedValueError.h>
 #include <tang/computedValueFloat.h>
 #include <tang/computedValueInteger.h>
+#include <tang/computedValueString.h>
+
 
 #endif // G_TANG_COMPUTED_VALUE_ALL_H

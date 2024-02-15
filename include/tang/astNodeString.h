@@ -9,7 +9,7 @@
 extern "C" {
 #endif //__cplusplus
 
-#include "tang/astNode.h"
+#include <tang/astNode.h>
 
 /**
  * The vtable for the GTA_Ast_Node_String class.
@@ -84,6 +84,28 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_string_simplify(GTA_Ast_Node * self, 
  * @param return_value The return value of the walk, populated by the callback.
  */
 void gta_ast_node_string_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+
+/**
+ * Compile a GTA_Ast_Node_String object to bytecode.
+ *
+ * @see gta_ast_node_compile_to_bytecode
+ *
+ * @param self The GTA_Ast_Node_String object to compile.
+ * @param context The bytecode compiler context.
+ * @return true on success, false on failure.
+ */
+bool gta_ast_node_string_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
+
+/**
+ * Compile a GTA_Ast_Node_String object to binary.
+ *
+ * @see gta_ast_node_compile_to_binary
+ *
+ * @param self The GTA_Ast_Node_String object to compile.
+ * @param context The binary compiler context.
+ * @return true on success, false on failure.
+ */
+bool gta_ast_node_string_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

@@ -13,6 +13,7 @@
 extern "C" {
 #endif // __cplusplus
 
+#include <cutil/hash.h>
 #include <tang/astNode.h>
 #include <tang/bytecode.h>
 #include <tang/computedValue.h>

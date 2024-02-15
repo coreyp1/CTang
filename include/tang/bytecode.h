@@ -31,6 +31,7 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_FLOAT,          ///< Push a floating point number onto the stack
   GTA_BYTECODE_INTEGER,        ///< Push an integer onto the stack
   GTA_BYTECODE_NULL,           ///< Push a null onto the stack
+  GTA_BYTECODE_STRING,         ///< Get len, char string: push string
 
 
   GTA_BYTECODE_POP,            ///< Pop a val
@@ -45,7 +46,6 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_JMPT_S,         ///< PC #: read val, if true, set pc to PC #
   GTA_BYTECODE_JMPT_I,         ///< PC #: read val, if true, set pc to PC #
   GTA_BYTECODE_JMPT_POP,       ///< PC #: pop val, if true, set pc to PC #
-  GTA_BYTECODE_STRING,         ///< Get len, char string: push string
   GTA_BYTECODE_ARRAY,          ///< Get len, pop `len` items, putting them into an array
                   ///<   with the last array item popped first
   GTA_BYTECODE_MAP,            ///< Get len, pop `len` value then key pairs, putting them

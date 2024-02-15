@@ -172,6 +172,35 @@ TEST(Declare, Float) {
   }
 }
 
+TEST(Declare, String) {
+  {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(R"("")");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context.result));
+    ASSERT_STREQ(((GTA_Computed_Value_String *)context.result)->value->buffer, "");
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(R"("hello")");
+    ASSERT_TRUE(program);
+    GTA_Execution_Context context;
+    ASSERT_TRUE(gta_program_execute(program, &context));
+    ASSERT_TRUE(context.result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context.result));
+    ASSERT_STREQ(((GTA_Computed_Value_String *)context.result)->value->buffer, "hello");
+    gta_program_destroy(program);
+    gta_bytecode_execution_context_destroy_in_place(&context);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
 
 int main(int argc, char **argv) {
   /*

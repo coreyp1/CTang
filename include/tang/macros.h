@@ -19,6 +19,8 @@ extern "C" {
 #include <stdint.h>
 #include <cutil/float.h>
 #include <cutil/vector.h>
+#include <cutil/hash.h>
+#include <cutil/string.h>
 
 /**
  * Declaring the calling convention (for consistency).
@@ -155,10 +157,23 @@ typedef GCU_float64_t GTA_Float;
  */
 #if GTA_32_BIT
 typedef GCU_Vector32 GTA_Bytecode_Vector;
+typedef GCU_Type32_Union GTA_Bytecode_Type_Union;
+typedef GCU_Hash32 GTA_Bytecode_Hash;
+typedef GCU_Hash32_Iterator GTA_Bytecode_Hash_Iterator;
+#define GTA_STRING_HASH gcu_string_hash_32
 #define GTA_VECTORX_CREATE gcu_vector32_create
 #define GTA_VECTORX_DESTROY gcu_vector32_destroy
 #define GTA_VECTORX_APPEND gcu_vector32_append
 #define GTA_VECTORX_COUNT gcu_vector32_count
+#define GTA_HASHX_CREATE gcu_hash32_create
+#define GTA_HASHX_DESTROY gcu_hash32_destroy
+#define GTA_HASHX_SET gcu_hash32_set
+#define GTA_HASHX_GET gcu_hash32_get
+#define GTA_HASHX_CONTAINS gcu_hash32_contains
+#define GTA_HASHX_REMOVE gcu_hash32_remove
+#define GTA_HASHX_COUNT gcu_hash32_count
+#define GTA_HASHX_ITERATOR_GET gcu_hash32_iterator_get
+#define GTA_HASHX_ITERATOR_NEXT gcu_hash32_iterator_next
 #define GTA_TYPEX_UI(X) (X).ui32
 #define GTA_TYPEX_I(X) (X).i32
 #define GTA_TYPEX_F(X) (X).f32
@@ -170,12 +185,25 @@ typedef GCU_Vector32 GTA_Bytecode_Vector;
 #define GTA_TYPEX_MAKE_P(X) GCU_TYPE32_P(X)
 #define GTA_TYPEX_MAKE_B(X) GCU_TYPE32_B(X)
 #elif GTA_64_BIT
+
 typedef GCU_Vector64 GTA_VectorX;
 typedef GCU_Type64_Union GTA_TypeX_Union;
+typedef GCU_Hash64 GTA_HashX;
+typedef GCU_Hash64_Iterator GTA_HashX_Iterator;
+#define GTA_STRING_HASH gcu_string_hash_64
 #define GTA_VECTORX_CREATE gcu_vector64_create
 #define GTA_VECTORX_DESTROY gcu_vector64_destroy
 #define GTA_VECTORX_APPEND gcu_vector64_append
 #define GTA_VECTORX_COUNT gcu_vector64_count
+#define GTA_HASHX_CREATE gcu_hash64_create
+#define GTA_HASHX_DESTROY gcu_hash64_destroy
+#define GTA_HASHX_SET gcu_hash64_set
+#define GTA_HASHX_GET gcu_hash64_get
+#define GTA_HASHX_CONTAINS gcu_hash64_contains
+#define GTA_HASHX_REMOVE gcu_hash64_remove
+#define GTA_HASHX_COUNT gcu_hash64_count
+#define GTA_HASHX_ITERATOR_GET gcu_hash64_iterator_get
+#define GTA_HASHX_ITERATOR_NEXT gcu_hash64_iterator_next
 #define GTA_TYPEX_UI(X) (X).ui64
 #define GTA_TYPEX_I(X) (X).i64
 #define GTA_TYPEX_F(X) (X).f64
