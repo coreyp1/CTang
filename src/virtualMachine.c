@@ -3,11 +3,11 @@
 #include <tang/virtualMachine.h>
 #include <tang/computedValueAll.h>
 
-bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context, GTA_Program * program) {
-  if (!context || !program || !program->bytecode) {
+bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
+  if (!context || !context->program || !context->program->bytecode) {
     return false;
   }
-  GTA_TypeX_Union * current = program->bytecode->data;
+  GTA_TypeX_Union * current = context->program->bytecode->data;
   GTA_TypeX_Union * next = current;
   // Unlike x86, the stack grows upwards.
   // Push the "old" base pointer, which is in this case, 0, will signal the

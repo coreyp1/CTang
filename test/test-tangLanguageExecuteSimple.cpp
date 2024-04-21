@@ -11,6 +11,20 @@
 
 using namespace std;
 
+#define TEST_PROGRAM_SETUP(code) \
+  gcu_memory_reset_counts(); \
+  GTA_Program * program = gta_program_create(code); \
+  ASSERT_TRUE(program); \
+  GTA_Execution_Context * context = gta_execution_context_create(program); \
+  ASSERT_TRUE(context); \
+  ASSERT_TRUE(gta_program_execute(context)); \
+  ASSERT_TRUE(context->result);
+
+#define TEST_PROGRAM_TEARDOWN() \
+  gta_execution_context_destroy(context); \
+  gta_program_destroy(program); \
+  ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+
 TEST(Syntax, InvalidSyntax) {
   gcu_memory_reset_counts();
   GTA_Program * program = gta_program_create("invalid syntax :(");
@@ -19,241 +33,149 @@ TEST(Syntax, InvalidSyntax) {
 }
 
 TEST(Syntax, Empty) {
-  gcu_memory_reset_counts();
-  GTA_Program * program = gta_program_create("");
-  ASSERT_TRUE(program);
-  GTA_Execution_Context context;
-  ASSERT_TRUE(gta_program_execute(program, &context));
-  ASSERT_TRUE(context.result);
-  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context.result));
-  gta_program_destroy(program);
-  gta_bytecode_execution_context_destroy_in_place(&context);
-  ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  // An empty program should return a null result.
+  TEST_PROGRAM_SETUP("");
+  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+  TEST_PROGRAM_TEARDOWN();
 }
 
 TEST(Declare, Null) {
-  gcu_memory_reset_counts();
-  GTA_Program * program = gta_program_create("null");
-  ASSERT_TRUE(program);
-  GTA_Execution_Context context;
-  ASSERT_TRUE(gta_program_execute(program, &context));
-  ASSERT_TRUE(context.result);
-  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context.result));
-  gta_program_destroy(program);
-  gta_bytecode_execution_context_destroy_in_place(&context);
-  ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  // The null keyword should return a null result.
+  TEST_PROGRAM_SETUP("null");
+  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+  TEST_PROGRAM_TEARDOWN();
 }
 
 TEST(Declare, Boolean) {
   {
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("true");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context.result));
-    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context.result)->value);
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    // The true keyword should return a boolean result with a value of true.
+    TEST_PROGRAM_SETUP("true");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
   }
   {
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("false");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context.result));
-    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context.result)->value);
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    // The false keyword should return a boolean result with a value of false.
+    TEST_PROGRAM_SETUP("false");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
   }
 }
 
 TEST(Declare, Integer) {
   {
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("3");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context.result));
-    ASSERT_EQ(((GTA_Computed_Value_Integer *)context.result)->value, 3);
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    // A positive integer.
+    TEST_PROGRAM_SETUP("3");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
+    TEST_PROGRAM_TEARDOWN();
   }
   {
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("42");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context.result));
-    ASSERT_EQ(((GTA_Computed_Value_Integer *)context.result)->value, 42);
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    // A positive integer.
+    TEST_PROGRAM_SETUP("42");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 42);
+    TEST_PROGRAM_TEARDOWN();
   }
   {
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("-42");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context.result));
-    ASSERT_EQ(((GTA_Computed_Value_Integer *)context.result)->value, -42);
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    // A negative integer.
+    TEST_PROGRAM_SETUP("-42");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -42);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // An integer with a value of 0.
+    TEST_PROGRAM_SETUP("0");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 0);
+    TEST_PROGRAM_TEARDOWN();
   }
 }
 
 TEST(Declare, Float) {
   {
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("3.14");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context.result));
-    ASSERT_EQ(((GTA_Computed_Value_Float *)context.result)->value, 3.14);
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    // A positive float.
+    TEST_PROGRAM_SETUP("3.14");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 3.14);
+    TEST_PROGRAM_TEARDOWN();
   }
   {
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("42.0");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context.result));
-    ASSERT_EQ(((GTA_Computed_Value_Float *)context.result)->value, 42.0);
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    // A positive float.
+    TEST_PROGRAM_SETUP("42.0");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 42.0);
+    TEST_PROGRAM_TEARDOWN();
   }
   {
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("-42.0");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context.result));
-    ASSERT_EQ(((GTA_Computed_Value_Float *)context.result)->value, -42.0);
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    // A negative float.
+    TEST_PROGRAM_SETUP("-42.0");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, -42.0);
+    TEST_PROGRAM_TEARDOWN();
   }
   {
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("0.");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context.result));
-    ASSERT_EQ(((GTA_Computed_Value_Float *)context.result)->value, 0.);
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    // A float with a value of 0.
+    TEST_PROGRAM_SETUP("0.");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 0.);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A float with a leading 0.
+    TEST_PROGRAM_SETUP("0.42");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 0.42);
+    TEST_PROGRAM_TEARDOWN();
   }
 }
 
 TEST(Declare, String) {
   {
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create(R"("")");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context.result));
-    ASSERT_STREQ(((GTA_Computed_Value_String *)context.result)->value->buffer, "");
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    // Empty string.
+    TEST_PROGRAM_SETUP(R"("")");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ(((GTA_Computed_Value_String *)context->result)->value->buffer, "");
+    TEST_PROGRAM_TEARDOWN();
   }
   {
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create(R"("hello")");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context.result));
-    ASSERT_STREQ(((GTA_Computed_Value_String *)context.result)->value->buffer, "hello");
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    // Non-empty string.
+    TEST_PROGRAM_SETUP(R"("hello")");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ(((GTA_Computed_Value_String *)context->result)->value->buffer, "hello");
+    TEST_PROGRAM_TEARDOWN();
   }
 }
 
 TEST(Declare, Block) {
   if (false) {
     // Empty block.
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("{}");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context.result));
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    TEST_PROGRAM_SETUP("{}");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    TEST_PROGRAM_TEARDOWN();
   }
   if (false) {
     // Block with a single statement.
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("{3;}");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context.result));
-    ASSERT_EQ(((GTA_Computed_Value_Integer *)context.result)->value, 3);
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    TEST_PROGRAM_SETUP("{3;}");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
+    TEST_PROGRAM_TEARDOWN();
   }
   if (false) {
     // Block with multiple statements.
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create("{3; 4;}");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context.result));
-    ASSERT_EQ(((GTA_Computed_Value_Integer *)context.result)->value, 4);
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    TEST_PROGRAM_SETUP("{3; 4;}");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 4);
+    TEST_PROGRAM_TEARDOWN();
   }
   {
     // Block with multiple statements of different types.
-    gcu_memory_reset_counts();
-    GTA_Program * program = gta_program_create(R"(3; 4; "foo";)");
-    ASSERT_TRUE(program);
-    GTA_Execution_Context context;
-    ASSERT_TRUE(gta_program_execute(program, &context));
-    ASSERT_TRUE(context.result);
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context.result));
-    ASSERT_STREQ(((GTA_Computed_Value_String *)context.result)->value->buffer, "foo");
-    gta_program_destroy(program);
-    gta_bytecode_execution_context_destroy_in_place(&context);
-    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    TEST_PROGRAM_SETUP(R"(3; 4; "foo";)");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ(((GTA_Computed_Value_String *)context->result)->value->buffer, "foo");
+    TEST_PROGRAM_TEARDOWN();
   }
 }
 

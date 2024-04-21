@@ -16,7 +16,7 @@ extern "C" {
 #include <tang/computedValue.h>
 #include <tang/program.h>
 
-bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context, GTA_Program * program);
+bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context);
 
 #ifdef __cplusplus
 }

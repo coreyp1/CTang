@@ -187,29 +187,26 @@ void gta_program_destroy_in_place(GTA_Program * program);
  * Otherwise, if the program was compiled to bytecode then the bytecode will be
  * executed.  If the program has neither, then the function will return false.
  *
- * @param program The program to execute.
- * @param context The context to execute the program with.
+ * @param context The initialized context with which to execute the program.
  * @return True if the program executed successfully, false otherwise.
  */
-bool gta_program_execute(GTA_Program * program, GTA_Execution_Context * context);
+bool gta_program_execute(GTA_Execution_Context * context);
 
 /**
  * Execute the given program with the given context using the bytecode.
  *
- * @param program The program to execute.
- * @param context The context to execute the program with.
+ * @param context The initialized context with which to execute the program.
  * @return True if the program executed successfully, false otherwise.
  */
-bool gta_program_execute_bytecode(GTA_Program * program, GTA_Execution_Context * context);
+bool gta_program_execute_bytecode(GTA_Execution_Context * context);
 
 /**
  * Execute the given program with the given context using the binary.
  *
- * @param program The program to execute.
- * @param context The context to execute the program with.
+ * @param context The initialized context with which to execute the program.
  * @return True if the program executed successfully, false otherwise.
  */
-bool gta_program_execute_binary(GTA_Program * program, GTA_Execution_Context * context);
+bool gta_program_execute_binary(GTA_Execution_Context * context);
 
 /**
  * Print the bytecode for the given program.
