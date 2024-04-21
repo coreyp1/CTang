@@ -95,7 +95,7 @@ void gta_execution_context_destroy(GTA_Execution_Context * context);
  *
  * @param context The Context object to destroy.
  */
-void gta_bytecode_execution_context_destroy_in_place(GTA_Execution_Context * context);
+void gta_execution_context_destroy_in_place(GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

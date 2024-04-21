@@ -38,11 +38,11 @@ bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_
 }
 
 void gta_execution_context_destroy(GTA_Execution_Context * self) {
-  gta_bytecode_execution_context_destroy_in_place(self);
+  gta_execution_context_destroy_in_place(self);
   gcu_free(self);
 }
 
-void gta_bytecode_execution_context_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Execution_Context * self)) {
+void gta_execution_context_destroy_in_place(GTA_Execution_Context * self) {
   GTA_VECTORX_DESTROY(self->stack);
   if (self->result) {
     gta_computed_value_destroy(self->result);
