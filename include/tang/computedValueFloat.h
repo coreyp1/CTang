@@ -36,9 +36,20 @@ typedef struct GTA_Computed_Value_Float {
  * Create a new Computed Value Float.
  *
  * @param value The value.
+ * @param context The execution context to create the value in.
  * @return The new Computed Value Float or NULL on failure.
  */
-GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value);
+GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value, GTA_Execution_Context * context);
+
+/**
+ * Create a new computed value for a float in place.
+ *
+ * @param self The memory address of the computed value.
+ * @param value The value of the float.
+ * @param context The execution context to create the value in.
+ * @return True if the operation was successful, false otherwise.
+ */
+bool GTA_CALL gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, GTA_Float value, GTA_Execution_Context * context);
 
 /**
  * Destroy a Computed Value Float.
@@ -46,6 +57,15 @@ GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value);
  * @param computed_value The Computed Value Float.
  */
 void gta_computed_value_float_destroy(GTA_Computed_Value * computed_value);
+
+/**
+ * Destroy a computed value for a float in place.
+ *
+ * @see gta_computed_value_destroy_in_place
+ *
+ * @param self The computed value for the float.
+ */
+void GTA_CALL gta_computed_value_float_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Deep copy a computed value for an float.

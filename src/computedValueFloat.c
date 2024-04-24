@@ -7,6 +7,7 @@
 GTA_Computed_Value_VTable gta_computed_value_float_vtable = {
   .name = "Float",
   .destroy = gta_computed_value_float_destroy,
+  .destroy_in_place = gta_computed_value_float_destroy_in_place,
   .deep_copy = gta_computed_value_float_deep_copy,
   .to_string = gta_computed_value_float_to_string,
   .assign_index = gta_computed_value_assign_index_not_implemented,
@@ -30,14 +31,20 @@ GTA_Computed_Value_VTable gta_computed_value_float_vtable = {
   .call = gta_computed_value_call_not_implemented,
 };
 
-GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value) {
+GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value, GTA_Execution_Context * context) {
   GTA_Computed_Value_Float * computed_value = (GTA_Computed_Value_Float *) gcu_malloc(sizeof(GTA_Computed_Value_Float));
   if (!computed_value) {
     return NULL;
   }
-  *computed_value = (GTA_Computed_Value_Float) {
+  gta_computed_value_float_create_in_place(computed_value, value, context);
+  return computed_value;
+}
+
+bool gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, GTA_Float value, GTA_Execution_Context * context) {
+  *self = (GTA_Computed_Value_Float) {
     .base = {
       .vtable = &gta_computed_value_float_vtable,
+      .context = context,
       .is_true = (bool)value,
       .is_error = false,
       .is_temporary = true,
@@ -47,17 +54,19 @@ GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value) {
     },
     .value = value
   };
-  computed_value->value = value;
-  return computed_value;
+  self->value = value;
+  return true;
 }
 
 void gta_computed_value_float_destroy(GTA_Computed_Value * self) {
   gcu_free(self);
 }
 
+void gta_computed_value_float_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
+
 GTA_Computed_Value * gta_computed_value_float_deep_copy(GTA_Computed_Value * value) {
   GTA_Computed_Value_Float * float_value = (GTA_Computed_Value_Float *)value;
-  return (GTA_Computed_Value *)gta_computed_value_float_create(float_value->value);
+  return (GTA_Computed_Value *)gta_computed_value_float_create(float_value->value, float_value->base.context);
 }
 
 char * gta_computed_value_float_to_string(GTA_Computed_Value * self) {

@@ -52,7 +52,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         break;
       }
       case GTA_BYTECODE_FLOAT: {
-        GTA_Computed_Value_Float * float_value = gta_computed_value_float_create(GTA_TYPEX_F(*next));
+        GTA_Computed_Value_Float * float_value = gta_computed_value_float_create(GTA_TYPEX_F(*next), context);
         if (!float_value || !GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(float_value))) {
           context->result = gta_computed_value_error_out_of_memory;
         }
