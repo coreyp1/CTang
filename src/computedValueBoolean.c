@@ -7,6 +7,7 @@
 GTA_Computed_Value_VTable gta_computed_value_boolean_vtable = {
   .name = "Boolean",
   .destroy = gta_computed_value_boolean_destroy,
+  .destroy_in_place = gta_computed_value_boolean_destroy,
   .deep_copy = gta_computed_value_boolean_deep_copy,
   .to_string = gta_computed_value_boolean_to_string,
   .assign_index = gta_computed_value_assign_index_not_implemented,
@@ -33,6 +34,7 @@ GTA_Computed_Value_VTable gta_computed_value_boolean_vtable = {
 static GTA_Computed_Value_Boolean gta_computed_value_boolean_true_singleton = {
   .base = {
     .vtable = &gta_computed_value_boolean_vtable,
+    .context = 0,
     .is_true = true,
     .is_error = false,
     .is_temporary = false,
@@ -46,6 +48,7 @@ static GTA_Computed_Value_Boolean gta_computed_value_boolean_true_singleton = {
 static GTA_Computed_Value_Boolean gta_computed_value_boolean_false_singleton = {
   .base = {
     .vtable = &gta_computed_value_boolean_vtable,
+    .context = 0,
     .is_true = false,
     .is_error = false,
     .is_temporary = false,
@@ -59,10 +62,27 @@ static GTA_Computed_Value_Boolean gta_computed_value_boolean_false_singleton = {
 GTA_Computed_Value * gta_computed_value_boolean_true = (GTA_Computed_Value *)&gta_computed_value_boolean_true_singleton;
 GTA_Computed_Value * gta_computed_value_boolean_false = (GTA_Computed_Value *)&gta_computed_value_boolean_false_singleton;
 
-GTA_Computed_Value_Boolean * gta_computed_value_boolean_create(bool value) {
+GTA_Computed_Value_Boolean * gta_computed_value_boolean_create(bool value, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return value
     ? (GTA_Computed_Value_Boolean *)gta_computed_value_boolean_true
     : (GTA_Computed_Value_Boolean *)gta_computed_value_boolean_false;
+}
+
+bool gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * self, bool value, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  *self = (GTA_Computed_Value_Boolean) {
+    .base = {
+      .vtable = &gta_computed_value_boolean_vtable,
+      .context = 0,
+      .is_true = value,
+      .is_error = false,
+      .is_temporary = false,
+      .requires_deep_copy = false,
+      .is_singleton = false,
+      .is_a_reference = false,
+    },
+    .value = value,
+  };
+  return true;
 }
 
 void gta_computed_value_boolean_destroy(GTA_Computed_Value * self) {
@@ -70,6 +90,8 @@ void gta_computed_value_boolean_destroy(GTA_Computed_Value * self) {
     gcu_free(self);
   }
 }
+
+void gta_computed_value_boolean_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
 
 GTA_Computed_Value * gta_computed_value_boolean_deep_copy(GTA_Computed_Value * value) {
   return value;

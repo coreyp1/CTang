@@ -6,6 +6,7 @@
 GTA_Computed_Value_VTable gta_computed_value_error_vtable = {
   .name = "Error",
   .destroy = gta_computed_value_null_destroy,
+  .destroy_in_place = gta_computed_value_null_destroy_in_place,
   .deep_copy = gta_computed_value_null_deep_copy,
   .to_string = gta_computed_value_error_to_string,
   .assign_index = gta_computed_value_assign_index_not_implemented,
@@ -32,6 +33,7 @@ GTA_Computed_Value_VTable gta_computed_value_error_vtable = {
 static GTA_Computed_Value_Error gta_computed_value_error_not_implemented_singleton = {
   .base = {
     .vtable = &gta_computed_value_error_vtable,
+    .context = 0,
     .is_true = false,
     .is_error = true,
     .is_temporary = false,
@@ -45,6 +47,7 @@ static GTA_Computed_Value_Error gta_computed_value_error_not_implemented_singlet
 static GTA_Computed_Value_Error gta_computed_value_error_out_of_memory_singleton = {
   .base = {
     .vtable = &gta_computed_value_error_vtable,
+    .context = 0,
     .is_true = false,
     .is_error = true,
     .is_temporary = false,
@@ -58,6 +61,7 @@ static GTA_Computed_Value_Error gta_computed_value_error_out_of_memory_singleton
 static GTA_Computed_Value_Error gta_computed_value_error_invalid_bytecode_singleton = {
   .base = {
     .vtable = &gta_computed_value_error_vtable,
+    .context = 0,
     .is_true = false,
     .is_error = true,
     .is_temporary = false,

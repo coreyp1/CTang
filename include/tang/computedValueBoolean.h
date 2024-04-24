@@ -40,9 +40,20 @@ typedef struct GTA_Computed_Value_Boolean {
  * Initializes a GTA_Computed_Value_Boolean object.
  *
  * @param value The boolean value of the computed value.
+ * @param context The execution context in which to create the value.
  * @return The initialized object or NULL if an error occurred.
  */
-GTA_Computed_Value_Boolean * GTA_CALL gta_computed_value_boolean_create(bool value);
+GTA_Computed_Value_Boolean * GTA_CALL gta_computed_value_boolean_create(bool value, GTA_Execution_Context * context);
+
+/**
+ * Create a computed value for a boolean in place.
+ *
+ * @param self The memory address of the computed value.
+ * @param value The boolean value of the computed value.
+ * @param context The execution context in which to create the value.
+ * @return True if the operation was successful, false otherwise.
+ */
+bool GTA_CALL gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * self, bool value, GTA_Execution_Context * context);
 
 /**
  * Destroys a GTA_Computed_Value_Boolean object.
@@ -55,6 +66,15 @@ GTA_Computed_Value_Boolean * GTA_CALL gta_computed_value_boolean_create(bool val
  * @param self The object to destroy.
  */
 void GTA_CALL gta_computed_value_boolean_destroy(GTA_Computed_Value * self);
+
+/**
+ * Destroy a computed value for a boolean in place.
+ *
+ * @see gta_computed_value_destroy_in_place
+ *
+ * @param self The memory address of the computed value.
+ */
+void GTA_CALL gta_computed_value_boolean_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Deep copy a computed value for a boolean.
