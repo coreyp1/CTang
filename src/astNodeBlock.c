@@ -100,7 +100,7 @@ bool gta_ast_node_block_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compil
       return false;
     }
     if (i < GTA_VECTORX_COUNT(block->statements) - 1) {
-      if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 1)) {
+      if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 15)) {
         return false;
       }
       // The result of the previous operation is in rax.  We need to delete it.

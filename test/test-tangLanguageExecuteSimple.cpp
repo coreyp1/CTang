@@ -150,20 +150,20 @@ TEST(Declare, String) {
 }
 
 TEST(Declare, Block) {
-  if (false) {
+  {
     // Empty block.
     TEST_PROGRAM_SETUP("{}");
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
     TEST_PROGRAM_TEARDOWN();
   }
-  if (false) {
+  {
     // Block with a single statement.
     TEST_PROGRAM_SETUP("{3;}");
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
     ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
     TEST_PROGRAM_TEARDOWN();
   }
-  if (false) {
+  {
     // Block with multiple statements.
     TEST_PROGRAM_SETUP("{3; 4;}");
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
