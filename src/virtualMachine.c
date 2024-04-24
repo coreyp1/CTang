@@ -60,7 +60,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         break;
       }
       case GTA_BYTECODE_INTEGER: {
-        GTA_Computed_Value_Integer * integer = gta_computed_value_integer_create(GTA_TYPEX_I(*next));
+        GTA_Computed_Value_Integer * integer = gta_computed_value_integer_create(GTA_TYPEX_I(*next), context);
         if (!integer || !GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(integer))) {
           context->result = gta_computed_value_error_out_of_memory;
         }

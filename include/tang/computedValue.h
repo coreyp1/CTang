@@ -16,6 +16,7 @@ extern "C" {
 
 typedef struct GTA_Computed_Value GTA_Computed_Value;
 typedef struct GTA_Computed_Value_VTable GTA_Computed_Value_VTable;
+typedef struct GTA_Execution_Context GTA_Execution_Context;
 typedef GTA_VectorX GTA_Computed_Value_Vector;
 
 /**
@@ -45,6 +46,12 @@ typedef struct GTA_Computed_Value_VTable {
    * @param self The object to destroy.
    */
   void (*destroy)(GTA_Computed_Value * self);
+  /**
+   * Destructor for the class in place.
+   *
+   * @param self The object to destroy.
+   */
+  void (*destroy_in_place)(GTA_Computed_Value * self);
   /**
    * Performs a deep copy of the object.
    *
@@ -256,6 +263,16 @@ typedef struct GTA_Computed_Value {
    */
   GTA_Computed_Value_VTable * vtable;
   /**
+   * The execution context that the value was created in.
+   *
+   * The computed value must register itself with the garbage collector so that
+   * it can be destroyed when it is no longer needed without the overhead of
+   * reference counting or manual memory management (by the user).
+   *
+   * @see GTA_Execution_Context
+   */
+  GTA_Execution_Context * context;
+  /**
    * Whether or not the value is truthy, to aid in logical operations.
    */
   bool is_true;
@@ -296,9 +313,19 @@ extern GTA_Computed_Value * gta_computed_value_null;
 /**
  * Creates a new computed value.
  *
+ * @param context The execution context to create the value in.
  * @return A new computed value or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_create();
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_create(GTA_Execution_Context * context);
+
+/**
+ * Creates a new computed value in place.
+ *
+ * @param self The memory address of the computed value.
+ * @param context The execution context to create the value in.
+ * @return True on success, false on failure.
+ */
+bool gta_computed_value_create_in_place(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Destroys a computed value.
@@ -308,6 +335,15 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_create();
  * @param self The object to destroy.
  */
 void gta_computed_value_destroy(GTA_Computed_Value * self);
+
+/**
+ * Destroys a computed value in place.
+ *
+ * Calls the `destroy_in_place` method of the virtual table.
+ *
+ * @param self The object to destroy.
+ */
+void gta_computed_value_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Performs a deep copy of a computed value.
@@ -554,8 +590,6 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call(GTA_Computed_Value *
 /**
  * Destroys a computed value of the NULL class.
  *
- * Calls the `destroy` method of the virtual table.
- *
  * @see gta_computed_value_destroy
  *
  * @param self The object to destroy.
@@ -563,9 +597,16 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call(GTA_Computed_Value *
 void gta_computed_value_null_destroy(GTA_Computed_Value * self);
 
 /**
- * Performs a deep copy of a computed value of the NULL class.
+ * Destroys a computed value of the NULL class in place.
  *
- * Calls the `deep_copy` method of the virtual table.
+ * @see gta_computed_value_destroy_in_place
+ *
+ * @param self The object to destroy.
+ */
+void gta_computed_value_null_destroy_in_place(GTA_Computed_Value * self);
+
+/**
+ * Performs a deep copy of a computed value of the NULL class.
  *
  * @see gta_computed_value_deep_copy
  *
@@ -576,8 +617,6 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_deep_copy(GTA_Comput
 
 /**
  * Gets a string representation of a computed value of the NULL class.
- *
- * Calls the `to_string` method of the virtual table.
  *
  * The caller is responsible for freeing the returned string.
  *

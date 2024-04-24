@@ -166,13 +166,13 @@ static void gta_program_compile_binary(GTA_Program * program) {
     }
     else {
       // dump the binary to stderr
+      //printf("\nProgram code:\n%s\n", program->code);
       //fwrite(context->binary_vector->data, 1, length, stderr);
     }
   }
 #endif
   // Correct JUMP instructions to point to the correct location in the binary.
   // TODO: implement this.
-
 
   gta_binary_compiler_context_destroy(context);
 }

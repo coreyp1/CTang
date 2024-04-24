@@ -23,7 +23,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/tangParser.o \
 	$(OBJ_DIR)/tangScanner.o \
 	$(OBJ_DIR)/unicodeString.o \
-  $(OBJ_DIR)/astNode.o \
+	$(OBJ_DIR)/astNode.o \
 	$(OBJ_DIR)/astNodeArray.o \
 	$(OBJ_DIR)/astNodeAssign.o \
 	$(OBJ_DIR)/astNodeBinary.o \
@@ -64,6 +64,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/computedValueInteger.o \
 	$(OBJ_DIR)/computedValueString.o \
 	$(OBJ_DIR)/executionContext.o \
+	$(OBJ_DIR)/garbageCollector.o \
 	$(OBJ_DIR)/program.o \
 	$(OBJ_DIR)/tangLanguage.o \
 	$(OBJ_DIR)/virtualMachine.o \
@@ -346,6 +347,11 @@ DEP_EXECUTIONCONTEXT = \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_UNICODESTRING)
 
+DEP_GARBAGECOLLECTOR = \
+	include/tang/garbageCollector.h \
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_MACROS)
+
 DEP_PROGRAM = \
 	include/tang/program.h \
 	$(DEP_ASTNODE) \
@@ -448,6 +454,7 @@ DEP_TANG = \
 	$(DEP_COMPUTEDEXPRESSIONSTRING) \
 	$(DEP_CONTEXT) \
 	$(DEP_ERROR) \
+	$(DEP_GARBAGECOLLECTOR) \
 	$(DEP_MACROS) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM) \
@@ -821,6 +828,10 @@ $(OBJ_DIR)/computedValueString.o: \
 	$(DEP_COMPUTEDVALUESTRING) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_UNICODESTRING)
+
+$(OBJ_DIR)/garbageCollector.o: \
+	src/garbageCollector.c \
+	$(DEP_GARBAGECOLLECTOR)
 
 $(OBJ_DIR)/program.o: \
 	src/program.c \

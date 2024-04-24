@@ -58,13 +58,18 @@ bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
 bool gta_ast_node_integer_compile_to_binary(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
   GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) self;
   GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 22)) {
+  if (!gcu_vector8_reserve(v, v->count + 24)) {
     return false;
   }
 #if defined(GTA_X86_64)
   // 64-bit x86
-  // Assembly to call gta_computed_value_integer_create():
-  //   mov rdi, integer->value
+  // context is in r15.
+  // Assembly to call gta_computed_value_integer_create(integer->value, context):
+  //   mov rdi, r15
+  //   mov rsi, integer->value
+  //   mov rax, gta_computed_value_integer_create
+
+  GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFF);
   GTA_BINARY_WRITE2(v, 0x48, 0xBF);
   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
   memcpy(&v->data[v->count - 8], &integer->value, 8);

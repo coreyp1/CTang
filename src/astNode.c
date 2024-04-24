@@ -73,15 +73,21 @@ bool gta_ast_node_null_compile_to_binary(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), 
   }
 #if GTA_X86_64
   // 64-bit x86
-  // Assembly to call gta_computed_value_create():
+  // TODO: Replace with:
+  //   mov rax, gta_computed_value_null
+
+  // Assembly to call gta_computed_value_create(0):
   //   mov rax, gta_computed_value_create
+  //   mov rdi, 0
   GTA_BINARY_WRITE2(v, 0x48, 0xB8);
   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  GTA_BINARY_WRITE2(v, 0x48, 0xBF);
+  GTA_BINARY_WRITE8(v, 0, 0, 0, 0, 0, 0, 0, 0);
   //   call rax
   GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
 
   GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_create);
-  memcpy(&v->data[v->count - 10], &fp, 8);
+  memcpy(&v->data[v->count - 20], &fp, 8);
   return true;
 #endif
   return false;

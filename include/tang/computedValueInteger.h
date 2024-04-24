@@ -37,9 +37,20 @@ typedef struct GTA_Computed_Value_Integer {
  * Create a new computed value for an integer.
  *
  * @param value The value of the integer.
+ * @param context The execution context to create the value in.
  * @return The new computed value for the integer.
  */
-GTA_NO_DISCARD GTA_Computed_Value_Integer * GTA_CALL gta_computed_value_integer_create(GTA_Integer value);
+GTA_NO_DISCARD GTA_Computed_Value_Integer * GTA_CALL gta_computed_value_integer_create(GTA_Integer value, GTA_Execution_Context * context);
+
+/**
+ * Create a new computed value for an integer in place.
+ *
+ * @param self The memory address of the computed value.
+ * @param value The value of the integer.
+ * @param context The execution context to create the value in.
+ * @return True if the operation was successful, false otherwise.
+ */
+bool GTA_CALL gta_computed_value_integer_create_in_place(GTA_Computed_Value_Integer * self, GTA_Integer value, GTA_Execution_Context * context);
 
 /**
  * Destroy a computed value for an integer.
@@ -49,6 +60,15 @@ GTA_NO_DISCARD GTA_Computed_Value_Integer * GTA_CALL gta_computed_value_integer_
  * @param computed_value The computed value for the integer.
  */
 void GTA_CALL gta_computed_value_integer_destroy(GTA_Computed_Value * computed_value);
+
+/**
+ * Destroy a computed value for an integer in place.
+ *
+ * @see gta_computed_value_destroy_in_place
+ *
+ * @param self The computed value for the integer.
+ */
+void GTA_CALL gta_computed_value_integer_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Deep copy a computed value for an integer.

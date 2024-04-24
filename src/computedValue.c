@@ -9,6 +9,7 @@
 GTA_Computed_Value_VTable gta_computed_value_null_vtable = {
   .name = "Null",
   .destroy = gta_computed_value_null_destroy,
+  .destroy_in_place = gta_computed_value_null_destroy_in_place,
   .deep_copy = gta_computed_value_null_deep_copy,
   .to_string = gta_computed_value_null_to_string,
   .assign_index = gta_computed_value_assign_index_not_implemented,
@@ -34,6 +35,7 @@ GTA_Computed_Value_VTable gta_computed_value_null_vtable = {
 
 static GTA_Computed_Value computed_value_null_singleton = {
   .vtable = &gta_computed_value_null_vtable,
+  .context = 0,
   .is_true = false,
   .is_error = false,
   .is_temporary = true,
@@ -44,12 +46,21 @@ static GTA_Computed_Value computed_value_null_singleton = {
 
 GTA_Computed_Value * gta_computed_value_null = &computed_value_null_singleton;
 
-GTA_Computed_Value * gta_computed_value_create() {
+GTA_Computed_Value * gta_computed_value_create(GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_null;
+}
+
+bool gta_computed_value_create_in_place(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  self->context = context;
+  return true;
 }
 
 void gta_computed_value_destroy(GTA_Computed_Value * self) {
   self->vtable->destroy(self);
+}
+
+void gta_computed_value_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+  self->vtable->destroy_in_place(self);
 }
 
 GTA_Computed_Value * gta_computed_value_deep_copy(GTA_Computed_Value * self) {
@@ -137,6 +148,10 @@ GTA_Computed_Value * gta_computed_value_call(GTA_Computed_Value * self, GTA_Comp
 }
 
 void gta_computed_value_null_destroy(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+  return;
+}
+
+void gta_computed_value_null_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
   return;
 }
 
