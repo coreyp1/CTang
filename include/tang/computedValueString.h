@@ -55,9 +55,22 @@ extern GTA_Computed_Value * gta_computed_value_string_empty;
  * @param value The GTA_Unicode_String project.
  * @param adopt Whether or not this object should take control of the string
  *   reference.
+ * @param context The execution context to create the value in.
  * @return The new object.
  */
-GTA_Computed_Value_String * GTA_CALL gta_computed_value_string_create(GTA_Unicode_String * value, bool adopt);
+GTA_Computed_Value_String * GTA_CALL gta_computed_value_string_create(GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context);
+
+/**
+ * Creates a new GTA_Computed_Value_String object in place.
+ *
+ * @param self The memory address of the object.
+ * @param value The GTA_Unicode_String project.
+ * @param adopt Whether or not this object should take control of the string
+ *  reference.
+ * @param context The execution context to create the value in.
+ * @return True if the operation was successful, false otherwise.
+ */
+bool GTA_CALL gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self, GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context);
 
 /**
  * Destroys a GTA_Computed_Value_String object.
@@ -70,6 +83,18 @@ GTA_Computed_Value_String * GTA_CALL gta_computed_value_string_create(GTA_Unicod
  * @param object The object.
  */
 void GTA_CALL gta_computed_value_string_destroy(GTA_Computed_Value * object);
+
+/**
+ * Destroys a GTA_Computed_Value_String object in place.
+ *
+ * This function should not be called directly.  Instead, use the
+ * gta_computed_value_destroy_in_place() function.
+ *
+ * @see gta_computed_value_destroy_in_place
+ *
+ * @param self The object.
+ */
+void GTA_CALL gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Creates a deep copy of a GTA_Computed_Value_String object.

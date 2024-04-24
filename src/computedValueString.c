@@ -8,6 +8,7 @@
 GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .name = "String",
   .destroy = gta_computed_value_string_destroy,
+  .destroy_in_place = gta_computed_value_string_destroy_in_place,
   .deep_copy = gta_computed_value_string_deep_copy,
   .to_string = gta_computed_value_string_to_string,
   .assign_index = gta_computed_value_assign_index_not_implemented,
@@ -33,14 +34,20 @@ GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
 
 GTA_Computed_Value * gta_computed_value_string_empty;
 
-GTA_Computed_Value_String * gta_computed_value_string_create(GTA_Unicode_String * value, bool adopt) {
+GTA_Computed_Value_String * gta_computed_value_string_create(GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context) {
   GTA_Computed_Value_String * self = gcu_malloc(sizeof(GTA_Computed_Value_String));
   if (!self) {
     return 0;
   }
+  gta_computed_value_string_create_in_place(self, value, adopt, context);
+  return self;
+}
+
+bool gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self, GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context) {
   *self = (GTA_Computed_Value_String) {
     .base = {
       .vtable = &gta_computed_value_string_vtable,
+      .context = context,
       .is_true = false,
       .is_error = false,
       .is_temporary = false,
@@ -51,15 +58,19 @@ GTA_Computed_Value_String * gta_computed_value_string_create(GTA_Unicode_String 
     .value = value,
     .is_owned = adopt,
   };
-  return self;
+  return true;
 }
 
 void gta_computed_value_string_destroy(GTA_Computed_Value * self) {
+  gta_computed_value_string_destroy_in_place(self);
+  gcu_free(self);
+}
+
+void gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self) {
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;
   if (string->is_owned) {
     gta_unicode_string_destroy(string->value);
   }
-  gcu_free(self);
 }
 
 GTA_Computed_Value * gta_computed_value_string_deep_copy(GTA_Computed_Value * value) {
@@ -68,7 +79,7 @@ GTA_Computed_Value * gta_computed_value_string_deep_copy(GTA_Computed_Value * va
   if (!unicodeString) {
     return 0;
   }
-  return (GTA_Computed_Value *)gta_computed_value_string_create(unicodeString, true);
+  return (GTA_Computed_Value *)gta_computed_value_string_create(unicodeString, true, string->base.context);
 }
 
 char * gta_computed_value_string_to_string(GTA_Computed_Value * value) {

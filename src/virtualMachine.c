@@ -74,7 +74,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         break;
       }
       case GTA_BYTECODE_STRING: {
-        GTA_Computed_Value_String * string = gta_computed_value_string_create(GTA_TYPEX_P(*next++), false);
+        GTA_Computed_Value_String * string = gta_computed_value_string_create(GTA_TYPEX_P(*next++), false, context);
         if (!string || !GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(string))) {
           context->result = gta_computed_value_error_out_of_memory;
         }
