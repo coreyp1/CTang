@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <cutil/memory.h>
 #include <tang/computedValueInteger.h>
+#include <tang/executionContext.h>
 
 GTA_Computed_Value_VTable gta_computed_value_integer_vtable = {
   .name = "Integer",
@@ -31,12 +32,17 @@ GTA_Computed_Value_VTable gta_computed_value_integer_vtable = {
 };
 
 GTA_Computed_Value_Integer * GTA_CALL gta_computed_value_integer_create(GTA_Integer value, GTA_Execution_Context * context) {
-  GTA_Computed_Value_Integer * computed_value = gcu_malloc(sizeof(GTA_Computed_Value_Integer));
-  if (!computed_value) {
+  GTA_Computed_Value_Integer * self = gcu_malloc(sizeof(GTA_Computed_Value_Integer));
+  if (!self) {
     return 0;
   }
-  gta_computed_value_integer_create_in_place(computed_value, value, context);
-  return computed_value;
+  // Attempt to add the pointer to the context's garbage collection list.
+  if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
+    gcu_free(self);
+    return NULL;
+  }
+  gta_computed_value_integer_create_in_place(self, value, context);
+  return self;
 }
 
 bool GTA_CALL gta_computed_value_integer_create_in_place(GTA_Computed_Value_Integer * self, GTA_Integer value, GTA_Execution_Context * context) {

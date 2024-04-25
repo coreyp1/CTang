@@ -3,6 +3,7 @@
 #include <cutil/memory.h>
 #include <tang/macros.h>
 #include <tang/computedValueFloat.h>
+#include <tang/executionContext.h>
 
 GTA_Computed_Value_VTable gta_computed_value_float_vtable = {
   .name = "Float",
@@ -32,12 +33,17 @@ GTA_Computed_Value_VTable gta_computed_value_float_vtable = {
 };
 
 GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value, GTA_Execution_Context * context) {
-  GTA_Computed_Value_Float * computed_value = (GTA_Computed_Value_Float *) gcu_malloc(sizeof(GTA_Computed_Value_Float));
-  if (!computed_value) {
+  GTA_Computed_Value_Float * self = (GTA_Computed_Value_Float *) gcu_malloc(sizeof(GTA_Computed_Value_Float));
+  if (!self) {
     return NULL;
   }
-  gta_computed_value_float_create_in_place(computed_value, value, context);
-  return computed_value;
+  // Attempt to add the pointer to the context's garbage collection list.
+  if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
+    gcu_free(self);
+    return NULL;
+  }
+  gta_computed_value_float_create_in_place(self, value, context);
+  return self;
 }
 
 bool gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, GTA_Float value, GTA_Execution_Context * context) {

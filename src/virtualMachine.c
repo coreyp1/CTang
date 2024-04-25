@@ -81,8 +81,9 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         break;
       }
       case GTA_BYTECODE_POP: {
-        GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[--*sp]);
-        gta_computed_value_destroy(value);
+        // Simply decrease the stack pointer.  The garbage collector will take
+        // care of the rest.
+        --*sp;
         break;
       }
       default: {

@@ -45,6 +45,10 @@ typedef struct GTA_Execution_Context {
    * The stack used for execution.
    */
   GTA_VectorX * stack;
+  /**
+   * The garbage collection list.
+   */
+  GTA_VectorX * garbage_collection;
 } GTA_Execution_Context;
 
 /**

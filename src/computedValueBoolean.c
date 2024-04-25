@@ -68,11 +68,11 @@ GTA_Computed_Value_Boolean * gta_computed_value_boolean_create(bool value, GTA_M
     : (GTA_Computed_Value_Boolean *)gta_computed_value_boolean_false;
 }
 
-bool gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * self, bool value, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+bool gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * self, bool value, GTA_Execution_Context * context) {
   *self = (GTA_Computed_Value_Boolean) {
     .base = {
       .vtable = &gta_computed_value_boolean_vtable,
-      .context = 0,
+      .context = context,
       .is_true = value,
       .is_error = false,
       .is_temporary = false,

@@ -4,6 +4,7 @@
 #include <cutil/memory.h>
 #include <tang/macros.h>
 #include <tang/computedValueString.h>
+#include <tang/executionContext.h>
 
 GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .name = "String",
@@ -38,6 +39,11 @@ GTA_Computed_Value_String * gta_computed_value_string_create(GTA_Unicode_String 
   GTA_Computed_Value_String * self = gcu_malloc(sizeof(GTA_Computed_Value_String));
   if (!self) {
     return 0;
+  }
+  // Attempt to add the pointer to the context's garbage collection list.
+  if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
+    gcu_free(self);
+    return NULL;
   }
   gta_computed_value_string_create_in_place(self, value, adopt, context);
   return self;

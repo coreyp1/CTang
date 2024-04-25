@@ -165,14 +165,14 @@ TEST(Declare, Block) {
   }
   {
     // Block with multiple statements.
-    TEST_PROGRAM_SETUP("{3; 4;}");
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
-    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 4);
+    TEST_PROGRAM_SETUP("{3; 4.5;}");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 4.5);
     TEST_PROGRAM_TEARDOWN();
   }
   {
     // Block with multiple statements of different types.
-    TEST_PROGRAM_SETUP(R"(3; 4; "foo";)");
+    TEST_PROGRAM_SETUP(R"(3; 4.5; true; "hello"; "foo";)");
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
     ASSERT_STREQ(((GTA_Computed_Value_String *)context->result)->value->buffer, "foo");
     TEST_PROGRAM_TEARDOWN();

@@ -29,9 +29,15 @@ bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_
   if (!context->stack) {
     return false;
   }
+  context->garbage_collection = GTA_VECTORX_CREATE(32);
+  if (!context->garbage_collection) {
+    GTA_VECTORX_DESTROY(context->stack);
+    return false;
+  }
   context->output = gta_unicode_string_create("", 0, GTA_UNICODE_STRING_TYPE_TRUSTED);
   if (!context->output) {
     GTA_VECTORX_DESTROY(context->stack);
+    GTA_VECTORX_DESTROY(context->garbage_collection);
     return false;
   }
   return true;
@@ -44,8 +50,9 @@ void gta_execution_context_destroy(GTA_Execution_Context * self) {
 
 void gta_execution_context_destroy_in_place(GTA_Execution_Context * self) {
   GTA_VECTORX_DESTROY(self->stack);
-  if (self->result) {
-    gta_computed_value_destroy(self->result);
+  for (size_t i = 0; i < self->garbage_collection->count; ++i) {
+    gta_computed_value_destroy(GTA_TYPEX_P(self->garbage_collection->data[i]));
   }
+  GTA_VECTORX_DESTROY(self->garbage_collection);
   gta_unicode_string_destroy(self->output);
 }
