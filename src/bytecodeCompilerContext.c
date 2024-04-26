@@ -22,9 +22,31 @@ bool gta_bytecode_compiler_context_create_in_place(GTA_Bytecode_Compiler_Context
   if (!bytecode_offsets) {
     return false;
   }
+  GTA_VectorX * scope_stack = GTA_VECTORX_CREATE(32);
+  if (!scope_stack) {
+    GTA_VECTORX_DESTROY(bytecode_offsets);
+    return false;
+  }
+  GTA_HashX * scope = GTA_HASHX_CREATE(32);
+  if (!scope) {
+    GTA_VECTORX_DESTROY(scope_stack);
+    GTA_VECTORX_DESTROY(bytecode_offsets);
+    return false;
+  }
+  GTA_VECTORX_APPEND(scope_stack, GTA_TYPEX_MAKE_P(scope));
+  GTA_HashX * globals = GTA_HASHX_CREATE(32);
+  if (!globals) {
+    GTA_HASHX_DESTROY(scope);
+    GTA_VECTORX_DESTROY(scope_stack);
+    GTA_VECTORX_DESTROY(bytecode_offsets);
+    return false;
+  }
+
   *context = (GTA_Bytecode_Compiler_Context) {
     .program = program,
     .bytecode_offsets = bytecode_offsets,
+    .scope_stack = scope_stack,
+    .globals = globals,
   };
   return true;
 }
@@ -36,4 +58,9 @@ void gta_bytecode_compiler_context_destroy(GTA_Bytecode_Compiler_Context * conte
 
 void gta_bytecode_compiler_context_destroy_in_place(GTA_Bytecode_Compiler_Context * context) {
   GTA_VECTORX_DESTROY(context->bytecode_offsets);
+  for (size_t i = 0; i < context->scope_stack->count; ++i) {
+    GTA_HASHX_DESTROY(GTA_TYPEX_P(context->scope_stack->data[i]));
+  }
+  GTA_VECTORX_DESTROY(context->scope_stack);
+  GTA_HASHX_DESTROY(context->globals);
 }

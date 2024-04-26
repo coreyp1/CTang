@@ -9,7 +9,8 @@
 
 GTA_Ast_Node_VTable gta_ast_node_assign_vtable = {
   .name = "Assign",
-  .compile_to_bytecode = 0,
+  .compile_to_bytecode = gta_ast_node_assign_compile_to_bytecode,
+  .compile_to_binary = gta_ast_node_assign_compile_to_binary,
   .destroy = gta_ast_node_assign_destroy,
   .print = gta_ast_node_assign_print,
   .simplify = gta_ast_node_assign_simplify,
@@ -90,4 +91,57 @@ void gta_ast_node_assign_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback ca
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
   gta_ast_node_walk(assign->lhs, callback, data, return_value);
   gta_ast_node_walk(assign->rhs, callback, data, return_value);
+}
+
+bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
+
+  if (!gta_ast_node_compile_to_bytecode(assign->rhs, context)) {
+    return false;
+  }
+
+  // An assignment may be in several forms:
+  //   a = foo;
+  //   a.b = foo;
+  //   a[b] = foo;
+  if (GTA_AST_IS_IDENTIFIER(assign->lhs)) {
+    GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) assign->lhs;
+
+    // If the identifier is a global variable, then the stack index is absolute
+    // from the beginning of the stack.
+    GTA_HashX_Value position = GTA_HASHX_GET(context->globals, identifier->hash);
+    if (position.exists) {
+      return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ASSIGN_TO_BASE))
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_TYPEX_UI(position.value)));
+    }
+
+    // If the identifier is a local variable, then the stack index is relative
+    // to the base pointer.
+    position = GTA_HASHX_GET(GTA_TYPEX_P(context->scope_stack->data[context->scope_stack->count - 1]), identifier->hash);
+    if (position.exists) {
+      return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ASSIGN))
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_TYPEX_UI(position.value)));
+    }
+
+    return false;
+  }
+
+  return false;
+}
+
+bool gta_ast_node_assign_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  (void) self;
+  (void) context;
+  GTA_Ast_Node_Assign * assign_node = (GTA_Ast_Node_Assign *) self;
+  GCU_Vector8 * v = context->binary_vector;
+  if (!gcu_vector8_reserve(v, v->count + 30)) {
+    return false;
+  }
+#if defined(GTA_X86_64)
+  // 64-bit x86
+  (void) assign_node;
+#endif
+  return false;
 }

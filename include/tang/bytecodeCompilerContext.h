@@ -40,6 +40,27 @@ typedef struct GTA_Bytecode_Compiler_Context {
    * the bytecode later.
    */
   GTA_VectorX * bytecode_offsets;
+  /**
+   * The scope stack.
+   *
+   * The scope stack is used to keep track of the variable names that have been
+   * declared in the current scope.
+   *
+   * The scope stack is a stack of hash tables.  Each hash table maps the name
+   * of a variable to the index of the variable in the stack, with 0 being the
+   * first variable in the stack frame.
+   */
+  GTA_VectorX * scope_stack;
+  /**
+   * The globals variables.
+   *
+   * Global variables can only be "declared" in the outermost scope, and are
+   * used for library aliases.
+   *
+   * Each entry maps the name of a global variable to the absolute index of the
+   * variable in the stack.
+   */
+  GTA_HashX * globals;
 } GTA_Bytecode_Compiler_Context;
 
 /**

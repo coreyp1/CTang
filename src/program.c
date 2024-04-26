@@ -18,6 +18,7 @@
 #include <tang/program.h>
 #include <tang/tangLanguage.h>
 #include <tang/astNodeBlock.h>
+#include <tang/astNodeIdentifier.h>
 #include <tang/astNodeParseError.h>
 #include <tang/virtualMachine.h>
 #include <tang/binaryCompilerContext.h>
@@ -33,6 +34,27 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
       bytecode = 0;
     }
     else {
+      // Create a variable scope and collect the variable names.
+      // All identifiers need to be found so that space can be reserved for
+      // them on the stack when the program is executed.
+      // TODO: If the first appearance of the variable is a constant, then
+      //   its value could be instantiated as that value immediately.
+      if (!gta_program_create_scope(context.scope_stack, context.globals, program->ast)) {
+        GTA_VECTORX_DESTROY(bytecode);
+        gta_bytecode_compiler_context_destroy_in_place(&context);
+        return;
+      }
+      // TODO: Load each library onto the stack in the order specified by the scope.
+      // Push a null onto the stack for each variable in the scope.
+      GTA_HashX * scope = GTA_TYPEX_P(context.scope_stack->data[context.scope_stack->count - 1]);
+      for (size_t i = 0; i < scope->entries; ++i) {
+        if (!GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))) {
+          GTA_VECTORX_DESTROY(bytecode);
+          gta_bytecode_compiler_context_destroy_in_place(&context);
+          return;
+        }
+      }
+
       program->bytecode = bytecode;
       if (!gta_ast_node_compile_to_bytecode(program->ast, &context)) {
         GTA_VECTORX_DESTROY(bytecode);
@@ -312,4 +334,64 @@ bool gta_program_execute_binary(GTA_Execution_Context * context) {
 
 void gta_program_bytecode_print(GTA_Program * self) {
   gta_bytecode_print(self->bytecode);
+}
+
+/**
+ * Helper type for collecting identifiers.
+ */
+typedef struct {
+  GTA_VectorX * scope_stack;
+  GTA_HashX * globals;
+} GTA_Program_Collect_Identifiers_Data;
+
+/**
+ * Helper function for collecting identifiers.
+ *
+ * @param self The AST node being visited.
+ * @param data The data for the collection.
+ * @param return_value The return value for the action.
+ */
+static void __gta_program_collect_identifiers(GTA_Ast_Node * self, void * data, void * return_value) {
+  GTA_Program_Collect_Identifiers_Data * collect_data = (GTA_Program_Collect_Identifiers_Data *)data;
+  GTA_VectorX * scope_stack = collect_data->scope_stack;
+  GTA_HashX * globals = collect_data->globals;
+  GTA_HashX * scope = GTA_TYPEX_P(scope_stack->data[scope_stack->count - 1]);
+
+  if (GTA_AST_IS_IDENTIFIER(self)) {
+    GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *)self;
+    if (!GTA_HASHX_CONTAINS(globals, identifier->hash) && !GTA_HASHX_CONTAINS(scope, identifier->hash)) {
+      // Add the identifier to the scope.
+      if (!GTA_HASHX_SET(scope, identifier->hash, GTA_TYPEX_MAKE_UI(scope->entries))) {
+        *(bool *)return_value = false;
+        return;
+      }
+    }
+  }
+}
+
+bool gta_program_create_scope(GTA_VectorX * scope_stack, GTA_HashX * globals, GTA_Ast_Node * ast) {
+  GTA_HashX * scope = GTA_HASHX_CREATE(32);
+  if (!scope) {
+    return false;
+  }
+  if (!GTA_VECTORX_APPEND(scope_stack, GTA_TYPEX_MAKE_P(scope))) {
+    GTA_HASHX_DESTROY(scope);
+    return false;
+  }
+  // TODO: First walk the AST and collect the libraries.
+  // Walk the AST and collect all of the identifiers.
+  bool success = true;
+  GTA_Program_Collect_Identifiers_Data data = {
+    .scope_stack = scope_stack,
+    .globals = globals,
+  };
+  gta_ast_node_walk(ast, __gta_program_collect_identifiers, &data, &success);
+  return success;
+}
+
+void gta_program_destroy_scope(GTA_VectorX * scope_stack) {
+  if (scope_stack->count) {
+    GTA_HASHX_DESTROY(GTA_TYPEX_P(scope_stack->data[scope_stack->count - 1]));
+    --scope_stack->count;
+  }
 }

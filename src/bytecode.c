@@ -36,6 +36,14 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%p\tPOP\n", (void *)current);
         ++current;
         break;
+      case GTA_BYTECODE_ASSIGN_TO_BASE:
+        printf("%p\tASSIGN_TO_BASE\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        current += 2;
+        break;
+      case GTA_BYTECODE_ASSIGN:
+        printf("%p\tASSIGN\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        current += 2;
+        break;
       default:
         printf("%p\tUnknown\n", (void *)current);
         ++current;

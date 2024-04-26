@@ -50,6 +50,12 @@ void gta_execution_context_destroy(GTA_Execution_Context * self) {
 
 void gta_execution_context_destroy_in_place(GTA_Execution_Context * self) {
   GTA_VECTORX_DESTROY(self->stack);
+  if (self->bp_stack) {
+    GTA_VECTORX_DESTROY(self->bp_stack);
+  }
+  if (self->pc_stack) {
+    GTA_VECTORX_DESTROY(self->pc_stack);
+  }
   for (size_t i = 0; i < self->garbage_collection->count; ++i) {
     gta_computed_value_destroy(GTA_TYPEX_P(self->garbage_collection->data[i]));
   }

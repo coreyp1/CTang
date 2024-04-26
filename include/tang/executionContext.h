@@ -46,6 +46,14 @@ typedef struct GTA_Execution_Context {
    */
   GTA_VectorX * stack;
   /**
+   * The stack used to track the base pointers.
+   */
+  GTA_VectorX * bp_stack;
+  /**
+   * The stack used to track the program counters.
+   */
+  GTA_VectorX * pc_stack;
+  /**
    * The garbage collection list.
    */
   GTA_VectorX * garbage_collection;

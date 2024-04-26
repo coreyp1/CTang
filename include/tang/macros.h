@@ -191,6 +191,7 @@ typedef GCU_Vector64 GTA_VectorX;
 typedef GCU_Type64_Union GTA_TypeX_Union;
 typedef GCU_Hash64 GTA_HashX;
 typedef GCU_Hash64_Iterator GTA_HashX_Iterator;
+typedef GCU_Hash64_Value GTA_HashX_Value;
 #define GTA_STRING_HASH gcu_string_hash_64
 #define GTA_VECTORX_CREATE gcu_vector64_create
 #define GTA_VECTORX_DESTROY gcu_vector64_destroy

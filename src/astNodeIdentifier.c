@@ -29,6 +29,7 @@ GTA_Ast_Node_Identifier * gta_ast_node_identifier_create(const char * identifier
   self->base.location = location;
   self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
   self->identifier = identifier;
+  self->hash = gcu_string_hash_64(identifier, strlen(identifier));
   return self;
 }
 
@@ -47,7 +48,7 @@ GTA_Ast_Node * gta_ast_node_identifier_simplify(GTA_Ast_Node * self, GTA_Ast_Sim
   // If the identifier is in the variable map, and the value is a primitive,
   // return the primitive value.
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
-  GCU_Hash64_Value val = gcu_hash64_get(variable_map, gcu_string_hash_64(identifier->identifier, strlen(identifier->identifier)));
+  GCU_Hash64_Value val = gcu_hash64_get(variable_map, identifier->hash);
   if (val.exists) {
     GTA_Ast_Node * node = (GTA_Ast_Node *)val.value.p;
     if (GTA_AST_IS_PRIMITIVE(node) && !GTA_AST_IS_STRING(node)) {

@@ -28,6 +28,10 @@ typedef struct GTA_Ast_Node_Identifier {
    * The identifier.
    */
   const char * identifier;
+  /**
+   * A hash of the identifier.
+   */
+  uint64_t hash;
 } GTA_Ast_Node_Identifier;
 
 /**

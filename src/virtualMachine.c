@@ -2,9 +2,16 @@
 #include <stdio.h>
 #include <tang/virtualMachine.h>
 #include <tang/computedValueAll.h>
+#include <cutil/memory.h>
 
 bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
   if (!context || !context->program || !context->program->bytecode) {
+    return false;
+  }
+  // Only the bytecode interpreter uses the bp_stack and pc_stack, so
+  // initialize them here.
+  if (!(context->bp_stack = GTA_VECTORX_CREATE(32)) ||
+      !(context->pc_stack = GTA_VECTORX_CREATE(32))) {
     return false;
   }
   GTA_TypeX_Union * current = context->program->bytecode->data;
@@ -12,12 +19,11 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
   // Unlike x86, the stack grows upwards.
   // Push the "old" base pointer, which is in this case, 0, will signal the
   // "return" instruction to halt the program.
-  if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_UI(0))) {
+  if (!GTA_VECTORX_APPEND(context->bp_stack, GTA_TYPEX_MAKE_UI(0))) {
     context->result = gta_computed_value_error_out_of_memory;
     return false;
   }
-  size_t bp = context->stack->count - 1;
-  (void)bp;
+  size_t bp = 0;
   // Note that the stack pointer is the count of the stack, not the index of
   // the top of the stack.  This is done for effieciency reasons.  Otherwise,
   // we would have to maintain a separate variable for the stack pointer and
@@ -31,14 +37,10 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       case GTA_BYTECODE_RETURN: {
         context->result = GTA_TYPEX_P(context->stack->data[--*sp]);
         // Pop the base pointer.
-        bp = GTA_TYPEX_UI(context->stack->data[--*sp]);
+        bp = GTA_TYPEX_UI(context->bp_stack->data[--context->bp_stack->count]);
         // Pop the return address.
-        // Because the return address is the last entry of the calling frame,
-        // and it is possible that we are in the outermost frame, then we
-        // need to verify that we are not reading into memory that doesn't
-        // belong to us.
-        next = *sp > 0
-          ? GTA_TYPEX_P(context->stack->data[--*sp])
+        next = context->pc_stack->count > 0
+          ? GTA_TYPEX_P(context->pc_stack->data[--context->pc_stack->count])
           : 0;
         break;
       }
@@ -84,6 +86,42 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         // Simply decrease the stack pointer.  The garbage collector will take
         // care of the rest.
         --*sp;
+        break;
+      }
+      case GTA_BYTECODE_ASSIGN_TO_BASE: {
+        // Assign a value to a global variable.
+        // The value will be left on the stack.
+        size_t index = GTA_TYPEX_UI(*next++);
+        GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[*sp - 1]);
+        if (value->is_temporary) {
+          value->is_temporary = false;
+          context->stack->data[index] = GTA_TYPEX_MAKE_P(value);
+          break;
+        }
+        GTA_Computed_Value * copy = gta_computed_value_deep_copy(value);
+        if (!copy) {
+          context->result = gta_computed_value_error_out_of_memory;
+          break;
+        }
+        context->stack->data[index] = GTA_TYPEX_MAKE_P(copy);
+        break;
+      }
+      case GTA_BYTECODE_ASSIGN: {
+        // Assign a value to a local variable.
+        // The value will be left on the stack.
+        size_t index = GTA_TYPEX_UI(*next++);
+        GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[*sp - 1]);
+        if (value->is_temporary) {
+          value->is_temporary = false;
+          context->stack->data[bp + index] = GTA_TYPEX_MAKE_P(value);
+          break;
+        }
+        GTA_Computed_Value * copy = gta_computed_value_deep_copy(value);
+        if (!copy) {
+          context->result = gta_computed_value_error_out_of_memory;
+          break;
+        }
+        context->stack->data[bp + index] = GTA_TYPEX_MAKE_P(copy);
         break;
       }
       default: {

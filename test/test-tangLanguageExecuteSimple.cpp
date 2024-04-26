@@ -179,6 +179,23 @@ TEST(Declare, Block) {
   }
 }
 
+TEST(Assignment, TemporaryLiteral) {
+  {
+    // Assign a value to a variable.
+    TEST_PROGRAM_SETUP("a = 3");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Assign a value to a variable.
+    TEST_PROGRAM_SETUP("a = 3; false;");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Boolean *)context->result)->value, false);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

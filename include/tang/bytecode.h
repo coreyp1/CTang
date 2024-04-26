@@ -33,8 +33,18 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_NULL,           ///< Push a null onto the stack
   GTA_BYTECODE_STRING,         ///< Get len, char string: push string
 
-
   GTA_BYTECODE_POP,            ///< Pop a val
+  GTA_BYTECODE_ASSIGN_TO_BASE, ///< Assign a value to a global variable.
+                               ///<   Get index, pop val, assign stack[index] = val
+  GTA_BYTECODE_ASSIGN,         ///< Assign a value to a local variable.
+                               ///<   Get index, pop val, assign stack[fp + index] = val
+  GTA_BYTECODE_PUSH_BP,        ///< Push the base pointer onto the stack
+  GTA_BYTECODE_PUSH_PC,        ///< Push the program counter onto the stack
+  GTA_BYTECODE_POP_BP,         ///< Pop the base pointer from the stack
+  GTA_BYTECODE_POP_PC,         ///< Pop the program counter from the stack
+
+
+
   GTA_BYTECODE_PEEK,           ///< Stack # (from fp): push val from stack #
   GTA_BYTECODE_POKE,           ///< Stack # (from fp): Copy a val, store @ stack #
   GTA_BYTECODE_COPY,           ///< Stack # (from fp): Deep copy val @ stack #, store @
