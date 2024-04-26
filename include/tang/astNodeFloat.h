@@ -88,9 +88,8 @@ void gta_ast_node_float_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
 /**
  * Compile the AST node to binary.
  *
- * The vtable's compile_to_binary function is called to compile the node.  This
- * function serves as a general dispatch function, and should be used in
- * preference to calling the vtable's compile_to_binary function directly.
+ * This function should not be called directly. Use gta_ast_node_compile_to_binary()
+ * instead.
  *
  * @see gta_ast_node_compile_to_binary
  *
@@ -101,14 +100,14 @@ void gta_ast_node_float_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
 bool gta_ast_node_float_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
 
 /**
- * Compiles a GTA_Ast_Node_Integer object to bytecode.
+ * Compiles the AST node to bytecode.
  *
  * This function should not be called directly. Use gta_ast_node_compile_to_bytecode()
  * instead.
  *
  * @see gta_ast_node_compile_to_bytecode
  *
- * @param self The GTA_Ast_Node_Integer object.
+ * @param self The node to compile.
  * @param context The compiler state to use for compilation.
  */
 bool gta_ast_node_float_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
