@@ -5,6 +5,9 @@
 #include <cutil/string.h>
 #include "tang/astNodeAssign.h"
 #include "tang/astNodeIdentifier.h"
+#include "tang/astNodeIndex.h"
+#include "tang/astNodePeriod.h"
+#include "tang/binaryCompilerContext.h"
 #include "tang/macros.h"
 
 GTA_Ast_Node_VTable gta_ast_node_assign_vtable = {
@@ -16,6 +19,7 @@ GTA_Ast_Node_VTable gta_ast_node_assign_vtable = {
   .simplify = gta_ast_node_assign_simplify,
   .walk = gta_ast_node_assign_walk,
 };
+
 
 GTA_Ast_Node_Assign * gta_ast_node_assign_create(GTA_Ast_Node * lhs, GTA_Ast_Node * rhs, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Assign * self = gcu_malloc(sizeof(GTA_Ast_Node_Assign));
@@ -30,12 +34,14 @@ GTA_Ast_Node_Assign * gta_ast_node_assign_create(GTA_Ast_Node * lhs, GTA_Ast_Nod
   return self;
 }
 
+
 void gta_ast_node_assign_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
   gta_ast_node_destroy(assign->lhs);
   gta_ast_node_destroy(assign->rhs);
   gcu_free(self);
 }
+
 
 void gta_ast_node_assign_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
@@ -53,6 +59,7 @@ void gta_ast_node_assign_print(GTA_Ast_Node * self, const char * indent) {
   gta_ast_node_print(assign->rhs, new_indent);
   gcu_free(new_indent);
 }
+
 
 GTA_Ast_Node * gta_ast_node_assign_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
@@ -86,12 +93,14 @@ GTA_Ast_Node * gta_ast_node_assign_simplify(GTA_Ast_Node * self, GTA_Ast_Simplif
   return 0;
 }
 
+
 void gta_ast_node_assign_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
   gta_ast_node_walk(assign->lhs, callback, data, return_value);
   gta_ast_node_walk(assign->rhs, callback, data, return_value);
 }
+
 
 bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
@@ -131,17 +140,162 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_C
   return false;
 }
 
-bool gta_ast_node_assign_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
-  (void) self;
-  (void) context;
-  GTA_Ast_Node_Assign * assign_node = (GTA_Ast_Node_Assign *) self;
-  GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 30)) {
-    return false;
+
+static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Compiler_Context * context) {
+  GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) lhs;
+  bool is_global;
+  uint64_t index;
+  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
+  bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
+
+  // If the identifier is a global variable, then the stack index is absolute
+  // from the beginning of the stack.
+  GTA_HashX_Value position = GTA_HASHX_GET(context->globals, identifier->hash);
+  if (position.exists) {
+    is_global = true;
+    index = GTA_TYPEX_UI(position.value);
   }
+  else {
+    position = GTA_HASHX_GET(GTA_TYPEX_P(context->scope_stack->data[context->scope_stack->count - 1]), identifier->hash);
+    // If the identifier is a local variable, then the stack index is relative
+    // to the base pointer.
+    if (position.exists) {
+      is_global = false;
+      index = GTA_TYPEX_UI(position.value);
+    }
+    else {
+      return false;
+    }
+  }
+
+  GCU_Vector8 * v = context->binary_vector;
+
 #if defined(GTA_X86_64)
   // 64-bit x86
-  (void) assign_node;
+  // Determine whether or not the computed value in RAX is a temporary value.
+  if (!gcu_vector8_reserve(v, v->count + 100)) {
+    return false;
+  }
+
+  // If the value is a temporary value, then we can simply mark it as non-temporary
+  // and store it in the appropriate location.
+  // The computed value is in RAX.
+  //  mov r8, 0xDEADBEEFDEADBEEF    ; The index of the value.
+  GTA_BINARY_WRITE2(v, 0x49, 0xB8);
+  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  memcpy(v->data + v->count - 8, &index, 8);
+  //  mov rdx, is_singleton_offset  ; Load the byte offset of is_singleton.
+  GTA_BINARY_WRITE2(v, 0x48, 0xBA);
+  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  memcpy(v->data + v->count - 8, &is_singleton_offset, 8);
+  //  lea rcx, [rax + rdx]          ; Load the is_singleton value.
+  GTA_BINARY_WRITE4(v, 0x48, 0x8D, 0x0C, 0x10);
+  //  cmp rcx, 1                    ; Compare the is_singleton value to 1.
+  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xF9, 0x01);
+  //  je done                       ; If singleton, then jump to done.
+  GTA_BINARY_WRITE2(v, 0x0F, 0x84);
+  GTA_BINARY_WRITE4(v, 0xDE, 0xAD, 0xBE, 0xEF);
+  GTA_Integer label_done = gta_binary_compiler_context_get_label(context);
+  if (label_done < 0) {
+    return false;
+  }
+  if (!gta_binary_compiler_context_add_label_jump(context, label_done, v->count - 4)) {
+    return false;
+  }
+
+  // not_singleton:
+  //  mov rdx, is_temporary_offset  ; Load the byte offset of is_temporary.
+  GTA_BINARY_WRITE2(v, 0x48, 0xBA);
+  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  memcpy(v->data + v->count - 8, &is_temporary_offset, 8);
+  //  lea rcx, [rax + rdx]          ; Load the is_temporary value.
+  GTA_BINARY_WRITE4(v, 0x48, 0x8D, 0x0C, 0x10);
+  //  cmp rcx, 1                    ; Compare the is_temporary value to 1.
+  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xF9, 0x01);
+  //  jne not_temporary             ; If permanent, then jump to not_temporary.
+  GTA_BINARY_WRITE2(v, 0x0F, 0x85);
+  GTA_BINARY_WRITE4(v, 0xDE, 0xAD, 0xBE, 0xEF);
+  GTA_Integer label_not_temporary = gta_binary_compiler_context_get_label(context);
+  if (label_not_temporary < 0) {
+    return false;
+  }
+  if (!gta_binary_compiler_context_add_label_jump(context, label_not_temporary, v->count - 4)) {
+    return false;
+  }
+  //  mov rcx, 0                    ; The the value for non-temporary.
+  GTA_BINARY_WRITE3(v, 0x48, 0xC7, 0xC1);
+  GTA_BINARY_WRITE4(v, 0x00, 0x00, 0x00, 0x00);
+  //  mov [rax + rdx], rcx          ; Mark the value as non-temporary.
+  GTA_BINARY_WRITE4(v, 0x48, 0x89, 0x0C, 0x10);
+  //  jmp done                      ; Jump to done.
+  GTA_BINARY_WRITE1(v, 0xE9);
+  GTA_BINARY_WRITE4(v, 0xDE, 0xAD, 0xBE, 0xEF);
+  if (!gta_binary_compiler_context_add_label_jump(context, label_done, v->count - 4)) {
+    return false;
+  }
+
+  // not_temporary:                 ; The value is not temporary.
+  if (!gta_binary_compiler_context_set_label(context, label_not_temporary, v->count)) {
+    return false;
+  }
+  //  mov rdi, rax                  ; Move the value to RDI.
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xc7);
+  //  mov rax, gta_computed_value_deep_copy ; Make a deep copy of the value.
+  GTA_BINARY_WRITE2(v, 0x48, 0xB8);
+  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_deep_copy);
+  memcpy(v->data + v->count - 8, &fp, 8);
+  //  call rax
+  GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+
+  // done:                          ; Done.
+  if (!gta_binary_compiler_context_set_label(context, label_done, v->count)) {
+    return false;
+  }
+  // RCX and RDX are not needed, they can be used for other purposes.
+  //   mov rcx, (is_global ? r13 : r12)
+  GTA_BINARY_WRITE3(v, 0x4C, 0x89, is_global ? 0xE9 : 0xE1);
+  // sub rcx, r8
+  GTA_BINARY_WRITE3(v, 0x4C, 0x29, 0xC1);
+  // mov [rcx], rax        ; Store the value in the appropriate location.
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0x01);
+
+  return true;
 #endif
   return false;
+}
+
+
+static bool __compile_binary_lhs_is_period(GTA_Ast_Node * lhs, GTA_Binary_Compiler_Context * context) {
+  (void) lhs;
+  (void) context;
+  return false;
+}
+
+
+static bool __compile_binary_lhs_is_index(GTA_Ast_Node * lhs, GTA_Binary_Compiler_Context * context) {
+  (void) lhs;
+  (void) context;
+  return false;
+}
+
+
+bool gta_ast_node_assign_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  GTA_Ast_Node_Assign * assign_node = (GTA_Ast_Node_Assign *) self;
+
+  if (!gta_ast_node_compile_to_binary(assign_node->rhs, context)) {
+    return false;
+  }
+
+  // An assignment may be in several forms:
+  //   a = foo;
+  //   a.b = foo;
+  //   a[b] = foo;
+  return GTA_AST_IS_IDENTIFIER(assign_node->lhs)
+    ? __compile_binary_lhs_is_identifier(assign_node->lhs, context)
+    : GTA_AST_IS_PERIOD(assign_node->lhs)
+      ? __compile_binary_lhs_is_period(assign_node->lhs, context)
+      : GTA_AST_IS_INDEX(assign_node->lhs)
+        ? __compile_binary_lhs_is_index(assign_node->lhs, context)
+        : false;
 }

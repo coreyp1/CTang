@@ -20,9 +20,10 @@
 #include <tang/astNodeBlock.h>
 #include <tang/astNodeIdentifier.h>
 #include <tang/astNodeParseError.h>
-#include <tang/virtualMachine.h>
 #include <tang/binaryCompilerContext.h>
+#include <tang/computedValue.h>
 #include <tang/executionContext.h>
+#include <tang/virtualMachine.h>
 
 static void gta_program_compile_bytecode(GTA_Program * program) {
   GTA_VectorX * bytecode = GTA_VECTORX_CREATE(0);
@@ -75,9 +76,23 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
 
 static void gta_program_compile_binary(GTA_Program * program) {
   GTA_Binary_Compiler_Context * context = gta_binary_compiler_context_create(program);
-  if (!context || !gcu_vector8_reserve(context->binary_vector, 1024)) {
+  if (!context) {
     return;
   }
+  if (!gcu_vector8_reserve(context->binary_vector, 1024)) {
+    gta_binary_compiler_context_destroy(context);
+    return;
+  }
+
+  // Create a variable scope and collect the variable names.
+  // All identifiers need to be found so that space can be reserved for
+  // them on the stack when the program is executed.
+  if (!gta_program_create_scope(context->scope_stack, context->globals, program->ast)) {
+    gta_binary_compiler_context_destroy(context);
+    return;
+  }
+  size_t count_of_globals = GTA_HASHX_COUNT(context->globals);
+  size_t count_of_locals = GTA_HASHX_COUNT(GTA_TYPEX_P(context->scope_stack->data[context->scope_stack->count - 1]));
 
 #ifdef GTA_X86_64
   // 64-bit x86
@@ -92,26 +107,66 @@ static void gta_program_compile_binary(GTA_Program * program) {
   // Setup will pre-populate registers with:
   //   r15 = context (rdi)
   //   r14 = &context->result
+  //   r13 = global stack pointer
+  //   r12 = frame (variable) stack pointer
   // Each execution will put the result in rax.  It is up to
   // the caller to move the result to the correct location.
+
+  // Reserve space for the binary.
+  size_t expected_size = 37 + ((count_of_globals + count_of_locals) * 1) + 13 + 100;
+  if (!gcu_vector8_reserve(context->binary_vector, expected_size < 1024 ? 1024 : expected_size)) {
+    gta_binary_compiler_context_destroy(context);
+    return;
+  }
 
   // Set up the beginning of the function:
   //   push rbp
   //   mov rbp, rsp
   GTA_BINARY_WRITE1(context->binary_vector, 0x55);
   GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xE5);
-  // Push r15 and r14 onto the stack.
-  // Because they are each 8 bytes, we do not need to adjust the stack
-  // pointer in order to maintain 16-byte alignment.
+  // Push callee-saved registers onto the stack.
   //   push r15
   //   push r14
+  //   push r13
+  //   push r12
   GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x57);
   GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x56);
-  //   mov r15, rdi
+  GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x55);
+  GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x54);
+  //   mov r15, rdi          ; Store context in r15.
   GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0xFF);
   //   lea r14, [r15 + offsetof(GTA_Binary_Execution_Context, result)]
   GTA_BINARY_WRITE3(context->binary_vector, 0x4D, 0x8D, 0x77);
   GTA_BINARY_WRITE1(context->binary_vector, (uint8_t)(size_t)(&((GTA_Execution_Context *)0)->result));
+
+  //   mov r13, rsp          ; Store the global stack pointer in r13.
+  GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0xE5);
+
+  // Put the memory location of the null value into rdx.
+  //  mov rdx, 0xDEADBEEFDEADBEEF
+  GTA_BINARY_WRITE2(context->binary_vector, 0x48, 0xBA);
+  GTA_BINARY_WRITE8(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  memcpy(context->binary_vector->data + context->binary_vector->count - sizeof(gta_computed_value_null), &gta_computed_value_null, sizeof(gta_computed_value_null));
+
+  for (size_t i = 0; i < count_of_globals; ++i) {
+    //  push rdx
+    GTA_BINARY_WRITE1(context->binary_vector, 0x52);
+  }
+
+  // Store the frame (variable) stack pointer.
+  //   mov r12, rsp
+  GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0xE4);
+
+  // Initialize all locals to null.
+  for (size_t i = 0; i < count_of_locals; ++i) {
+    //  push rdx
+    GTA_BINARY_WRITE1(context->binary_vector, 0x52);
+  }
+
+  // Align the stack to 16 bytes.
+  //   and rsp, 0xFFFFFFFFFFFFFFF0
+  GTA_BINARY_WRITE4(context->binary_vector, 0x48, 0x83, 0xE4, 0xF0);
+
 
 #elif defined(GTA_X86)
   // 32-bit x86
@@ -136,20 +191,53 @@ static void gta_program_compile_binary(GTA_Program * program) {
 
 #ifdef GTA_X86_64
   // 64-bit x86
-  if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 6)) {
+  if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 13)) {
     gta_binary_compiler_context_destroy(context);
     return;
   }
-  // Pop r15 and r14 off the stack.
+  // Restore the stack pointer to before we added the global and local
+  // variables.  This is faster than popping the locals and globals off the
+  // stack, and the garbage collector will clean up the memory.
+  //   mov rsp, r13
+  GTA_BINARY_WRITE3(context->binary_vector, 0x4C, 0x89, 0xEC);
+
+  // Pop callee-saved registers off the stack.
+  //   pop r12
+  //   pop r13
   //   pop r14
   //   pop r15
+  GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x5C);
+  GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x5D);
   GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x5E);
   GTA_BINARY_WRITE2(context->binary_vector, 0x41, 0x5F);
+
   // Set up the end of the function:
   //   leave
   //   ret
   GTA_BINARY_WRITE1(context->binary_vector, 0xC9);
   GTA_BINARY_WRITE1(context->binary_vector, 0xC3);
+
+  // Lastly, correct the JUMP instructions to point to the correct location in
+  // the binary.
+  if (context->labels->count != context->labels_from->count) {
+    gta_binary_compiler_context_destroy(context);
+    return;
+  }
+  for (size_t i = 0; i < context->labels->count; ++i) {
+    GTA_Integer label = GTA_TYPEX_UI(context->labels->data[i]);
+    GTA_VectorX * jumps = GTA_TYPEX_P(context->labels_from->data[i]);
+    for (size_t j = 0; j < jumps->count; ++j) {
+      GTA_Integer jump = GTA_TYPEX_UI(jumps->data[j]);
+      if (jump < 0 || (GTA_UInteger)jump >= context->binary_vector->count) {
+        gta_binary_compiler_context_destroy(context);
+        return;
+      }
+      // Jump is relative to the next instruction and is 4 bytes long.
+      int32_t offset = (int32_t)(label - jump - 4);
+      memcpy(context->binary_vector->data + jump, &offset, sizeof(offset));
+    }
+  }
+
 #elif defined(GTA_X86)
   // 32-bit x86
   // Set up the end of the function:
@@ -188,13 +276,11 @@ static void gta_program_compile_binary(GTA_Program * program) {
     }
     else {
       // dump the binary to stderr
-      //printf("\nProgram code:\n%s\n", program->code);
-      //fwrite(context->binary_vector->data, 1, length, stderr);
+      // printf("\nProgram code:\n%s\n", program->code);
+      // fwrite(context->binary_vector->data, 1, length, stderr);
     }
   }
 #endif
-  // Correct JUMP instructions to point to the correct location in the binary.
-  // TODO: implement this.
 
   gta_binary_compiler_context_destroy(context);
 }

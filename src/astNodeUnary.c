@@ -97,3 +97,44 @@ void gta_ast_node_unary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
   GTA_Ast_Node_Unary * unary = (GTA_Ast_Node_Unary *) self;
   gta_ast_node_walk(unary->expression, callback, data, return_value);
 }
+
+// bool gta_ast_node_unary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+//   GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;
+//   return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count) && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_FLOAT))
+//     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_F(float_node->value));
+
+//   return false;
+// }
+
+// bool gta_ast_node_unary_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+//   GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;
+//   GCU_Vector8 * v = context->binary_vector;
+//   if (!gcu_vector8_reserve(v, v->count + 30)) {
+//     return false;
+//   }
+// #if defined(GTA_X86_64)
+//   // 64-bit x86
+//   // Assembly to call gta_computed_value_float_create(float_node->value, context):
+//   // context is in r15.
+//   //   mov rdi, r15
+//   //   mov rax, float_node->value
+//   GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFF);
+//   GTA_BINARY_WRITE2(v, 0x48, 0xB8);
+//   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+
+//   //   mov xmm0, rax
+//   GTA_BINARY_WRITE5(v, 0x66, 0x48, 0x0F, 0x6E, 0xC0);
+//   memcpy(&v->data[v->count - 13], &float_node->value, 8);
+
+//   //   mov rax, gta_computed_value_float_create
+//   GTA_BINARY_WRITE2(v, 0x48, 0xB8);
+//   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+//   GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_float_create);
+//   memcpy(&v->data[v->count - 8], &fp, 8);
+
+//   //   call rax
+//   GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+//   return true;
+// #endif
+//   return false;
+// }

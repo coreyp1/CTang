@@ -67,7 +67,6 @@ bool gta_ast_node_integer_compile_to_binary(GTA_Ast_Node * self, GTA_MAYBE_UNUSE
   // Assembly to call gta_computed_value_integer_create(integer->value, context):
   //   mov rsi, r15
   //   mov rdi, integer->value
-  //   mov rax, gta_computed_value_integer_create
   GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFE);
   GTA_BINARY_WRITE2(v, 0x48, 0xBF);
   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
