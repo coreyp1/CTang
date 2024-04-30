@@ -331,6 +331,9 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
     return GTA_PARSER_USE;
     // return g_tang_make_USE(location);
   }
+  global {
+    return GTA_PARSER_GLOBAL;
+  }
   function {
     return GTA_PARSER_FUNCTION;
     // return g_tang_make_FUNCTION(location);

@@ -37,6 +37,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/astNodeFor.o \
 	$(OBJ_DIR)/astNodeFunction.o \
 	$(OBJ_DIR)/astNodeFunctionCall.o \
+	$(OBJ_DIR)/astNodeGlobal.o \
 	$(OBJ_DIR)/astNodeIdentifier.o \
 	$(OBJ_DIR)/astNodeIfElse.o \
 	$(OBJ_DIR)/astNodeIndex.o \
@@ -204,6 +205,9 @@ DEP_ASTNODEFUNCTIONCALL = \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
+DEP_ASTNODEGLOBAL = \
+	include/tang/astNodeGlobal.h \
+	$(DEP_ASTNODE)
 DEP_ASTNODEIFELSE = \
 	include/tang/astNodeIfElse.h \
 	$(DEP_ASTNODE) \
@@ -640,6 +644,15 @@ $(OBJ_DIR)/astNodeFunction.o: \
 $(OBJ_DIR)/astNodeFunctionCall.o: \
 	src/astNodeFunctionCall.c \
 	$(DEP_ASTNODEFUNCTIONCALL) \
+	$(DEP_BINARYCOMPILERCONTEXT) \
+	$(DEP_BYTECODECOMPILERCONTEXT) \
+	$(DEP_OPCODE)
+
+$(OBJ_DIR)/astNodeGlobal.o: \
+	src/astNodeGlobal.c \
+	$(DEP_ASTNODEASSIGN) \
+	$(DEP_ASTNODEGLOBAL) \
+	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)

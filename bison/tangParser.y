@@ -101,6 +101,7 @@
 %token CASTBOOLEAN "boolean"
 %token CASTSTRING "string"
 %token USE "use"
+%token GLOBAL "global"
 %token FUNCTION "function"
 %token RETURN "return"
 %token BREAK "break"
@@ -797,6 +798,50 @@ closedStatement
       if (!$$) {
         gcu_free((void *)identifier);
         parseError = &ErrorOutOfMemory;
+      }
+    }
+  | "global" IDENTIFIER ";"
+    {
+      // Verify that there have been no memory errors.
+      VERIFY($$);
+
+      const char * identifier = $2.str;
+
+      GTA_Ast_Node * name = (GTA_Ast_Node *)gta_ast_node_identifier_create(identifier, @2);
+      if (!name) {
+        gcu_free((void *)identifier);
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
+
+      LOCATION(@1, @3);
+      $$ = (GTA_Ast_Node *)gta_ast_node_global_create(name, 0, location);
+      if (!$$) {
+        gta_ast_node_destroy(name);
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
+    }
+    | "global" IDENTIFIER "=" expression ";"
+    {
+      // Verify that there have been no memory errors.
+      VERIFY1($4,$$);
+
+      const char * identifier = $2.str;
+
+      GTA_Ast_Node * name = (GTA_Ast_Node *)gta_ast_node_identifier_create(identifier, @2);
+      if (!name) {
+        gcu_free((void *)identifier);
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
+
+      LOCATION(@1, @5);
+      $$ = (GTA_Ast_Node *)gta_ast_node_global_create(name, $4, location);
+      if (!$$) {
+        gta_ast_node_destroy(name);
+        parseError = &ErrorOutOfMemory;
+        break;
       }
     }
   ;

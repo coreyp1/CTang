@@ -18,6 +18,7 @@
 #include "tang/astNodeFor.h"
 #include "tang/astNodeFunction.h"
 #include "tang/astNodeFunctionCall.h"
+#include "tang/astNodeGlobal.h"
 #include "tang/astNodeIdentifier.h"
 #include "tang/astNodeIfElse.h"
 #include "tang/astNodeIndex.h"
