@@ -11,7 +11,7 @@
 extern "C" {
 #endif //__cplusplus
 
-#include "tang/astNode.h"
+#include <tang/ast/astNode.h>
 
 
 GTA_NO_DISCARD GTA_Ast_Node * gta_tang_parse(const char * source);

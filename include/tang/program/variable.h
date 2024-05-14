@@ -9,7 +9,7 @@
 extern "C" {
 #endif //__cplusplus
 
-#include "macros.h"
+#include <tang/macros.h>
 
 /**
  * This structure is used to store the identifiers in the program as well as

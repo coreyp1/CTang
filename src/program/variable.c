@@ -1,9 +1,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
 #include <cutil/hash.h>
-#include <tang/astNode.h>
+#include <cutil/memory.h>
+#include <tang/ast/astNode.h>
 #include <tang/program/variable.h>
 
 /**

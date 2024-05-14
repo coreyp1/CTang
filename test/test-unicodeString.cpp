@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include <cutil/memory.h>
 #include <iostream>
-#include "unicodeString.h"
+#include <tang/unicodeString.h>
 
 using namespace std;
 //using namespace Tang;

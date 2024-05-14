@@ -1,2 +1,0 @@
-#include <tang/garbageCollector.h>
-

@@ -173,11 +173,10 @@
 // `requires` will be included in the .h file.
 %code requires {
 #include <stdint.h>
-#include "tang/astNode.h"
-//#include "tang/tangScanner.h"
-//#include "tang/error.h"
-#include "tang/unicodeString.h"
-#include "cutil/hash.h"
+#include <cutil/hash.h>
+#include <tang/ast/astNode.h>
+#include <tang/location.h>
+#include <tang/unicodeString.h>
 
 /* An opaque pointer. */
 #ifndef YY_TYPEDEF_YY_SCANNER_T
@@ -207,9 +206,9 @@ typedef struct {
 #include <stdio.h>
 #include <cutil/memory.h>
 #include "tangParser.h"
-#include "tang/tangScanner.h"
-#include "tang/astNodeAll.h"
-#include "tang/macros.h"
+#include <tang/macros.h>
+#include <tang/tangScanner.h>
+#include <tang/ast/astNodeAll.h>
 
 static GTA_Parser_Error ErrorOutOfMemory = "Out of memory/Memory allocation error";
 // static GTA_Parser_Error ErrorOctalOutOfBounds = true;

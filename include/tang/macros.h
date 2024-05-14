@@ -295,6 +295,7 @@ typedef struct GTA_Ast_Node GTA_Ast_Node;
 typedef struct GTA_Ast_Node_Parse_Error GTA_Ast_Node_Parse_Error;
 typedef struct GTA_Computed_Value GTA_Computed_Value;
 typedef struct GTA_Execution_Context GTA_Execution_Context;
+typedef struct GTA_Program GTA_Program;
 typedef struct GTA_Variable_Scope GTA_Variable_Scope;
 
 #ifdef __cplusplus

@@ -23,87 +23,54 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/tangParser.o \
 	$(OBJ_DIR)/tangScanner.o \
 	$(OBJ_DIR)/unicodeString.o \
-	$(OBJ_DIR)/astNode.o \
-	$(OBJ_DIR)/astNodeArray.o \
-	$(OBJ_DIR)/astNodeAssign.o \
-	$(OBJ_DIR)/astNodeBinary.o \
-	$(OBJ_DIR)/astNodeBlock.o \
-	$(OBJ_DIR)/astNodeBoolean.o \
-	$(OBJ_DIR)/astNodeBreak.o \
-	$(OBJ_DIR)/astNodeCast.o \
-	$(OBJ_DIR)/astNodeContinue.o \
-	$(OBJ_DIR)/astNodeDoWhile.o \
-	$(OBJ_DIR)/astNodeFloat.o \
-	$(OBJ_DIR)/astNodeFor.o \
-	$(OBJ_DIR)/astNodeFunction.o \
-	$(OBJ_DIR)/astNodeFunctionCall.o \
-	$(OBJ_DIR)/astNodeGlobal.o \
-	$(OBJ_DIR)/astNodeIdentifier.o \
-	$(OBJ_DIR)/astNodeIfElse.o \
-	$(OBJ_DIR)/astNodeIndex.o \
-	$(OBJ_DIR)/astNodeInteger.o \
-	$(OBJ_DIR)/astNodeLibrary.o \
-	$(OBJ_DIR)/astNodeMap.o \
-	$(OBJ_DIR)/astNodePeriod.o \
-	$(OBJ_DIR)/astNodeParseError.o \
-	$(OBJ_DIR)/astNodePrint.o \
-	$(OBJ_DIR)/astNodeRangedFor.o \
-	$(OBJ_DIR)/astNodeReturn.o \
-	$(OBJ_DIR)/astNodeSlice.o \
-	$(OBJ_DIR)/astNodeString.o \
-	$(OBJ_DIR)/astNodeTernary.o \
-	$(OBJ_DIR)/astNodeUnary.o \
-	$(OBJ_DIR)/astNodeUse.o \
-	$(OBJ_DIR)/astNodeWhile.o \
-	$(OBJ_DIR)/binaryCompilerContext.o \
-	$(OBJ_DIR)/bytecode.o \
-	$(OBJ_DIR)/bytecodeCompilerContext.o \
-	$(OBJ_DIR)/computedValue.o \
-	$(OBJ_DIR)/computedValueBoolean.o \
-	$(OBJ_DIR)/computedValueError.o \
-	$(OBJ_DIR)/computedValueFloat.o \
-	$(OBJ_DIR)/computedValueInteger.o \
-	$(OBJ_DIR)/computedValueString.o \
-	$(OBJ_DIR)/executionContext.o \
-	$(OBJ_DIR)/garbageCollector.o \
-	$(OBJ_DIR)/program.o \
-	$(OBJ_DIR)/program-variable.o \
+	$(OBJ_DIR)/ast/astNode.o \
+	$(OBJ_DIR)/ast/astNodeArray.o \
+	$(OBJ_DIR)/ast/astNodeAssign.o \
+	$(OBJ_DIR)/ast/astNodeBinary.o \
+	$(OBJ_DIR)/ast/astNodeBlock.o \
+	$(OBJ_DIR)/ast/astNodeBoolean.o \
+	$(OBJ_DIR)/ast/astNodeBreak.o \
+	$(OBJ_DIR)/ast/astNodeCast.o \
+	$(OBJ_DIR)/ast/astNodeContinue.o \
+	$(OBJ_DIR)/ast/astNodeDoWhile.o \
+	$(OBJ_DIR)/ast/astNodeFloat.o \
+	$(OBJ_DIR)/ast/astNodeFor.o \
+	$(OBJ_DIR)/ast/astNodeFunction.o \
+	$(OBJ_DIR)/ast/astNodeFunctionCall.o \
+	$(OBJ_DIR)/ast/astNodeGlobal.o \
+	$(OBJ_DIR)/ast/astNodeIdentifier.o \
+	$(OBJ_DIR)/ast/astNodeIfElse.o \
+	$(OBJ_DIR)/ast/astNodeIndex.o \
+	$(OBJ_DIR)/ast/astNodeInteger.o \
+	$(OBJ_DIR)/ast/astNodeLibrary.o \
+	$(OBJ_DIR)/ast/astNodeMap.o \
+	$(OBJ_DIR)/ast/astNodePeriod.o \
+	$(OBJ_DIR)/ast/astNodeParseError.o \
+	$(OBJ_DIR)/ast/astNodePrint.o \
+	$(OBJ_DIR)/ast/astNodeRangedFor.o \
+	$(OBJ_DIR)/ast/astNodeReturn.o \
+	$(OBJ_DIR)/ast/astNodeSlice.o \
+	$(OBJ_DIR)/ast/astNodeString.o \
+	$(OBJ_DIR)/ast/astNodeTernary.o \
+	$(OBJ_DIR)/ast/astNodeUnary.o \
+	$(OBJ_DIR)/ast/astNodeUse.o \
+	$(OBJ_DIR)/ast/astNodeWhile.o \
+	$(OBJ_DIR)/computedValue/computedValue.o \
+	$(OBJ_DIR)/computedValue/computedValueBoolean.o \
+	$(OBJ_DIR)/computedValue/computedValueError.o \
+	$(OBJ_DIR)/computedValue/computedValueFloat.o \
+	$(OBJ_DIR)/computedValue/computedValueInteger.o \
+	$(OBJ_DIR)/computedValue/computedValueString.o \
+	$(OBJ_DIR)/program/binaryCompilerContext.o \
+	$(OBJ_DIR)/program/bytecode.o \
+	$(OBJ_DIR)/program/bytecodeCompilerContext.o \
+	$(OBJ_DIR)/program/executionContext.o \
+	$(OBJ_DIR)/program/garbageCollector.o \
+	$(OBJ_DIR)/program/program.o \
+	$(OBJ_DIR)/program/variable.o \
 	$(OBJ_DIR)/tangLanguage.o \
-	$(OBJ_DIR)/virtualMachine.o \
+	$(OBJ_DIR)/program/virtualMachine.o \
 
-# \
-# $(OBJ_DIR)/computedExpression.o \
-# $(OBJ_DIR)/computedExpressionArray.o \
-# $(OBJ_DIR)/computedExpressionBoolean.o \
-# $(OBJ_DIR)/computedExpressionCompiledFunction.o \
-# $(OBJ_DIR)/computedExpressionError.o \
-# $(OBJ_DIR)/computedExpressionFloat.o \
-# $(OBJ_DIR)/computedExpressionInteger.o \
-# $(OBJ_DIR)/computedExpressionIterator.o \
-# $(OBJ_DIR)/computedExpressionIteratorEnd.o \
-# $(OBJ_DIR)/computedExpressionLibrary.o \
-# $(OBJ_DIR)/computedExpressionLibraryMath.o \
-# $(OBJ_DIR)/computedExpressionLibraryTang.o \
-# $(OBJ_DIR)/computedExpressionMap.o \
-# $(OBJ_DIR)/computedExpressionNativeBoundFunction.o \
-# $(OBJ_DIR)/computedExpressionNativeFunction.o \
-# $(OBJ_DIR)/computedExpressionNativeLibraryFunction.o \
-# $(OBJ_DIR)/computedExpressionString.o \
-# $(OBJ_DIR)/context.o \
-# $(OBJ_DIR)/error.o \
-# $(OBJ_DIR)/htmlEscape.o \
-# $(OBJ_DIR)/htmlEscapeAscii.o \
-# $(OBJ_DIR)/opcode.o \
-# $(OBJ_DIR)/percentEncode.o \
-# $(OBJ_DIR)/program-analyze.o \
-# $(OBJ_DIR)/program-dumpBytecode.o \
-# $(OBJ_DIR)/program-execute.o \
-# $(OBJ_DIR)/program-optimize.o \
-# $(OBJ_DIR)/program.o \
-# $(OBJ_DIR)/tangBase.o \
-# $(OBJ_DIR)/tangParser.o \
-# $(OBJ_DIR)/unescape.o \
-# $(OBJ_DIR)/unicodeString.o
 
 TESTFLAGS := `pkg-config --libs --cflags gtest`
 
@@ -126,158 +93,158 @@ DEP_UNICODESTRING = \
 DEP_LOCATION = \
   include/tang/location.h
 DEP_BYTECODE = \
-	include/tang/bytecode.h \
+	include/tang/program/bytecode.h \
 	$(DEP_MACROS)
 DEP_BYTECODECOMPILERCONTEXT = \
-	include/tang/bytecodeCompilerContext.h \
+	include/tang/program/bytecodeCompilerContext.h \
 	$(DEP_MACROS)
 DEP_BINARYCOMPILERCONTEXT = \
-	include/tang/binaryCompilerContext.h \
+	include/tang/program/binaryCompilerContext.h \
 	$(DEP_MACROS)
 
 DEP_ASTNODE = \
-	include/tang/astNode.h \
+	include/tang/ast/astNode.h \
 	$(GEN_DIR)/tangParser.h \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_LOCATION)
 DEP_ASTNODEIDENTIFIER = \
-	include/tang/astNodeIdentifier.h \
+	include/tang/ast/astNodeIdentifier.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODESTRING = \
-	include/tang/astNodeString.h \
+	include/tang/ast/astNodeString.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEARRAY = \
-	include/tang/astNodeArray.h \
+	include/tang/ast/astNodeArray.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS)
 DEP_ASTNODEASSIGN = \
-	include/tang/astNodeAssign.h \
+	include/tang/ast/astNodeAssign.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEINDEX = \
-	include/tang/astNodeIndex.h \
+	include/tang/ast/astNodeIndex.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEBINARY = \
-	include/tang/astNodeBinary.h \
+	include/tang/ast/astNodeBinary.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEBLOCK = \
-	include/tang/astNodeBlock.h \
+	include/tang/ast/astNodeBlock.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS)
 DEP_ASTNODEBOOLEAN = \
-	include/tang/astNodeBoolean.h \
+	include/tang/ast/astNodeBoolean.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEBREAK = \
-	include/tang/astNodeBreak.h \
+	include/tang/ast/astNodeBreak.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODECAST = \
-	include/tang/astNodeCast.h \
+	include/tang/ast/astNodeCast.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODECONTINUE = \
-	include/tang/astNodeContinue.h \
+	include/tang/ast/astNodeContinue.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEDOWHILE = \
-	include/tang/astNodeDoWhile.h \
+	include/tang/ast/astNodeDoWhile.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEFLOAT = \
-	include/tang/astNodeFloat.h \
+	include/tang/ast/astNodeFloat.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEFOR = \
-	include/tang/astNodeFor.h \
+	include/tang/ast/astNodeFor.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEFUNCTION = \
-	include/tang/astNodeFunction.h \
+	include/tang/ast/astNodeFunction.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS)
 DEP_ASTNODEFUNCTIONCALL = \
-	include/tang/astNodeFunctionCall.h \
+	include/tang/ast/astNodeFunctionCall.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEGLOBAL = \
-	include/tang/astNodeGlobal.h \
+	include/tang/ast/astNodeGlobal.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEIFELSE = \
-	include/tang/astNodeIfElse.h \
+	include/tang/ast/astNodeIfElse.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEINDEX = \
-	include/tang/astNodeIndex.h \
+	include/tang/ast/astNodeIndex.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEINTEGER = \
-	include/tang/astNodeInteger.h \
+	include/tang/ast/astNodeInteger.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODELIBRARY = \
-	include/tang/astNodeLibrary.h \
+	include/tang/ast/astNodeLibrary.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEMAP = \
-	include/tang/astNodeMap.h \
+	include/tang/ast/astNodeMap.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS)
 DEP_ASTNODEPARSEERROR = \
-	include/tang/astNodeParseError.h \
+	include/tang/ast/astNodeParseError.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEPERIOD = \
-	include/tang/astNodePeriod.h \
+	include/tang/ast/astNodePeriod.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEPRINT = \
-	include/tang/astNodePrint.h \
+	include/tang/ast/astNodePrint.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODERANGEDFOR = \
-	include/tang/astNodeFor.h \
+	include/tang/ast/astNodeFor.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODERETURN = \
-	include/tang/astNodeReturn.h \
+	include/tang/ast/astNodeReturn.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODESLICE = \
-	include/tang/astNodeSlice.h \
+	include/tang/ast/astNodeSlice.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODETERNARY = \
-	include/tang/astNodeTernary.h \
+	include/tang/ast/astNodeTernary.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEUNARY = \
-	include/tang/astNodeUnary.h \
+	include/tang/ast/astNodeUnary.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEUSE = \
-	include/tang/astNodeUse.h \
+	include/tang/ast/astNodeUse.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEWHILE = \
-	include/tang/astNodeWhile.h \
+	include/tang/ast/astNodeWhile.h \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
@@ -317,22 +284,22 @@ DEP_ASTNODE_ALL = \
 	$(DEP_ASTNODEWHILE)
 
 DEP_COMPUTEDVALUE = \
-	include/tang/computedValue.h \
+	include/tang/computedValue/computedValue.h \
 	$(DEP_MACROS)
 DEP_COMPUTEDVALUEBOOLEAN = \
-	include/tang/computedValueBoolean.h \
+	include/tang/computedValue/computedValueBoolean.h \
 	$(DEP_COMPUTEDVALUE)
 DEP_COMPUTEDVALUEERROR = \
-  include/tang/computedValueError.h \
+  include/tang/computedValue/computedValueError.h \
 	$(DEP_COMPUTEDVALUE)
 DEP_COMPUTEDVALUEFLOAT = \
-	include/tang/computedValueFloat.h \
+	include/tang/computedValue/computedValueFloat.h \
 	$(DEP_COMPUTEDVALUE)
 DEP_COMPUTEDVALUEINTEGER = \
-	include/tang/computedValueInteger.h \
+	include/tang/computedValue/computedValueInteger.h \
 	$(DEP_COMPUTEDVALUE)
 DEP_COMPUTEDVALUESTRING = \
-	include/tang/computedValueString.h \
+	include/tang/computedValue/computedValueString.h \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_UNICODESTRING)
 
@@ -347,13 +314,13 @@ DEP_TANGLANGUAGE = \
 	$(DEP_ASTNODE)
 
 DEP_EXECUTIONCONTEXT = \
-	include/tang/executionContext.h \
+	include/tang/program/executionContext.h \
 	$(DEP_MACROS) \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_UNICODESTRING)
 
 DEP_GARBAGECOLLECTOR = \
-	include/tang/garbageCollector.h \
+	include/tang/program/garbageCollector.h \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_MACROS)
 
@@ -363,7 +330,7 @@ DEP_PROGRAM_VARIABLE = \
 	$(DEP_ASTNODE)
 
 DEP_PROGRAM = \
-	include/tang/program.h \
+	include/tang/program/program.h \
 	$(DEP_ASTNODE) \
 	$(DEP_BYTECODE) \
 	$(DEP_COMPUTEDVALUE) \
@@ -372,110 +339,19 @@ DEP_PROGRAM = \
 	$(DEP_UNICODESTRING)
 
 DEP_VIRTUALMACHINE = \
-	include/tang/virtualMachine.h \
+	include/tang/program/virtualMachine.h \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_MACROS) \
 	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_BYTECODE)
 
 
-
-DEP_SINGLETONOBJECTPOOL = \
-	include/tang/singletonObjectPool.h
-DEP_ERROR = \
-	include/tang/error.h \
-	$(DEP_LOCATION)
-DEP_COMPUTEDEXPRESSION = \
-	include/tang/computedExpression.h \
-	$(DEP_MACROS) \
-	$(DEP_ERROR)
-DEP_PROGRAMZZZ = \
-	include/tang/program.h \
-	$(DEP_ASTNODE) \
-	$(DEP_COMPUTEDEXPRESSION) \
-	$(DEP_CONTEXT) \
-	$(DEP_ERROR) \
-	$(DEP_MACROS) \
-	$(DEP_UNICODESTRING)
-DEP_COMPUTEDEXPRESSIONARRAY = \
-	include/tang/computedExpressionArray.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONBOOLEAN = \
-	include/tang/computedExpressionBoolean.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONCOMPILEDFUNCTION = \
-	include/tang/computedExpressionCompiledFunction.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONERROR = \
-	include/tang/computedExpressionError.h \
-	$(DEP_ERROR) \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONFLOAT = \
-	include/tang/computedExpressionFloat.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONINTEGER = \
-	include/tang/computedExpressionInteger.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONITERATOR = \
-	include/tang/computedExpressionIterator.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONITERATOREND = \
-	include/tang/computedExpressionIteratorEnd.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONLIBRARY = \
-	include/tang/computedExpressionLibrary.h \
-	$(DEP_MACROS) \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONLIBRARYBASE = \
-	include/tang/computedExpressionLibraryBase.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONLIBRARYMATH = \
-	include/tang/computedExpressionLibraryMath.h \
-	$(DEP_COMPUTEDEXPRESSIONLIBRARYBASE)
-DEP_COMPUTEDEXPRESSIONLIBRARYTANG = \
-	include/tang/computedExpressionLibraryTang.h \
-	$(DEP_COMPUTEDEXPRESSIONLIBRARY)
-DEP_COMPUTEDEXPRESSIONMAP = \
-	include/tang/computedExpressionMap.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONNATIVEBOUNDFUNCTION = \
-	include/tang/computedExpressionNativeBoundFunction.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONNATIVEFUNCTION = \
-	include/tang/computedExpressionNativeFunction.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONNATIVELIBRARYFUNCTION = \
-	include/tang/computedExpressionNativeLibraryFunction.h \
-	$(DEP_COMPUTEDEXPRESSION)
-DEP_COMPUTEDEXPRESSIONSTRING = \
-	include/tang/computedExpressionString.h \
-	$(DEP_COMPUTEDEXPRESSION) \
-	$(DEP_UNICODESTRING)
-DEP_TANGBASE = \
-	$(DEP_COMPUTEDEXPRESSION) \
-	$(DEP_MACROS) \
-	$(DEP_PROGRAM)
-DEP_TANG = \
-	$(DEP_ASTNODE) \
-	$(DEP_COMPUTEDEXPRESSION) \
-	$(DEP_COMPUTEDEXPRESSIONERROR) \
-	$(DEP_COMPUTEDEXPRESSIONINTEGER) \
-	$(DEP_COMPUTEDEXPRESSIONNATIVEFUNCTION) \
-	$(DEP_COMPUTEDEXPRESSIONSTRING) \
-	$(DEP_CONTEXT) \
-	$(DEP_ERROR) \
-	$(DEP_GARBAGECOLLECTOR) \
-	$(DEP_MACROS) \
-	$(DEP_OPCODE) \
-	$(DEP_PROGRAM) \
-	$(DEP_TANGBASE)
-
 ####################################################################
 # Bison-Generated Files
 ####################################################################
 $(GEN_DIR)/tangParser.h: \
 				bison/tangParser.y \
-				include/tang/astNode.h \
+				include/tang/ast/astNode.h \
 				$(DEP_LOCATION)
 	@echo "\n### Generating Bison TangParser ###"
 	@mkdir -p $(@D)
@@ -531,8 +407,8 @@ $(LIBOBJECTS) :
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ -fPIC
 
-$(OBJ_DIR)/astNode.o: \
-	src/astNode.c \
+$(OBJ_DIR)/ast/astNode.o: \
+	src/ast/astNode.c \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
 	$(DEP_BYTECODE) \
@@ -541,8 +417,8 @@ $(OBJ_DIR)/astNode.o: \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_PROGRAM)
 
-$(OBJ_DIR)/astNodeArray.o: \
-	src/astNodeArray.c \
+$(OBJ_DIR)/ast/astNodeArray.o: \
+	src/ast/astNodeArray.c \
 	$(DEP_ASTNODEARRAY) \
 	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
@@ -550,8 +426,8 @@ $(OBJ_DIR)/astNodeArray.o: \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM)
 
-$(OBJ_DIR)/astNodeAssign.o: \
-	src/astNodeAssign.c \
+$(OBJ_DIR)/ast/astNodeAssign.o: \
+	src/ast/astNodeAssign.c \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
@@ -559,8 +435,8 @@ $(OBJ_DIR)/astNodeAssign.o: \
 	$(DEP_ASTNODEINDEX) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeBinary.o: \
-	src/astNodeBinary.c \
+$(OBJ_DIR)/ast/astNodeBinary.o: \
+	src/ast/astNodeBinary.c \
 	$(DEP_ASTNODEBINARY) \
 	$(DEP_ASTNODEINTEGER) \
 	$(DEP_ASTNODEFLOAT) \
@@ -571,31 +447,31 @@ $(OBJ_DIR)/astNodeBinary.o: \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeBlock.o: \
-	src/astNodeBlock.c \
+$(OBJ_DIR)/ast/astNodeBlock.o: \
+	src/ast/astNodeBlock.c \
 	$(DEP_ASTNODEBLOCK) \
 	$(DEP_ASTNODEUSE) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeBoolean.o: \
-	src/astNodeBoolean.c \
+$(OBJ_DIR)/ast/astNodeBoolean.o: \
+	src/ast/astNodeBoolean.c \
 	$(DEP_ASTNODEBOOLEAN) \
 	$(DEP_COMPUTEDVALUEBOOLEAN) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeBreak.o: \
-	src/astNodeBreak.c \
+$(OBJ_DIR)/ast/astNodeBreak.o: \
+	src/ast/astNodeBreak.c \
 	$(DEP_ASTNODEBREAK) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeCast.o: \
-	src/astNodeCast.c \
+$(OBJ_DIR)/ast/astNodeCast.o: \
+	src/ast/astNodeCast.c \
 	$(DEP_ASTNODECAST) \
 	$(DEP_ASTNODEINTEGER) \
 	$(DEP_ASTNODEFLOAT) \
@@ -605,15 +481,15 @@ $(OBJ_DIR)/astNodeCast.o: \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeContinue.o: \
-	src/astNodeContinue.c \
+$(OBJ_DIR)/ast/astNodeContinue.o: \
+	src/ast/astNodeContinue.c \
 	$(DEP_ASTNODECONTINUE) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeDoWhile.o: \
-	src/astNodeDoWhile.c \
+$(OBJ_DIR)/ast/astNodeDoWhile.o: \
+	src/ast/astNodeDoWhile.c \
 	$(DEP_ASTNODEDOWHILE) \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEBINARY) \
@@ -622,8 +498,8 @@ $(OBJ_DIR)/astNodeDoWhile.o: \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeFor.o: \
-	src/astNodeFor.c \
+$(OBJ_DIR)/ast/astNodeFor.o: \
+	src/ast/astNodeFor.c \
 	$(DEP_ASTNODEFOR) \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEBINARY) \
@@ -632,15 +508,15 @@ $(OBJ_DIR)/astNodeFor.o: \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeFloat.o: \
-	src/astNodeFloat.c \
+$(OBJ_DIR)/ast/astNodeFloat.o: \
+	src/ast/astNodeFloat.c \
 	$(DEP_ASTNODEFLOAT) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeFunction.o: \
-	src/astNodeFunction.c \
+$(OBJ_DIR)/ast/astNodeFunction.o: \
+	src/ast/astNodeFunction.c \
 	$(DEP_ASTNODEFUNCTIONDECLARATION) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_MACROS) \
@@ -648,15 +524,15 @@ $(OBJ_DIR)/astNodeFunction.o: \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeFunctionCall.o: \
-	src/astNodeFunctionCall.c \
+$(OBJ_DIR)/ast/astNodeFunctionCall.o: \
+	src/ast/astNodeFunctionCall.c \
 	$(DEP_ASTNODEFUNCTIONCALL) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeGlobal.o: \
-	src/astNodeGlobal.c \
+$(OBJ_DIR)/ast/astNodeGlobal.o: \
+	src/ast/astNodeGlobal.c \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEGLOBAL) \
 	$(DEP_ASTNODEIDENTIFIER) \
@@ -664,8 +540,8 @@ $(OBJ_DIR)/astNodeGlobal.o: \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeIdentifier.o: \
-	src/astNodeIdentifier.c \
+$(OBJ_DIR)/ast/astNodeIdentifier.o: \
+	src/ast/astNodeIdentifier.c \
 	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_ASTNODEINTEGER) \
 	$(DEP_ASTNODEFLOAT) \
@@ -679,65 +555,65 @@ $(OBJ_DIR)/astNodeIdentifier.o: \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_VARIABLE)
 
-$(OBJ_DIR)/astNodeIfElse.o: \
-	src/astNodeIfElse.c \
+$(OBJ_DIR)/ast/astNodeIfElse.o: \
+	src/ast/astNodeIfElse.c \
 	$(DEP_ASTNODEIFELSE) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeIndex.o: \
-	src/astNodeIndex.c \
+$(OBJ_DIR)/ast/astNodeIndex.o: \
+	src/ast/astNodeIndex.c \
 	$(DEP_ASTNODEINDEX) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeInteger.o: \
-	src/astNodeInteger.c \
+$(OBJ_DIR)/ast/astNodeInteger.o: \
+	src/ast/astNodeInteger.c \
 	$(DEP_ASTNODEINTEGER) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeLibrary.o: \
-	src/astNodeLibrary.c \
+$(OBJ_DIR)/ast/astNodeLibrary.o: \
+	src/ast/astNodeLibrary.c \
 	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_ASTNODELIBRARY) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeMap.o: \
-	src/astNodeMap.c \
+$(OBJ_DIR)/ast/astNodeMap.o: \
+	src/ast/astNodeMap.c \
 	$(DEP_ASTNODEMAP) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeParseError.o: \
-	src/astNodeParseError.c \
+$(OBJ_DIR)/ast/astNodeParseError.o: \
+	src/ast/astNodeParseError.c \
 	$(DEP_ASTNODEPARSEERROR)
 
-$(OBJ_DIR)/astNodePeriod.o: \
-	src/astNodePeriod.c \
+$(OBJ_DIR)/ast/astNodePeriod.o: \
+	src/ast/astNodePeriod.c \
 	$(DEP_ASTNODEPERIOD) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodePrint.o: \
-	src/astNodePrint.c \
+$(OBJ_DIR)/ast/astNodePrint.o: \
+	src/ast/astNodePrint.c \
 	$(DEP_ASTNODEPRINT) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeRangedFor.o: \
-	src/astNodeRangedFor.c \
+$(OBJ_DIR)/ast/astNodeRangedFor.o: \
+	src/ast/astNodeRangedFor.c \
 	$(DEP_ASTNODERANGEDFOR) \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEBINARY) \
@@ -746,22 +622,22 @@ $(OBJ_DIR)/astNodeRangedFor.o: \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeReturn.o: \
-	src/astNodeReturn.c \
+$(OBJ_DIR)/ast/astNodeReturn.o: \
+	src/ast/astNodeReturn.c \
 	$(DEP_ASTNODERETURN) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeSlice.o: \
-	src/astNodeSlice.c \
+$(OBJ_DIR)/ast/astNodeSlice.o: \
+	src/ast/astNodeSlice.c \
 	$(DEP_ASTNODESLICE) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeString.o: \
-	src/astNodeString.c \
+$(OBJ_DIR)/ast/astNodeString.o: \
+	src/ast/astNodeString.c \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_UNICODESTRING) \
 	$(DEP_COMPUTEDVALUESTRING) \
@@ -769,15 +645,15 @@ $(OBJ_DIR)/astNodeString.o: \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeTernary.o: \
-	src/astNodeTernary.c \
+$(OBJ_DIR)/ast/astNodeTernary.o: \
+	src/ast/astNodeTernary.c \
 	$(DEP_ASTNODETERNARY) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeUnary.o: \
-	src/astNodeUnary.c \
+$(OBJ_DIR)/ast/astNodeUnary.o: \
+	src/ast/astNodeUnary.c \
 	$(DEP_ASTNODEUNARY) \
 	$(DEP_ASTNODEINTEGER) \
 	$(DEP_ASTNODEFLOAT) \
@@ -787,8 +663,8 @@ $(OBJ_DIR)/astNodeUnary.o: \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
 
-$(OBJ_DIR)/astNodeUse.o: \
-	src/astNodeUse.c \
+$(OBJ_DIR)/ast/astNodeUse.o: \
+	src/ast/astNodeUse.c \
 	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_ASTNODEPARSEERROR) \
 	$(DEP_ASTNODEUSE) \
@@ -797,8 +673,8 @@ $(OBJ_DIR)/astNodeUse.o: \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_VARIABLE)
 
-$(OBJ_DIR)/astNodeWhile.o: \
-	src/astNodeWhile.c \
+$(OBJ_DIR)/ast/astNodeWhile.o: \
+	src/ast/astNodeWhile.c \
 	$(DEP_ASTNODEWHILE) \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEBINARY) \
@@ -814,61 +690,65 @@ $(OBJ_DIR)/tangLanguage.o: \
 	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_ASTNODEPARSEERROR)
 
-$(OBJ_DIR)/binaryCompilerContext.o : \
-	src/binaryCompilerContext.c \
-	$(DEP_BINARYCOMPILERCONTEXT) \
-
-$(OBJ_DIR)/bytecode.o: \
-	src/bytecode.c \
-	$(DEP_BYTECODE)
-
-$(OBJ_DIR)/bytecodeCompilerContext.o: \
-	src/bytecodeCompilerContext.c \
-	$(DEP_BYTECODECOMPILERCONTEXT) \
-	$(DEP_PROGRAM) \
-	$(DEP_PROGRAM_VARIABLE)
-
-$(OBJ_DIR)/computedValue.o: \
-	src/computedValue.c \
+$(OBJ_DIR)/computedValue/computedValue.o: \
+	src/computedValue/computedValue.c \
   $(DEP_COMPUTEDVALUE) \
 	$(DEP_MACROS)
 
-$(OBJ_DIR)/computedValueBoolean.o: \
-	src/computedValueBoolean.c \
+$(OBJ_DIR)/computedValue/computedValueBoolean.o: \
+	src/computedValue/computedValueBoolean.c \
 	$(DEP_COMPUTEDVALUEBOOLEAN) \
 	$(DEP_COMPUTEDVALUEERROR)
 
-$(OBJ_DIR)/computedValueError.o: \
-	src/computedValueError.c \
+$(OBJ_DIR)/computedValue/computedValueError.o: \
+	src/computedValue/computedValueError.c \
 	$(DEP_COMPUTEDVALUEERROR)
 
-$(OBJ_DIR)/computedValueFloat.o: \
-	src/computedValueFloat.c \
+$(OBJ_DIR)/computedValue/computedValueFloat.o: \
+	src/computedValue/computedValueFloat.c \
 	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_EXECUTIONCONTEXT)
 
-$(OBJ_DIR)/computedValueInteger.o: \
-	src/computedValueInteger.c \
+$(OBJ_DIR)/computedValue/computedValueInteger.o: \
+	src/computedValue/computedValueInteger.c \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_EXECUTIONCONTEXT)
 
-$(OBJ_DIR)/computedValueString.o: \
-	src/computedValueString.c \
+$(OBJ_DIR)/computedValue/computedValueString.o: \
+	src/computedValue/computedValueString.c \
 	$(DEP_COMPUTEDVALUESTRING) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_UNICODESTRING)
 
-$(OBJ_DIR)/garbageCollector.o: \
-	src/garbageCollector.c \
+$(OBJ_DIR)/program/binaryCompilerContext.o : \
+	src/program/binaryCompilerContext.c \
+	$(DEP_BINARYCOMPILERCONTEXT) \
+
+$(OBJ_DIR)/program/bytecode.o: \
+	src/program/bytecode.c \
+	$(DEP_BYTECODE)
+
+$(OBJ_DIR)/program/bytecodeCompilerContext.o: \
+	src/program/bytecodeCompilerContext.c \
+	$(DEP_BYTECODECOMPILERCONTEXT) \
+	$(DEP_PROGRAM) \
+	$(DEP_PROGRAM_VARIABLE)
+
+$(OBJ_DIR)/program/executionContext.o: \
+	src/program/executionContext.c \
+	$(DEP_EXECUTIONCONTEXT)
+
+$(OBJ_DIR)/program/garbageCollector.o: \
+	src/program/garbageCollector.c \
 	$(DEP_GARBAGECOLLECTOR)
 
-$(OBJ_DIR)/program.o: \
-	src/program.c \
+$(OBJ_DIR)/program/program.o: \
+	src/program/program.c \
 	$(DEP_PROGRAM) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_EXECUTIONCONTEXT) \
@@ -880,262 +760,18 @@ $(OBJ_DIR)/program.o: \
 	$(DEP_PROGRAM_VARIABLE) \
 	$(DEP_VIRTUALMACHINE)
 
-$(OBJ_DIR)/program-variable.o: \
+$(OBJ_DIR)/program/variable.o: \
 	src/program/variable.c \
 	$(DEP_PROGRAM_VARIABLE)
 
-$(OBJ_DIR)/virtualMachine.o: \
-	src/virtualMachine.c \
+$(OBJ_DIR)/program/virtualMachine.o: \
+	src/program/virtualMachine.c \
 	$(DEP_VIRTUALMACHINE) \
 	$(DEP_COMPUTEDVALUEALL)
-
-
-
-
-$(OBJ_DIR)/computedExpression.o: \
-				src/computedExpression.c \
-				$(DEP_COMPUTEDEXPRESSION) \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONNATIVEBOUNDFUNCTION) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING) \
-				$(DEP_TANGBASE)
-
-$(OBJ_DIR)/computedExpressionArray.o: \
-				src/computedExpressionArray.c \
-				$(DEP_COMPUTEDEXPRESSIONARRAY) \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONINTEGER) \
-				$(DEP_COMPUTEDEXPRESSIONITERATOR) \
-				$(DEP_COMPUTEDEXPRESSIONITERATOREND) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING)
-
-$(OBJ_DIR)/computedExpressionBoolean.o: \
-				src/computedExpressionBoolean.c \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONFLOAT) \
-				$(DEP_COMPUTEDEXPRESSIONINTEGER)
-
-$(OBJ_DIR)/computedExpressionCompiledFunction.o: \
-				src/computedExpressionCompiledFunction.c \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONCOMPILEDFUNCTION) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONFLOAT) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING)
-
-$(OBJ_DIR)/computedExpressionError.o: \
-				src/computedExpressionError.c \
-				$(DEP_COMPUTEDEXPRESSIONERROR)
-
-$(OBJ_DIR)/computedExpressionFloat.o: \
-				src/computedExpressionFloat.c \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONFLOAT) \
-				$(DEP_COMPUTEDEXPRESSIONINTEGER) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING)
-
-$(OBJ_DIR)/computedExpressionInteger.o: \
-				src/computedExpressionInteger.c \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONFLOAT) \
-				$(DEP_COMPUTEDEXPRESSIONINTEGER) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING)
-
-$(OBJ_DIR)/computedExpressionIterator.o: \
-				src/computedExpressionIterator.c \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONINTEGER) \
-				$(DEP_COMPUTEDEXPRESSIONITERATOR) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING)
-
-$(OBJ_DIR)/computedExpressionIteratorEnd.o: \
-				src/computedExpressionIteratorEnd.c \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONINTEGER) \
-				$(DEP_COMPUTEDEXPRESSIONITERATOREND) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING)
-
-$(OBJ_DIR)/computedExpressionLibrary.o: \
-				src/computedExpressionLibrary.c \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONLIBRARY) \
-				$(DEP_COMPUTEDEXPRESSIONNATIVELIBRARYFUNCTION) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING) \
-				$(DEP_TANGBASE)
-
-$(OBJ_DIR)/computedExpressionLibraryMath.o: \
-				src/computedExpressionLibraryMath.c \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONFLOAT) \
-				$(DEP_COMPUTEDEXPRESSIONINTEGER) \
-				$(DEP_COMPUTEDEXPRESSIONLIBRARYMATH) \
-				$(DEP_COMPUTEDEXPRESSIONNATIVEFUNCTION) \
-				$(DEP_COMPUTEDEXPRESSIONNATIVELIBRARYFUNCTION) \
-				$(DEP_TANGBASE)
-
-$(OBJ_DIR)/computedExpressionLibraryTang.o: \
-				src/computedExpressionLibraryTang.c \
-				$(DEP_COMPUTEDEXPRESSIONLIBRARYTANG) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING) \
-				$(DEP_TANGBASE)
-
-$(OBJ_DIR)/computedExpressionMap.o: \
-				src/computedExpressionMap.c \
-				$(DEP_COMPUTEDEXPRESSIONARRAY) \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONITERATOR) \
-				$(DEP_COMPUTEDEXPRESSIONITERATOREND) \
-				$(DEP_COMPUTEDEXPRESSIONMAP) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING)
-
-$(OBJ_DIR)/computedExpressionNativeBoundFunction.o: \
-				src/computedExpressionNativeBoundFunction.c \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONFLOAT) \
-				$(DEP_COMPUTEDEXPRESSIONNATIVEBOUNDFUNCTION) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING)
-
-$(OBJ_DIR)/computedExpressionNativeFunction.o: \
-				src/computedExpressionNativeFunction.c \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONFLOAT) \
-				$(DEP_COMPUTEDEXPRESSIONNATIVEFUNCTION) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING) \
-				$(DEP_CONTEXT)
-
-$(OBJ_DIR)/computedExpressionNativeLibraryFunction.o: \
-				src/computedExpressionNativeLibraryFunction.c \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONFLOAT) \
-				$(DEP_COMPUTEDEXPRESSIONNATIVELIBRARYFUNCTION) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING) \
-				$(DEP_CONTEXT)
-
-$(OBJ_DIR)/computedExpressionString.o: \
-				src/computedExpressionString.c \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONINTEGER) \
-				$(DEP_COMPUTEDEXPRESSIONITERATOR) \
-				$(DEP_COMPUTEDEXPRESSIONITERATOREND) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING)
-
-$(OBJ_DIR)/executionContext.o: \
-	src/executionContext.c \
-	$(DEP_EXECUTIONCONTEXT)
-
-$(OBJ_DIR)/error.o: \
-				src/error.c \
-				$(DEP_ERROR)
-
-$(OBJ_DIR)/htmlEscape.o: \
-				$(GEN_DIR)/htmlEscape.c \
-				$(DEP_COMPUTEDEXPRESSION) \
-				include/tang/htmlEscape.h
-
-$(OBJ_DIR)/htmlEscapeAscii.o: \
-				$(GEN_DIR)/htmlEscapeAscii.c \
-				$(DEP_COMPUTEDEXPRESSION) \
-				include/tang/htmlEscapeAscii.h
-
-$(OBJ_DIR)/opcode.o: \
-				src/opcode.c \
-				$(DEP_OPCODE)
-
-$(OBJ_DIR)/percentEncode.o: \
-				$(GEN_DIR)/percentEncode.c \
-				$(DEP_COMPUTEDEXPRESSION) \
-				include/tang/percentEncode.h
-
-$(OBJ_DIR)/program-analyze.o: \
-				src/program-analyze.c \
-				$(DEP_PROGRAM) \
-				$(DEP_OPCODE)
-
-$(OBJ_DIR)/program-dumpBytecode.o: \
-				src/program-dumpBytecode.c \
-				$(DEP_PROGRAM) \
-				$(DEP_OPCODE)
-
-$(OBJ_DIR)/program-execute.o: \
-				src/program-execute.c \
-				$(DEP_COMPUTEDEXPRESSIONARRAY) \
-				$(DEP_COMPUTEDEXPRESSIONBOOLEAN) \
-				$(DEP_COMPUTEDEXPRESSIONCOMPILEDFUNCTION) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONFLOAT) \
-				$(DEP_COMPUTEDEXPRESSIONINTEGER) \
-				$(DEP_COMPUTEDEXPRESSIONITERATOREND) \
-				$(DEP_COMPUTEDEXPRESSIONLIBRARY) \
-				$(DEP_COMPUTEDEXPRESSIONMAP) \
-				$(DEP_COMPUTEDEXPRESSIONNATIVEBOUNDFUNCTION) \
-				$(DEP_COMPUTEDEXPRESSIONNATIVEFUNCTION) \
-				$(DEP_COMPUTEDEXPRESSIONNATIVELIBRARYFUNCTION) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING) \
-				$(DEP_CONTEXT) \
-				$(DEP_OPCODE) \
-				$(DEP_PROGRAM) \
-				$(DEP_TANGBASE)
-
-$(OBJ_DIR)/program-optimize.o: \
-				src/program-optimize.c \
-				$(DEP_PROGRAM) \
-				$(DEP_OPCODE)
-
-$(OBJ_DIR)/tangBase.o: \
-				src/tangBase.c \
-				$(DEP_COMPUTEDEXPRESSIONARRAY) \
-				$(DEP_COMPUTEDEXPRESSIONCONTEXT) \
-				$(DEP_COMPUTEDEXPRESSIONERROR) \
-				$(DEP_COMPUTEDEXPRESSIONLIBRARYMATH) \
-				$(DEP_COMPUTEDEXPRESSIONLIBRARYTANG) \
-				$(DEP_COMPUTEDEXPRESSIONSTRING) \
-				$(DEP_TANGBASE)
 
 $(OBJ_DIR)/tangParser.o: \
 				$(GEN_DIR)/tangParser.c \
 				$(DEP_ASTNODE)
-# $(DEP_ASTNODEARRAY) \
-# $(DEP_ASTNODEASSIGN) \
-# $(DEP_ASTNODEBINARY) \
-# $(DEP_ASTNODEBLOCK) \
-# $(DEP_ASTNODEBOOLEAN) \
-# $(DEP_ASTNODEBREAK) \
-# $(DEP_ASTNODECAST) \
-# $(DEP_ASTNODECONTINUE) \
-# $(DEP_ASTNODEDOWHILE) \
-# $(DEP_ASTNODEFLOAT) \
-# $(DEP_ASTNODEFOR) \
-# $(DEP_ASTNODEFUNCTIONCALL) \
-# $(DEP_ASTNODEFUNCTIONDECLARATION) \
-# $(DEP_ASTNODEIDENTIFIER) \
-# $(DEP_ASTNODEIFELSE) \
-# $(DEP_ASTNODEINDEX) \
-# $(DEP_ASTNODEINTEGER) \
-# $(DEP_ASTNODELIBRARY) \
-# $(DEP_ASTNODEMAP) \
-# $(DEP_ASTNODEPERIOD) \
-# $(DEP_ASTNODEPRINT) \
-# $(DEP_ASTNODERANGEDFOR) \
-# $(DEP_ASTNODERETURN) \
-# $(DEP_ASTNODESLICE) \
-# $(DEP_ASTNODESTRING) \
-# $(DEP_ASTNODETERNARY) \
-# $(DEP_ASTNODEUNARY) \
-# $(DEP_ASTNODEUSE) \
-# $(DEP_ASTNODEWHILE) \
-# $(DEP_ERROR) \
-# $(DEP_LOCATION) \
-# $(DEP_UNICODESTRING)
 
 $(OBJ_DIR)/tangScanner.o: \
 				$(GEN_DIR)/tangScanner.c \
@@ -1145,11 +781,6 @@ $(OBJ_DIR)/tangScanner.o: \
 	@echo "\n### Compiling $@ ###"
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ -fPIC -Wno-unused-function
-
-
-$(OBJ_DIR)/unescape.o: \
-				$(GEN_DIR)/unescape.c \
-				include/tang/unescape.h
 
 $(OBJ_DIR)/unicodeString.o: \
 				src/unicodeString.c \

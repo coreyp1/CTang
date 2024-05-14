@@ -3,7 +3,7 @@
 #include <unicode/uconfig.h>
 #include <unicode/ustring.h>
 #include <unicode/ubrk.h>
-#include "tang/unicodeString.h"
+#include <tang/unicodeString.h>
 
 #include <stdio.h>
 

@@ -4,10 +4,10 @@
 
 #include <tang/tang.h>
 #include <tang/macros.h>
-#include <tang/program.h>
-#include <tang/executionContext.h>
-#include <tang/bytecode.h>
-#include <tang/computedValueAll.h>
+#include <tang/computedValue/computedValueAll.h>
+#include <tang/program/program.h>
+#include <tang/program/bytecode.h>
+#include <tang/program/executionContext.h>
 #include <tang/program/variable.h>
 
 using namespace std;

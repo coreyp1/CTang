@@ -3,9 +3,9 @@
 #include <iostream>
 #include <cutil/memory.h>
 
-#include "tang/macros.h"
-#include "tang/astNodeAll.h"
-#include "tang/tangLanguage.h"
+#include <tang/macros.h>
+#include <tang/ast/astNodeAll.h>
+#include <tang/tangLanguage.h>
 
 using namespace std;
 

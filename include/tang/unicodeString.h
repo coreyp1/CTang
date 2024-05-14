@@ -26,8 +26,8 @@
 
 #include <stddef.h>
 #include <cutil/vector.h>
-#include "tang/libver.h"
-#include "tang/macros.h"
+#include <tang/libver.h>
+#include <tang/macros.h>
 
 #ifdef __cplusplus
 extern "C" {
