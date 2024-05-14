@@ -14,9 +14,12 @@ extern "C" {
 #include <cutil/vector.h>
 #include <tang/macros.h>
 
-typedef struct GTA_Computed_Value GTA_Computed_Value;
-typedef struct GTA_Computed_Value_VTable GTA_Computed_Value_VTable;
-typedef struct GTA_Execution_Context GTA_Execution_Context;
+/**
+ * A vector of computed values.
+ *
+ * This structure is used when a function is called.  The arguments of the
+ * function are stored in this vector.
+ */
 typedef GTA_VectorX GTA_Computed_Value_Vector;
 
 /**

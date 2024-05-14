@@ -14,8 +14,12 @@ extern "C" {
 #include <cutil/vector.h>
 #include <tang/macros.h>
 
+/**
+ * A list of allocations that have been created but not yet freed.
+ *
+ * Each entry is a pointer to the computedValue object.
+ */
 typedef GTA_VectorX GTA_Garbage_Collector_Allocations_List;
-
 
 
 #ifdef __cplusplus

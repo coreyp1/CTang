@@ -19,8 +19,6 @@ extern "C" {
 #include <tang/program/bytecode.h>
 #include <tang/program/executionContext.h>
 
-typedef struct GTA_Execution_Context GTA_Execution_Context;
-
 /**
  * The flags for a program.
  *

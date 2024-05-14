@@ -19,10 +19,6 @@ extern "C" {
 #include <tang/macros.h>
 #include <tang/unicodeString.h>
 
-typedef struct GTA_Program GTA_Program;
-typedef struct GTA_Computed_Value GTA_Computed_Value;
-typedef struct GTA_Execution_Context GTA_Execution_Context;
-
 /**
  * Gobal variable creation function.
  *

@@ -9,10 +9,6 @@
 extern "C" {
 #endif //__cplusplus
 
-typedef struct GTA_Ast_Node GTA_Ast_Node;
-typedef struct GTA_Bytecode_Compiler_Context GTA_Bytecode_Compiler_Context;
-typedef struct GTA_Binary_Compiler_Context GTA_Binary_Compiler_Context;
-
 #include <stdbool.h>
 #include <cutil/float.h>
 #include <cutil/hash.h>
@@ -46,7 +42,7 @@ typedef void (*GTA_Ast_Node_Walk_Callback)(GTA_Ast_Node * self, void * data, voi
  * node that represents the value of the variable.  The hash should *not* delete
  * the ast nodes when it is destroyed.
  */
-typedef GCU_Hash64 GTA_Ast_Simplify_Variable_Map;
+typedef GTA_HashX GTA_Ast_Simplify_Variable_Map;
 
 /**
  * An enum of the different types of AST nodes that are possible as a result of
