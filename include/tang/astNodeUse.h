@@ -29,6 +29,10 @@ typedef struct GTA_Ast_Node_Use {
    */
   const char * identifier;
   /**
+   * The hash of the identifier.
+   */
+  GTA_UInteger hash;
+  /**
    * The expression of the use statement.
    */
   GTA_Ast_Node * expression;
@@ -79,6 +83,24 @@ void gta_ast_node_use_print(GTA_Ast_Node * self, const char * indent);
 GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_use_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
+ * Perform pre-compilation analysis on the AST node.
+ *
+ * This step includes allocating constants, identifying libraries and variables
+ * (global and local), and creating namespace scopes for functions.
+ *
+ * This function serves as a general dispatch function, and should be used in
+ * preference to calling the vtable's analyze function directly.
+ *
+ * @see gta_ast_node_analyze()
+ *
+ * @param self The node to analyze.
+ * @param program The program that the node is part of.
+ * @param scope The current variable scope.
+ * @return NULL on success, otherwise return a parse error.
+ */
+GTA_Ast_Node * gta_ast_node_use_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+
+/**
  * Walks a GTA_Ast_Node_Use object.
  *
  * This function should not be called directly. Use gta_ast_node_walk()
@@ -90,6 +112,19 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_use_simplify(GTA_Ast_Node * self, GTA
  * @param return_value The return value of the walk, populated by the callback.
  */
 void gta_ast_node_use_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+
+/**
+ * Compiles a GTA_Ast_Node_Use object to bytecode.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_bytecode()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_bytecode
+ *
+ * @param self The GTA_Ast_Node_Use object.
+ * @param context The compiler state to use for compilation.
+ */
+bool gta_ast_node_use_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

@@ -2,6 +2,7 @@
 #include <cutil/memory.h>
 #include "tang/bytecodeCompilerContext.h"
 #include "tang/program.h"
+#include "tang/program/variable.h"
 
 GTA_Bytecode_Compiler_Context * gta_bytecode_compiler_context_create(GTA_Program * program) {
   GTA_Bytecode_Compiler_Context * context = gcu_malloc(sizeof(GTA_Bytecode_Compiler_Context));

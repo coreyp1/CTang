@@ -9,12 +9,34 @@
 extern "C" {
 #endif //__cplusplus
 
-#include "tang/astNode.h"
+#include <tang/astNode.h>
 
 /**
  * The vtable for the GTA_Ast_Node_Identifier class.
  */
 extern GTA_Ast_Node_VTable gta_ast_node_identifier_vtable;
+
+/**
+ * The type of the identifier in the scope.
+ */
+typedef enum GTA_Ast_Node_Identifier_Type {
+  /**
+   * The identifier is a local variable.
+   */
+  GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL,
+  /**
+   * The identifier is a global variable.
+   */
+  GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL,
+  /**
+   * The identifier is a function.
+   */
+  GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION,
+  /**
+   * The identifier is a library.
+   */
+  GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY,
+} GTA_Ast_Node_Identifier_Type;
 
 /**
  * The GTA_Ast_Node_Identifier class.
@@ -31,7 +53,26 @@ typedef struct GTA_Ast_Node_Identifier {
   /**
    * A hash of the identifier.
    */
-  uint64_t hash;
+  GTA_UInteger hash;
+  /**
+   * A mangled name, if needed.
+   *
+   * The mangled name is used to uniquely identify the identifier in the
+   * program.  It is mostly useful for function identifier.  The mangled
+   * name pointer will not be deleted by the destructor.  Rather, when the
+   * mangled name is created, it should be added to the GTA_Variable_Scope
+   * `name_hashes` vector.  This vector will be cleaned up when the scope
+   * is destroyed.
+   */
+  const char * mangled_name;
+  /**
+   * The mangled name hash.
+   */
+  GTA_UInteger mangled_name_hash;
+  /**
+   * The type of the identifier.
+   */
+  GTA_Ast_Node_Identifier_Type type;
 } GTA_Ast_Node_Identifier;
 
 /**
@@ -77,6 +118,24 @@ void gta_ast_node_identifier_print(GTA_Ast_Node * self, const char * indent);
 GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_identifier_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
+ * Perform pre-compilation analysis on the AST node.
+ *
+ * This step includes allocating constants, identifying libraries and variables
+ * (global and local), and creating namespace scopes for functions.
+ *
+ * This function serves as a general dispatch function, and should be used in
+ * preference to calling the vtable's analyze function directly.
+ *
+ * @see gta_ast_node_analyze()
+ *
+ * @param self The node to analyze.
+ * @param program The program that the node is part of.
+ * @param scope The current variable scope.
+ * @return NULL on success, otherwise return a parse error.
+ */
+GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+
+/**
  * Walks a GTA_Ast_Node_Identifier object.
  *
  * This function should not be called directly. Use gta_ast_node_walk()
@@ -88,6 +147,19 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_identifier_simplify(GTA_Ast_Node * se
  * @param return_value The return value of the walk, populated by the callback.
  */
 void gta_ast_node_identifier_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+
+/**
+ * Compiles a GTA_Ast_Node_Identifier object to bytecode.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_bytecode()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_bytecode
+ *
+ * @param self The GTA_Ast_Node_Identifier object.
+ * @param context The compiler state to use for compilation.
+ */
+bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

@@ -4,6 +4,11 @@
 #include <tang/computedValueAll.h>
 #include <cutil/memory.h>
 
+typedef union Function_Converter {
+  GTA_Computed_Value * GTA_CALL (*f)(GTA_Execution_Context *);
+  void * b;
+} Function_Converter;
+
 bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
   if (!context || !context->program || !context->program->bytecode) {
     return false;
@@ -122,6 +127,33 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
           break;
         }
         context->stack->data[bp + index] = GTA_TYPEX_MAKE_P(copy);
+        break;
+      }
+      case GTA_BYTECODE_LOAD_LIBRARY: {
+        // Load a library value.
+        // The value will be left on the stack.
+        GTA_HashX_Value func = GTA_HASHX_GET(context->globals, GTA_TYPEX_UI(*next++));
+        GTA_Computed_Value * library_value = func.exists
+          ? (Function_Converter){.b = GTA_TYPEX_P(func.value)}.f(context)
+          : gta_computed_value_null;
+        if (!library_value) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        if (!library_value->is_singleton && library_value->is_temporary) {
+          // This is an assignment, so make sure that it is not temporary.
+          library_value->is_temporary = false;
+        }
+        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(library_value))) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        break;
+      }
+      case GTA_BYTECODE_PEEK_BP: {
+        // Push the base pointer onto the stack.
+        size_t index = GTA_TYPEX_UI(*next++);
+        if (!GTA_VECTORX_APPEND(context->stack, context->stack->data[index])) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
         break;
       }
       default: {

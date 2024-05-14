@@ -28,6 +28,10 @@ typedef struct GTA_Ast_Node_Library {
    * The identifier of the library.
    */
   const char * identifier;
+  /**
+   * A hash of the identifier.
+   */
+  GTA_UInteger hash;
 } GTA_Ast_Node_Library;
 
 /**

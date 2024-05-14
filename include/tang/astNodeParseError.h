@@ -22,9 +22,15 @@ extern "C" {
 extern GTA_Ast_Node_VTable gta_ast_node_parse_error_vtable;
 
 /**
+ * An error representing the fact that an out of memory error occurred when
+ * attempting to create a parse error.
+ */
+extern GTA_Ast_Node * gta_ast_node_parse_error_out_of_memory;
+
+/**
  * The GTA_Ast_Node_Parse_Error class.
  */
-typedef struct astNodeParseError {
+typedef struct GTA_Ast_Node_Parse_Error {
   /**
    * The base class.
    */

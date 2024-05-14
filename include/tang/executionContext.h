@@ -21,6 +21,21 @@ extern "C" {
 
 typedef struct GTA_Program GTA_Program;
 typedef struct GTA_Computed_Value GTA_Computed_Value;
+typedef struct GTA_Execution_Context GTA_Execution_Context;
+
+/**
+ * Gobal variable creation function.
+ *
+ * Libraries and other contextual variables are not always needed.  In order to
+ * prevent unnecessary memory allocations, gobals will not be instantiated
+ * unless they are referenced in the script.  When registering a global using
+ * gta_execution_context_add_global(), a callback with this signature must be
+ * provided.  This callback will be invoked during the script setup.
+ *
+ * @param context The context of the currently executing script.
+ * @return The resulting computed value.
+ */
+typedef GTA_Computed_Value * GTA_CALL (*GTA_Execution_Context_Global_Create) (GTA_Execution_Context * context);
 
 /**
  * The Context class.
@@ -57,6 +72,14 @@ typedef struct GTA_Execution_Context {
    * The garbage collection list.
    */
   GTA_VectorX * garbage_collection;
+  /**
+   * A hash table used to store libraries and user-defined global variables.
+   */
+  GTA_HashX * globals;
+  /**
+   * A user-defined pointer that can be used to store additional data.
+   */
+  void * user_data;
 } GTA_Execution_Context;
 
 /**
@@ -108,6 +131,16 @@ void gta_execution_context_destroy(GTA_Execution_Context * context);
  * @param context The Context object to destroy.
  */
 void gta_execution_context_destroy_in_place(GTA_Execution_Context * context);
+
+/**
+ * Adds a global variable to the execution context.
+ *
+ * @param context The execution context.
+ * @param identifier The name of the global variable.
+ * @param func The function to be invoked to create the Computed Value.
+ * @return true on success, false on failure.
+ */
+bool gta_execution_context_add_global(GTA_Execution_Context * context, const char * identifier, GTA_Execution_Context_Global_Create func);
 
 #ifdef __cplusplus
 }

@@ -16,10 +16,9 @@
 #include <stdio.h>
 #include <cutil/memory.h>
 #include <tang/program.h>
+#include <tang/program/variable.h>
 #include <tang/tangLanguage.h>
-#include <tang/astNodeBlock.h>
-#include <tang/astNodeIdentifier.h>
-#include <tang/astNodeParseError.h>
+#include <tang/astNodeAll.h>
 #include <tang/binaryCompilerContext.h>
 #include <tang/computedValue.h>
 #include <tang/executionContext.h>
@@ -35,28 +34,57 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
       bytecode = 0;
     }
     else {
-      // Create a variable scope and collect the variable names.
-      // All identifiers need to be found so that space can be reserved for
-      // them on the stack when the program is executed.
-      // TODO: If the first appearance of the variable is a constant, then
-      //   its value could be instantiated as that value immediately.
-      if (!gta_program_create_scope(context.scope_stack, context.globals, program->ast)) {
+      program->bytecode = bytecode;
+
+      // Push the globals onto the stack in the correct order.
+      // First, we must determine the order that globals should be pushed onto
+      // the stack.
+      GTA_VectorX * globals_order = GTA_VECTORX_CREATE(program->scope->global_positions->entries);
+      if (!globals_order) {
         GTA_VECTORX_DESTROY(bytecode);
+        program->bytecode = 0;
         gta_bytecode_compiler_context_destroy_in_place(&context);
         return;
       }
-      // TODO: Load each library onto the stack in the order specified by the scope.
-      // Push a null onto the stack for each variable in the scope.
-      GTA_HashX * scope = GTA_TYPEX_P(context.scope_stack->data[context.scope_stack->count - 1]);
-      for (size_t i = 0; i < scope->entries; ++i) {
-        if (!GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))) {
+      globals_order->count = program->scope->global_positions->entries;
+      GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(program->scope->global_positions);
+      while (iterator.exists) {
+        globals_order->data[GTA_TYPEX_UI(iterator.value)] = GTA_TYPEX_MAKE_UI(iterator.hash);
+        iterator = GTA_HASHX_ITERATOR_NEXT(iterator);
+      }
+      // Now, loop through the globals in the correct order.  If it is a
+      // library, then load the library.  Otherwise, push a NULL onto the
+      // stack.
+      // TODO: Handle Functions definitions.
+      for (size_t i = 0; i < globals_order->count; ++i) {
+        GTA_HashX_Value value = GTA_HASHX_GET(program->scope->global_declarations, GTA_TYPEX_UI(globals_order->data[i]));
+        if (!value.exists) {
           GTA_VECTORX_DESTROY(bytecode);
+          program->bytecode = 0;
+          GTA_VECTORX_DESTROY(globals_order);
+          gta_bytecode_compiler_context_destroy_in_place(&context);
+          return;
+        }
+        GTA_Ast_Node * global = value.value.p;
+        if (GTA_AST_IS_USE(global)) {
+          if (!gta_ast_node_compile_to_bytecode(global, &context)) {
+            GTA_VECTORX_DESTROY(bytecode);
+            program->bytecode = 0;
+            GTA_VECTORX_DESTROY(globals_order);
+            gta_bytecode_compiler_context_destroy_in_place(&context);
+            return;
+          }
+        }
+        else if (GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))) {
+          GTA_VECTORX_DESTROY(bytecode);
+          program->bytecode = 0;
+          GTA_VECTORX_DESTROY(globals_order);
           gta_bytecode_compiler_context_destroy_in_place(&context);
           return;
         }
       }
+      GTA_VECTORX_DESTROY(globals_order);
 
-      program->bytecode = bytecode;
       if (!gta_ast_node_compile_to_bytecode(program->ast, &context)) {
         GTA_VECTORX_DESTROY(bytecode);
         program->bytecode = 0;
@@ -334,6 +362,7 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * 
     .bytecode = 0,
     .binary = 0,
     .flags = flags,
+    .scope = 0,
   };
 
   // Either parse the code into an AST or create a null AST.
@@ -357,6 +386,23 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * 
     return false;
   }
 
+  // Create the scope structure.
+  char * name = gcu_calloc(1, 1);
+  if (!name) {
+    gta_ast_node_destroy(program->ast);
+    return false;
+  }
+  program->scope = gta_variable_scope_create(name, program->ast, 0);
+
+  // Analyze the AST to collect constants and build scopes.
+  GTA_Ast_Node * error = gta_ast_node_analyze(program->ast, program, program->scope);
+  if (error) {
+    gta_ast_node_destroy(error);
+    gta_ast_node_destroy(program->ast);
+    gta_variable_scope_destroy(program->scope);
+    return false;
+  }
+
   // If the program can compile to binary, then there is no need to compile to
   // bytecode.
   if (!(flags & GTA_PROGRAM_FLAG_DISABLE_BINARY)) {
@@ -366,7 +412,13 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * 
     gta_program_compile_bytecode(program);
   }
 
-  return program->bytecode || program->binary;
+  if (!program->bytecode && !program->binary) {
+    gta_ast_node_destroy(program->ast);
+    gta_variable_scope_destroy(program->scope);
+    return false;
+  }
+
+  return true;
 }
 
 void gta_program_destroy(GTA_Program * self) {
@@ -389,6 +441,7 @@ void gta_program_destroy_in_place(GTA_Program * self) {
     munmap(self->binary, length);
 #endif // _WIN32
   }
+  gta_variable_scope_destroy(self->scope);
 }
 
 bool gta_program_execute(GTA_Execution_Context * context) {
@@ -453,6 +506,21 @@ static void __gta_program_collect_identifiers(GTA_Ast_Node * self, void * data, 
       }
     }
   }
+  else if (GTA_AST_IS_GLOBAL(self)) {
+    GTA_Ast_Node_Global * global = (GTA_Ast_Node_Global *)self;
+    if (GTA_HASHX_CONTAINS(scope, ((GTA_Ast_Node_Identifier *)global->identifier)->hash)) {
+      // Remove the identifier from the local scope.
+      GTA_HASHX_REMOVE(scope, ((GTA_Ast_Node_Identifier *)global->identifier)->hash);
+    }
+    if (!GTA_HASHX_CONTAINS(globals, ((GTA_Ast_Node_Identifier *)global->identifier)->hash)) {
+      // Add the identifier to the globals.
+      if (!GTA_HASHX_SET(globals, ((GTA_Ast_Node_Identifier *)global->identifier)->hash, GTA_TYPEX_MAKE_UI(globals->entries))) {
+        *(bool *)return_value = false;
+        return;
+      }
+    }
+  }
+  // TODO: How do we handle function declarations?
 }
 
 bool gta_program_create_scope(GTA_VectorX * scope_stack, GTA_HashX * globals, GTA_Ast_Node * ast) {
@@ -481,3 +549,26 @@ void gta_program_destroy_scope(GTA_VectorX * scope_stack) {
     --scope_stack->count;
   }
 }
+
+// static void __identify_globals(GTA_Ast_Node * self, void * data, void * return_value) {
+//   GTA_HashX * globals = (GTA_HashX *)data;
+//   if (GTA_AST_IS_GLOBAL(self)) {
+//     GTA_Ast_Node_Global * global = (GTA_Ast_Node_Global *)self;
+//     if (!GTA_HASHX_CONTAINS(globals, ((GTA_Ast_Node_Identifier *)global->identifier)->hash)) {
+//       // Add the identifier to the globals.
+//       if (!GTA_HASHX_SET(globals, ((GTA_Ast_Node_Identifier *)global->identifier)->hash, GTA_TYPEX_MAKE_UI(globals->entries))) {
+//         *(bool *)return_value = false;
+//       }
+//     }
+//   }
+//   else if (GTA_AST_IS_USE(self)) {
+//     GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
+//     if (!GTA_HASHX_CONTAINS(globals, use->hash)) {
+//       // Add the identifier to the globals.
+//       if (!GTA_HASHX_SET(globals, use->hash, GTA_TYPEX_MAKE_UI(globals->entries))) {
+//         *(bool *)return_value = false;
+//       }
+//     }
+//   }
+//   else if (GTA_AST_IS_)
+// }

@@ -15,6 +15,7 @@ GTA_Ast_Node_VTable gta_ast_node_cast_vtable = {
   .destroy = gta_ast_node_cast_destroy,
   .print = gta_ast_node_cast_print,
   .simplify = gta_ast_node_cast_simplify,
+  .analyze = 0,
   .walk = gta_ast_node_cast_walk,
 };
 

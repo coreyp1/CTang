@@ -15,6 +15,7 @@ GTA_Ast_Node_VTable gta_ast_node_ranged_for_vtable = {
   .destroy = gta_ast_node_ranged_for_destroy,
   .print = gta_ast_node_ranged_for_print,
   .simplify = gta_ast_node_ranged_for_simplify,
+  .analyze = 0,
   .walk = gta_ast_node_ranged_for_walk,
 };
 

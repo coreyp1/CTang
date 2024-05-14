@@ -11,6 +11,7 @@ GTA_Ast_Node_VTable gta_ast_node_period_vtable = {
   .destroy = gta_ast_node_period_destroy,
   .print = gta_ast_node_period_print,
   .simplify = gta_ast_node_period_simplify,
+  .analyze = 0,
   .walk = gta_ast_node_period_walk,
 };
 

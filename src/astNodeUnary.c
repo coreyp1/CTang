@@ -11,10 +11,11 @@
 
 GTA_Ast_Node_VTable gta_ast_node_unary_vtable = {
   .name = "Unary",
-  .compile_to_bytecode = 0,
+  .compile_to_bytecode = gta_ast_node_unary_compile_to_bytecode,
   .destroy = gta_ast_node_unary_destroy,
   .print = gta_ast_node_unary_print,
   .simplify = gta_ast_node_unary_simplify,
+  .analyze = 0,
   .walk = gta_ast_node_unary_walk,
 };
 
@@ -98,13 +99,14 @@ void gta_ast_node_unary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
   gta_ast_node_walk(unary->expression, callback, data, return_value);
 }
 
-// bool gta_ast_node_unary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
-//   GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;
-//   return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count) && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_FLOAT))
-//     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_F(float_node->value));
+bool gta_ast_node_unary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;
+  return gta_ast_node_compile_to_bytecode(unary_node->expression, context)
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(unary_node->operator_type == GTA_UNARY_TYPE_NEGATIVE ? GTA_BYTECODE_NEGATIVE : GTA_BYTECODE_NOT));
 
-//   return false;
-// }
+  return false;
+}
 
 // bool gta_ast_node_unary_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
 //   GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;

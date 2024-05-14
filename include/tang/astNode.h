@@ -69,7 +69,7 @@ typedef enum GTA_Ast_Possible_Type {
 /**
  * The vtable for the GTA_Ast_Node class.
  */
-typedef struct {
+typedef struct GTA_Ast_Node_VTable {
   /**
    * The name of the class.  It should be unique for each class, and should be
    * suitable for printing in error messages.
@@ -118,6 +118,19 @@ typedef struct {
    */
   GTA_Ast_Node * (*simplify)(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
   /**
+   * Analyzes the node and all of its children prior to compilation.
+   *
+   * This step includes allocating constants, identifying libraries and variables
+   * (global and local), and creating namespace scopes for functions.
+   *
+   * @param self The node to analyze.
+   * @param program The program that the node is part of.
+   * @param scope The current variable scope.
+   * @return NULL on success, otherwise return a parse error.
+   */
+  GTA_Ast_Node * (*analyze)(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+
+  /**
    * Generalized function to walk the AST.  The callback function is called for
    * each node in the tree.
    *
@@ -155,6 +168,10 @@ typedef struct GTA_Ast_Node {
    * The possible type of the node.
    */
   GTA_Ast_Possible_Type possible_type;
+  /**
+   * Whether or not the AST node is a singleton.
+   */
+  bool is_singleton;
 } GTA_Ast_Node;
 
 /**
@@ -340,6 +357,21 @@ void gta_ast_simplify_variable_map_invalidate(GTA_Ast_Simplify_Variable_Map * va
  * @param source The variable map whose elements will be tested.
  */
 void gta_ast_simplify_variable_map_synchronize(GTA_Ast_Simplify_Variable_Map * target, GTA_Ast_Simplify_Variable_Map * source);
+
+/**
+ * Perform pre-compilation analysis on the AST node.
+ *
+ * This step includes allocating constants, identifying libraries and variables
+ * (global and local), and creating namespace scopes for functions.
+ *
+ * This function serves as a general dispatch function, and should be used in
+ * preference to calling the vtable's analyze function directly.
+ *
+ * @param self The node to analyze.
+ * @param program The program that the node is part of.
+ * @return NULL on success, otherwise return a parse error.
+ */
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
 
 #ifdef __cplusplus
 }

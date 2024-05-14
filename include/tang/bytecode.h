@@ -42,10 +42,12 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_PUSH_PC,        ///< Push the program counter onto the stack
   GTA_BYTECODE_POP_BP,         ///< Pop the base pointer from the stack
   GTA_BYTECODE_POP_PC,         ///< Pop the program counter from the stack
+  GTA_BYTECODE_LOAD_LIBRARY,   ///< Get identifier hash and load a library value.
+  GTA_BYTECODE_NEGATIVE,
+  GTA_BYTECODE_NOT,
+  GTA_BYTECODE_PEEK_BP,        ///< Stack # (from bp): push val from stack #
 
 
-
-  GTA_BYTECODE_PEEK,           ///< Stack # (from fp): push val from stack #
   GTA_BYTECODE_POKE,           ///< Stack # (from fp): Copy a val, store @ stack #
   GTA_BYTECODE_COPY,           ///< Stack # (from fp): Deep copy val @ stack #, store @
                   ///<   stack #

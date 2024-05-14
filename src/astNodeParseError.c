@@ -11,8 +11,20 @@ GTA_Ast_Node_VTable gta_ast_node_parse_error_vtable = {
   .destroy = gta_ast_node_parse_error_destroy,
   .print = gta_ast_node_parse_error_print,
   .simplify = gta_ast_node_parse_error_simplify,
+  .analyze = 0,
   .walk = gta_ast_node_parse_error_walk,
 };
+
+static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_out_of_memory_singleton = {
+  .base = {
+    .vtable = &gta_ast_node_parse_error_vtable,
+    .location = {0, 0, 0},
+    .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+  },
+  .message = "An out of memory error ocurred when attempting to create a parse error.",
+};
+
+GTA_Ast_Node * gta_ast_node_parse_error_out_of_memory = (GTA_Ast_Node *) &gta_ast_node_parse_error_out_of_memory_singleton;
 
 GTA_Ast_Node_Parse_Error * gta_ast_node_parse_error_create(const char * message, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Parse_Error * self = gcu_malloc(sizeof(GTA_Ast_Node_Parse_Error));

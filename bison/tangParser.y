@@ -779,7 +779,16 @@ closedStatement
         parseError = &ErrorOutOfMemory;
         break;
       }
-      $$ = (GTA_Ast_Node *)gta_ast_node_use_create(0, library, location);
+      // Copy the identifier.
+      const char * identifier_copy = gcu_calloc(strlen(identifier) + 1, sizeof(char));
+      if (!identifier_copy) {
+        gcu_free((void *)identifier);
+        gta_ast_node_destroy(library);
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
+      strcpy((char *)identifier_copy, identifier);
+      $$ = (GTA_Ast_Node *)gta_ast_node_use_create(identifier_copy, library, location);
       if (!$$) {
         gta_ast_node_destroy(library);
         parseError = &ErrorOutOfMemory;

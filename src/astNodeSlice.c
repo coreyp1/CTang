@@ -11,6 +11,7 @@ GTA_Ast_Node_VTable gta_ast_node_slice_vtable = {
   .destroy = gta_ast_node_slice_destroy,
   .print = gta_ast_node_slice_print,
   .simplify = gta_ast_node_slice_simplify,
+  .analyze = 0,
   .walk = gta_ast_node_slice_walk,
 };
 

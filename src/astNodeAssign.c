@@ -17,6 +17,7 @@ GTA_Ast_Node_VTable gta_ast_node_assign_vtable = {
   .destroy = gta_ast_node_assign_destroy,
   .print = gta_ast_node_assign_print,
   .simplify = gta_ast_node_assign_simplify,
+  .analyze = 0,
   .walk = gta_ast_node_assign_walk,
 };
 
@@ -176,7 +177,6 @@ static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Co
   if (!gcu_vector8_reserve(v, v->count + 100)) {
     return false;
   }
-
   // If the value is a temporary value, then we can simply mark it as non-temporary
   // and store it in the appropriate location.
   // The computed value is in RAX.
@@ -286,6 +286,13 @@ bool gta_ast_node_assign_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compi
   if (!gta_ast_node_compile_to_binary(assign_node->rhs, context)) {
     return false;
   }
+
+  // TODO: Optimization: If the RHS is a constant singleton (bool, null), then
+  // we can simplify the binary to immediately assign the value to the
+  // variable.  If the RHS is a literal type (int, float, string), then we can
+  // also simplify the binary to immediately change the `is_temporary` value
+  // and adopt the value directly.  Array and object literals may be similarly
+  // optimized.
 
   // An assignment may be in several forms:
   //   a = foo;

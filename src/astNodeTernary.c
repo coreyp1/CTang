@@ -11,6 +11,7 @@ GTA_Ast_Node_VTable gta_ast_node_ternary_vtable = {
   .destroy = gta_ast_node_ternary_destroy,
   .print = gta_ast_node_ternary_print,
   .simplify = gta_ast_node_ternary_simplify,
+  .analyze = 0,
   .walk = gta_ast_node_ternary_walk,
 };
 

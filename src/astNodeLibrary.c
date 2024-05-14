@@ -11,6 +11,7 @@ GTA_Ast_Node_VTable gta_ast_node_library_vtable = {
   .destroy = gta_ast_node_library_destroy,
   .print = gta_ast_node_library_print,
   .simplify = gta_ast_node_library_simplify,
+  .analyze = 0,
   .walk = gta_ast_node_library_walk,
 };
 
@@ -23,6 +24,7 @@ GTA_Ast_Node_Library * gta_ast_node_library_create(const char * identifier, GTA_
   self->base.location = location;
   self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
   self->identifier = identifier;
+  self->hash = GTA_STRING_HASH(identifier, strlen(identifier));
   return self;
 }
 

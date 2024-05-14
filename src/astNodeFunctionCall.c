@@ -10,6 +10,7 @@ GTA_Ast_Node_VTable gta_ast_node_function_call_vtable = {
   .destroy = gta_ast_node_function_call_destroy,
   .print = gta_ast_node_function_call_print,
   .simplify = gta_ast_node_function_call_simplify,
+  .analyze = 0,
   .walk = gta_ast_node_function_call_walk,
 };
 

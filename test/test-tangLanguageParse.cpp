@@ -20,21 +20,32 @@ TEST(TangLanguage, test1) {
     ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
   }
   {
-    // Parse an empty string.
+    // Parse a valid script.
     gcu_memory_reset_counts();
     GTA_Ast_Node * ast = gta_tang_primary_parse(R"(
       use math.floor as floor;
+      use y;
+      use ignore_me;
+      z = 3;
       function f(x) {
         function fInner(floor) {
-          return floor;
+          global z;
+          return floor < z ? floor : z;
         }
         return fInner(x);
       }
-      print(f("foo"));
+      function g(y) {
+        function fInner(foo) {
+            return floor(f(foo));
+        }
+        return fInner(y);
+      }
+      y = 42;
+      print(g(y));
     )");
     ASSERT_NE(ast, nullptr);
     if (ast) gta_ast_node_destroy(ast);
-    //ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
   }
 }
 

@@ -11,6 +11,7 @@ GTA_Ast_Node_VTable gta_ast_node_function_vtable = {
   .destroy = gta_ast_node_function_destroy,
   .print = gta_ast_node_function_print,
   .simplify = gta_ast_node_function_simplify,
+  .analyze = 0,
   .walk = gta_ast_node_function_walk,
 };
 
@@ -22,6 +23,9 @@ GTA_Ast_Node_Function * gta_ast_node_function_create(const char * identifier, GT
   self->base.vtable = &gta_ast_node_function_vtable;
   self->base.location = location;
   self->identifier = identifier;
+  self->hash = GTA_STRING_HASH(identifier, strlen(identifier));
+  self->mangled_name = 0;
+  self->mangled_name_hash = 0;
   self->parameters = parameters;
   self->block = block;
   return self;
@@ -31,6 +35,9 @@ void gta_ast_node_function_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
   GTA_VECTORX_DESTROY(function->parameters);
   gta_ast_node_destroy(function->block);
+  if (function->mangled_name && (function->mangled_name != function->identifier)) {
+    gcu_free((void *)function->mangled_name);
+  }
   gcu_free((void *)function->identifier);
   gcu_free(self);
 }

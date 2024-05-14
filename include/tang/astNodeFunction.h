@@ -29,6 +29,18 @@ typedef struct GTA_Ast_Node_Function {
    */
   const char * identifier;
   /**
+   * A hash of the identifier.
+   */
+  GTA_UInteger hash;
+  /**
+   * A mangled name, if needed.
+   */
+  const char * mangled_name;
+  /**
+   * The mangled name hash.
+   */
+  GTA_UInteger mangled_name_hash;
+  /**
    * The parameters of the function.
    *
    * This is a vector of char * identifiers.

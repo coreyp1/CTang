@@ -4,15 +4,18 @@
 #include <cutil/memory.h>
 #include <cutil/hash.h>
 #include <cutil/string.h>
-#include "tang/astNodeUse.h"
-#include "tang/macros.h"
+#include <tang/astNodeParseError.h>
+#include <tang/astNodeUse.h>
+#include <tang/macros.h>
+#include <tang/program/variable.h>
 
 GTA_Ast_Node_VTable gta_ast_node_use_vtable = {
   .name = "Use",
-  .compile_to_bytecode = 0,
+  .compile_to_bytecode = gta_ast_node_use_compile_to_bytecode,
   .destroy = gta_ast_node_use_destroy,
   .print = gta_ast_node_use_print,
   .simplify = gta_ast_node_use_simplify,
+  .analyze = gta_ast_node_use_analyze,
   .walk = gta_ast_node_use_walk,
 };
 
@@ -25,6 +28,7 @@ GTA_Ast_Node_Use * gta_ast_node_use_create(const char * identifier, GTA_Ast_Node
   self->base.location = location;
   self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
   self->identifier = identifier;
+  self->hash = GTA_STRING_HASH(identifier, strlen(identifier));
   self->expression = expression;
   return self;
 }
@@ -66,8 +70,62 @@ GTA_Ast_Node * gta_ast_node_use_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_V
   return 0;
 }
 
+GTA_Ast_Node * gta_ast_node_use_analyze(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Program * program), GTA_Variable_Scope * scope) {
+  GTA_Variable_Scope * outermost_scope = scope;
+  while (outermost_scope->parent_scope) {
+    outermost_scope = outermost_scope->parent_scope;
+  }
+  GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
+
+  // Ensure that the "use" expression is in the outermost scope.
+  if (scope->parent_scope) {
+    GTA_Ast_Node * error = (GTA_Ast_Node *) gta_ast_node_parse_error_create("A use statement must be in the outermost scope.", self->location);
+    return error ? error : gta_ast_node_parse_error_out_of_memory;
+  }
+
+  // Determine whether or not the identifier has already been used for a
+  // library declaration.
+  if (GTA_HASHX_CONTAINS(scope->library_declarations, use->hash)) {
+    GTA_Ast_Node * error = (GTA_Ast_Node *) gta_ast_node_parse_error_create("The identifier in a use statement has already been declared in the library scope.", self->location);
+    return error ? error : gta_ast_node_parse_error_out_of_memory;
+  }
+
+  // The identifier has not been used as a library.
+  // Verify that it has not been used as a global variable.
+  if (GTA_HASHX_CONTAINS(scope->global_declarations, use->hash)) {
+    GTA_Ast_Node * error = (GTA_Ast_Node *) gta_ast_node_parse_error_create("The identifier in a use statement has already been declared as a global variable.", self->location);
+    return error ? error : gta_ast_node_parse_error_out_of_memory;
+  }
+
+  // Verify that it has not been used as a local variable.
+  if (GTA_HASHX_CONTAINS(scope->local_declarations, use->hash)) {
+    GTA_Ast_Node * error = (GTA_Ast_Node *) gta_ast_node_parse_error_create("The identifier in a use statement has already been declared as a local variable.", self->location);
+    return error ? error : gta_ast_node_parse_error_out_of_memory;
+  }
+
+  // Verify that it has not been used as a function name.
+  if (GTA_HASHX_CONTAINS(outermost_scope->function_scopes, use->hash)) {
+    GTA_Ast_Node * error = (GTA_Ast_Node *) gta_ast_node_parse_error_create("The identifier in a use statement has already been declared as a function name.", self->location);
+    return error ? error : gta_ast_node_parse_error_out_of_memory;
+  }
+
+  // Add the identifier to the library scope.
+  if (!GTA_HASHX_SET(scope->library_declarations, use->hash, GCU_TYPE64_P(use))) {
+    return gta_ast_node_parse_error_out_of_memory;
+  }
+
+  return NULL;
+}
+
 void gta_ast_node_use_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
   gta_ast_node_walk(use->expression, callback, data, return_value);
+}
+
+bool gta_ast_node_use_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
+  return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_LOAD_LIBRARY))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(use->hash));
 }

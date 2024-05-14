@@ -100,6 +100,10 @@ typedef struct GTA_Program {
    * The flags for the program.
    */
   GTA_Program_Flags flags;
+  /**
+   * The variable scope structure for the program.
+   */
+  GTA_Variable_Scope * scope;
 } GTA_Program;
 
 /**

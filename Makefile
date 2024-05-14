@@ -67,6 +67,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/executionContext.o \
 	$(OBJ_DIR)/garbageCollector.o \
 	$(OBJ_DIR)/program.o \
+	$(OBJ_DIR)/program-variable.o \
 	$(OBJ_DIR)/tangLanguage.o \
 	$(OBJ_DIR)/virtualMachine.o \
 
@@ -356,6 +357,11 @@ DEP_GARBAGECOLLECTOR = \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_MACROS)
 
+DEP_PROGRAM_VARIABLE = \
+	include/tang/program/variable.h \
+	$(DEP_MACROS) \
+	$(DEP_ASTNODE)
+
 DEP_PROGRAM = \
 	include/tang/program.h \
 	$(DEP_ASTNODE) \
@@ -568,6 +574,7 @@ $(OBJ_DIR)/astNodeBinary.o: \
 $(OBJ_DIR)/astNodeBlock.o: \
 	src/astNodeBlock.c \
 	$(DEP_ASTNODEBLOCK) \
+	$(DEP_ASTNODEUSE) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_OPCODE)
@@ -660,9 +667,17 @@ $(OBJ_DIR)/astNodeGlobal.o: \
 $(OBJ_DIR)/astNodeIdentifier.o: \
 	src/astNodeIdentifier.c \
 	$(DEP_ASTNODEIDENTIFIER) \
+	$(DEP_ASTNODEINTEGER) \
+	$(DEP_ASTNODEFLOAT) \
+	$(DEP_ASTNODEFUNCTION) \
+	$(DEP_ASTNODEBOOLEAN) \
+	$(DEP_ASTNODEPARSEERROR) \
+	$(DEP_ASTNODESTRING) \
+	$(DEP_ASTNODEUSE) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
-	$(DEP_OPCODE)
+	$(DEP_OPCODE) \
+	$(DEP_PROGRAM_VARIABLE)
 
 $(OBJ_DIR)/astNodeIfElse.o: \
 	src/astNodeIfElse.c \
@@ -775,10 +790,12 @@ $(OBJ_DIR)/astNodeUnary.o: \
 $(OBJ_DIR)/astNodeUse.o: \
 	src/astNodeUse.c \
 	$(DEP_ASTNODEIDENTIFIER) \
+	$(DEP_ASTNODEPARSEERROR) \
 	$(DEP_ASTNODEUSE) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
-	$(DEP_OPCODE)
+	$(DEP_OPCODE) \
+	$(DEP_PROGRAM_VARIABLE)
 
 $(OBJ_DIR)/astNodeWhile.o: \
 	src/astNodeWhile.c \
@@ -808,7 +825,8 @@ $(OBJ_DIR)/bytecode.o: \
 $(OBJ_DIR)/bytecodeCompilerContext.o: \
 	src/bytecodeCompilerContext.c \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
-	$(DEP_PROGRAM)
+	$(DEP_PROGRAM) \
+	$(DEP_PROGRAM_VARIABLE)
 
 $(OBJ_DIR)/computedValue.o: \
 	src/computedValue.c \
@@ -855,13 +873,16 @@ $(OBJ_DIR)/program.o: \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_TANGLANGUAGE) \
-	$(DEP_ASTNODEBLOCK) \
-	$(DEP_ASTNODEIDENTIFIER) \
-	$(DEP_ASTNODEPARSEERROR) \
+	$(DEP_ASTNODEALL) \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_COMPUTEDVALUE) \
+	$(DEP_PROGRAM_VARIABLE) \
 	$(DEP_VIRTUALMACHINE)
+
+$(OBJ_DIR)/program-variable.o: \
+	src/program/variable.c \
+	$(DEP_PROGRAM_VARIABLE)
 
 $(OBJ_DIR)/virtualMachine.o: \
 	src/virtualMachine.c \

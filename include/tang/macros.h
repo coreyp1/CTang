@@ -239,6 +239,7 @@ typedef GCU_Hash64_Value GTA_HashX_Value;
 #define GTA_AST_IS_FOR(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_for_vtable)
 #define GTA_AST_IS_FUNCTION(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_function_vtable)
 #define GTA_AST_IS_FUNCTION_CALL(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_function_call_vtable)
+#define GTA_AST_IS_GLOBAL(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_global_vtable)
 #define GTA_AST_IS_IDENTIFIER(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_identifier_vtable)
 #define GTA_AST_IS_IF_ELSE(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_if_else_vtable)
 #define GTA_AST_IS_INDEX(X) (((GTA_Ast_Node *) X)->vtable == &gta_ast_node_index_vtable)
@@ -286,6 +287,15 @@ typedef GCU_Hash64_Value GTA_HashX_Value;
  * Macros for dealing with x86 and x86-64 assembly.
  */
 #define GTA_X86_RAX
+
+/**
+ * Type prototypes.
+ */
+typedef struct GTA_Ast_Node GTA_Ast_Node;
+typedef struct GTA_Ast_Node_Parse_Error GTA_Ast_Node_Parse_Error;
+typedef struct GTA_Computed_Value GTA_Computed_Value;
+typedef struct GTA_Execution_Context GTA_Execution_Context;
+typedef struct GTA_Variable_Scope GTA_Variable_Scope;
 
 #ifdef __cplusplus
 }

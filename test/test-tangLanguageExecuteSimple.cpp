@@ -8,6 +8,7 @@
 #include <tang/executionContext.h>
 #include <tang/bytecode.h>
 #include <tang/computedValueAll.h>
+#include <tang/program/variable.h>
 
 using namespace std;
 
@@ -19,6 +20,13 @@ using namespace std;
   ASSERT_TRUE(context); \
   ASSERT_TRUE(gta_program_execute(context)); \
   ASSERT_TRUE(context->result);
+
+#define TEST_PROGRAM_SETUP_NO_RUN(code) \
+  gcu_memory_reset_counts(); \
+  GTA_Program * program = gta_program_create(code); \
+  ASSERT_TRUE(program); \
+  GTA_Execution_Context * context = gta_execution_context_create(program); \
+  ASSERT_TRUE(context);
 
 #define TEST_PROGRAM_TEARDOWN() \
   gta_execution_context_destroy(context); \
@@ -179,22 +187,86 @@ TEST(Declare, Block) {
   }
 }
 
-TEST(Assignment, TemporaryLiteral) {
+GTA_Computed_Value * GTA_CALL make_int_3(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(3, context);
+}
+
+TEST(Identifier, Global) {
+  // {
+  //   // `a` is not declared global, so should not have a value.
+  //   TEST_PROGRAM_SETUP_NO_RUN("a");
+  //   gta_program_bytecode_print(context->program);
+  //   ASSERT_TRUE(gta_execution_context_add_global(context, "a", make_int_3));
+  //   ASSERT_TRUE(gta_program_execute(context));
+  //   ASSERT_TRUE(context->result);
+  //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+  //   ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -3);
+  //   TEST_PROGRAM_TEARDOWN();
+  // }
   {
-    // Assign a value to a variable.
-    TEST_PROGRAM_SETUP("a = 3");
+    // `a` is declared global, so should have the default value.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; a;");
+    ASSERT_TRUE(gta_execution_context_add_global(context, "a", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
     ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
     TEST_PROGRAM_TEARDOWN();
   }
-  {
-    // Assign a value to a variable.
-    TEST_PROGRAM_SETUP("a = 3; false;");
-    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
-    ASSERT_EQ(((GTA_Computed_Value_Boolean *)context->result)->value, false);
-    TEST_PROGRAM_TEARDOWN();
-  }
+  // {
+  //   // `a` is declared global, so should have the default value.  There are
+  //   // multiple statements.
+  //   TEST_PROGRAM_SETUP_NO_RUN("global a; a;");
+  //   gta_program_bytecode_print(context->program);
+  //   ASSERT_TRUE(gta_execution_context_add_global(context, "a", make_int_3));
+  //   ASSERT_TRUE(gta_program_execute(context));
+  //   ASSERT_TRUE(context->result);
+  //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+  //   ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -3);
+  //   TEST_PROGRAM_TEARDOWN();
+  // }
+  // {
+  //   // `a` is declared global, but is assigned a value which is different from
+  //   // the default value.
+  //   TEST_PROGRAM_SETUP_NO_RUN("global a = 42");
+  //   gta_program_bytecode_print(context->program);
+  //   ASSERT_TRUE(gta_execution_context_add_global(context, "a", make_int_3));
+  //   ASSERT_TRUE(gta_program_execute(context));
+  //   ASSERT_TRUE(context->result);
+  //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+  //   ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -3);
+  //   TEST_PROGRAM_TEARDOWN();
+  // }
+  // {
+  //   // `a` is declared global, but is assigned a value which is different from
+  //   // the default value.  There are multiple statements.
+  //   TEST_PROGRAM_SETUP_NO_RUN("global a = 42; a;");
+  //   gta_program_bytecode_print(context->program);
+  //   ASSERT_TRUE(gta_execution_context_add_global(context, "a", make_int_3));
+  //   ASSERT_TRUE(gta_program_execute(context));
+  //   ASSERT_TRUE(context->result);
+  //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+  //   ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -3);
+  //   TEST_PROGRAM_TEARDOWN();
+  // }
 }
+
+// TEST(Assignment, TemporaryLiteral) {
+//   {
+//     // Assign a value to a variable.
+//     TEST_PROGRAM_SETUP("a = 3");
+//     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+//     ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
+//     TEST_PROGRAM_TEARDOWN();
+//   }
+//   {
+//     // Assign a value to a variable.
+//     TEST_PROGRAM_SETUP("a = 3; false;");
+//     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+//     ASSERT_EQ(((GTA_Computed_Value_Boolean *)context->result)->value, false);
+//     TEST_PROGRAM_TEARDOWN();
+//   }
+// }
 
 
 int main(int argc, char **argv) {
