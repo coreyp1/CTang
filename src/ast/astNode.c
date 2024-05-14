@@ -3,7 +3,6 @@
 #include <string.h>
 #include <cutil/memory.h>
 #include <cutil/type.h>
-#include <tang/macros.h>
 #include <tang/ast/astNode.h>
 #include <tang/computedValue/computedValue.h>
 #include <tang/program/bytecode.h>

@@ -11,7 +11,6 @@
 extern "C" {
 #endif // __cplusplus
 
-#include <tang/macros.h>
 #include <tang/computedValue/computedValue.h>
 
 /**

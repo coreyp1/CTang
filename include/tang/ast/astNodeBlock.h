@@ -9,7 +9,6 @@
 extern "C" {
 #endif
 
-#include <tang/macros.h>
 #include <tang/ast/astNode.h>
 
 /**

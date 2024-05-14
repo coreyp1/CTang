@@ -12,7 +12,6 @@ extern "C" {
 #endif // __cplusplus
 
 #include <cutil/vector.h>
-#include <tang/macros.h>
 #include <tang/program/program.h>
 
 #define GTA_BINARY_WRITE1(X,A) \

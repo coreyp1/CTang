@@ -1,7 +1,6 @@
 
 #include <stdio.h>
 #include <cutil/memory.h>
-#include <tang/macros.h>
 #include <tang/computedValue/computedValueFloat.h>
 #include <tang/program/executionContext.h>
 

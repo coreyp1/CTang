@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
-#include <tang/macros.h>
 #include <tang/ast/astNodeLibrary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_library_vtable = {

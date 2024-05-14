@@ -13,7 +13,6 @@ extern "C" {
 #endif // __cplusplus
 
 #include <cutil/vector.h>
-#include <tang/macros.h>
 #include <tang/program/bytecode.h>
 
 typedef struct GTA_Program GTA_Program;

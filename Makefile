@@ -97,16 +97,14 @@ DEP_BYTECODE = \
 	$(DEP_MACROS)
 DEP_BYTECODECOMPILERCONTEXT = \
 	include/tang/program/bytecodeCompilerContext.h \
-	$(DEP_MACROS)
-DEP_BINARYCOMPILERCONTEXT = \
-	include/tang/program/binaryCompilerContext.h \
-	$(DEP_MACROS)
+	$(DEP_BYTECODE)
 
 DEP_ASTNODE = \
 	include/tang/ast/astNode.h \
 	$(GEN_DIR)/tangParser.h \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
-	$(DEP_LOCATION)
+	$(DEP_LOCATION) \
+	$(DEP_MACROS)
 DEP_ASTNODEIDENTIFIER = \
 	include/tang/ast/astNodeIdentifier.h \
 	$(DEP_ASTNODE)
@@ -115,12 +113,10 @@ DEP_ASTNODESTRING = \
 	$(DEP_ASTNODE)
 DEP_ASTNODEARRAY = \
 	include/tang/ast/astNodeArray.h \
-	$(DEP_ASTNODE) \
-	$(DEP_MACROS)
+	$(DEP_ASTNODE)
 DEP_ASTNODEASSIGN = \
 	include/tang/ast/astNodeAssign.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEINDEX = \
@@ -129,13 +125,11 @@ DEP_ASTNODEINDEX = \
 DEP_ASTNODEBINARY = \
 	include/tang/ast/astNodeBinary.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEBLOCK = \
 	include/tang/ast/astNodeBlock.h \
-	$(DEP_ASTNODE) \
-	$(DEP_MACROS)
+	$(DEP_ASTNODE)
 DEP_ASTNODEBOOLEAN = \
 	include/tang/ast/astNodeBoolean.h \
 	$(DEP_ASTNODE)
@@ -145,7 +139,6 @@ DEP_ASTNODEBREAK = \
 DEP_ASTNODECAST = \
 	include/tang/ast/astNodeCast.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODECONTINUE = \
@@ -160,17 +153,14 @@ DEP_ASTNODEFLOAT = \
 DEP_ASTNODEFOR = \
 	include/tang/ast/astNodeFor.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEFUNCTION = \
 	include/tang/ast/astNodeFunction.h \
-	$(DEP_ASTNODE) \
-	$(DEP_MACROS)
+	$(DEP_ASTNODE)
 DEP_ASTNODEFUNCTIONCALL = \
 	include/tang/ast/astNodeFunctionCall.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEGLOBAL = \
@@ -179,13 +169,11 @@ DEP_ASTNODEGLOBAL = \
 DEP_ASTNODEIFELSE = \
 	include/tang/ast/astNodeIfElse.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEINDEX = \
 	include/tang/ast/astNodeIndex.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEINTEGER = \
@@ -196,39 +184,33 @@ DEP_ASTNODELIBRARY = \
 	$(DEP_ASTNODE)
 DEP_ASTNODEMAP = \
 	include/tang/ast/astNodeMap.h \
-	$(DEP_ASTNODE) \
-	$(DEP_MACROS)
+	$(DEP_ASTNODE)
 DEP_ASTNODEPARSEERROR = \
 	include/tang/ast/astNodeParseError.h \
 	$(DEP_ASTNODE)
 DEP_ASTNODEPERIOD = \
 	include/tang/ast/astNodePeriod.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEPRINT = \
 	include/tang/ast/astNodePrint.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODERANGEDFOR = \
 	include/tang/ast/astNodeFor.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODERETURN = \
 	include/tang/ast/astNodeReturn.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODESLICE = \
 	include/tang/ast/astNodeSlice.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODETERNARY = \
@@ -237,7 +219,6 @@ DEP_ASTNODETERNARY = \
 DEP_ASTNODEUNARY = \
 	include/tang/ast/astNodeUnary.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 DEP_ASTNODEUSE = \
@@ -246,7 +227,6 @@ DEP_ASTNODEUSE = \
 DEP_ASTNODEWHILE = \
 	include/tang/ast/astNodeWhile.h \
 	$(DEP_ASTNODE) \
-	$(DEP_MACROS) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEIDENTIFIER)
 
@@ -334,16 +314,18 @@ DEP_PROGRAM = \
 	$(DEP_ASTNODE) \
 	$(DEP_BYTECODE) \
 	$(DEP_COMPUTEDVALUE) \
-	$(DEP_MACROS) \
 	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_UNICODESTRING)
+
+DEP_BINARYCOMPILERCONTEXT = \
+	include/tang/program/binaryCompilerContext.h \
+	$(DEP_PROGRAM)
 
 DEP_VIRTUALMACHINE = \
 	include/tang/program/virtualMachine.h \
 	$(DEP_COMPUTEDVALUE) \
-	$(DEP_MACROS) \
 	$(DEP_EXECUTIONCONTEXT) \
-	$(DEP_BYTECODE)
+	$(DEP_PROGRAM)
 
 
 ####################################################################
@@ -767,6 +749,7 @@ $(OBJ_DIR)/program/variable.o: \
 $(OBJ_DIR)/program/virtualMachine.o: \
 	src/program/virtualMachine.c \
 	$(DEP_VIRTUALMACHINE) \
+	$(DEP_BYTECODE) \
 	$(DEP_COMPUTEDVALUEALL)
 
 $(OBJ_DIR)/tangParser.o: \

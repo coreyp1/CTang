@@ -19,6 +19,7 @@ typedef struct GTA_Binary_Compiler_Context GTA_Binary_Compiler_Context;
 #include <cutil/vector.h>
 #include "tangParser.h"
 #include <tang/location.h>
+#include <tang/macros.h>
 #include <tang/program/binaryCompilerContext.h>
 #include <tang/program/bytecodeCompilerContext.h>
 #include <tang/unicodeString.h>

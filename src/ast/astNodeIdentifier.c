@@ -4,7 +4,6 @@
 #include <cutil/memory.h>
 #include <cutil/hash.h>
 #include <cutil/string.h>
-#include <tang/macros.h>
 #include <tang/ast/astNodeBoolean.h>
 #include <tang/ast/astNodeIdentifier.h>
 #include <tang/ast/astNodeInteger.h>

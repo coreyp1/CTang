@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
-#include <tang/macros.h>
 #include <tang/ast/astNodeBoolean.h>
 #include <tang/ast/astNodeFloat.h>
 #include <tang/ast/astNodeInteger.h>

@@ -3,7 +3,6 @@
 #include <string.h>
 #include <cutil/memory.h>
 #include <cutil/string.h>
-#include <tang/macros.h>
 #include <tang/ast/astNodeAssign.h>
 #include <tang/ast/astNodeBinary.h>
 #include <tang/ast/astNodeIdentifier.h>

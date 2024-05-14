@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
-#include <tang/macros.h>
 #include <tang/computedValue/computedValueString.h>
 #include <tang/program/executionContext.h>
 

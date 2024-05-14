@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <cutil/memory.h>
+#include <tang/program/bytecode.h>
 #include <tang/program/virtualMachine.h>
 #include <tang/computedValue/computedValueAll.h>
 
