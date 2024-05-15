@@ -16,6 +16,7 @@
 
 GTA_Ast_Node_VTable gta_ast_node_identifier_vtable = {
   .name = "Identifier",
+  .compile_to_binary = gta_ast_node_identifier_compile_to_binary,
   .compile_to_bytecode = gta_ast_node_identifier_compile_to_bytecode,
   .destroy = gta_ast_node_identifier_destroy,
   .print = gta_ast_node_identifier_print,
@@ -35,6 +36,7 @@ GTA_Ast_Node_Identifier * gta_ast_node_identifier_create(const char * identifier
       .vtable = &gta_ast_node_identifier_vtable,
       .location = location,
       .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
     },
     .identifier = identifier,
     .hash = GTA_STRING_HASH(identifier, strlen(identifier)),
@@ -196,6 +198,31 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UN
 
 void gta_ast_node_identifier_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
+}
+
+bool gta_ast_node_identifier_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
+  if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
+    GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
+    if (!val.exists) {
+      printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
+      return false;
+    }
+    GTA_UInteger index = GTA_TYPEX_UI(val.value);
+    index *= -16;
+    if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 15)) {
+      return false;
+    }
+    // Copy the value from the global position (GTA_TYPEX_UI(val.value)) to RAX.
+    //   mov rdx, 0xDEADBEEFDEADBEEF
+    GTA_BINARY_WRITE2(context->binary_vector, 0x48, 0xBA);
+    GTA_BINARY_WRITE8(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+    memcpy(&context->binary_vector->data[context->binary_vector->count - sizeof(index)], &index, sizeof(index));
+    //   mov rax, [r13 + rdx]
+    GTA_BINARY_WRITE5(context->binary_vector, 0x49, 0x88, 0x44, 0x15, 0x00);
+    return true;
+  }
+  return false;
 }
 
 

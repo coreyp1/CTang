@@ -46,20 +46,6 @@ extern "C" {
   GTA_BINARY_WRITE8(X, I, J, K, L, M, N, O, P)
 
 /**
- * Helper union for converting between function pointers and integers.
- */
-typedef union GTA_JIT_Function_Converter {
-  void (*f)(void);
-  GTA_UInteger i;
-} GTA_JIT_Function_Converter;
-
-/**
- * Convert a function pointer to an integer.
- */
-#define GTA_JIT_FUNCTION_CONVERTER(F) \
-  ((GTA_JIT_Function_Converter){.f = (void (*)(void))(F)}.i)
-
-/**
  * The context for the binary compiler.
  */
 typedef struct GTA_Binary_Compiler_Context{

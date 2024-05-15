@@ -6,10 +6,13 @@
 #include <cutil/string.h>
 #include <tang/ast/astNodeParseError.h>
 #include <tang/ast/astNodeUse.h>
+#include <tang/computedValue/computedValueError.h>
+#include <tang/program/binaryCompilerContext.h>
 #include <tang/program/variable.h>
 
 GTA_Ast_Node_VTable gta_ast_node_use_vtable = {
   .name = "Use",
+  .compile_to_binary = gta_ast_node_use_compile_to_binary,
   .compile_to_bytecode = gta_ast_node_use_compile_to_bytecode,
   .destroy = gta_ast_node_use_destroy,
   .print = gta_ast_node_use_print,
@@ -24,12 +27,17 @@ GTA_Ast_Node_Use * gta_ast_node_use_create(const char * identifier, GTA_Ast_Node
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_use_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->identifier = identifier;
-  self->hash = GTA_STRING_HASH(identifier, strlen(identifier));
-  self->expression = expression;
+  *self = (GTA_Ast_Node_Use) {
+    .base = {
+      .vtable = &gta_ast_node_use_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .identifier = identifier,
+    .hash = GTA_STRING_HASH(identifier, strlen(identifier)),
+    .expression = expression,
+  };
   return self;
 }
 
@@ -37,7 +45,9 @@ GTA_Ast_Node_Use * gta_ast_node_use_create(const char * identifier, GTA_Ast_Node
 void gta_ast_node_use_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
   gcu_free((void *)use->identifier);
-  gta_ast_node_destroy(use->expression);
+  if (use->expression) {
+    gta_ast_node_destroy(use->expression);
+  }
   gcu_free(self);
 }
 
@@ -120,6 +130,65 @@ void gta_ast_node_use_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callb
   callback(self, data, return_value);
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
   gta_ast_node_walk(use->expression, callback, data, return_value);
+}
+
+
+static GTA_Computed_Value * GTA_CALL __load_library(GTA_Execution_Context * context, GTA_UInteger hash) {
+  GTA_HashX_Value func = GTA_HASHX_GET(context->globals, hash);
+  if (!func.exists) {
+    return gta_computed_value_null;
+  }
+  GTA_Computed_Value * library_value = (GTA_Function_Converter){.b = GTA_TYPEX_P(func.value)}.f(context);
+  if (!library_value) {
+    return gta_computed_value_error_out_of_memory;
+  }
+  if (!library_value->is_singleton && library_value->is_temporary) {
+    // This is an assignment, so make sure that it is not temporary.
+    library_value->is_temporary = false;
+  }
+  return library_value;
+}
+
+
+bool gta_ast_node_use_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  GCU_Vector8 * v = context->binary_vector;
+  if (!gcu_vector8_reserve(v, v->count + 36)) {
+    return false;
+  }
+  GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
+
+  // Load the library.
+  // TODO: JIT the __load_library function to avoid the extra function call.
+  if (!gcu_vector8_reserve(v, v->count + 25)) {
+    return false;
+  }
+  // Prepare function call.
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFFFFFFFFFF0
+  GTA_BINARY_WRITE1(v, 0x55);
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
+  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
+  // Assembly to call __load_library(boolean->value, use->hash):
+  // context is in r15
+  //   mov rdi, r15
+  GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFF);
+  //   mov rsi, use->hash
+  GTA_BINARY_WRITE2(v, 0x48, 0xBE);
+  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  memcpy(&v->data[v->count - 8], &use->hash, 8);
+  //   mov rax, __load_library
+  GTA_BINARY_WRITE2(v, 0x48, 0xB8);
+  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  memcpy(&v->data[v->count - 8], &GTA_JIT_FUNCTION_CONVERTER(__load_library), 8);
+  //   call rax
+  GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+  // Restore stack.
+  //   mov rsp, rbp
+  //   pop rbp
+  GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xEC);
+  GTA_BINARY_WRITE1(context->binary_vector, 0x5D);
+  return true;
 }
 
 

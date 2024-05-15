@@ -5,12 +5,6 @@
 #include <tang/program/virtualMachine.h>
 #include <tang/computedValue/computedValueAll.h>
 
-typedef union Function_Converter {
-  GTA_Computed_Value * GTA_CALL (*f)(GTA_Execution_Context *);
-  void * b;
-} Function_Converter;
-
-
 bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
   if (!context || !context->program || !context->program->bytecode) {
     return false;
@@ -136,7 +130,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         // The value will be left on the stack.
         GTA_HashX_Value func = GTA_HASHX_GET(context->globals, GTA_TYPEX_UI(*next++));
         GTA_Computed_Value * library_value = func.exists
-          ? (Function_Converter){.b = GTA_TYPEX_P(func.value)}.f(context)
+          ? (GTA_Function_Converter){.b = GTA_TYPEX_P(func.value)}.f(context)
           : gta_computed_value_null;
         if (!library_value) {
           context->result = gta_computed_value_error_out_of_memory;

@@ -344,6 +344,28 @@ typedef struct GTA_Execution_Context GTA_Execution_Context;
 typedef struct GTA_Program GTA_Program;
 typedef struct GTA_Variable_Scope GTA_Variable_Scope;
 
+/**
+ * Helper union for converting between function pointers and void pointers.
+ */
+typedef union GTA_Function_Converter {
+  GTA_Computed_Value * GTA_CALL (*f)(GTA_Execution_Context *);
+  void * b;
+} GTA_Function_Converter;
+
+/**
+ * Helper union for converting between function pointers and integers.
+ */
+typedef union GTA_JIT_Function_Converter {
+  void (*f)(void);
+  GTA_UInteger i;
+} GTA_JIT_Function_Converter;
+
+/**
+ * Convert a function pointer to an integer.
+ */
+#define GTA_JIT_FUNCTION_CONVERTER(F) \
+  ((GTA_JIT_Function_Converter){.f = (void (*)(void))(F)}.i)
+
 #ifdef __cplusplus
 }
 #endif //__cplusplus

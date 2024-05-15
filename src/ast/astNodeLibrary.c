@@ -20,11 +20,16 @@ GTA_Ast_Node_Library * gta_ast_node_library_create(const char * identifier, GTA_
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_library_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->identifier = identifier;
-  self->hash = GTA_STRING_HASH(identifier, strlen(identifier));
+  *self = (GTA_Ast_Node_Library) {
+    .base = {
+      .vtable = &gta_ast_node_library_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .identifier = identifier,
+    .hash = GTA_STRING_HASH(identifier, strlen(identifier)),
+  };
   return self;
 }
 

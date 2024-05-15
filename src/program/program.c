@@ -133,8 +133,7 @@ static void gta_program_compile_binary(GTA_Program * program) {
     gta_binary_compiler_context_destroy(context);
     return;
   }
-  size_t count_of_globals = GTA_HASHX_COUNT(context->globals);
-  size_t count_of_locals = GTA_HASHX_COUNT(GTA_TYPEX_P(context->scope_stack->data[context->scope_stack->count - 1]));
+  size_t local_orders_count = GTA_HASHX_COUNT(program->scope->local_positions);
 
 #ifdef GTA_X86_64
   // 64-bit x86
@@ -153,10 +152,27 @@ static void gta_program_compile_binary(GTA_Program * program) {
   //   r12 = frame (variable) stack pointer
   // Each execution will put the result in rax.  It is up to
   // the caller to move the result to the correct location.
+  // Registers available for use:
+  //   rbx (must save before use and restore)
+  //   r10, r11 (may be clobbered by function calls)
+  //   rdi, rsi, rdx, rcx, r8, r9 (function arguments, may be clobbered by function calls)
+  //   rax (return value, will be clobbered by function calls)
+  //
+  // Procedure for calling a function:
+  //   1. Save caller-saved registers (if needed)
+  //      rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11
+  //   2. Move arguments into correct registers
+  //   3. Call function
+  //        push rbp
+  //        mov rbp, rsp
+  //        and rsp, 0xFFFFFFFFFFFFFFF0
+  //        call function_pointer
+  //        mov rsp, rbp
+  //        pop rbp
+  //   4. Restore caller-saved registers
 
   // Reserve space for the binary.
-  size_t expected_size = 37 + ((count_of_globals + count_of_locals) * 1) + 13 + 100;
-  if (!gcu_vector8_reserve(context->binary_vector, expected_size < 1024 ? 1024 : expected_size)) {
+  if (!gcu_vector8_reserve(context->binary_vector, 2048)) {
     gta_binary_compiler_context_destroy(context);
     return;
   }
@@ -184,29 +200,110 @@ static void gta_program_compile_binary(GTA_Program * program) {
   //   mov r13, rsp          ; Store the global stack pointer in r13.
   GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0xE5);
 
-  // Put the memory location of the null value into rdx.
-  //  mov rdx, 0xDEADBEEFDEADBEEF
-  GTA_BINARY_WRITE2(context->binary_vector, 0x48, 0xBA);
-  GTA_BINARY_WRITE8(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  memcpy(context->binary_vector->data + context->binary_vector->count - sizeof(gta_computed_value_null), &gta_computed_value_null, sizeof(gta_computed_value_null));
+  /////////////////////////////////////////////////////////////////////////////
+  // Push the globals onto the stack in the correct order.
+  // First, we must determine the order that globals should be pushed onto
+  // the stack.
+  size_t global_orders_count = program->scope->global_positions->entries;
+  GTA_UInteger * globals_order = gcu_calloc(sizeof(GTA_UInteger), global_orders_count);
+  if (!globals_order) {
+    gta_binary_compiler_context_destroy(context);
+    return;
+  }
+  GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(program->scope->global_positions);
+  while (iterator.exists) {
+    globals_order[GTA_TYPEX_UI(iterator.value)] = iterator.hash;
+    iterator = GTA_HASHX_ITERATOR_NEXT(iterator);
+  }
+  // Now, loop through the globals in the correct order.  If it is a
+  // library, then load the library.  Otherwise, push a NULL onto the
+  // stack.
+  // TODO: Handle Functions definitions.
+  for (size_t i = 0; i < global_orders_count; ++i) {
+    GTA_HashX_Value value = GTA_HASHX_GET(program->scope->identified_variables, globals_order[i]);
+    if (!value.exists) {
+      gcu_free(globals_order);
+      gta_binary_compiler_context_destroy(context);
+      return;
+    }
+    GTA_Ast_Node_Identifier * identifier = value.value.p;
+    if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
+      // Find the library AST and compile it.
+      GTA_HashX_Value use_node = GTA_HASHX_GET(program->scope->library_declarations, identifier->mangled_name_hash);
+      if (use_node.exists && GTA_AST_IS_USE(use_node.value.p)) {
+        if (!gta_ast_node_compile_to_binary((GTA_Ast_Node *)use_node.value.p, context)) {
+          gcu_free(globals_order);
+          gta_binary_compiler_context_destroy(context);
+          return;
+        }
+        // Compile was successful.
+        // Result should be in RAX.
+        if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 1)) {
+          gcu_free(globals_order);
+          gta_binary_compiler_context_destroy(context);
+          return;
+        }
+        // Push the result onto the stack.
+        //   push rax
+        GTA_BINARY_WRITE1(context->binary_vector, 0x50);
+      }
+      else {
+        // Library not found, but it should exist.
+        gcu_free(globals_order);
+        gta_binary_compiler_context_destroy(context);
+        return;
+      }
+    }
+    else {
+      // We don't know how to handle this type of global.
+      // Initialize to null.
+      if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 11)) {
+        gcu_free(globals_order);
+        gta_binary_compiler_context_destroy(context);
+        return;
+      }
+      // Put the memory location of the null value into rdx.
+      //   mov rdx, 0xDEADBEEFDEADBEEF
+      GTA_BINARY_WRITE2(context->binary_vector, 0x48, 0xBA);
+      GTA_BINARY_WRITE8(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+      memcpy(&context->binary_vector->data[context->binary_vector->count - sizeof(gta_computed_value_null)], &gta_computed_value_null, sizeof(gta_computed_value_null));
+      //   push rdx
+      GTA_BINARY_WRITE1(context->binary_vector, 0x52);
+    }
+  }
+  gcu_free(globals_order);
+  // Done with globals.
+  /////////////////////////////////////////////////////////////////////////////
 
-  for (size_t i = 0; i < count_of_globals; ++i) {
-    //  push rdx
-    GTA_BINARY_WRITE1(context->binary_vector, 0x52);
+  if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 13 + (local_orders_count) + 8)) {
+    gta_binary_compiler_context_destroy(context);
+    return;
   }
 
-  // Store the frame (variable) stack pointer.
+  // Store the frame (local variable) stack pointer.
   //   mov r12, rsp
   GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0xE4);
 
+  // Put the memory location of the null value into rdx.
+  // (RDX may have been overwritten by a function call in the global
+  // initializations.)
+  //   mov rdx, 0xDEADBEEFDEADBEEF
+  GTA_BINARY_WRITE2(context->binary_vector, 0x48, 0xBA);
+  GTA_BINARY_WRITE8(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  memcpy(&context->binary_vector->data[context->binary_vector->count - sizeof(gta_computed_value_null)], &gta_computed_value_null, sizeof(gta_computed_value_null));
+
   // Initialize all locals to null.
-  for (size_t i = 0; i < count_of_locals; ++i) {
+  for (size_t i = 0; i < local_orders_count; ++i) {
     //  push rdx
     GTA_BINARY_WRITE1(context->binary_vector, 0x52);
   }
 
   // Align the stack to 16 bytes.
+  //   push rbp
+  //   mov rbp, rsp
   //   and rsp, 0xFFFFFFFFFFFFFFF0
+  GTA_BINARY_WRITE1(context->binary_vector, 0x55);
+  GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xE5);
   GTA_BINARY_WRITE4(context->binary_vector, 0x48, 0x83, 0xE4, 0xF0);
 
 
@@ -233,10 +330,17 @@ static void gta_program_compile_binary(GTA_Program * program) {
 
 #ifdef GTA_X86_64
   // 64-bit x86
-  if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 13)) {
+  if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 17)) {
     gta_binary_compiler_context_destroy(context);
     return;
   }
+
+  // Restore to the potentially-unaligned state.
+  //   mov rsp, rbp
+  //   pop rbp
+  GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xEC);
+  GTA_BINARY_WRITE1(context->binary_vector, 0x5D);
+
   // Restore the stack pointer to before we added the global and local
   // variables.  This is faster than popping the locals and globals off the
   // stack, and the garbage collector will clean up the memory.
@@ -276,7 +380,7 @@ static void gta_program_compile_binary(GTA_Program * program) {
       }
       // Jump is relative to the next instruction and is 4 bytes long.
       int32_t offset = (int32_t)(label - jump - 4);
-      memcpy(context->binary_vector->data + jump, &offset, sizeof(offset));
+      memcpy(&context->binary_vector->data[jump], &offset, sizeof(offset));
     }
   }
 

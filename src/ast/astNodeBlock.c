@@ -24,10 +24,15 @@ GTA_Ast_Node_Block * gta_ast_node_block_create(GTA_VectorX * statements, GTA_PAR
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_block_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->statements = statements;
+  *self = (GTA_Ast_Node_Block) {
+    .base = {
+      .vtable = &gta_ast_node_block_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .statements = statements,
+  };
   return self;
 }
 
@@ -122,11 +127,12 @@ bool gta_ast_node_block_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 bool gta_ast_node_block_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Block * block = (GTA_Ast_Node_Block *) self;
 
-  // Garbage collect everything.
   for (size_t i = 0; i < GTA_VECTORX_COUNT(block->statements); ++i) {
     GTA_Ast_Node * statement = (GTA_Ast_Node *)GTA_TYPEX_P(block->statements->data[i]);
-    if (!gta_ast_node_compile_to_binary(statement, context)) {
-      return false;
+    if (!GTA_AST_IS_USE(statement)) {
+      if (!gta_ast_node_compile_to_binary(statement, context)) {
+        return false;
+      }
     }
   }
   return true;
