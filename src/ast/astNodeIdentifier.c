@@ -30,13 +30,19 @@ GTA_Ast_Node_Identifier * gta_ast_node_identifier_create(const char * identifier
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_identifier_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->identifier = identifier;
-  self->hash = gcu_string_hash_64(identifier, strlen(identifier));
-  self->mangled_name = 0;
-  self->mangled_name_hash = 0;
+  *self = (GTA_Ast_Node_Identifier) {
+    .base = {
+      .vtable = &gta_ast_node_identifier_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+    },
+    .identifier = identifier,
+    .hash = GTA_STRING_HASH(identifier, strlen(identifier)),
+    .mangled_name = 0,
+    .mangled_name_hash = 0,
+    .type = GTA_AST_NODE_IDENTIFIER_TYPE_NONE,
+    .scope = 0,
+  };
   return self;
 }
 
@@ -87,12 +93,12 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UN
     outermost_scope = outermost_scope->parent_scope;
   }
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
+  identifier->scope = scope;
 
-  // If the identifier has already been declared as in the local scope, then
-  // propagate the type and mangled name.
-  GTA_HashX_Value val = GTA_HASHX_GET(scope->local_declarations, identifier->hash);
+  // If an identifier in this scope has already been recognized, then propagate
+  // the type and mangled name.
+  GTA_HashX_Value val = GTA_HASHX_GET(scope->identified_variables, identifier->hash);
   if (val.exists) {
-    // The identifier is already declared in the local scope.
     GTA_Ast_Node_Identifier * existing_identifier = (GTA_Ast_Node_Identifier *)val.value.p;
     identifier->mangled_name = existing_identifier->mangled_name;
     identifier->mangled_name_hash = existing_identifier->mangled_name_hash;
@@ -100,32 +106,34 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UN
     return 0;
   }
 
-  // If the identifier has already been declared as a global variable, then
-  // propagate the type and mangled name.
-  val = GTA_HASHX_GET(scope->global_declarations, identifier->hash);
-  if (val.exists) {
-    // The identifier is already declared as a global variable.
-    GTA_Ast_Node_Identifier * existing_identifier = (GTA_Ast_Node_Identifier *)val.value.p;
-    identifier->mangled_name = existing_identifier->mangled_name;
-    identifier->mangled_name_hash = existing_identifier->mangled_name_hash;
-    identifier->type = existing_identifier->type;
-    return 0;
-  }
-
-  // If the identifier has already been declared as a library function, then
-  // propagate the type and mangled name.
-  val = GTA_HASHX_GET(outermost_scope->library_declarations, identifier->hash);
-  if (val.exists) {
-    // Because we did not see the identifier in the local or global scopes,
-    // we know that this is the first time that we have seen this
-    // identifier.  Be sure to add it to the globals so that, when globals
-    // are loaded, the identifier hash will be recognized.
-    GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)val.value.p;
-    identifier->mangled_name = use->identifier;
-    identifier->mangled_name_hash = use->hash;
-    identifier->type = GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY;
-    if (!GTA_HASHX_SET(outermost_scope->global_declarations, identifier->hash, GTA_TYPEX_MAKE_P(use))
-      || !GTA_HASHX_SET(outermost_scope->global_positions, identifier->hash, GTA_TYPEX_MAKE_UI(outermost_scope->global_positions->entries))) {
+  // Is the identifier a library variable?
+  GTA_HashX_Value outermost_library = GTA_HASHX_GET(outermost_scope->library_declarations, identifier->hash);
+  if (outermost_library.exists) {
+    // The identifier is a library variable.  Has it already been seen in the
+    // outermost scope?
+    GTA_HashX_Value outermost_library_identifier = GTA_HASHX_GET(outermost_scope->identified_variables, identifier->hash);
+    if (outermost_library_identifier.exists) {
+      // The identifier has already been seen in the outermost scope.
+      // Propagate the type and mangled name.
+      GTA_Ast_Node_Identifier * existing_identifier = (GTA_Ast_Node_Identifier *)outermost_library_identifier.value.p;
+      identifier->mangled_name = existing_identifier->mangled_name;
+      identifier->mangled_name_hash = existing_identifier->mangled_name_hash;
+      identifier->type = existing_identifier->type;
+    }
+    else {
+      // The identifier has not been seen in the outermost scope.  Add it to
+      // the outermost scope so that, when globals are loaded, the identifier
+      // hash will be recognized.
+      identifier->mangled_name = identifier->identifier;
+      identifier->mangled_name_hash = identifier->hash;
+      identifier->type = GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY;
+      if (!GTA_HASHX_SET(outermost_scope->identified_variables, identifier->hash, GTA_TYPEX_MAKE_P(identifier))
+        || !GTA_HASHX_SET(outermost_scope->global_positions, identifier->hash, GTA_TYPEX_MAKE_UI(outermost_scope->global_positions->entries))) {
+        return gta_ast_node_parse_error_out_of_memory;
+      }
+    }
+    if ((scope != outermost_scope)
+      && !GTA_HASHX_SET(scope->identified_variables, identifier->hash, GTA_TYPEX_MAKE_P(identifier))) {
       return gta_ast_node_parse_error_out_of_memory;
     }
     return 0;
@@ -138,7 +146,7 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UN
     // Compute the possible mangled name based on the current_scope.
     size_t namespace_length = strlen(current_scope->name);
     size_t mangled_length = identifier_length + namespace_length + 2;
-    char * mangled_name = gcu_malloc(mangled_length);
+    char * mangled_name = gcu_calloc(1, mangled_length);
     if (!mangled_name) {
       return gta_ast_node_parse_error_out_of_memory;
     }
@@ -157,7 +165,7 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UN
       gcu_free(mangled_name);
       // Add the identifier to the local declarations.
       // This way, subsequent lookups in this scope will be faster.
-      if (!GTA_HASHX_SET(scope->local_declarations, identifier->hash, GTA_TYPEX_MAKE_P(identifier))) {
+      if (!GTA_HASHX_SET(scope->identified_variables, identifier->hash, GTA_TYPEX_MAKE_P(identifier))) {
         return gta_ast_node_parse_error_out_of_memory;
       }
       return 0;
@@ -175,7 +183,7 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UN
 
   // Add the identifier to the local declarations.
   // This way, subsequent lookups in this scope will be faster.
-  if (!GTA_HASHX_SET(scope->local_declarations, identifier->hash, GTA_TYPEX_MAKE_P(identifier))) {
+  if (!GTA_HASHX_SET(scope->identified_variables, identifier->hash, GTA_TYPEX_MAKE_P(identifier))) {
     return gta_ast_node_parse_error_out_of_memory;
   }
   // Add the position of the identifier to the list of local variables.

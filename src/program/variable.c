@@ -43,25 +43,23 @@ GTA_Variable_Scope * gta_variable_scope_create(char * name, GTA_Ast_Node * ast_n
     .parent_scope = parent_scope,
     .ast_node = ast_node,
     .library_declarations = GTA_HASHX_CREATE(32),
-    .global_declarations = GTA_HASHX_CREATE(32),
+    .identified_variables = GTA_HASHX_CREATE(32),
     .global_positions = GTA_HASHX_CREATE(32),
-    .local_declarations = GTA_HASHX_CREATE(32),
     .local_positions = GTA_HASHX_CREATE(32),
     .function_scopes = GTA_HASHX_CREATE(32),
-    .name_hashes = GTA_VECTORX_CREATE(32),
+    .allocated_mangled_names = GTA_VECTORX_CREATE(32),
   };
   if (!scope->library_declarations
-    || !scope->global_declarations
+    || !scope->identified_variables
     || !scope->global_positions
-    || !scope->local_declarations
     || !scope->local_positions
     || !scope->function_scopes
-    || !scope->name_hashes) {
+    || !scope->allocated_mangled_names) {
     gta_variable_scope_destroy(scope);
     return NULL;
   }
   scope->function_scopes->cleanup = __gta_variable_scope_function_cleanup;
-  scope->name_hashes->cleanup = __gta_variable_scope_name_hashes_cleanup;
+  scope->allocated_mangled_names->cleanup = __gta_variable_scope_name_hashes_cleanup;
   return scope;
 }
 
@@ -76,14 +74,11 @@ void gta_variable_scope_destroy(GTA_Variable_Scope * scope) {
   if (scope->library_declarations) {
     GTA_HASHX_DESTROY(scope->library_declarations);
   }
-  if (scope->global_declarations) {
-    GTA_HASHX_DESTROY(scope->global_declarations);
+  if (scope->identified_variables) {
+    GTA_HASHX_DESTROY(scope->identified_variables);
   }
   if (scope->global_positions) {
     GTA_HASHX_DESTROY(scope->global_positions);
-  }
-  if (scope->local_declarations) {
-    GTA_HASHX_DESTROY(scope->local_declarations);
   }
   if (scope->local_positions) {
     GTA_HASHX_DESTROY(scope->local_positions);
@@ -91,8 +86,8 @@ void gta_variable_scope_destroy(GTA_Variable_Scope * scope) {
   if (scope->function_scopes) {
     GTA_HASHX_DESTROY(scope->function_scopes);
   }
-  if (scope->name_hashes) {
-    GTA_VECTORX_DESTROY(scope->name_hashes);
+  if (scope->allocated_mangled_names) {
+    GTA_VECTORX_DESTROY(scope->allocated_mangled_names);
   }
   gcu_free(scope);
 }
@@ -121,8 +116,8 @@ void gta_variable_scope_print(GTA_Variable_Scope * scope, const char * indent) {
     hash_iterator = GTA_HASHX_ITERATOR_NEXT(hash_iterator);
   }
 
-  printf("%s  Global Declarations:\n", indent);
-  hash_iterator = GTA_HASHX_ITERATOR_GET(scope->global_declarations);
+  printf("%s  Identified Variables:\n", indent);
+  hash_iterator = GTA_HASHX_ITERATOR_GET(scope->identified_variables);
   while (hash_iterator.exists) {
     GTA_Ast_Node * node = (GTA_Ast_Node *)GTA_TYPEX_P(hash_iterator.value);
     gta_ast_node_print(node, new_indent);
@@ -135,23 +130,19 @@ void gta_variable_scope_print(GTA_Variable_Scope * scope, const char * indent) {
   while (hash_iterator.exists) {
     GTA_UInteger hash = hash_iterator.hash;
     GTA_Integer position = GTA_TYPEX_I(hash_iterator.value);
-    GTA_HashX_Value val = GTA_HASHX_GET(scope->global_declarations, hash);
+    GTA_HashX_Value val = GTA_HASHX_GET(scope->identified_variables, hash);
     if (val.exists) {
       GTA_Ast_Node * node = (GTA_Ast_Node *)GTA_TYPEX_P(val.value);
       printf("%s    %lu\n", indent, position);
       gta_ast_node_print(node, new_indent);
     }
+    else {
+      printf("%s    %lu\n", indent, position);
+      printf("%s      (Missing declaration)\n", new_indent);
+    }
     hash_iterator = GTA_HASHX_ITERATOR_NEXT(hash_iterator);
   }
   new_indent[indent_length + 4] = '\0';
-
-  printf("%s  Local Declarations:\n", indent);
-  hash_iterator = GTA_HASHX_ITERATOR_GET(scope->local_declarations);
-  while (hash_iterator.exists) {
-    GTA_Ast_Node * node = (GTA_Ast_Node *)GTA_TYPEX_P(hash_iterator.value);
-    gta_ast_node_print(node, new_indent);
-    hash_iterator = GTA_HASHX_ITERATOR_NEXT(hash_iterator);
-  }
 
   printf("%s  Local Positions:\n", indent);
   new_indent[indent_length + 4] = ' ';
@@ -159,12 +150,11 @@ void gta_variable_scope_print(GTA_Variable_Scope * scope, const char * indent) {
   while (hash_iterator.exists) {
     GTA_UInteger hash = hash_iterator.hash;
     GTA_Integer position = GTA_TYPEX_I(hash_iterator.value);
-    GTA_HashX_Value val = GTA_HASHX_GET(scope->local_declarations, hash);
+    GTA_HashX_Value val = GTA_HASHX_GET(scope->identified_variables, hash);
     if (val.exists) {
       GTA_Ast_Node * node = (GTA_Ast_Node *)GTA_TYPEX_P(val.value);
       printf("%s    %lu\n", indent, position);
       gta_ast_node_print(node, new_indent);
-
     }
     hash_iterator = GTA_HASHX_ITERATOR_NEXT(hash_iterator);
   }
@@ -179,8 +169,8 @@ void gta_variable_scope_print(GTA_Variable_Scope * scope, const char * indent) {
   }
 
   printf("%s  Name Hashes:\n", indent);
-  for (size_t i = 0; i < scope->name_hashes->count; i++) {
-    printf("%s    %s\n", new_indent, (char *)GTA_TYPEX_P(scope->name_hashes->data[i]));
+  for (size_t i = 0; i < scope->allocated_mangled_names->count; i++) {
+    printf("%s    %s\n", new_indent, (char *)GTA_TYPEX_P(scope->allocated_mangled_names->data[i]));
   }
   gcu_free(new_indent);
 }

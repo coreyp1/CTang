@@ -57,7 +57,7 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
       // stack.
       // TODO: Handle Functions definitions.
       for (size_t i = 0; i < globals_order->count; ++i) {
-        GTA_HashX_Value value = GTA_HASHX_GET(program->scope->global_declarations, GTA_TYPEX_UI(globals_order->data[i]));
+        GTA_HashX_Value value = GTA_HASHX_GET(program->scope->identified_variables, GTA_TYPEX_UI(globals_order->data[i]));
         if (!value.exists) {
           GTA_VECTORX_DESTROY(bytecode);
           program->bytecode = 0;
@@ -65,9 +65,21 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
           gta_bytecode_compiler_context_destroy_in_place(&context);
           return;
         }
-        GTA_Ast_Node * global = value.value.p;
-        if (GTA_AST_IS_USE(global)) {
-          if (!gta_ast_node_compile_to_bytecode(global, &context)) {
+        GTA_Ast_Node_Identifier * identifier = value.value.p;
+        if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
+          // Find the library AST and compile it.
+          GTA_HashX_Value use_node = GTA_HASHX_GET(program->scope->library_declarations, identifier->mangled_name_hash);
+          if (use_node.exists && GTA_AST_IS_USE(use_node.value.p)) {
+            if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)use_node.value.p, &context)) {
+              GTA_VECTORX_DESTROY(bytecode);
+              program->bytecode = 0;
+              GTA_VECTORX_DESTROY(globals_order);
+              gta_bytecode_compiler_context_destroy_in_place(&context);
+              return;
+            }
+          }
+          else {
+            // Library not found, but it should exist.
             GTA_VECTORX_DESTROY(bytecode);
             program->bytecode = 0;
             GTA_VECTORX_DESTROY(globals_order);
@@ -75,7 +87,8 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
             return;
           }
         }
-        else if (GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))) {
+        else {
+          // We don't know how to handle this type of global.
           GTA_VECTORX_DESTROY(bytecode);
           program->bytecode = 0;
           GTA_VECTORX_DESTROY(globals_order);

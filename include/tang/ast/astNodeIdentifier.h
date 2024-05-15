@@ -21,6 +21,10 @@ extern GTA_Ast_Node_VTable gta_ast_node_identifier_vtable;
  */
 typedef enum GTA_Ast_Node_Identifier_Type {
   /**
+   * The identifier type is unknown.
+   */
+  GTA_AST_NODE_IDENTIFIER_TYPE_NONE,
+  /**
    * The identifier is a local variable.
    */
   GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL,
@@ -61,8 +65,8 @@ typedef struct GTA_Ast_Node_Identifier {
    * program.  It is mostly useful for function identifier.  The mangled
    * name pointer will not be deleted by the destructor.  Rather, when the
    * mangled name is created, it should be added to the GTA_Variable_Scope
-   * `name_hashes` vector.  This vector will be cleaned up when the scope
-   * is destroyed.
+   * `allocated_mangled_names` vector.  This vector will be cleaned up when the
+   * scope is destroyed.
    */
   const char * mangled_name;
   /**
@@ -73,6 +77,13 @@ typedef struct GTA_Ast_Node_Identifier {
    * The type of the identifier.
    */
   GTA_Ast_Node_Identifier_Type type;
+  /**
+   * The scope in which the node is operating.
+   *
+   * This will be set during the analysis phase, and will be used to determine
+   * how to resolve a variable name.
+   */
+  GTA_Variable_Scope * scope;
 } GTA_Ast_Node_Identifier;
 
 /**

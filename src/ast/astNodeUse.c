@@ -84,21 +84,15 @@ GTA_Ast_Node * gta_ast_node_use_analyze(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GT
 
   // Determine whether or not the identifier has already been used for a
   // library declaration.
-  if (GTA_HASHX_CONTAINS(scope->library_declarations, use->hash)) {
+  if (GTA_HASHX_CONTAINS(outermost_scope->library_declarations, use->hash)) {
     GTA_Ast_Node * error = (GTA_Ast_Node *) gta_ast_node_parse_error_create("The identifier in a use statement has already been declared in the library scope.", self->location);
     return error ? error : gta_ast_node_parse_error_out_of_memory;
   }
 
   // The identifier has not been used as a library.
-  // Verify that it has not been used as a global variable.
-  if (GTA_HASHX_CONTAINS(scope->global_declarations, use->hash)) {
-    GTA_Ast_Node * error = (GTA_Ast_Node *) gta_ast_node_parse_error_create("The identifier in a use statement has already been declared as a global variable.", self->location);
-    return error ? error : gta_ast_node_parse_error_out_of_memory;
-  }
-
-  // Verify that it has not been used as a local variable.
-  if (GTA_HASHX_CONTAINS(scope->local_declarations, use->hash)) {
-    GTA_Ast_Node * error = (GTA_Ast_Node *) gta_ast_node_parse_error_create("The identifier in a use statement has already been declared as a local variable.", self->location);
+  // Verify that it has not been used anywhere else.
+  if (GTA_HASHX_CONTAINS(outermost_scope->identified_variables, use->hash)) {
+    GTA_Ast_Node * error = (GTA_Ast_Node *) gta_ast_node_parse_error_create("The identifier in a use statement has already been declared.", self->location);
     return error ? error : gta_ast_node_parse_error_out_of_memory;
   }
 

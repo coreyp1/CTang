@@ -56,7 +56,7 @@ typedef struct GTA_Variable_Scope {
      * be declared in the outermost scope using the "use <expression> as
      * <identifier>" statement or "use <identifier>" statement.  In either
      * case, the identifier is added to the library scope as the key, and the
-     * use AST node is added as the value.
+     * "use..." AST node is added as the value.
      *
      * An identifier may only be used once.  It is an error to attempt to use
      * an identifier that has already been declared in the local or global
@@ -64,28 +64,17 @@ typedef struct GTA_Variable_Scope {
      */
     GTA_HashX * library_declarations;
     /**
-     * The global variables in this scope.
+     * This records the first AST node in a scope for which a given identifier
+     * was linked to a library, global, local, or function variable.
      *
-     * All variables (except for library values) have a local scope by default.
-     * Variables in the outermost scope may be accessed by any scope, however,
-     * by using the "global <identifier>" statement.
+     * The key is the identifier hash (non-mangled), and the value is the AST
+     * node that first identified what the identifier should reference.
      *
-     * When an identifier is declared as global, the identifier will now
-     * reference the variable with the same name in the global scope.
-     *
-     * A variable must be declared as global before it is used in a child
-     * scope.  The "global" statement may not be used in the outermost scope.
-     *
-     * The identifer hash is used as the key, and the AST node that declared
-     * the variable as global is the value.  This way, if an error message
-     * needs to be generated, the position of the initial global declaration
-     * can be used.
-     *
-     * For convenience, this global scope will also contain all library
-     * variables because they will need to be loaded if referenced, and the
-     * mechanism for referencing them in the stack is similar.
+     * This is used so that, as the scope is traversed, all identifiers can be
+     * quickly identified as library, global, local, or function variables
+     * without having to search through all of the hash tables.
      */
-    GTA_HashX * global_declarations;
+    GTA_HashX * identified_variables;
     /**
      * This records the position of the global variable within the stack.
      *
@@ -97,16 +86,6 @@ typedef struct GTA_Variable_Scope {
      * been referenced as a local variable.
      */
     GTA_HashX * global_positions;
-    /**
-     * The local variables in this scope.
-     *
-     * The key is the identifier hash, and the value is the AST node that
-     * declared the variable.
-     *
-     * Variable names are identifiers, however they are constant and may not
-     * be redefined.
-     */
-    GTA_HashX * local_declarations;
     /**
      * This records the position of the local variable within the stack.
      *
@@ -126,7 +105,7 @@ typedef struct GTA_Variable_Scope {
     /**
      * A list of name hashes that should be freed when the scope is destroyed.
      */
-    GTA_VectorX * name_hashes;
+    GTA_VectorX * allocated_mangled_names;
 } GTA_Variable_Scope;
 
 /**
