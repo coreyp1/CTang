@@ -31,6 +31,7 @@ GTA_Computed_Value_VTable gta_computed_value_boolean_vtable = {
   .call = gta_computed_value_call_not_implemented,
 };
 
+
 static GTA_Computed_Value_Boolean gta_computed_value_boolean_true_singleton = {
   .base = {
     .vtable = &gta_computed_value_boolean_vtable,
@@ -44,6 +45,7 @@ static GTA_Computed_Value_Boolean gta_computed_value_boolean_true_singleton = {
   },
   .value = true,
 };
+
 
 static GTA_Computed_Value_Boolean gta_computed_value_boolean_false_singleton = {
   .base = {
@@ -59,14 +61,17 @@ static GTA_Computed_Value_Boolean gta_computed_value_boolean_false_singleton = {
   .value = false,
 };
 
+
 GTA_Computed_Value * gta_computed_value_boolean_true = (GTA_Computed_Value *)&gta_computed_value_boolean_true_singleton;
 GTA_Computed_Value * gta_computed_value_boolean_false = (GTA_Computed_Value *)&gta_computed_value_boolean_false_singleton;
+
 
 GTA_Computed_Value_Boolean * gta_computed_value_boolean_create(bool value, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return value
     ? (GTA_Computed_Value_Boolean *)gta_computed_value_boolean_true
     : (GTA_Computed_Value_Boolean *)gta_computed_value_boolean_false;
 }
+
 
 bool gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * self, bool value, GTA_Execution_Context * context) {
   *self = (GTA_Computed_Value_Boolean) {
@@ -85,17 +90,21 @@ bool gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * sel
   return true;
 }
 
+
 void gta_computed_value_boolean_destroy(GTA_Computed_Value * self) {
   if (!self->is_singleton) {
     gcu_free(self);
   }
 }
 
+
 void gta_computed_value_boolean_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
+
 
 GTA_Computed_Value * gta_computed_value_boolean_deep_copy(GTA_Computed_Value * value) {
   return value;
 }
+
 
 char * gta_computed_value_boolean_to_string(GTA_Computed_Value * self) {
   char * str = (char *)gcu_malloc(6);

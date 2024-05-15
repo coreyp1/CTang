@@ -18,6 +18,7 @@ GTA_Ast_Node_VTable gta_ast_node_ranged_for_vtable = {
   .walk = gta_ast_node_ranged_for_walk,
 };
 
+
 GTA_Ast_Node_Ranged_For * gta_ast_node_ranged_for_create(const char * identifier, GTA_Ast_Node * expression, GTA_Ast_Node * block, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Ranged_For * self = gcu_malloc(sizeof(GTA_Ast_Node_Ranged_For));
   if (!self) {
@@ -32,6 +33,7 @@ GTA_Ast_Node_Ranged_For * gta_ast_node_ranged_for_create(const char * identifier
   return self;
 }
 
+
 void gta_ast_node_ranged_for_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *) self;
   gcu_free((void *)ranged_for->identifier);
@@ -39,6 +41,7 @@ void gta_ast_node_ranged_for_destroy(GTA_Ast_Node * self) {
   gta_ast_node_destroy(ranged_for->block);
   gcu_free(self);
 }
+
 
 void gta_ast_node_ranged_for_print(GTA_Ast_Node * self, const char * indent) {
   size_t indent_len = strlen(indent);
@@ -57,6 +60,7 @@ void gta_ast_node_ranged_for_print(GTA_Ast_Node * self, const char * indent) {
   gcu_free(new_indent);
 }
 
+
 /**
  * This function is used to find all the assignments in the while loop.
  */
@@ -72,6 +76,7 @@ static void findAssignments(GTA_Ast_Node * self, void * data, void * error) {
     }
   }
 }
+
 
 GTA_Ast_Node * gta_ast_node_ranged_for_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *) self;
@@ -133,6 +138,7 @@ GTA_Ast_Node * gta_ast_node_ranged_for_simplify(GTA_Ast_Node * self, GTA_Ast_Sim
 
   return 0;
 }
+
 
 void gta_ast_node_ranged_for_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

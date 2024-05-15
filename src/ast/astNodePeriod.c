@@ -14,6 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_period_vtable = {
   .walk = gta_ast_node_period_walk,
 };
 
+
 GTA_Ast_Node_Period * gta_ast_node_period_create(GTA_Ast_Node * lhs, const char * rhs, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Period * self = gcu_malloc(sizeof(GTA_Ast_Node_Period));
   if (!self) {
@@ -27,12 +28,14 @@ GTA_Ast_Node_Period * gta_ast_node_period_create(GTA_Ast_Node * lhs, const char 
   return self;
 }
 
+
 void gta_ast_node_period_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) self;
   gta_ast_node_destroy(period->lhs);
   gcu_free((void *)period->rhs);
   gcu_free(self);
 }
+
 
 void gta_ast_node_period_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) self;
@@ -50,6 +53,7 @@ void gta_ast_node_period_print(GTA_Ast_Node * self, const char * indent) {
   gcu_free(new_indent);
 }
 
+
 GTA_Ast_Node * gta_ast_node_period_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) self;
   GTA_Ast_Node * simplified_lhs = gta_ast_node_simplify(period->lhs, variable_map);
@@ -59,6 +63,7 @@ GTA_Ast_Node * gta_ast_node_period_simplify(GTA_Ast_Node * self, GTA_Ast_Simplif
   }
   return 0;
 }
+
 
 void gta_ast_node_period_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

@@ -18,6 +18,7 @@ GTA_Ast_Node_VTable gta_ast_node_cast_vtable = {
   .walk = gta_ast_node_cast_walk,
 };
 
+
 GTA_Ast_Node_Cast * gta_ast_node_cast_create(GTA_Ast_Node * expression, GTA_Cast_Type type, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Cast * self = gcu_malloc(sizeof(GTA_Ast_Node_Cast));
   if (!self) {
@@ -31,6 +32,7 @@ GTA_Ast_Node_Cast * gta_ast_node_cast_create(GTA_Ast_Node * expression, GTA_Cast
   return self;
 }
 
+
 void gta_ast_node_cast_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
   if (cast->expression) {
@@ -38,6 +40,7 @@ void gta_ast_node_cast_destroy(GTA_Ast_Node * self) {
   }
   gcu_free(self);
 }
+
 
 void gta_ast_node_cast_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
@@ -63,6 +66,7 @@ void gta_ast_node_cast_print(GTA_Ast_Node * self, const char * indent) {
   gcu_free(new_indent);
 }
 
+
 /**
  * Helper function to remove trailing zeroes from a string.
  *
@@ -84,6 +88,7 @@ static void remove_trailing_zeroes(char * buffer) {
     buffer[length - 1] = 0;
   }
 }
+
 
 GTA_Ast_Node * gta_ast_node_cast_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *)self;
@@ -216,6 +221,7 @@ GTA_Ast_Node * gta_ast_node_cast_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_
   }
   return 0;
 }
+
 
 void gta_ast_node_cast_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

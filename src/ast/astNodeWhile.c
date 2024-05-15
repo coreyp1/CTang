@@ -18,6 +18,7 @@ GTA_Ast_Node_VTable gta_ast_node_while_vtable = {
   .walk = gta_ast_node_while_walk,
 };
 
+
 GTA_Ast_Node_While * gta_ast_node_while_create(GTA_Ast_Node * condition, GTA_Ast_Node * block, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_While * self = gcu_malloc(sizeof(GTA_Ast_Node_While));
   if (!self) {
@@ -31,12 +32,14 @@ GTA_Ast_Node_While * gta_ast_node_while_create(GTA_Ast_Node * condition, GTA_Ast
   return self;
 }
 
+
 void gta_ast_node_while_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_While * while_node = (GTA_Ast_Node_While *) self;
   gta_ast_node_destroy(while_node->condition);
   gta_ast_node_destroy(while_node->block);
   gcu_free(self);
 }
+
 
 void gta_ast_node_while_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_While * while_node = (GTA_Ast_Node_While *) self;
@@ -55,6 +58,7 @@ void gta_ast_node_while_print(GTA_Ast_Node * self, const char * indent) {
   gcu_free(new_indent);
 }
 
+
 /**
  * This function is used to find all the assignments in the while loop.
  */
@@ -70,6 +74,7 @@ static void findAssignments(GTA_Ast_Node * self, void * data, void * error) {
     }
   }
 }
+
 
 GTA_Ast_Node * gta_ast_node_while_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_While * while_node = (GTA_Ast_Node_While *) self;
@@ -135,6 +140,7 @@ GTA_Ast_Node * gta_ast_node_while_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
 
   return 0;
 }
+
 
 void gta_ast_node_while_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

@@ -10,6 +10,7 @@ typedef union Function_Converter {
   void * b;
 } Function_Converter;
 
+
 bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
   if (!context || !context->program || !context->program->bytecode) {
     return false;

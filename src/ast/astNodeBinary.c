@@ -19,6 +19,7 @@ GTA_Ast_Node_VTable gta_ast_node_binary_vtable = {
   .walk = gta_ast_node_binary_walk,
 };
 
+
 GTA_Ast_Node_Binary * gta_ast_node_binary_create(GTA_Ast_Node * lhs, GTA_Ast_Node * rhs, GTA_Binary_Type operator_type, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Binary * self = gcu_malloc(sizeof(GTA_Ast_Node_Binary));
   if (!self) {
@@ -33,12 +34,14 @@ GTA_Ast_Node_Binary * gta_ast_node_binary_create(GTA_Ast_Node * lhs, GTA_Ast_Nod
   return self;
 }
 
+
 void gta_ast_node_binary_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Binary * binary = (GTA_Ast_Node_Binary *) self;
   gta_ast_node_destroy(binary->lhs);
   gta_ast_node_destroy(binary->rhs);
   gcu_free(self);
 }
+
 
 void gta_ast_node_binary_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_Binary * binary = (GTA_Ast_Node_Binary *) self;
@@ -98,6 +101,7 @@ void gta_ast_node_binary_print(GTA_Ast_Node * self, const char * indent) {
   gta_ast_node_print(binary->rhs, new_indent);
   gcu_free(new_indent);
 }
+
 
 GTA_Ast_Node * gta_ast_node_binary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Binary * binary = (GTA_Ast_Node_Binary *) self;
@@ -238,6 +242,7 @@ GTA_Ast_Node * gta_ast_node_binary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplif
   }
   return 0;
 }
+
 
 void gta_ast_node_binary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

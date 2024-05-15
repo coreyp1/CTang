@@ -14,6 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_parse_error_vtable = {
   .walk = gta_ast_node_parse_error_walk,
 };
 
+
 static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_out_of_memory_singleton = {
   .base = {
     .vtable = &gta_ast_node_parse_error_vtable,
@@ -23,7 +24,9 @@ static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_out_of_memory_singleton
   .message = "An out of memory error ocurred when attempting to create a parse error.",
 };
 
+
 GTA_Ast_Node * gta_ast_node_parse_error_out_of_memory = (GTA_Ast_Node *) &gta_ast_node_parse_error_out_of_memory_singleton;
+
 
 GTA_Ast_Node_Parse_Error * gta_ast_node_parse_error_create(const char * message, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Parse_Error * self = gcu_malloc(sizeof(GTA_Ast_Node_Parse_Error));
@@ -51,20 +54,24 @@ GTA_Ast_Node_Parse_Error * gta_ast_node_parse_error_create(const char * message,
   return self;
 }
 
+
 void gta_ast_node_parse_error_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Parse_Error * parseError = (GTA_Ast_Node_Parse_Error *) self;
   gcu_free(parseError->message);
   gcu_free(parseError);
 }
 
+
 void gta_ast_node_parse_error_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_Parse_Error * parseError = (GTA_Ast_Node_Parse_Error *) self;
   printf("%sParse Error: %s\n", indent, parseError->message);
 }
 
+
 GTA_Ast_Node * gta_ast_node_parse_error_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node * parseError), GTA_MAYBE_UNUSED(GTA_Ast_Simplify_Variable_Map * variable_map)) {
   return 0;
 }
+
 
 void gta_ast_node_parse_error_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

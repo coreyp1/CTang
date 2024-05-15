@@ -18,6 +18,7 @@ GTA_Ast_Node_VTable gta_ast_node_unary_vtable = {
   .walk = gta_ast_node_unary_walk,
 };
 
+
 GTA_Ast_Node_Unary * gta_ast_node_unary_create(GTA_Ast_Node * expression, GTA_Unary_Type operator_type, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Unary * self = gcu_malloc(sizeof(GTA_Ast_Node_Unary));
   if (!self) {
@@ -31,11 +32,13 @@ GTA_Ast_Node_Unary * gta_ast_node_unary_create(GTA_Ast_Node * expression, GTA_Un
   return self;
 }
 
+
 void gta_ast_node_unary_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Unary * unary = (GTA_Ast_Node_Unary *) self;
   gta_ast_node_destroy(unary->expression);
   gcu_free(self);
 }
+
 
 void gta_ast_node_unary_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_Unary * unary = (GTA_Ast_Node_Unary *) self;
@@ -55,6 +58,7 @@ void gta_ast_node_unary_print(GTA_Ast_Node * self, const char * indent) {
   gta_ast_node_print(unary->expression, new_indent);
   gcu_free(new_indent);
 }
+
 
 GTA_Ast_Node * gta_ast_node_unary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Unary * unary = (GTA_Ast_Node_Unary *) self;
@@ -92,11 +96,13 @@ GTA_Ast_Node * gta_ast_node_unary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
   return 0;
 }
 
+
 void gta_ast_node_unary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
   GTA_Ast_Node_Unary * unary = (GTA_Ast_Node_Unary *) self;
   gta_ast_node_walk(unary->expression, callback, data, return_value);
 }
+
 
 bool gta_ast_node_unary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
   GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;

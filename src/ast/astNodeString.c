@@ -16,6 +16,7 @@ GTA_Ast_Node_VTable gta_ast_node_string_vtable = {
   .walk = gta_ast_node_string_walk,
 };
 
+
 GTA_Ast_Node_String * gta_ast_node_string_create(GTA_Unicode_String * string, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_String * self = gcu_malloc(sizeof(GTA_Ast_Node_String));
   if (!self) {
@@ -28,30 +29,36 @@ GTA_Ast_Node_String * gta_ast_node_string_create(GTA_Unicode_String * string, GT
   return self;
 }
 
+
 void gta_ast_node_string_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
   gta_unicode_string_destroy(string->string);
   gcu_free(self);
 }
 
+
 void gta_ast_node_string_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
   printf("%s%s: \"%s\"\n", indent, self->vtable->name, string->string->buffer);
 }
 
+
 GTA_Ast_Node * gta_ast_node_string_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_MAYBE_UNUSED(GTA_Ast_Simplify_Variable_Map * variable_map)) {
   return 0;
 }
 
+
 void gta_ast_node_string_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
 }
+
 
 bool gta_ast_node_string_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
   return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count) && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_STRING))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_P(string->string));
 }
+
 
 bool gta_ast_node_string_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   (void)self;

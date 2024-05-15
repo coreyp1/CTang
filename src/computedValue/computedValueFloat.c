@@ -31,6 +31,7 @@ GTA_Computed_Value_VTable gta_computed_value_float_vtable = {
   .call = gta_computed_value_call_not_implemented,
 };
 
+
 GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value, GTA_Execution_Context * context) {
   GTA_Computed_Value_Float * self = (GTA_Computed_Value_Float *) gcu_malloc(sizeof(GTA_Computed_Value_Float));
   if (!self) {
@@ -44,6 +45,7 @@ GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value, GTA_
   gta_computed_value_float_create_in_place(self, value, context);
   return self;
 }
+
 
 bool gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, GTA_Float value, GTA_Execution_Context * context) {
   *self = (GTA_Computed_Value_Float) {
@@ -63,16 +65,20 @@ bool gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, G
   return true;
 }
 
+
 void gta_computed_value_float_destroy(GTA_Computed_Value * self) {
   gcu_free(self);
 }
 
+
 void gta_computed_value_float_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
+
 
 GTA_Computed_Value * gta_computed_value_float_deep_copy(GTA_Computed_Value * value) {
   GTA_Computed_Value_Float * float_value = (GTA_Computed_Value_Float *)value;
   return (GTA_Computed_Value *)gta_computed_value_float_create(float_value->value, float_value->base.context);
 }
+
 
 char * gta_computed_value_float_to_string(GTA_Computed_Value * self) {
   GTA_Computed_Value_Float * float_value = (GTA_Computed_Value_Float *)self;

@@ -13,6 +13,7 @@ GTA_Ast_Node * gta_tang_parse(const char * source) {
     : 0;
 }
 
+
 GTA_Ast_Node * gta_tang_primary_parse(const char * source) {
   GTA_Ast_Node * ast = 0;
   GTA_Parser_Error parseError = 0;
@@ -31,11 +32,13 @@ GTA_Ast_Node * gta_tang_primary_parse(const char * source) {
   return ast;
 }
 
+
 static void count_variables(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(void * data), void * return_value) {
   if (GTA_AST_IS_IDENTIFIER(self)) {
     ++*((size_t *) return_value);
   }
 }
+
 
 GTA_Ast_Node * gta_tang_simplify(GTA_Ast_Node * node) {
   // Count the number of identifiers in the tree in order to pre-allocate space
@@ -57,10 +60,12 @@ GTA_Ast_Node * gta_tang_simplify(GTA_Ast_Node * node) {
   return node;
 }
 
+
 void count_nodes(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_MAYBE_UNUSED(void * data), void * return_value) {
   size_t * count = (size_t *) return_value;
   (*count)++;
 }
+
 
 size_t gta_tang_node_count(GTA_Ast_Node * node) {
   size_t count = 0;

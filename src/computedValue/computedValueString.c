@@ -32,7 +32,9 @@ GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .call = gta_computed_value_call_not_implemented,
 };
 
+
 GTA_Computed_Value * gta_computed_value_string_empty;
+
 
 GTA_Computed_Value_String * gta_computed_value_string_create(GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context) {
   GTA_Computed_Value_String * self = gcu_malloc(sizeof(GTA_Computed_Value_String));
@@ -47,6 +49,7 @@ GTA_Computed_Value_String * gta_computed_value_string_create(GTA_Unicode_String 
   gta_computed_value_string_create_in_place(self, value, adopt, context);
   return self;
 }
+
 
 bool gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self, GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context) {
   *self = (GTA_Computed_Value_String) {
@@ -66,10 +69,12 @@ bool gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self,
   return true;
 }
 
+
 void gta_computed_value_string_destroy(GTA_Computed_Value * self) {
   gta_computed_value_string_destroy_in_place(self);
   gcu_free(self);
 }
+
 
 void gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self) {
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;
@@ -77,6 +82,7 @@ void gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self) {
     gta_unicode_string_destroy(string->value);
   }
 }
+
 
 GTA_Computed_Value * gta_computed_value_string_deep_copy(GTA_Computed_Value * value) {
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) value;
@@ -86,6 +92,7 @@ GTA_Computed_Value * gta_computed_value_string_deep_copy(GTA_Computed_Value * va
   }
   return (GTA_Computed_Value *)gta_computed_value_string_create(unicodeString, true, string->base.context);
 }
+
 
 char * gta_computed_value_string_to_string(GTA_Computed_Value * value) {
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) value;

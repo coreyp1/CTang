@@ -13,6 +13,7 @@ GTA_Ast_Node_VTable gta_ast_node_return_vtable = {
   .walk = gta_ast_node_return_walk,
 };
 
+
 GTA_Ast_Node_Return * gta_ast_node_return_create(GTA_Ast_Node * expression, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Return * self = gcu_malloc(sizeof(GTA_Ast_Node_Return));
   if (!self) {
@@ -25,11 +26,13 @@ GTA_Ast_Node_Return * gta_ast_node_return_create(GTA_Ast_Node * expression, GTA_
   return self;
 }
 
+
 void gta_ast_node_return_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Return * return_node = (GTA_Ast_Node_Return *)self;
   gta_ast_node_destroy(return_node->expression);
   gcu_free(self);
 }
+
 
 void gta_ast_node_return_print(GTA_Ast_Node * self, const char * indent) {
   size_t indent_len = strlen(indent);
@@ -49,6 +52,7 @@ void gta_ast_node_return_print(GTA_Ast_Node * self, const char * indent) {
   gcu_free(new_indent);
 }
 
+
 GTA_Ast_Node * gta_ast_node_return_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Return * return_node = (GTA_Ast_Node_Return *)self;
   GTA_Ast_Node * simplified_expression = gta_ast_node_simplify(return_node->expression, variable_map);
@@ -58,6 +62,7 @@ GTA_Ast_Node * gta_ast_node_return_simplify(GTA_Ast_Node * self, GTA_Ast_Simplif
   }
   return 0;
 }
+
 
 void gta_ast_node_return_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

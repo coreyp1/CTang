@@ -14,6 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_index_vtable = {
   .walk = gta_ast_node_index_walk,
 };
 
+
 GTA_Ast_Node_Index * gta_ast_node_index_create(GTA_Ast_Node * lhs, GTA_Ast_Node * rhs, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Index * self = gcu_malloc(sizeof(GTA_Ast_Node_Index));
   if (!self) {
@@ -27,12 +28,14 @@ GTA_Ast_Node_Index * gta_ast_node_index_create(GTA_Ast_Node * lhs, GTA_Ast_Node 
   return self;
 }
 
+
 void gta_ast_node_index_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Index * index = (GTA_Ast_Node_Index *) self;
   gta_ast_node_destroy(index->lhs);
   gta_ast_node_destroy(index->rhs);
   gcu_free(self);
 }
+
 
 void gta_ast_node_index_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_Index * index = (GTA_Ast_Node_Index *) self;
@@ -51,6 +54,7 @@ void gta_ast_node_index_print(GTA_Ast_Node * self, const char * indent) {
   gcu_free(new_indent);
 }
 
+
 GTA_Ast_Node * gta_ast_node_index_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Index * index = (GTA_Ast_Node_Index *) self;
   GTA_Ast_Node * simplified_lhs = gta_ast_node_simplify(index->lhs, variable_map);
@@ -65,6 +69,7 @@ GTA_Ast_Node * gta_ast_node_index_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
   }
   return 0;
 }
+
 
 void gta_ast_node_index_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

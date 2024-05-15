@@ -31,6 +31,7 @@ GTA_Computed_Value_VTable gta_computed_value_integer_vtable = {
   .call = gta_computed_value_call_not_implemented,
 };
 
+
 GTA_Computed_Value_Integer * GTA_CALL gta_computed_value_integer_create(GTA_Integer value, GTA_Execution_Context * context) {
   GTA_Computed_Value_Integer * self = gcu_malloc(sizeof(GTA_Computed_Value_Integer));
   if (!self) {
@@ -44,6 +45,7 @@ GTA_Computed_Value_Integer * GTA_CALL gta_computed_value_integer_create(GTA_Inte
   gta_computed_value_integer_create_in_place(self, value, context);
   return self;
 }
+
 
 bool GTA_CALL gta_computed_value_integer_create_in_place(GTA_Computed_Value_Integer * self, GTA_Integer value, GTA_Execution_Context * context) {
   *self = (GTA_Computed_Value_Integer) {
@@ -62,16 +64,20 @@ bool GTA_CALL gta_computed_value_integer_create_in_place(GTA_Computed_Value_Inte
   return true;
 }
 
+
 void GTA_CALL gta_computed_value_integer_destroy(GTA_Computed_Value * computed_value) {
   gcu_free(computed_value);
 }
 
+
 void GTA_CALL gta_computed_value_integer_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
+
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_integer_deep_copy(GTA_Computed_Value * value) {
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)value;
   return (GTA_Computed_Value *)gta_computed_value_integer_create(integer->value, integer->base.context);
 }
+
 
 char * GTA_CALL gta_computed_value_integer_to_string(GTA_Computed_Value * self) {
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)self;

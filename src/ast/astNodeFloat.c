@@ -19,6 +19,7 @@ GTA_Ast_Node_VTable gta_ast_node_float_vtable = {
   .walk = gta_ast_node_float_walk,
 };
 
+
 GTA_Ast_Node_Float * gta_ast_node_float_create(GCU_float64_t value, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Float * self = gcu_malloc(sizeof(GTA_Ast_Node_Float));
   if (!self) {
@@ -31,22 +32,27 @@ GTA_Ast_Node_Float * gta_ast_node_float_create(GCU_float64_t value, GTA_PARSER_L
   return self;
 }
 
+
 void gta_ast_node_float_destroy(GTA_Ast_Node * self) {
   gcu_free(self);
 }
+
 
 void gta_ast_node_float_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;
   printf("%s%s: %f\n", indent, self->vtable->name, float_node->value);
 }
 
+
 GTA_Ast_Node * gta_ast_node_float_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_MAYBE_UNUSED(GTA_Ast_Simplify_Variable_Map * variable_map)) {
   return 0;
 }
 
+
 void gta_ast_node_float_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
 }
+
 
 bool gta_ast_node_float_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;
@@ -55,6 +61,7 @@ bool gta_ast_node_float_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 
   return false;
 }
+
 
 bool gta_ast_node_float_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;

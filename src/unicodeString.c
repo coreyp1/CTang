@@ -142,6 +142,7 @@ GTA_Unicode_String * gta_unicode_string_create(const char * source, size_t lengt
   return string;
 }
 
+
 GTA_Unicode_String * gta_unicode_string_create_and_adopt(const char * source, size_t length, GTA_String_Type type) {
   // Allocate space for the string.
   GTA_Unicode_String * string = gcu_calloc(sizeof(GTA_Unicode_String), 1);

@@ -14,6 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_ternary_vtable = {
   .walk = gta_ast_node_ternary_walk,
 };
 
+
 GTA_Ast_Node_Ternary * gta_ast_node_ternary_create(GTA_Ast_Node * condition, GTA_Ast_Node * ifTrue, GTA_Ast_Node * ifFalse, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Ternary * self = gcu_malloc(sizeof(GTA_Ast_Node_Ternary));
   if (!self) {
@@ -28,6 +29,7 @@ GTA_Ast_Node_Ternary * gta_ast_node_ternary_create(GTA_Ast_Node * condition, GTA
   return self;
 }
 
+
 void gta_ast_node_ternary_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
   gta_ast_node_destroy(ternary->condition);
@@ -35,6 +37,7 @@ void gta_ast_node_ternary_destroy(GTA_Ast_Node * self) {
   gta_ast_node_destroy(ternary->ifFalse);
   gcu_free(self);
 }
+
 
 void gta_ast_node_ternary_print(GTA_Ast_Node * self, const char * indent) {
   size_t indent_len = strlen(indent);
@@ -54,6 +57,7 @@ void gta_ast_node_ternary_print(GTA_Ast_Node * self, const char * indent) {
   gta_ast_node_print(ternary->ifFalse, new_indent);
   gcu_free(new_indent);
 }
+
 
 GTA_Ast_Node * gta_ast_node_ternary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   // The ternary operator is a bit more complicated to simplify than the other
@@ -116,6 +120,7 @@ GTA_Ast_Node * gta_ast_node_ternary_simplify(GTA_Ast_Node * self, GTA_Ast_Simpli
 
   return 0;
 }
+
 
 void gta_ast_node_ternary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

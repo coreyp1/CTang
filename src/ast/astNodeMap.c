@@ -14,6 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_map_vtable = {
   .walk = gta_ast_node_map_walk,
 };
 
+
 GTA_Ast_Node_Map * gta_ast_node_map_create(GTA_VectorX * pairs, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Map * self = gcu_malloc(sizeof(GTA_Ast_Node_Map));
   if (!self) {
@@ -26,11 +27,13 @@ GTA_Ast_Node_Map * gta_ast_node_map_create(GTA_VectorX * pairs, GTA_PARSER_LTYPE
   return self;
 }
 
+
 void gta_ast_node_map_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *) self;
   GTA_VECTORX_DESTROY(map->pairs);
   gcu_free(self);
 }
+
 
 void gta_ast_node_map_print(GTA_Ast_Node * self, const char * indent) {
   size_t indent_len = strlen(indent);
@@ -51,6 +54,7 @@ void gta_ast_node_map_print(GTA_Ast_Node * self, const char * indent) {
   gcu_free(new_indent);
 }
 
+
 GTA_Ast_Node * gta_ast_node_map_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *) self;
   for (size_t i = 0; i < GTA_VECTORX_COUNT(map->pairs); ++i) {
@@ -63,6 +67,7 @@ GTA_Ast_Node * gta_ast_node_map_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_V
   }
   return 0;
 }
+
 
 void gta_ast_node_map_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

@@ -115,6 +115,7 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
   }
 }
 
+
 static void gta_program_compile_binary(GTA_Program * program) {
   GTA_Binary_Compiler_Context * context = gta_binary_compiler_context_create(program);
   if (!context) {
@@ -326,6 +327,7 @@ static void gta_program_compile_binary(GTA_Program * program) {
   gta_binary_compiler_context_destroy(context);
 }
 
+
 GTA_Program * gta_program_create(const char * code) {
   GTA_Program * program = gcu_malloc(sizeof(GTA_Program));
   if (!program) {
@@ -338,6 +340,7 @@ GTA_Program * gta_program_create(const char * code) {
   }
   return program;
 }
+
 
 bool gta_program_create_in_place(GTA_Program * program, const char * code) {
   // Initialize flags based on environment variables.
@@ -354,6 +357,7 @@ bool gta_program_create_in_place(GTA_Program * program, const char * code) {
   return gta_program_create_in_place_with_flags(program, code, flags);
 }
 
+
 GTA_Program * gta_program_create_with_flags(const char * code, GTA_Program_Flags flags) {
   GTA_Program * program = gcu_malloc(sizeof(GTA_Program));
   if (!program) {
@@ -366,6 +370,7 @@ GTA_Program * gta_program_create_with_flags(const char * code, GTA_Program_Flags
   }
   return program;
 }
+
 
 bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * code, GTA_Program_Flags flags) {
   // Initialize the program data structure.
@@ -434,10 +439,12 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * 
   return true;
 }
 
+
 void gta_program_destroy(GTA_Program * self) {
   gta_program_destroy_in_place(self);
   gcu_free(self);
 }
+
 
 void gta_program_destroy_in_place(GTA_Program * self) {
   if (self->ast) {
@@ -536,6 +543,7 @@ static void __gta_program_collect_identifiers(GTA_Ast_Node * self, void * data, 
   // TODO: How do we handle function declarations?
 }
 
+
 bool gta_program_create_scope(GTA_VectorX * scope_stack, GTA_HashX * globals, GTA_Ast_Node * ast) {
   GTA_HashX * scope = GTA_HASHX_CREATE(32);
   if (!scope) {
@@ -562,6 +570,7 @@ void gta_program_destroy_scope(GTA_VectorX * scope_stack) {
     --scope_stack->count;
   }
 }
+
 
 // static void __identify_globals(GTA_Ast_Node * self, void * data, void * return_value) {
 //   GTA_HashX * globals = (GTA_HashX *)data;

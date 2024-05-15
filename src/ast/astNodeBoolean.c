@@ -16,6 +16,7 @@ GTA_Ast_Node_VTable gta_ast_node_boolean_vtable = {
   .walk = gta_ast_node_boolean_walk,
 };
 
+
 GTA_Ast_Node_Boolean * gta_ast_node_boolean_create(bool value, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Boolean * self = gcu_malloc(sizeof(GTA_Ast_Node_Boolean));
   if (!self) {
@@ -28,28 +29,34 @@ GTA_Ast_Node_Boolean * gta_ast_node_boolean_create(bool value, GTA_PARSER_LTYPE 
   return self;
 }
 
+
 void gta_ast_node_boolean_destroy(GTA_Ast_Node * self) {
   gcu_free(self);
 }
+
 
 void gta_ast_node_boolean_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;
   printf("%s%s: %s\n", indent, self->vtable->name, boolean->value ? "true" : "false");
 }
 
+
 GTA_Ast_Node * gta_ast_node_boolean_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_MAYBE_UNUSED(GTA_Ast_Simplify_Variable_Map * variable_map)) {
   return 0;
 }
 
+
 void gta_ast_node_boolean_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
 }
+
 
 bool gta_ast_node_boolean_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;
   return GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_BOOLEAN))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_B(boolean->value));
 }
+
 
 bool gta_ast_node_boolean_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;

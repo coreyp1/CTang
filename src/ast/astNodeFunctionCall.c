@@ -14,6 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_function_call_vtable = {
   .walk = gta_ast_node_function_call_walk,
 };
 
+
 GTA_Ast_Node_Function_Call * gta_ast_node_function_call_create(GTA_Ast_Node * lhs, GTA_VectorX * arguments, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Function_Call * self = gcu_malloc(sizeof(GTA_Ast_Node_Function_Call));
   if (!self) {
@@ -27,12 +28,14 @@ GTA_Ast_Node_Function_Call * gta_ast_node_function_call_create(GTA_Ast_Node * lh
   return self;
 }
 
+
 void gta_ast_node_function_call_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
   gta_ast_node_destroy(function_call->lhs);
   GTA_VECTORX_DESTROY(function_call->arguments);
   gcu_free(self);
 }
+
 
 void gta_ast_node_function_call_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
@@ -54,6 +57,7 @@ void gta_ast_node_function_call_print(GTA_Ast_Node * self, const char * indent) 
   gcu_free(new_indent);
 }
 
+
 GTA_Ast_Node * gta_ast_node_function_call_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
   GTA_Ast_Node * simplified_lhs = gta_ast_node_simplify(function_call->lhs, variable_map);
@@ -71,6 +75,7 @@ GTA_Ast_Node * gta_ast_node_function_call_simplify(GTA_Ast_Node * self, GTA_Ast_
   }
   return 0;
 }
+
 
 void gta_ast_node_function_call_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

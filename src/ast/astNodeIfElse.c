@@ -14,6 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_if_else_vtable = {
   .walk = gta_ast_node_if_else_walk,
 };
 
+
 GTA_Ast_Node_If_Else * gta_ast_node_if_else_create(GTA_Ast_Node * condition, GTA_Ast_Node * ifBlock, GTA_Ast_Node * elseBlock, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_If_Else * self = gcu_malloc(sizeof(GTA_Ast_Node_If_Else));
   if (!self) {
@@ -28,6 +29,7 @@ GTA_Ast_Node_If_Else * gta_ast_node_if_else_create(GTA_Ast_Node * condition, GTA
   return self;
 }
 
+
 void gta_ast_node_if_else_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
   gta_ast_node_destroy(if_else->condition);
@@ -37,6 +39,7 @@ void gta_ast_node_if_else_destroy(GTA_Ast_Node * self) {
   }
   gcu_free(self);
 }
+
 
 void gta_ast_node_if_else_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
@@ -58,6 +61,7 @@ void gta_ast_node_if_else_print(GTA_Ast_Node * self, const char * indent) {
   }
   gcu_free(new_indent);
 }
+
 
 GTA_Ast_Node * gta_ast_node_if_else_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
@@ -113,6 +117,7 @@ GTA_Ast_Node * gta_ast_node_if_else_simplify(GTA_Ast_Node * self, GTA_Ast_Simpli
 
   return 0;
 }
+
 
 void gta_ast_node_if_else_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);

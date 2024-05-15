@@ -14,6 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_function_vtable = {
   .walk = gta_ast_node_function_walk,
 };
 
+
 GTA_Ast_Node_Function * gta_ast_node_function_create(const char * identifier, GTA_VectorX * parameters, GTA_Ast_Node * block, GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Function * self = gcu_malloc(sizeof(GTA_Ast_Node_Function));
   if (!self) {
@@ -30,6 +31,7 @@ GTA_Ast_Node_Function * gta_ast_node_function_create(const char * identifier, GT
   return self;
 }
 
+
 void gta_ast_node_function_destroy(GTA_Ast_Node * self) {
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
   GTA_VECTORX_DESTROY(function->parameters);
@@ -40,6 +42,7 @@ void gta_ast_node_function_destroy(GTA_Ast_Node * self) {
   gcu_free((void *)function->identifier);
   gcu_free(self);
 }
+
 
 void gta_ast_node_function_print(GTA_Ast_Node * self, const char * indent) {
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
@@ -69,6 +72,7 @@ void gta_ast_node_function_print(GTA_Ast_Node * self, const char * indent) {
   gcu_free(small_indent);
 }
 
+
 GTA_Ast_Node * gta_ast_node_function_simplify(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Ast_Simplify_Variable_Map * variable_map)) {
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
   // A function is a top-level node, so we need to pass it a new variable map.
@@ -86,6 +90,7 @@ GTA_Ast_Node * gta_ast_node_function_simplify(GTA_Ast_Node * self, GTA_MAYBE_UNU
   gcu_hash64_destroy(new_variable_map);
   return 0;
 }
+
 
 void gta_ast_node_function_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
