@@ -144,12 +144,49 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         }
         break;
       }
-      case GTA_BYTECODE_PEEK_BP: {
-        // Push the base pointer onto the stack.
+      case GTA_BYTECODE_PEEK_GLOBAL: {
+        // Push a value on the stack, indexed by the base pointer.
         size_t index = GTA_TYPEX_UI(*next++);
         if (!GTA_VECTORX_APPEND(context->stack, context->stack->data[index])) {
           context->result = gta_computed_value_error_out_of_memory;
         }
+        break;
+      }
+      case GTA_BYTECODE_POKE_GLOBAL: {
+        // Poke a value into the stack, indexed by the base pointer.
+        size_t index = GTA_TYPEX_UI(*next++);
+        context->stack->data[index] = context->stack->data[--*sp];
+        break;
+      }
+      case GTA_BYTECODE_PEEK_LOCAL: {
+        // Push a value on the stack, indexed by the frame pointer.
+        size_t index = GTA_TYPEX_UI(*next++);
+        if (!GTA_VECTORX_APPEND(context->stack, context->stack->data[context->fp + index])) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        break;
+      }
+      case GTA_BYTECODE_POKE_LOCAL: {
+        // Poke a value into the stack, indexed by the frame pointer.
+        size_t index = GTA_TYPEX_UI(*next++);
+        context->stack->data[context->fp + index] = context->stack->data[--*sp];
+        break;
+      }
+      case GTA_BYTECODE_MARK_FP: {
+        // Mark the current stack pointer as the frame pointer.
+        context->fp = *sp;
+        break;
+      }
+      case GTA_BYTECODE_PUSH_FP: {
+        // Push the frame pointer onto the stack.
+        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_UI(context->fp))) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        break;
+      }
+      case GTA_BYTECODE_POP_FP: {
+        // Pop the frame pointer from the stack.
+        context->fp = GTA_TYPEX_UI(context->stack->data[--*sp]);
         break;
       }
       default: {

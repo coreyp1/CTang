@@ -76,6 +76,10 @@ typedef struct GTA_Execution_Context {
    * A user-defined pointer that can be used to store additional data.
    */
   void * user_data;
+  /**
+   * The current frame pointer.
+   */
+  GTA_UInteger fp;
 } GTA_Execution_Context;
 
 /**

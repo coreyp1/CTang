@@ -30,6 +30,7 @@ bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_
     .garbage_collection = 0,
     .globals = 0,
     .user_data = 0,
+    .fp = 0,
   };
   context->stack = GTA_VECTORX_CREATE(32);
   if (!context->stack) {

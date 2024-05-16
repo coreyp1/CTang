@@ -235,8 +235,19 @@ bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Byteco
       return false;
     }
     return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_PEEK_BP))
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_PEEK_GLOBAL))
       && GTA_VECTORX_APPEND(context->program->bytecode, val.value);
   }
+  else if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
+    GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+    if (!val.exists) {
+      printf("Error: Identifier %s not found in local positions.\n", identifier->mangled_name);
+      return false;
+    }
+    return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_PEEK_LOCAL))
+      && GTA_VECTORX_APPEND(context->program->bytecode, val.value);
+  }
+
   return false;
 }

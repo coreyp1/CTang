@@ -98,6 +98,14 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
       }
       GTA_VECTORX_DESTROY(globals_order);
 
+      // Update the frame pointer to the current stack pointer.
+      GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_MARK_FP));
+
+      // Initialize all locals to null.
+      for (size_t i = 0; i < program->scope->local_positions->entries; ++i) {
+        GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
+      }
+
       if (!gta_ast_node_compile_to_bytecode(program->ast, &context)) {
         GTA_VECTORX_DESTROY(bytecode);
         program->bytecode = 0;

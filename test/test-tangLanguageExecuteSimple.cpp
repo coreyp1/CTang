@@ -187,6 +187,17 @@ TEST(Declare, Block) {
   }
 }
 
+TEST(Identifier, Local) {
+  {
+    // `a` is not declared global, so should not have a value.
+    TEST_PROGRAM_SETUP_NO_RUN("a");
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 GTA_Computed_Value * GTA_CALL make_int_3(GTA_Execution_Context * context) {
   return (GTA_Computed_Value *)gta_computed_value_integer_create(3, context);
 }

@@ -45,7 +45,13 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_LOAD_LIBRARY,   ///< Get identifier hash and load a library value.
   GTA_BYTECODE_NEGATIVE,
   GTA_BYTECODE_NOT,
-  GTA_BYTECODE_PEEK_BP,        ///< Stack # (from bp): push val from stack #
+  GTA_BYTECODE_PEEK_GLOBAL,    ///< Stack # (from bp): push val from stack #
+  GTA_BYTECODE_POKE_GLOBAL,    ///< Stack # (from bp): Copy a val, store @ stack #
+  GTA_BYTECODE_PEEK_LOCAL,     ///< Stack # (from fp): push val from stack #
+  GTA_BYTECODE_POKE_LOCAL,     ///< Stack # (from fp): Copy a val, store @ stack #
+  GTA_BYTECODE_MARK_FP,        ///< Mark the current stack pointer as the frame pointer
+  GTA_BYTECODE_PUSH_FP,        ///< Push the frame pointer onto the stack
+  GTA_BYTECODE_POP_FP,         ///< Pop the frame pointer from the stack
 
 
   GTA_BYTECODE_POKE,           ///< Stack # (from fp): Copy a val, store @ stack #

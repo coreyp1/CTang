@@ -48,9 +48,33 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%p\tLOAD_LIBRARY\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
-      case GTA_BYTECODE_PEEK_BP:
-        printf("%p\tPEEK_BP\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+      case GTA_BYTECODE_PEEK_GLOBAL:
+        printf("%p\tPEEK_GLOBAL\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
+        break;
+      case GTA_BYTECODE_POKE_GLOBAL:
+        printf("%p\tPOKE_GLOBAL\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        current += 2;
+        break;
+      case GTA_BYTECODE_PEEK_LOCAL:
+        printf("%p\tPEEK_LOCAL\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        current += 2;
+        break;
+      case GTA_BYTECODE_POKE_LOCAL:
+        printf("%p\tPOKE_LOCAL\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        current += 2;
+        break;
+      case GTA_BYTECODE_MARK_FP:
+        printf("%p\tMARK_FP\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_PUSH_FP:
+        printf("%p\tPUSH_FP\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_POP_FP:
+        printf("%p\tPOP_FP\n", (void *)current);
+        ++current;
         break;
       default:
         printf("%p\tUnknown\n", (void *)current);
