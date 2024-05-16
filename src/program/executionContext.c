@@ -90,6 +90,6 @@ typedef union Function_Converter {
 } Function_Converter;
 
 
-bool gta_execution_context_add_global(GTA_Execution_Context * context, const char * identifier, GTA_Execution_Context_Global_Create func) {
+bool gta_execution_context_add_library(GTA_Execution_Context * context, const char * identifier, GTA_Execution_Context_Global_Create func) {
   return GTA_HASHX_SET(context->globals, GTA_STRING_HASH(identifier, strlen(identifier)), GTA_TYPEX_MAKE_P((Function_Converter){.f = func}.b));
 }

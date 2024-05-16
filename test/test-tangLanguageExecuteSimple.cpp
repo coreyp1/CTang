@@ -191,12 +191,12 @@ GTA_Computed_Value * GTA_CALL make_int_3(GTA_Execution_Context * context) {
   return (GTA_Computed_Value *)gta_computed_value_integer_create(3, context);
 }
 
-TEST(Identifier, Global) {
+TEST(Identifier, Library) {
   // {
   //   // `a` is not declared global, so should not have a value.
   //   TEST_PROGRAM_SETUP_NO_RUN("a");
   //   gta_program_bytecode_print(context->program);
-  //   ASSERT_TRUE(gta_execution_context_add_global(context, "a", make_int_3));
+  //   ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
   //   ASSERT_TRUE(gta_program_execute(context));
   //   ASSERT_TRUE(context->result);
   //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -206,7 +206,7 @@ TEST(Identifier, Global) {
   {
     // `a` is declared global, so should have the default value.
     TEST_PROGRAM_SETUP_NO_RUN("use a; a;");
-    ASSERT_TRUE(gta_execution_context_add_global(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -218,7 +218,7 @@ TEST(Identifier, Global) {
   //   // multiple statements.
   //   TEST_PROGRAM_SETUP_NO_RUN("global a; a;");
   //   gta_program_bytecode_print(context->program);
-  //   ASSERT_TRUE(gta_execution_context_add_global(context, "a", make_int_3));
+  //   ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
   //   ASSERT_TRUE(gta_program_execute(context));
   //   ASSERT_TRUE(context->result);
   //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -230,7 +230,7 @@ TEST(Identifier, Global) {
   //   // the default value.
   //   TEST_PROGRAM_SETUP_NO_RUN("global a = 42");
   //   gta_program_bytecode_print(context->program);
-  //   ASSERT_TRUE(gta_execution_context_add_global(context, "a", make_int_3));
+  //   ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
   //   ASSERT_TRUE(gta_program_execute(context));
   //   ASSERT_TRUE(context->result);
   //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -242,7 +242,7 @@ TEST(Identifier, Global) {
   //   // the default value.  There are multiple statements.
   //   TEST_PROGRAM_SETUP_NO_RUN("global a = 42; a;");
   //   gta_program_bytecode_print(context->program);
-  //   ASSERT_TRUE(gta_execution_context_add_global(context, "a", make_int_3));
+  //   ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
   //   ASSERT_TRUE(gta_program_execute(context));
   //   ASSERT_TRUE(context->result);
   //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));

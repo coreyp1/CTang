@@ -25,7 +25,7 @@ extern "C" {
  * Libraries and other contextual variables are not always needed.  In order to
  * prevent unnecessary memory allocations, gobals will not be instantiated
  * unless they are referenced in the script.  When registering a global using
- * gta_execution_context_add_global(), a callback with this signature must be
+ * gta_execution_context_add_library(), a callback with this signature must be
  * provided.  This callback will be invoked during the script setup.
  *
  * @param context The context of the currently executing script.
@@ -136,7 +136,7 @@ void gta_execution_context_destroy_in_place(GTA_Execution_Context * context);
  * @param func The function to be invoked to create the Computed Value.
  * @return true on success, false on failure.
  */
-bool gta_execution_context_add_global(GTA_Execution_Context * context, const char * identifier, GTA_Execution_Context_Global_Create func);
+bool gta_execution_context_add_library(GTA_Execution_Context * context, const char * identifier, GTA_Execution_Context_Global_Create func);
 
 #ifdef __cplusplus
 }
