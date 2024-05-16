@@ -20,11 +20,16 @@ GTA_Ast_Node_Function_Call * gta_ast_node_function_call_create(GTA_Ast_Node * lh
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_function_call_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->lhs = lhs;
-  self->arguments = arguments;
+  *self = (GTA_Ast_Node_Function_Call) {
+    .base = {
+      .vtable = &gta_ast_node_function_call_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .lhs = lhs,
+    .arguments = arguments,
+  };
   return self;
 }
 

@@ -24,11 +24,16 @@ GTA_Ast_Node_Cast * gta_ast_node_cast_create(GTA_Ast_Node * expression, GTA_Cast
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_cast_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->expression = expression;
-  self->type = type;
+  *self = (GTA_Ast_Node_Cast) {
+    .base = {
+      .vtable = &gta_ast_node_cast_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .expression = expression,
+    .type = type,
+  };
   return self;
 }
 

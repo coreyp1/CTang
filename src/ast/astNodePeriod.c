@@ -20,11 +20,16 @@ GTA_Ast_Node_Period * gta_ast_node_period_create(GTA_Ast_Node * lhs, const char 
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_period_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->lhs = lhs;
-  self->rhs = rhs;
+  *self = (GTA_Ast_Node_Period) {
+    .base = {
+      .vtable = &gta_ast_node_period_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .lhs = lhs,
+    .rhs = rhs,
+  };
   return self;
 }
 

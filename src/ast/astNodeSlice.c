@@ -20,13 +20,18 @@ GTA_Ast_Node_Slice * gta_ast_node_slice_create(GTA_Ast_Node * lhs, GTA_Ast_Node 
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_slice_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->lhs = lhs;
-  self->start = start;
-  self->end = end;
-  self->skip = skip;
+  *self = (GTA_Ast_Node_Slice) {
+    .base = {
+      .vtable = &gta_ast_node_slice_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .lhs = lhs,
+    .start = start,
+    .end = end,
+    .skip = skip,
+  };
   return self;
 }
 

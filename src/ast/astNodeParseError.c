@@ -39,6 +39,7 @@ GTA_Ast_Node_Parse_Error * gta_ast_node_parse_error_create(const char * message,
       .vtable = &gta_ast_node_parse_error_vtable,
       .location = location,
       .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
     },
     .message = 0,
   };

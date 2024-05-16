@@ -20,9 +20,14 @@ GTA_Ast_Node_Continue * gta_ast_node_continue_create(GTA_PARSER_LTYPE location) 
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_continue_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
+  *self = (GTA_Ast_Node_Continue) {
+    .base = {
+      .vtable = &gta_ast_node_continue_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+  };
   return self;
 }
 

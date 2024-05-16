@@ -24,13 +24,18 @@ GTA_Ast_Node_For * gta_ast_node_for_create(GTA_Ast_Node * init, GTA_Ast_Node * c
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_for_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->init = init;
-  self->condition = condition;
-  self->update = update;
-  self->block = block;
+  *self = (GTA_Ast_Node_For) {
+    .base = {
+      .vtable = &gta_ast_node_for_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .init = init,
+    .condition = condition,
+    .update = update,
+    .block = block,
+  };
   return self;
 }
 

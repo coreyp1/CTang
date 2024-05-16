@@ -26,11 +26,16 @@ GTA_Ast_Node_Assign * gta_ast_node_assign_create(GTA_Ast_Node * lhs, GTA_Ast_Nod
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_assign_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->lhs = lhs;
-  self->rhs = rhs;
+  *self = (GTA_Ast_Node_Assign) {
+    .base = {
+      .vtable = &gta_ast_node_assign_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .lhs = lhs,
+    .rhs = rhs,
+  };
   return self;
 }
 
@@ -179,7 +184,7 @@ static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Co
   // If the value is a temporary value, then we can simply mark it as non-temporary
   // and store it in the appropriate location.
   // The computed value is in RAX.
-  //  mov r8, 0xDEADBEEFDEADBEEF    ; The index of the value.
+  //  mov r8, index                 ; The index of the value.
   GTA_BINARY_WRITE2(v, 0x49, 0xB8);
   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
   memcpy(v->data + v->count - 8, &index, 8);

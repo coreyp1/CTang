@@ -61,7 +61,6 @@ bool gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, G
     },
     .value = value
   };
-  self->value = value;
   return true;
 }
 

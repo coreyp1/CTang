@@ -20,10 +20,15 @@ GTA_Ast_Node_Print * gta_ast_node_print_create(GTA_Ast_Node * expression, GTA_PA
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_print_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->expression = expression;
+  *self = (GTA_Ast_Node_Print) {
+    .base = {
+      .vtable = &gta_ast_node_print_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .expression = expression,
+  };
   return self;
 }
 

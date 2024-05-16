@@ -20,12 +20,17 @@ GTA_Ast_Node_If_Else * gta_ast_node_if_else_create(GTA_Ast_Node * condition, GTA
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_if_else_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->condition = condition;
-  self->ifBlock = ifBlock;
-  self->elseBlock = elseBlock;
+  *self = (GTA_Ast_Node_If_Else) {
+    .base = {
+      .vtable = &gta_ast_node_if_else_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .condition = condition,
+    .ifBlock = ifBlock,
+    .elseBlock = elseBlock,
+  };
   return self;
 }
 

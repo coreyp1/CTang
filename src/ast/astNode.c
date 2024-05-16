@@ -23,6 +23,9 @@ GTA_Ast_Node_VTable gta_ast_node_null_vtable = {
 
 GTA_Ast_Node * GTA_CALL gta_ast_node_create(GTA_PARSER_LTYPE location) {
   GTA_Ast_Node * self = gcu_malloc(sizeof(GTA_Ast_Node));
+  if (!self) {
+    return 0;
+  }
   *self = (GTA_Ast_Node) {
     .vtable = &gta_ast_node_null_vtable,
     .location = location,

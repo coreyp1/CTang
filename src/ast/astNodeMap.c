@@ -20,10 +20,15 @@ GTA_Ast_Node_Map * gta_ast_node_map_create(GTA_VectorX * pairs, GTA_PARSER_LTYPE
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_map_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->pairs = pairs;
+  *self = (GTA_Ast_Node_Map) {
+    .base = {
+      .vtable = &gta_ast_node_map_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .pairs = pairs,
+  };
   return self;
 }
 

@@ -24,12 +24,17 @@ GTA_Ast_Node_Ranged_For * gta_ast_node_ranged_for_create(const char * identifier
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_ranged_for_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->identifier = identifier;
-  self->expression = expression;
-  self->block = block;
+  *self = (GTA_Ast_Node_Ranged_For) {
+    .base = {
+      .vtable = &gta_ast_node_ranged_for_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .identifier = identifier,
+    .expression = expression,
+    .block = block,
+  };
   return self;
 }
 

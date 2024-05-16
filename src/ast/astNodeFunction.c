@@ -20,14 +20,20 @@ GTA_Ast_Node_Function * gta_ast_node_function_create(const char * identifier, GT
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_function_vtable;
-  self->base.location = location;
-  self->identifier = identifier;
-  self->hash = GTA_STRING_HASH(identifier, strlen(identifier));
-  self->mangled_name = 0;
-  self->mangled_name_hash = 0;
-  self->parameters = parameters;
-  self->block = block;
+  *self = (GTA_Ast_Node_Function) {
+    .base = {
+      .vtable = &gta_ast_node_function_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .identifier = identifier,
+    .hash = GTA_STRING_HASH(identifier, strlen(identifier)),
+    .mangled_name = 0,
+    .mangled_name_hash = 0,
+    .parameters = parameters,
+    .block = block,
+  };
   return self;
 }
 

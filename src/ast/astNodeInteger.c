@@ -27,6 +27,7 @@ GTA_Ast_Node_Integer * gta_ast_node_integer_create(int64_t integer, GTA_PARSER_L
       .vtable = &gta_ast_node_integer_vtable,
       .location = location,
       .possible_type = GTA_AST_POSSIBLE_TYPE_INTEGER,
+      .is_singleton = false,
     },
     .value = integer,
   };

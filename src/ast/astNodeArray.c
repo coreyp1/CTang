@@ -20,10 +20,15 @@ GTA_Ast_Node_Array * gta_ast_node_array_create(GTA_VectorX * elements, GTA_PARSE
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_array_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->elements = elements;
+  *self = (GTA_Ast_Node_Array) {
+    .base = {
+      .vtable = &gta_ast_node_array_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .elements = elements,
+  };
   return self;
 }
 

@@ -22,10 +22,15 @@ GTA_Ast_Node_Boolean * gta_ast_node_boolean_create(bool value, GTA_PARSER_LTYPE 
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_boolean_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_BOOLEAN;
-  self->value = value;
+  *self = (GTA_Ast_Node_Boolean) {
+    .base = {
+      .vtable = &gta_ast_node_boolean_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_BOOLEAN,
+      .is_singleton = false,
+    },
+    .value = value,
+  };
   return self;
 }
 

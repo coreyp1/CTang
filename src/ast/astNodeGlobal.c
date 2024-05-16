@@ -27,6 +27,7 @@ GTA_Ast_Node_Global * gta_ast_node_global_create(GTA_Ast_Node * identifier, GTA_
       .vtable = &gta_ast_node_global_vtable,
       .location = location,
       .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
     },
     .identifier = identifier,
     .assignment = assignment,

@@ -20,12 +20,17 @@ GTA_Ast_Node_Ternary * gta_ast_node_ternary_create(GTA_Ast_Node * condition, GTA
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_ternary_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->condition = condition;
-  self->ifTrue = ifTrue;
-  self->ifFalse = ifFalse;
+  *self = (GTA_Ast_Node_Ternary) {
+    .base = {
+      .vtable = &gta_ast_node_ternary_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .condition = condition,
+    .ifTrue = ifTrue,
+    .ifFalse = ifFalse,
+  };
   return self;
 }
 

@@ -22,10 +22,15 @@ GTA_Ast_Node_String * gta_ast_node_string_create(GTA_Unicode_String * string, GT
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_string_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_STRING;
-  self->string = string;
+  *self = (GTA_Ast_Node_String) {
+    .base = {
+      .vtable = &gta_ast_node_string_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_STRING,
+      .is_singleton = false,
+    },
+    .string = string,
+  };
   return self;
 }
 

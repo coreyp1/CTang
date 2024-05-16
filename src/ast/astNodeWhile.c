@@ -24,11 +24,16 @@ GTA_Ast_Node_While * gta_ast_node_while_create(GTA_Ast_Node * condition, GTA_Ast
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_while_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->condition = condition;
-  self->block = block;
+  *self = (GTA_Ast_Node_While) {
+    .base = {
+      .vtable = &gta_ast_node_while_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .condition = condition,
+    .block = block,
+  };
   return self;
 }
 

@@ -25,10 +25,15 @@ GTA_Ast_Node_Float * gta_ast_node_float_create(GCU_float64_t value, GTA_PARSER_L
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_float_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_FLOAT;
-  self->value = value;
+  *self = (GTA_Ast_Node_Float) {
+    .base = {
+      .vtable = &gta_ast_node_float_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_FLOAT,
+      .is_singleton = false,
+    },
+    .value = value,
+  };
   return self;
 }
 

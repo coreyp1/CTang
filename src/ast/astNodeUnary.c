@@ -24,11 +24,16 @@ GTA_Ast_Node_Unary * gta_ast_node_unary_create(GTA_Ast_Node * expression, GTA_Un
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_unary_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->expression = expression;
-  self->operator_type = operator_type;
+  *self = (GTA_Ast_Node_Unary) {
+    .base = {
+      .vtable = &gta_ast_node_unary_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .expression = expression,
+    .operator_type = operator_type,
+  };
   return self;
 }
 

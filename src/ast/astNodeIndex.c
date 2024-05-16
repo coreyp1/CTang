@@ -20,11 +20,16 @@ GTA_Ast_Node_Index * gta_ast_node_index_create(GTA_Ast_Node * lhs, GTA_Ast_Node 
   if (!self) {
     return 0;
   }
-  self->base.vtable = &gta_ast_node_index_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
-  self->lhs = lhs;
-  self->rhs = rhs;
+  *self = (GTA_Ast_Node_Index) {
+    .base = {
+      .vtable = &gta_ast_node_index_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+    .lhs = lhs,
+    .rhs = rhs,
+  };
   return self;
 }
 

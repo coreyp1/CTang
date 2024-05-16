@@ -17,9 +17,17 @@ GTA_Ast_Node_VTable gta_ast_node_break_vtable = {
 
 GTA_Ast_Node_Break * gta_ast_node_break_create(GTA_PARSER_LTYPE location) {
   GTA_Ast_Node_Break * self = gcu_malloc(sizeof(GTA_Ast_Node_Break));
-  self->base.vtable = &gta_ast_node_break_vtable;
-  self->base.location = location;
-  self->base.possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN;
+  if (!self) {
+    return 0;
+  }
+  *self = (GTA_Ast_Node_Break) {
+    .base = {
+      .vtable = &gta_ast_node_break_vtable,
+      .location = location,
+      .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+      .is_singleton = false,
+    },
+  };
   return self;
 }
 
