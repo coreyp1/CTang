@@ -70,13 +70,20 @@ bool gta_ast_node_string_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compi
   (void)context;
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
   GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 32)) {
+  if (!gcu_vector8_reserve(v, v->count + 44)) {
     return false;
   }
 #if GTA_X86_64
   // 64-bit x86
-  // Assembly to call gta_computed_value_string_create(&string->string, 0, context):
+  // Set up for a function call.
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFFFFFFFFFF0
+  GTA_BINARY_WRITE1(v, 0x55);
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
+  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
   // context is in r15.
+  // gta_computed_value_string_create(&string->string, 0, context):
   //   mov rdi, string->string
   GTA_BINARY_WRITE2(v, 0x48, 0xBF);
   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
@@ -93,6 +100,12 @@ bool gta_ast_node_string_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compi
   memcpy(&v->data[v->count - 8], &fp, 8);
   //   call rax
   GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+  // Tear down the function call.
+  //   mov rsp, rbp
+  //   pop rbp
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
+  GTA_BINARY_WRITE1(v, 0x5D);
+
   return true;
 #endif
 

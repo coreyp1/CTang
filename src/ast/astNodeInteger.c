@@ -67,13 +67,20 @@ bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
 bool gta_ast_node_integer_compile_to_binary(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
   GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) self;
   GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 25)) {
+  if (!gcu_vector8_reserve(v, v->count + 37)) {
     return false;
   }
 #if defined(GTA_X86_64)
   // 64-bit x86
+  // Set up for a function call.
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFFFFFFFFFF0
+  GTA_BINARY_WRITE1(v, 0x55);
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
+  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
+  // gta_computed_value_integer_create(integer->value, context):
   // context is in r15.
-  // Assembly to call gta_computed_value_integer_create(integer->value, context):
   //   mov rsi, r15
   //   mov rdi, integer->value
   GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFE);
@@ -87,6 +94,12 @@ bool gta_ast_node_integer_compile_to_binary(GTA_Ast_Node * self, GTA_MAYBE_UNUSE
   memcpy(&v->data[v->count - 8], &fp, 8);
   //   call rax
   GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+  // Tear down the function call.
+  //   mov rsp, rbp
+  //   pop rbp
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
+  GTA_BINARY_WRITE1(v, 0x5D);
+
   return true;
 #endif
   return false;

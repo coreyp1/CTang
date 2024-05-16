@@ -31,6 +31,9 @@ GTA_Computed_Value_VTable gta_computed_value_integer_vtable = {
   .call = gta_computed_value_call_not_implemented,
 };
 
+#include <execinfo.h>
+#include <stdlib.h>
+
 
 GTA_Computed_Value_Integer * GTA_CALL gta_computed_value_integer_create(GTA_Integer value, GTA_Execution_Context * context) {
   GTA_Computed_Value_Integer * self = gcu_malloc(sizeof(GTA_Computed_Value_Integer));

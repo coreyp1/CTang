@@ -415,7 +415,8 @@ $(OBJ_DIR)/ast/astNodeAssign.o: \
 	$(DEP_BINARYCOMPILERCONTEXT) \
 	$(DEP_BYTECODECOMPILERCONTEXT) \
 	$(DEP_ASTNODEINDEX) \
-	$(DEP_OPCODE)
+	$(DEP_OPCODE) \
+	$(DEP_PROGRAM_VARIABLE)
 
 $(OBJ_DIR)/ast/astNodeBinary.o: \
 	src/ast/astNodeBinary.c \

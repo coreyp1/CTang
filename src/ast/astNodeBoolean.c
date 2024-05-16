@@ -66,15 +66,23 @@ bool gta_ast_node_boolean_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
 bool gta_ast_node_boolean_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;
   GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 25)) {
+  if (!gcu_vector8_reserve(v, v->count + 37)) {
     return false;
   }
 #if defined(GTA_X86_64)
   // 64-bit x86
   // TODO: Replace with a branch-free version using cmov and the singleton
   //   objects directly (rather than calling a function).
-  // Assembly to call gta_computed_value_boolean_create(boolean->value, context):
+
+  // Set up for a function call.
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFFFFFFFFFF0
+  GTA_BINARY_WRITE1(v, 0x55);
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
+  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
   // context is in r15
+  // gta_computed_value_boolean_create(boolean->value, context):
   //   mov rdi, r15
   GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFF);
   //   mov rsi, boolean->value
@@ -87,6 +95,12 @@ bool gta_ast_node_boolean_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Comp
   memcpy(&v->data[v->count - 8], &fp, 8);
   //   call rax
   GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+  // Tear down the function call.
+  //   mov rsp, rbp
+  //   pop rbp
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
+  GTA_BINARY_WRITE1(v, 0x5D);
+
   return true;
 #endif
   return false;

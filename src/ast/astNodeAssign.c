@@ -8,6 +8,7 @@
 #include <tang/ast/astNodeIndex.h>
 #include <tang/ast/astNodePeriod.h>
 #include <tang/program/binaryCompilerContext.h>
+#include <tang/program/variable.h>
 
 GTA_Ast_Node_VTable gta_ast_node_assign_vtable = {
   .name = "Assign",
@@ -16,7 +17,7 @@ GTA_Ast_Node_VTable gta_ast_node_assign_vtable = {
   .destroy = gta_ast_node_assign_destroy,
   .print = gta_ast_node_assign_print,
   .simplify = gta_ast_node_assign_simplify,
-  .analyze = 0,
+  .analyze = gta_ast_node_assign_analyze,
   .walk = gta_ast_node_assign_walk,
 };
 
@@ -99,6 +100,17 @@ GTA_Ast_Node * gta_ast_node_assign_simplify(GTA_Ast_Node * self, GTA_Ast_Simplif
 }
 
 
+GTA_Ast_Node * gta_ast_node_assign_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
+  GTA_Ast_Node * result = 0;
+  result = gta_ast_node_analyze(assign->lhs, program, scope);
+  if (!result) {
+    result = gta_ast_node_analyze(assign->rhs, program, scope);
+  }
+  return result;
+}
+
+
 void gta_ast_node_assign_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
@@ -121,22 +133,25 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_C
   if (GTA_AST_IS_IDENTIFIER(assign->lhs)) {
     GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) assign->lhs;
 
-    // If the identifier is a global variable, then the stack index is absolute
-    // from the beginning of the stack.
-    GTA_HashX_Value position = GTA_HASHX_GET(context->globals, identifier->hash);
-    if (position.exists) {
+    if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
+      GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
+      if (!val.exists) {
+        printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
+        return false;
+      }
       return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ASSIGN_TO_BASE))
-        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_TYPEX_UI(position.value)));
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POKE_GLOBAL))
+        && GTA_VECTORX_APPEND(context->program->bytecode, val.value);
     }
-
-    // If the identifier is a local variable, then the stack index is relative
-    // to the base pointer.
-    position = GTA_HASHX_GET(GTA_TYPEX_P(context->scope_stack->data[context->scope_stack->count - 1]), identifier->hash);
-    if (position.exists) {
+    else if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
+      GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+      if (!val.exists) {
+        printf("Error: Identifier %s not found in local positions.\n", identifier->mangled_name);
+        return false;
+      }
       return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ASSIGN))
-        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_TYPEX_UI(position.value)));
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POKE_LOCAL))
+        && GTA_VECTORX_APPEND(context->program->bytecode, val.value);
     }
 
     return false;
@@ -147,125 +162,137 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_C
 
 
 static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Compiler_Context * context) {
+  // RHS is in RAX.
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) lhs;
-  bool is_global;
-  uint64_t index;
-  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
   bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
-
-  // If the identifier is a global variable, then the stack index is absolute
-  // from the beginning of the stack.
-  GTA_HashX_Value position = GTA_HASHX_GET(context->globals, identifier->hash);
-  if (position.exists) {
-    is_global = true;
-    index = GTA_TYPEX_UI(position.value);
-  }
-  else {
-    position = GTA_HASHX_GET(GTA_TYPEX_P(context->scope_stack->data[context->scope_stack->count - 1]), identifier->hash);
-    // If the identifier is a local variable, then the stack index is relative
-    // to the base pointer.
-    if (position.exists) {
-      is_global = false;
-      index = GTA_TYPEX_UI(position.value);
-    }
-    else {
-      return false;
-    }
-  }
-
+  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
   GCU_Vector8 * v = context->binary_vector;
 
-#if defined(GTA_X86_64)
-  // 64-bit x86
-  // Determine whether or not the computed value in RAX is a temporary value.
-  if (!gcu_vector8_reserve(v, v->count + 100)) {
+  // Overview:
+  // If the computed value is a singleton or temporary, then set the
+  // `is_temporary` value to 1 and store the value in the appropriate location.
+  // Otherwise, make a deep copy of the value and store the copy in the
+  // appropriate location.
+
+  if (!gcu_vector8_reserve(v, v->count + 41 + 27 + 17 + 8)) {
     return false;
   }
-  // If the value is a temporary value, then we can simply mark it as non-temporary
-  // and store it in the appropriate location.
-  // The computed value is in RAX.
-  //  mov r8, index                 ; The index of the value.
-  GTA_BINARY_WRITE2(v, 0x49, 0xB8);
-  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  memcpy(v->data + v->count - 8, &index, 8);
-  //  mov rdx, is_singleton_offset  ; Load the byte offset of is_singleton.
+
+  /////////////////////////////////////////////////////////////////////////////
+  // if (is_singleton || is_temporary) jump to done - 41 bytes
+  /////////////////////////////////////////////////////////////////////////////
+  //   mov rdx, is_singleton_offset  ; Load the byte offset of is_singleton.
   GTA_BINARY_WRITE2(v, 0x48, 0xBA);
   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
   memcpy(v->data + v->count - 8, &is_singleton_offset, 8);
-  //  lea rcx, [rax + rdx]          ; Load the is_singleton value.
-  GTA_BINARY_WRITE4(v, 0x48, 0x8D, 0x0C, 0x10);
-  //  cmp rcx, 1                    ; Compare the is_singleton value to 1.
-  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xF9, 0x01);
-  //  je done                       ; If singleton, then jump to done.
-  GTA_BINARY_WRITE2(v, 0x0F, 0x84);
-  GTA_BINARY_WRITE4(v, 0xDE, 0xAD, 0xBE, 0xEF);
-  GTA_Integer label_done = gta_binary_compiler_context_get_label(context);
-  if (label_done < 0) {
-    return false;
-  }
-  if (!gta_binary_compiler_context_add_label_jump(context, label_done, v->count - 4)) {
-    return false;
-  }
-
-  // not_singleton:
-  //  mov rdx, is_temporary_offset  ; Load the byte offset of is_temporary.
+  //   mov r8, [rax + rdx]           ; Load the is_singleton value.
+  GTA_BINARY_WRITE4(v, 0x4C, 0x8B, 0x04, 0x10);
+  //   mov rdx, is_temporary_offset  ; Load the byte offset of is_temporary.
   GTA_BINARY_WRITE2(v, 0x48, 0xBA);
   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
   memcpy(v->data + v->count - 8, &is_temporary_offset, 8);
-  //  lea rcx, [rax + rdx]          ; Load the is_temporary value.
-  GTA_BINARY_WRITE4(v, 0x48, 0x8D, 0x0C, 0x10);
-  //  cmp rcx, 1                    ; Compare the is_temporary value to 1.
-  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xF9, 0x01);
-  //  jne not_temporary             ; If permanent, then jump to not_temporary.
+  //   mov r9, [rax + rdx]           ; Load the is_temporary value.
+  GTA_BINARY_WRITE4(v, 0x4C, 0x8B, 0x0C, 0x10);
+  //   or r8, r9                     ; Combine the is_singleton and is_temporary values.
+  GTA_BINARY_WRITE3(v, 0x4D, 0x09, 0xC8);
+  //   jnz done                      ; If singleton, then jump to done.
   GTA_BINARY_WRITE2(v, 0x0F, 0x85);
   GTA_BINARY_WRITE4(v, 0xDE, 0xAD, 0xBE, 0xEF);
-  GTA_Integer label_not_temporary = gta_binary_compiler_context_get_label(context);
-  if (label_not_temporary < 0) {
-    return false;
-  }
-  if (!gta_binary_compiler_context_add_label_jump(context, label_not_temporary, v->count - 4)) {
-    return false;
-  }
-  //  mov rcx, 0                    ; The the value for non-temporary.
-  GTA_BINARY_WRITE3(v, 0x48, 0xC7, 0xC1);
-  GTA_BINARY_WRITE4(v, 0x00, 0x00, 0x00, 0x00);
-  //  mov [rax + rdx], rcx          ; Mark the value as non-temporary.
-  GTA_BINARY_WRITE4(v, 0x48, 0x89, 0x0C, 0x10);
-  //  jmp done                      ; Jump to done.
-  GTA_BINARY_WRITE1(v, 0xE9);
-  GTA_BINARY_WRITE4(v, 0xDE, 0xAD, 0xBE, 0xEF);
-  if (!gta_binary_compiler_context_add_label_jump(context, label_done, v->count - 4)) {
+  GTA_Integer label_done = gta_binary_compiler_context_get_label(context);
+  if (label_done < 0 || !gta_binary_compiler_context_add_label_jump(context, label_done, v->count - 4)) {
     return false;
   }
 
-  // not_temporary:                 ; The value is not temporary.
-  if (!gta_binary_compiler_context_set_label(context, label_not_temporary, v->count)) {
-    return false;
-  }
-  //  mov rdi, rax                  ; Move the value to RDI.
+  /////////////////////////////////////////////////////////////////////////////
+  // Call the deep copy function. - 16 bytes
+  /////////////////////////////////////////////////////////////////////////////
+  // Set up for a function call.
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFFFFFFFFFF0
+  GTA_BINARY_WRITE1(v, 0x55);
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
+  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
+  //   mov rdi, rax                  ; Move the value to RDI.
   GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xc7);
-  //  mov rax, gta_computed_value_deep_copy ; Make a deep copy of the value.
+  //   mov rax, gta_computed_value_deep_copy ; Make a deep copy of the value.
   GTA_BINARY_WRITE2(v, 0x48, 0xB8);
   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
   GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_deep_copy);
   memcpy(v->data + v->count - 8, &fp, 8);
-  //  call rax
+  //   call rax
   GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+  // Tear down the function call.
+  //   mov rsp, rbp
+  //   pop rbp
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
+  GTA_BINARY_WRITE1(v, 0x5D);
 
-  // done:                          ; Done.
+  /////////////////////////////////////////////////////////////////////////////
+  // done: - 16 bytes
+  //   is_temporary = 0
+  /////////////////////////////////////////////////////////////////////////////
+  //   done:                         ; Done.
   if (!gta_binary_compiler_context_set_label(context, label_done, v->count)) {
     return false;
   }
-  // RCX and RDX are not needed, they can be used for other purposes.
-  //   mov rcx, (is_global ? r13 : r12)
-  GTA_BINARY_WRITE3(v, 0x4C, 0x89, is_global ? 0xE9 : 0xE1);
-  // sub rcx, r8
-  GTA_BINARY_WRITE3(v, 0x4C, 0x29, 0xC1);
-  // mov [rcx], rax        ; Store the value in the appropriate location.
-  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0x01);
+  //   mov rdx, is_temporary_offset  ; Load the byte offset of is_temporary.
+  GTA_BINARY_WRITE2(v, 0x48, 0xBA);
+  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  memcpy(v->data + v->count - 8, &is_temporary_offset, 8);
+  //   xor rcx, rcx                  ; The the value for non-temporary.
+  GTA_BINARY_WRITE3(v, 0x48, 0x31, 0xC9);
+  //   mov [rax + rdx], al          ; Mark the value as non-temporary.
+  GTA_BINARY_WRITE3(v, 0x88, 0x04, 0x10);
 
-  return true;
-#endif
+  /////////////////////////////////////////////////////////////////////////////
+  // Store the value in the appropriate location. - 8 bytes max
+  /////////////////////////////////////////////////////////////////////////////
+  // RAX contains the final value of the RHS.
+  if ((identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY)
+    || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL)) {
+    // Find the identifier's position in the global positions.
+    GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
+    if (!val.exists) {
+      printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
+      return false;
+    }
+
+    // Reminder: r13 is the global pointer, but it points to the end of the
+    // global variables.  We need to move the pointer back to the beginning of
+    // the memory address for whichever variable we're trying to access.
+    int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
+
+    // Copy the value from the global position (GTA_TYPEX_UI(val.value)) to RAX.
+    //   mov [r13 + index], rax
+    GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0x85);
+    GTA_BINARY_WRITE4(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF);
+    memcpy(&context->binary_vector->data[context->binary_vector->count - 4], &index, 4);
+
+    return true;
+  }
+
+  if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
+    // Find the identifier's position in the local positions.
+    GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+    if (!val.exists) {
+      printf("Error: Identifier %s not found in local positions.\n", identifier->mangled_name);
+      return false;
+    }
+
+    // Reminder: r12 is the local pointer, but it points to the end of the
+    // local variables.  We need to move the pointer back to the beginning of
+    // the memory address for whichever variable we're trying to access.
+    int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
+
+    // Copy the value from the local position (GTA_TYPEX_UI(val.value)) to RAX.
+    //   mov [r12 + index], rax
+    GTA_BINARY_WRITE4(context->binary_vector, 0x49, 0x89, 0x84, 0x24);
+    GTA_BINARY_WRITE4(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF);
+    memcpy(&context->binary_vector->data[context->binary_vector->count - 4], &index, 4);
+
+    return true;
+  }
   return false;
 }
 

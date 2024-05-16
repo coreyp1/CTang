@@ -169,7 +169,7 @@ bool gta_ast_node_use_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler
   GTA_BINARY_WRITE1(v, 0x55);
   GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
   GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
-  // Assembly to call __load_library(boolean->value, use->hash):
+  // __load_library(boolean->value, use->hash):
   // context is in r15
   //   mov rdi, r15
   GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFF);

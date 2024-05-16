@@ -71,22 +71,29 @@ bool gta_ast_node_float_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 bool gta_ast_node_float_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;
   GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 30)) {
+  if (!gcu_vector8_reserve(v, v->count + 42)) {
     return false;
   }
 #if defined(GTA_X86_64)
   // 64-bit x86
-  // Assembly to call gta_computed_value_float_create(float_node->value, context):
+  // Set up for a function call.
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFFFFFFFFFF0
+  GTA_BINARY_WRITE1(v, 0x55);
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
+  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
   // context is in r15.
+  // gta_computed_value_float_create(float_node->value, context):
   //   mov rdi, r15
   //   mov rax, float_node->value
   GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFF);
   GTA_BINARY_WRITE2(v, 0x48, 0xB8);
   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+  memcpy(&v->data[v->count - 8], &float_node->value, 8);
 
   //   mov xmm0, rax
   GTA_BINARY_WRITE5(v, 0x66, 0x48, 0x0F, 0x6E, 0xC0);
-  memcpy(&v->data[v->count - 13], &float_node->value, 8);
 
   //   mov rax, gta_computed_value_float_create
   GTA_BINARY_WRITE2(v, 0x48, 0xB8);
@@ -96,6 +103,12 @@ bool gta_ast_node_float_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compil
 
   //   call rax
   GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+  // Tear down the function call.
+  //   mov rsp, rbp
+  //   pop rbp
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
+  GTA_BINARY_WRITE1(v, 0x5D);
+
   return true;
 #endif
   return false;

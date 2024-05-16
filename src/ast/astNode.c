@@ -87,7 +87,7 @@ void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback,
 
 bool gta_ast_node_null_compile_to_binary(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
   GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 12)) {
+  if (!gcu_vector8_reserve(v, v->count + 34)) {
     return false;
   }
 #if GTA_X86_64
@@ -95,6 +95,13 @@ bool gta_ast_node_null_compile_to_binary(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), 
   // TODO: Replace with:
   //   mov rax, gta_computed_value_null
 
+  // Set up for a function call.
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFFFFFFFFFF0
+  GTA_BINARY_WRITE1(v, 0x55);
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
+  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
   // Assembly to call gta_computed_value_create(0):
   //   mov rax, gta_computed_value_create
   //   mov rdi, 0
@@ -107,6 +114,11 @@ bool gta_ast_node_null_compile_to_binary(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), 
 
   GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_create);
   memcpy(&v->data[v->count - 20], &fp, 8);
+  // Tear down the function call.
+  //   mov rsp, rbp
+  //   pop rbp
+  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
+  GTA_BINARY_WRITE1(v, 0x5D);
   return true;
 #endif
   return false;

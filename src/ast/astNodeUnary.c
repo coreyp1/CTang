@@ -126,6 +126,13 @@ bool gta_ast_node_unary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 //   }
 // #if defined(GTA_X86_64)
 //   // 64-bit x86
+  // // Set up for a function call.
+  // //   push rbp
+  // //   mov rbp, rsp
+  // //   and rsp, 0xFFFFFFFFFFFFFFF0
+  // GTA_BINARY_WRITE1(v, 0x55);
+  // GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
+  // GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
 //   // Assembly to call gta_computed_value_float_create(float_node->value, context):
 //   // context is in r15.
 //   //   mov rdi, r15
@@ -146,6 +153,11 @@ bool gta_ast_node_unary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 
 //   //   call rax
 //   GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+  // // Tear down the function call.
+  // //   mov rsp, rbp
+  // //   pop rbp
+  // GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
+  // GTA_BINARY_WRITE1(v, 0x5D);
 //   return true;
 // #endif
 //   return false;

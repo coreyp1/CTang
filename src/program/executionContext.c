@@ -25,7 +25,6 @@ bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_
     .output = 0,
     .result = 0,
     .stack = 0,
-    .bp_stack = 0,
     .pc_stack = 0,
     .garbage_collection = 0,
     .globals = 0,
@@ -66,9 +65,6 @@ void gta_execution_context_destroy(GTA_Execution_Context * self) {
 
 void gta_execution_context_destroy_in_place(GTA_Execution_Context * self) {
   GTA_VECTORX_DESTROY(self->stack);
-  if (self->bp_stack) {
-    GTA_VECTORX_DESTROY(self->bp_stack);
-  }
   if (self->pc_stack) {
     GTA_VECTORX_DESTROY(self->pc_stack);
   }

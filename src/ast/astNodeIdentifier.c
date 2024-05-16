@@ -228,7 +228,8 @@ bool gta_ast_node_identifier_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_C
 
     return true;
   }
-  else if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
+
+  if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
     // Find the identifier's position in the local positions.
     GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
     if (!val.exists) {

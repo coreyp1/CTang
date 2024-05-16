@@ -249,60 +249,87 @@ TEST(Identifier, Library) {
     ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 42);
     TEST_PROGRAM_TEARDOWN();
   }
-  // {
-  //   // `a` is declared global, so should have the default value.  There are
-  //   // multiple statements.
-  //   TEST_PROGRAM_SETUP_NO_RUN("global a; a;");
-  //   gta_program_bytecode_print(context->program);
-  //   ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-  //   ASSERT_TRUE(gta_program_execute(context));
-  //   ASSERT_TRUE(context->result);
-  //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
-  //   ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -3);
-  //   TEST_PROGRAM_TEARDOWN();
-  // }
-  // {
-  //   // `a` is declared global, but is assigned a value which is different from
-  //   // the default value.
-  //   TEST_PROGRAM_SETUP_NO_RUN("global a = 42");
-  //   gta_program_bytecode_print(context->program);
-  //   ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-  //   ASSERT_TRUE(gta_program_execute(context));
-  //   ASSERT_TRUE(context->result);
-  //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
-  //   ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -3);
-  //   TEST_PROGRAM_TEARDOWN();
-  // }
-  // {
-  //   // `a` is declared global, but is assigned a value which is different from
-  //   // the default value.  There are multiple statements.
-  //   TEST_PROGRAM_SETUP_NO_RUN("global a = 42; a;");
-  //   gta_program_bytecode_print(context->program);
-  //   ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-  //   ASSERT_TRUE(gta_program_execute(context));
-  //   ASSERT_TRUE(context->result);
-  //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
-  //   ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -3);
-  //   TEST_PROGRAM_TEARDOWN();
-  // }
 }
 
-// TEST(Assignment, TemporaryLiteral) {
-//   {
-//     // Assign a value to a variable.
-//     TEST_PROGRAM_SETUP("a = 3");
-//     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
-//     ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
-//     TEST_PROGRAM_TEARDOWN();
-//   }
-//   {
-//     // Assign a value to a variable.
-//     TEST_PROGRAM_SETUP("a = 3; false;");
-//     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
-//     ASSERT_EQ(((GTA_Computed_Value_Boolean *)context->result)->value, false);
-//     TEST_PROGRAM_TEARDOWN();
-//   }
-// }
+TEST(Assignment, ToIdentifier) {
+  {
+    // Assign a value to a local variable.
+    TEST_PROGRAM_SETUP("a = 3");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Assign two local variables, return first.
+    TEST_PROGRAM_SETUP("a = 3; b = 4; a;");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Assign two local variables, return second.
+    TEST_PROGRAM_SETUP("a = 3; b = 4; b;");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 4);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Assign a value to a library.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; a = 42; a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 42);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Load two libraries.  Overwrite the first, return the first.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a = 10; a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 10);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Load two libraries.  Overwrite the second, return the first.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; b = 10; a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Load two libraries.  Overwrite the second, return the second.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; b = 10; b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 10);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Load a library, then assign a value to a local variable, then load
+    // another library.  Return the local variable.
+    // Verifying that the local variable is not overwritten by the library.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; b = 10; use c; b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "c", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 10);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
 
 
 int main(int argc, char **argv) {
