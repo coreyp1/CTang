@@ -200,26 +200,57 @@ void gta_ast_node_identifier_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callbac
   callback(self, data, return_value);
 }
 
+
 bool gta_ast_node_identifier_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
   if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
+    // Find the identifier's position in the global positions.
     GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
     if (!val.exists) {
       printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
       return false;
     }
-    GTA_UInteger index = GTA_TYPEX_UI(val.value);
-    index *= -16;
+
+    // Reminder: r13 is the global pointer, but it points to the end of the
+    // global variables.  We need to move the pointer back to the beginning of
+    // the memory address for whichever variable we're trying to access.
+    int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
+
     if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 15)) {
       return false;
     }
+
     // Copy the value from the global position (GTA_TYPEX_UI(val.value)) to RAX.
-    //   mov rdx, 0xDEADBEEFDEADBEEF
-    GTA_BINARY_WRITE2(context->binary_vector, 0x48, 0xBA);
-    GTA_BINARY_WRITE8(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-    memcpy(&context->binary_vector->data[context->binary_vector->count - sizeof(index)], &index, sizeof(index));
-    //   mov rax, [r13 + rdx]
-    GTA_BINARY_WRITE5(context->binary_vector, 0x49, 0x88, 0x44, 0x15, 0x00);
+    //   mov rax, [r13 + index]
+    GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x8B, 0x85);
+    GTA_BINARY_WRITE4(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF);
+    memcpy(&context->binary_vector->data[context->binary_vector->count - 4], &index, 4);
+
+    return true;
+  }
+  else if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
+    // Find the identifier's position in the local positions.
+    GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+    if (!val.exists) {
+      printf("Error: Identifier %s not found in local positions.\n", identifier->mangled_name);
+      return false;
+    }
+
+    // Reminder: r12 is the local pointer, but it points to the end of the
+    // local variables.  We need to move the pointer back to the beginning of
+    // the memory address for whichever variable we're trying to access.
+    int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
+
+    if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 14)) {
+      return false;
+    }
+
+    // Copy the value from the local position (GTA_TYPEX_UI(val.value)) to RAX.
+    //   mov rax, [r12 + index]
+    GTA_BINARY_WRITE4(context->binary_vector, 0x49, 0x8B, 0x84, 0x24);
+    GTA_BINARY_WRITE4(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF);
+    memcpy(&context->binary_vector->data[context->binary_vector->count - 4], &index, 4);
+
     return true;
   }
   return false;

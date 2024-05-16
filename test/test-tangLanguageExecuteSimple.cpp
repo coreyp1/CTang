@@ -196,24 +196,25 @@ TEST(Identifier, Local) {
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
     TEST_PROGRAM_TEARDOWN();
   }
+  {
+    // `a` and `b` are not declared global.
+    TEST_PROGRAM_SETUP_NO_RUN("a; b;");
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    TEST_PROGRAM_TEARDOWN();
+  }
 }
 
 GTA_Computed_Value * GTA_CALL make_int_3(GTA_Execution_Context * context) {
   return (GTA_Computed_Value *)gta_computed_value_integer_create(3, context);
 }
 
+GTA_Computed_Value * GTA_CALL make_int_42(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(42, context);
+}
+
 TEST(Identifier, Library) {
-  // {
-  //   // `a` is not declared global, so should not have a value.
-  //   TEST_PROGRAM_SETUP_NO_RUN("a");
-  //   gta_program_bytecode_print(context->program);
-  //   ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-  //   ASSERT_TRUE(gta_program_execute(context));
-  //   ASSERT_TRUE(context->result);
-  //   ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
-  //   ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -3);
-  //   TEST_PROGRAM_TEARDOWN();
-  // }
   {
     // `a` is declared global, so should have the default value.
     TEST_PROGRAM_SETUP_NO_RUN("use a; a;");
@@ -222,6 +223,30 @@ TEST(Identifier, Library) {
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
     ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // `a` and `b` are libraries.
+    // Confirm that `a` can be loaded.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // `a` and `b` are libraries.
+    // Confirm that `b` can be loaded.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 42);
     TEST_PROGRAM_TEARDOWN();
   }
   // {

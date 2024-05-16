@@ -298,7 +298,7 @@ static void gta_program_compile_binary(GTA_Program * program) {
   //   mov rdx, 0xDEADBEEFDEADBEEF
   GTA_BINARY_WRITE2(context->binary_vector, 0x48, 0xBA);
   GTA_BINARY_WRITE8(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  memcpy(&context->binary_vector->data[context->binary_vector->count - sizeof(gta_computed_value_null)], &gta_computed_value_null, sizeof(gta_computed_value_null));
+  memcpy(&context->binary_vector->data[context->binary_vector->count - 8], &gta_computed_value_null, 8);
 
   // Initialize all locals to null.
   for (size_t i = 0; i < local_orders_count; ++i) {
@@ -310,9 +310,9 @@ static void gta_program_compile_binary(GTA_Program * program) {
   //   push rbp
   //   mov rbp, rsp
   //   and rsp, 0xFFFFFFFFFFFFFFF0
-  GTA_BINARY_WRITE1(context->binary_vector, 0x55);
-  GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xE5);
-  GTA_BINARY_WRITE4(context->binary_vector, 0x48, 0x83, 0xE4, 0xF0);
+  // GTA_BINARY_WRITE1(context->binary_vector, 0x55);
+  // GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xE5);
+  // GTA_BINARY_WRITE4(context->binary_vector, 0x48, 0x83, 0xE4, 0xF0);
 
 
 #elif defined(GTA_X86)
@@ -346,8 +346,8 @@ static void gta_program_compile_binary(GTA_Program * program) {
   // Restore to the potentially-unaligned state.
   //   mov rsp, rbp
   //   pop rbp
-  GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xEC);
-  GTA_BINARY_WRITE1(context->binary_vector, 0x5D);
+  // GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xEC);
+  // GTA_BINARY_WRITE1(context->binary_vector, 0x5D);
 
   // Restore the stack pointer to before we added the global and local
   // variables.  This is faster than popping the locals and globals off the
@@ -576,6 +576,7 @@ void gta_program_destroy_in_place(GTA_Program * self) {
   gta_variable_scope_destroy(self->scope);
 }
 
+
 bool gta_program_execute(GTA_Execution_Context * context) {
   if (context->program->binary) {
     return gta_program_execute_binary(context);
@@ -586,14 +587,17 @@ bool gta_program_execute(GTA_Execution_Context * context) {
   return false;
 }
 
+
 bool gta_program_execute_bytecode(GTA_Execution_Context * context) {
   return gta_virtual_machine_execute_bytecode(context);
 }
+
 
 typedef union Function_Converter {
   GTA_Computed_Value * GTA_CALL (*f)(GTA_Execution_Context *);
   void * b;
 } Function_Converter;
+
 
 bool gta_program_execute_binary(GTA_Execution_Context * context) {
   if (context->program->binary) {
@@ -602,6 +606,7 @@ bool gta_program_execute_binary(GTA_Execution_Context * context) {
   }
   return false;
 }
+
 
 void gta_program_bytecode_print(GTA_Program * self) {
   gta_bytecode_print(self->bytecode);
@@ -614,6 +619,7 @@ typedef struct {
   GTA_VectorX * scope_stack;
   GTA_HashX * globals;
 } GTA_Program_Collect_Identifiers_Data;
+
 
 /**
  * Helper function for collecting identifiers.
@@ -675,6 +681,7 @@ bool gta_program_create_scope(GTA_VectorX * scope_stack, GTA_HashX * globals, GT
   gta_ast_node_walk(ast, __gta_program_collect_identifiers, &data, &success);
   return success;
 }
+
 
 void gta_program_destroy_scope(GTA_VectorX * scope_stack) {
   if (scope_stack->count) {
