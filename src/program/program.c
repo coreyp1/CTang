@@ -468,8 +468,15 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     && gta_leave__x86_64(context->binary_vector)
     && gta_ret__x86_64(context->binary_vector);
 
-  // Lastly, correct the JUMP instructions to point to the correct location in
-  // the binary.
+  // The compilation is finished (aside from writing the jump targets).  If
+  // there were any errors, then the binary is not valid.
+  if (!no_errors) {
+    goto CONTEXT_CLEANUP;
+  }
+
+  // Correct the JUMP instructions to point to the correct location in the
+  // binary.  The jump targets are relative to the instruction after the jump.
+  // It is 4 bytes long.
   if (context->labels->count != context->labels_from->count) {
     goto CONTEXT_CLEANUP;
   }
@@ -487,7 +494,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     }
   }
 
-  // Copy the binary to executable memory.
+  // Lastly, copy the binary into executable memory.
   size_t length = gcu_vector8_count(context->binary_vector);
 #ifdef _WIN32
   program->binary = VirtualAlloc(0, length, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
