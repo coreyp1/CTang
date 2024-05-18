@@ -216,26 +216,7 @@ bool gta_program_execute_binary(GTA_Execution_Context * context);
  */
 void gta_program_bytecode_print(GTA_Program * program);
 
-/**
- * Create a new scope on the scope stack.
- *
- * The scope stack is a vector of hash tables.  Each hash table maps the name
- * of an identifier to the index of the identifier in the stack, with 0 being
- * the first entry in the stack.
- *
- * @param scope_stack The scope stack on which to create the new scope.
- * @param globals Any global variables.
- * @param ast The AST node to be scanned for identifiers.
- * @return True if the scope was created successfully, false otherwise.
- */
-bool gta_program_create_scope(GTA_VectorX * scope_stack, GTA_HashX * globals, GTA_Ast_Node * ast);
-
-/**
- * Destroy the top scope on the scope stack.
- *
- * @param scope_stack The scope stack on which to destroy the top scope.
- */
-void gta_program_destroy_scope(GTA_VectorX * scope_stack);
+void gta_program_compile_binary__x86_64(GTA_Program * program);
 
 #ifdef __cplusplus
 }

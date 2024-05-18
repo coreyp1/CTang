@@ -14,7 +14,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif //__cplusplus
+#endif // __cplusplus
 
 #include <stdint.h>
 #include <cutil/float.h>
@@ -366,8 +366,14 @@ typedef union GTA_JIT_Function_Converter {
 #define GTA_JIT_FUNCTION_CONVERTER(F) \
   ((GTA_JIT_Function_Converter){.f = (void (*)(void))(F)}.i)
 
+
+#ifdef GTA_X86_64
+#define gta_program_compile_binary gta_program_compile_binary__x86_64
+#endif // GTA_X86_64
+
+
 #ifdef __cplusplus
 }
 #endif //__cplusplus
 
-#endif //GTA_MACROS_H
+#endif // GTA_MACROS_H
