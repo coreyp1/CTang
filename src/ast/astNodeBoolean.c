@@ -4,6 +4,7 @@
 #include <cutil/memory.h>
 #include <tang/ast/astNodeBoolean.h>
 #include <tang/computedValue/computedValueBoolean.h>
+#include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_boolean_vtable = {
   .name = "Boolean",
@@ -66,42 +67,31 @@ bool gta_ast_node_boolean_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
 bool gta_ast_node_boolean_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;
   GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 37)) {
-    return false;
-  }
-#if defined(GTA_X86_64)
-  // 64-bit x86
+
   // TODO: Replace with a branch-free version using cmov and the singleton
   //   objects directly (rather than calling a function).
 
-  // Set up for a function call.
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFFFFFFFFFF0
-  GTA_BINARY_WRITE1(v, 0x55);
-  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
-  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
-  // context is in r15
-  // gta_computed_value_boolean_create(boolean->value, context):
-  //   mov rdi, r15
-  GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFF);
-  //   mov rsi, boolean->value
-  GTA_BINARY_WRITE2(v, 0x48, 0xBF);
-  GTA_BINARY_WRITE8(v, boolean->value ? 0x01 : 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
-  //   mov rax, gta_computed_value_boolean_create
-  GTA_BINARY_WRITE2(v, 0x48, 0xB8);
-  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_boolean_create);
-  memcpy(&v->data[v->count - 8], &fp, 8);
-  //   call rax
-  GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
-  // Tear down the function call.
-  //   mov rsp, rbp
-  //   pop rbp
-  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
-  GTA_BINARY_WRITE1(v, 0x5D);
-
-  return true;
-#endif
-  return false;
+  return true
+    // Set up for a function call.
+    //   push rbp
+    //   mov rbp, rsp
+    //   and rsp, 0xFFFFFFFFFFFFFFF0
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, (int32_t)0xFFFFFFF0)
+    // context is in r15
+    // gta_computed_value_boolean_create(boolean->value, context):
+    //   mov rsi, r15
+    //   mov rdi, boolean->value
+    //   mov rax, gta_computed_value_boolean_create
+    //   call rax
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, boolean->value ? 1 : 0)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (GTA_UInteger)gta_computed_value_boolean_create)
+    && gta_call_reg__x86_64(v, GTA_REG_RAX)
+    // Tear down the function call.
+    //   mov rsp, rbp
+    //   pop rbp
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(v, GTA_REG_RBP);
 }
