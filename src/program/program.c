@@ -27,7 +27,7 @@
 
 static void gta_program_compile_bytecode(GTA_Program * program) {
   GTA_VectorX * bytecode = GTA_VECTORX_CREATE(0);
-  bool no_errors = true;
+  bool error_free = true;
   if (bytecode) {
     GTA_Bytecode_Compiler_Context context;
     if (!gta_bytecode_compiler_context_create_in_place(&context, program)) {
@@ -114,9 +114,9 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
       gta_bytecode_compiler_context_destroy_in_place(&context);
     }
     if (program->bytecode) {
-      no_errors &= GTA_VECTORX_APPEND(program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_RETURN));
+      error_free &= GTA_VECTORX_APPEND(program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_RETURN));
       // If there was a memory error, then the bytecode is not valid.
-      if (!no_errors) {
+      if (!error_free) {
         GTA_VECTORX_DESTROY(program->bytecode);
         program->bytecode = 0;
       }
@@ -345,9 +345,9 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   GCU_Vector8 * v = context->binary_vector;
   size_t global_orders_count = GTA_HASHX_COUNT(program->scope->global_positions);
   size_t local_orders_count = GTA_HASHX_COUNT(program->scope->local_positions);
-  bool no_errors = true;
+  bool error_free = true;
 
-  no_errors
+  error_free
   // Set up the beginning of the function:
   //   push rbp
   //   mov rbp, rsp
@@ -400,7 +400,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
       // Find the library AST and compile it.
       GTA_HashX_Value use_node = GTA_HASHX_GET(program->scope->library_declarations, identifier->mangled_name_hash);
-      no_errors
+      error_free
         &= use_node.exists
         && GTA_AST_IS_USE(use_node.value.p)
         // Compile the expression.  The result will be in RAX.
@@ -414,7 +414,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
       // Put the memory location of the null value into rdx.
       //   mov rdx, gta_computed_value_null
       //   push rdx
-      no_errors
+      error_free
         &= gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (uint64_t)gta_computed_value_null)
         && gta_push_reg__x86_64(v, GTA_REG_RDX);
     }
@@ -425,7 +425,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
 
   // Store the frame (local variable) stack pointer into R12.
   //   mov r12, rsp
-  no_errors
+  error_free
     &= gta_mov_reg_reg__x86_64(context->binary_vector, GTA_REG_R12, GTA_REG_RSP)
 
   // Put the memory location of the null value into rdx.
@@ -437,11 +437,11 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   // Initialize all locals to null.
   for (size_t i = 0; i < local_orders_count; ++i) {
     //  push rdx
-    no_errors &= gta_push_reg__x86_64(v, GTA_REG_RDX);
+    error_free &= gta_push_reg__x86_64(v, GTA_REG_RDX);
   }
 
   // Actually compile the AST to binary.
-  no_errors
+  error_free
     &= gta_ast_node_compile_to_binary(program->ast, context)
 
   // Restore the stack pointer to before we added the global and local
@@ -468,7 +468,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
 
   // The compilation is finished (aside from writing the jump targets).  If
   // there were any errors, then the binary is not valid.
-  if (!no_errors) {
+  if (!error_free) {
     goto CONTEXT_CLEANUP;
   }
 
