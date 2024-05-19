@@ -365,15 +365,13 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     && gta_push_reg__x86_64(v, GTA_REG_R12)
 
   //   mov r15, rdi          ; Store context in r15.
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_R15, GTA_REG_RDI);
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_R15, GTA_REG_RDI)
 
   //   lea r14, [r15 + offsetof(GTA_Binary_Execution_Context, result)]
-  GTA_BINARY_WRITE3(context->binary_vector, 0x4D, 0x8D, 0x77);
-  GTA_BINARY_WRITE1(context->binary_vector, (uint8_t)(size_t)(&((GTA_Execution_Context *)0)->result));
+    && gta_lea_reg_mem__x86_64(v, GTA_REG_R14, GTA_REG_R15, (int32_t)(size_t)(&((GTA_Execution_Context *)0)->result))
 
   //   mov r13, rsp          ; Store the global stack pointer in r13.
-  no_errors
-    &= gta_mov_reg_reg__x86_64(v, GTA_REG_R13, GTA_REG_RSP);
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_R13, GTA_REG_RSP);
 
   /////////////////////////////////////////////////////////////////////////////
   // Push the globals onto the stack in the correct order.
@@ -536,4 +534,3 @@ GLOBALS_ORDER_CLEANUP:
 CONTEXT_CLEANUP:
   gta_binary_compiler_context_destroy(context);
 }
-

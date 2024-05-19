@@ -35,6 +35,70 @@ uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg) {
 }
 
 
+bool gta_lea_reg_mem__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, int32_t offset) {
+  // https://www.felixcloutier.com/x86/lea
+  if (!gta_binary_optimistic_increase(vector, 8)) {
+    return false;
+  }
+  uint8_t dst_code = gta_binary_get_register_code__x86_64(dst);
+  uint8_t base_code = gta_binary_get_register_code__x86_64(base);
+  // These are not valid for LEA.
+  if (REG_IS_8BIT(dst) || REG_IS_8BIT(base) || REG_IS_16BIT(base)) {
+    return false;
+  }
+  // Prefixes.
+  if (REG_IS_32BIT(base)) {
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x67);
+  }
+  if (REG_IS_16BIT(dst)) {
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+  }
+  if (REG_IS_64BIT(dst) || REG_IS_64BIT(base)) {
+    // REX prefix.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((dst_code & 0x08) >> 1) | ((base_code & 0x08) >> 3));
+  }
+  // LEA opcode.
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x8D);
+  // ModR/M byte.
+  uint8_t modrm = ((dst_code & 0x7) << 3) + (base_code & 0x7);
+  bool sib = false;
+  // Determine the mode for the modrm byte.
+  if (offset == 0) {
+    if (base == GTA_REG_RBP || base == GTA_REG_ESP || base == GTA_REG_SP || base == GTA_REG_R12) {
+      // See https://wiki.osdev.org/X86-64_Instruction_Encoding
+      sib = true;
+    }
+  }
+  if (offset > 0xFFFF || offset < -0xFFFF || dst == GTA_REG_RBP || dst == GTA_REG_ESP) {
+    // 32-bit displacement.
+    modrm |= 0x80;
+    vector->data[vector->count++] = GCU_TYPE8_UI8(modrm);
+    if (sib) {
+      // SIB byte.
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x20 | (base_code & 0x07));
+    }
+    memcpy(&vector->data[vector->count], &offset, 4);
+    vector->count += 4;
+  }
+  else if (offset || sib || dst == GTA_REG_R13) {
+    // 8-bit displacement.
+    modrm |= 0x40;
+    vector->data[vector->count++] = GCU_TYPE8_UI8(modrm);
+    if (sib) {
+      // SIB byte.
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x20 | (base_code & 0x07));
+    }
+    vector->data[vector->count++] = GCU_TYPE8_UI8(offset);
+  }
+  else {
+    // No displacement.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(modrm);
+  }
+
+  return true;
+}
+
+
 bool gta_leave__x86_64(GCU_Vector8 * vector) {
   // https://www.felixcloutier.com/x86/leave
   if (!gta_binary_optimistic_increase(vector, 1)) {
