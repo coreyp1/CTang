@@ -5,6 +5,7 @@
 #include <cutil/type.h>
 #include <tang/ast/astNode.h>
 #include <tang/computedValue/computedValue.h>
+#include <tang/program/binary.h>
 #include <tang/program/bytecode.h>
 #include <tang/program/bytecodeCompilerContext.h>
 #include <tang/program/program.h>
@@ -87,41 +88,29 @@ void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback,
 
 bool gta_ast_node_null_compile_to_binary(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
   GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 34)) {
-    return false;
-  }
-#if GTA_X86_64
-  // 64-bit x86
+
   // TODO: Replace with:
   //   mov rax, gta_computed_value_null
-
-  // Set up for a function call.
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFFFFFFFFFF0
-  GTA_BINARY_WRITE1(v, 0x55);
-  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
-  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
-  // Assembly to call gta_computed_value_create(0):
-  //   mov rax, gta_computed_value_create
-  //   mov rdi, 0
-  GTA_BINARY_WRITE2(v, 0x48, 0xB8);
-  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  GTA_BINARY_WRITE2(v, 0x48, 0xBF);
-  GTA_BINARY_WRITE8(v, 0, 0, 0, 0, 0, 0, 0, 0);
-  //   call rax
-  GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
-
-  GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_create);
-  memcpy(&v->data[v->count - 20], &fp, 8);
-  // Tear down the function call.
-  //   mov rsp, rbp
-  //   pop rbp
-  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
-  GTA_BINARY_WRITE1(v, 0x5D);
-  return true;
-#endif
-  return false;
+  return true
+    // Set up for a function call.
+    //   push rbp
+    //   mov rbp, rsp
+    //   and rsp, 0xFFFFFFFFFFFFFFF0
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, (int32_t)0xFFFFFFF0)
+    // Assembly to call gta_computed_value_create(0):
+    //   mov rax, gta_computed_value_create
+    //   mov rdi, 0
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_create))
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, 0)
+    //   call rax
+    && gta_call_reg__x86_64(v, GTA_REG_RAX)
+    // Tear down the function call.
+    //   mov rsp, rbp
+    //   pop rbp
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(v, GTA_REG_RBP);
 }
 
 

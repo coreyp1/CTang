@@ -35,6 +35,127 @@ uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg) {
 }
 
 
+bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t src) {
+  // https://www.felixcloutier.com/x86/and
+  if (!gta_binary_optimistic_increase(vector, 7)) {
+    return false;
+  }
+  uint8_t dst_code = gta_binary_get_register_code__x86_64(dst);
+  if (dst == GTA_REG_AL && src <= 0x7F && src >= -0x80) {
+    // AL is a special case.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x24);
+    vector->data[vector->count++] = GCU_TYPE8_UI8((uint8_t)src);
+    return true;
+  }
+  if (dst == GTA_REG_AX && src <= 0x7FFF && src >= -0x8000) {
+    // AX is a special case.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x25);
+    uint16_t downsized_src = (uint16_t)src;
+    memcpy(&vector->data[vector->count], &downsized_src, 2);
+    vector->count += 2;
+    return true;
+  }
+  if (dst == GTA_REG_EAX) {
+    // EAX is a special case.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x25);
+    uint32_t downsized_src = (uint32_t)src;
+    memcpy(&vector->data[vector->count], &downsized_src, 4);
+    vector->count += 4;
+    return true;
+  }
+  if (dst == GTA_REG_RAX) {
+    // RAX is a special case.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x25);
+    memcpy(&vector->data[vector->count], &src, 4);
+    vector->count += 4;
+    return true;
+  }
+  if (src <= 0x7F && src >= -0x80) {
+    // 8-bit immediate.
+    if (REG_IS_8BIT(dst)) {
+      if (dst == GTA_REG_AH || dst == GTA_REG_BH || dst == GTA_REG_CH || dst == GTA_REG_DH) {
+        // AH, BH, CH, DH are not valid for AND in 64-bit mode.
+        return false;
+      }
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x80);
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0xE0 + (dst_code & 0x07));
+      vector->data[vector->count++] = GCU_TYPE8_UI8((uint8_t)src);
+      return true;
+    }
+    if (REG_IS_16BIT(dst)) {
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x83);
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0xE0 + (dst_code & 0x07));
+      vector->data[vector->count++] = GCU_TYPE8_UI8((uint8_t)src);
+      return true;
+    }
+    if (REG_IS_32BIT(dst)) {
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x83);
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0xE0 + (dst_code & 0x07));
+      vector->data[vector->count++] = GCU_TYPE8_UI8((uint8_t)src);
+      return true;
+    }
+    // 64-bit register.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((dst_code & 0x08) >> 3));
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x83);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xE0 + (dst_code & 0x07));
+    vector->data[vector->count++] = GCU_TYPE8_UI8((uint8_t)src);
+    return true;
+  }
+  if (REG_IS_16BIT(dst) && src <= 0x7FFF && src >= -0x8000) {
+    // 16-bit register, 16-bit immediate.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x81);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xE0 + (dst_code & 0x07));
+    uint16_t downsized_src = (uint16_t)src;
+    memcpy(&vector->data[vector->count], &downsized_src, 2);
+    vector->count += 2;
+    return true;
+  }
+  if (REG_IS_8BIT(dst) || REG_IS_16BIT(dst)){
+    // No valid encodings left for 8-bit or 16-bit registers.
+    return false;
+  }
+  if (REG_IS_32BIT(dst)) {
+    // 32-bit register, 32-bit immediate.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x81);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xE0 + (dst_code & 0x07));
+    memcpy(&vector->data[vector->count], &src, 4);
+    vector->count += 4;
+    return true;
+  }
+  // 64-bit register, 32-bit immediate.
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((dst_code & 0x08) >> 3));
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x81);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0xE0 + (dst_code & 0x07));
+  memcpy(&vector->data[vector->count], &src, 4);
+  vector->count += 4;
+  return true;
+}
+
+
+bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
+  // https://www.felixcloutier.com/x86/call
+  if (!gta_binary_optimistic_increase(vector, 3)) {
+    return false;
+  }
+  if (!REG_IS_64BIT(reg)) {
+    // Not a valid register for CALL in 64-bit mode.
+    return false;
+  }
+  uint8_t code = gta_binary_get_register_code__x86_64(reg);
+  if (code & 0x08) {
+    // REX prefix
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x41);
+  }
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0xFF);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0xD0 + (code & 0x07));
+  return true;
+}
+
+
 bool gta_lea_reg_mem__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, int32_t offset) {
   // https://www.felixcloutier.com/x86/lea
   if (!gta_binary_optimistic_increase(vector, 8)) {
