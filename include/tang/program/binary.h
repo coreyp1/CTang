@@ -63,7 +63,7 @@ bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 bool gta_lea_reg_mem__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, int32_t offset);
 bool gta_leave__x86_64(GCU_Vector8 * vector);
 bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
-bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, uint64_t src);
+bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t value);
 bool gta_pop_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 bool gta_push_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 bool gta_ret__x86_64(GCU_Vector8 * vector);
