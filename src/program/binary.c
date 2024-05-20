@@ -3,10 +3,14 @@
 
 #define VECTOR_GROWTH_FACTOR ((double)1.5)
 
-#define REG_IS_64BIT(reg) ((reg) <= GTA_REG_R15)
+#define REG_IS_256BIT(reg) ((reg) >= GTA_REG_YMM0 && (reg) <= GTA_REG_YMM15)
+#define REG_IS_128BIT(reg) ((reg) >= GTA_REG_XMM0 && (reg) <= GTA_REG_XMM15)
+#define REG_IS_64BIT(reg) ((reg) <= GTA_REG_R15 || ((reg) >= GTA_REG_MMX0 && (reg) <= GTA_REG_MMX7))
 #define REG_IS_32BIT(reg) ((reg) <= GTA_REG_ESP && (reg) >= GTA_REG_EAX)
 #define REG_IS_16BIT(reg) ((reg) <= GTA_REG_SP && (reg) >= GTA_REG_AX)
 #define REG_IS_8BIT(reg) ((reg) <= GTA_REG_DH && (reg) >= GTA_REG_AL)
+#define REG_IS_INTEGER(reg) ((reg) <= GTA_REG_DH)
+#define REG_IS_FLOAT(reg) ((reg) >= GTA_REG_XMM0)
 
 
 bool gta_binary_optimistic_increase(GCU_Vector8 * vector, size_t additional) {
@@ -30,6 +34,16 @@ uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg) {
     0x00, 0x03, 0x01, 0x02, 0x06, 0x07, 0x05, 0x04,
   //  AL,   BL,   CL,   DL,   AH,   BH,   CH,   DH,
     0x00, 0x03, 0x01, 0x02, 0x04, 0x07, 0x05, 0x06,
+  //MMX0, MMX1, MMX2, MMX3, MMX4, MMX5, MMX6, MMX7,
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+  //XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7,
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+  //XMM8, XMM9, XMM10,XMM11,XMM12,XMM13,XMM14,XMM15,
+    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+  //YMM0, YMM1, YMM2, YMM3, YMM4, YMM5, YMM6, YMM7,
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+  //YMM8, YMM9, YMM10,YMM11,YMM12,YMM13,YMM14,YMM15,
+    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
   };
   return reg < sizeof(reg_codes) ? reg_codes[reg] : 0;
 }
@@ -37,7 +51,7 @@ uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg) {
 
 bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t src) {
   // https://www.felixcloutier.com/x86/and
-  if (!gta_binary_optimistic_increase(vector, 7)) {
+  if (!REG_IS_INTEGER(dst) || !gta_binary_optimistic_increase(vector, 7)) {
     return false;
   }
   uint8_t dst_code = gta_binary_get_register_code__x86_64(dst);
@@ -138,7 +152,7 @@ bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t src
 
 bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   // https://www.felixcloutier.com/x86/call
-  if (!gta_binary_optimistic_increase(vector, 3)) {
+  if (!REG_IS_INTEGER(reg) || !gta_binary_optimistic_increase(vector, 3)) {
     return false;
   }
   if (!REG_IS_64BIT(reg)) {
@@ -158,7 +172,7 @@ bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
 
 bool gta_lea_reg_mem__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, int32_t offset) {
   // https://www.felixcloutier.com/x86/lea
-  if (!gta_binary_optimistic_increase(vector, 8)) {
+  if (!REG_IS_INTEGER(dst) || !gta_binary_optimistic_increase(vector, 8)) {
     return false;
   }
   uint8_t dst_code = gta_binary_get_register_code__x86_64(dst);
@@ -232,7 +246,7 @@ bool gta_leave__x86_64(GCU_Vector8 * vector) {
 
 bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t value) {
   // https://www.felixcloutier.com/x86/mov
-  if (!gta_binary_optimistic_increase(vector, 10)) {
+  if (!REG_IS_INTEGER(dst) || !gta_binary_optimistic_increase(vector, 10)) {
     return false;
   }
   uint8_t dst_code = gta_binary_get_register_code__x86_64(dst);
@@ -273,7 +287,7 @@ bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t val
 
 bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src) {
   // https://www.felixcloutier.com/x86/mov
-  if (!gta_binary_optimistic_increase(vector, 3)) {
+  if (!REG_IS_INTEGER(dst) || !REG_IS_INTEGER(src) || !gta_binary_optimistic_increase(vector, 3)) {
     return false;
   }
   if (REG_IS_8BIT(dst) || REG_IS_8BIT(src)) {
@@ -315,7 +329,7 @@ bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
 
 bool gta_pop_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   // https://www.felixcloutier.com/x86/pop
-  if (!gta_binary_optimistic_increase(vector, 2)
+  if (!REG_IS_INTEGER(reg) || !gta_binary_optimistic_increase(vector, 2)
     || !REG_IS_64BIT(reg)) {
     return false;
   }
@@ -331,8 +345,7 @@ bool gta_pop_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
 
 bool gta_push_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   // https://www.felixcloutier.com/x86/push
-  if (!gta_binary_optimistic_increase(vector, 2)
-    || !REG_IS_64BIT(reg)) {
+  if (!REG_IS_INTEGER(reg) || !REG_IS_64BIT(reg) || !gta_binary_optimistic_increase(vector, 2)) {
     return false;
   }
   uint8_t code = gta_binary_get_register_code__x86_64(reg);
