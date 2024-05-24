@@ -22,36 +22,24 @@ bool gta_binary_compiler_context_create_in_place(GTA_Binary_Compiler_Context * c
   }
   GTA_VectorX * scope_stack = GTA_VECTORX_CREATE(32);
   if (!scope_stack) {
-    return false;
+    goto SCOPE_STACK_VECTOR_CREATE_FAILED;
   }
   GTA_HashX * scope = GTA_HASHX_CREATE(32);
   if (!scope) {
-    GTA_VECTORX_DESTROY(scope_stack);
-    return false;
+    goto SCOPE_HASH_CREATE_FAILED;
   }
   GTA_VECTORX_APPEND(scope_stack, GTA_TYPEX_MAKE_P(scope));
   GTA_HashX * globals = GTA_HASHX_CREATE(32);
   if (!globals) {
-    GTA_HASHX_DESTROY(scope);
-    GTA_VECTORX_DESTROY(scope_stack);
-    return false;
+    goto GLOBALS_HASH_CREATE_FAILED;
   }
-
   GTA_VectorX * labels_from = GTA_VECTORX_CREATE(32);
   if (!labels_from) {
-    GTA_HASHX_DESTROY(globals);
-    GTA_HASHX_DESTROY(scope);
-    GTA_VECTORX_DESTROY(scope_stack);
-    return false;
+    goto LABELS_FROM_VECTOR_CREATE_FAILED;
   }
-
   GTA_VectorX * labels = GTA_VECTORX_CREATE(32);
   if (!labels) {
-    GTA_VECTORX_DESTROY(labels_from);
-    GTA_HASHX_DESTROY(globals);
-    GTA_HASHX_DESTROY(scope);
-    GTA_VECTORX_DESTROY(scope_stack);
-    return false;
+    goto LABELS_VECTOR_CREATE_FAILED;
   }
 
   *context = (GTA_Binary_Compiler_Context) {
@@ -65,6 +53,19 @@ bool gta_binary_compiler_context_create_in_place(GTA_Binary_Compiler_Context * c
     .labels = labels,
   };
   return true;
+
+  // Failure conditions.
+LABELS_VECTOR_CREATE_FAILED:
+  GTA_VECTORX_DESTROY(labels_from);
+LABELS_FROM_VECTOR_CREATE_FAILED:
+  GTA_HASHX_DESTROY(globals);
+GLOBALS_HASH_CREATE_FAILED:
+  GTA_HASHX_DESTROY(scope);
+SCOPE_HASH_CREATE_FAILED:
+  GTA_VECTORX_DESTROY(scope_stack);
+SCOPE_STACK_VECTOR_CREATE_FAILED:
+  gcu_vector8_destroy(binary_vector);
+  return false;
 }
 
 

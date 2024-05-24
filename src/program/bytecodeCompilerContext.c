@@ -26,22 +26,16 @@ bool gta_bytecode_compiler_context_create_in_place(GTA_Bytecode_Compiler_Context
   }
   GTA_VectorX * scope_stack = GTA_VECTORX_CREATE(32);
   if (!scope_stack) {
-    GTA_VECTORX_DESTROY(bytecode_offsets);
-    return false;
+    goto SCOPE_STACK_VECTOR_CREATE_FAILED;
   }
   GTA_HashX * scope = GTA_HASHX_CREATE(32);
   if (!scope) {
-    GTA_VECTORX_DESTROY(scope_stack);
-    GTA_VECTORX_DESTROY(bytecode_offsets);
-    return false;
+    goto SCOPE_HASH_CREATE_FAILED;
   }
   GTA_VECTORX_APPEND(scope_stack, GTA_TYPEX_MAKE_P(scope));
   GTA_HashX * globals = GTA_HASHX_CREATE(32);
   if (!globals) {
-    GTA_HASHX_DESTROY(scope);
-    GTA_VECTORX_DESTROY(scope_stack);
-    GTA_VECTORX_DESTROY(bytecode_offsets);
-    return false;
+    goto GLOBALS_HASH_CREATE_FAILED;
   }
 
   *context = (GTA_Bytecode_Compiler_Context) {
@@ -51,6 +45,15 @@ bool gta_bytecode_compiler_context_create_in_place(GTA_Bytecode_Compiler_Context
     .globals = globals,
   };
   return true;
+
+  // Failure conditions.
+GLOBALS_HASH_CREATE_FAILED:
+  GTA_HASHX_DESTROY(scope);
+SCOPE_HASH_CREATE_FAILED:
+  GTA_VECTORX_DESTROY(scope_stack);
+SCOPE_STACK_VECTOR_CREATE_FAILED:
+  GTA_VECTORX_DESTROY(bytecode_offsets);
+  return false;
 }
 
 

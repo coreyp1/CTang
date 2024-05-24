@@ -20,40 +20,44 @@ GTA_Execution_Context * gta_execution_context_create(GTA_Program * program) {
 
 
 bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_Program * program) {
+  GTA_VectorX * stack = GTA_VECTORX_CREATE(32);
+  if (!stack) {
+    return false;
+  }
+  GTA_VectorX * garbage_collection = GTA_VECTORX_CREATE(32);
+  if (!garbage_collection) {
+    goto GARBAGE_COLLECTION_VECTOR_CREATE_FAILED;
+  }
+  GTA_HashX * globals = GTA_HASHX_CREATE(32);
+  if (!globals) {
+    goto GLOBALS_HASH_CREATE_FAILED;
+  }
+  GTA_Unicode_String * output = gta_unicode_string_create("", 0, GTA_UNICODE_STRING_TYPE_TRUSTED);
+  if (!output) {
+    goto OUTPUT_STRING_CREATE_FAILED;
+  }
+
   *context = (GTA_Execution_Context) {
     .program = program,
-    .output = 0,
+    .output = output,
     .result = 0,
-    .stack = 0,
+    .stack = stack,
     .pc_stack = 0,
-    .garbage_collection = 0,
-    .globals = 0,
+    .garbage_collection = garbage_collection,
+    .globals = globals,
     .user_data = 0,
     .fp = 0,
   };
-  context->stack = GTA_VECTORX_CREATE(32);
-  if (!context->stack) {
-    return false;
-  }
-  context->garbage_collection = GTA_VECTORX_CREATE(32);
-  if (!context->garbage_collection) {
-    GTA_VECTORX_DESTROY(context->stack);
-    return false;
-  }
-  context->output = gta_unicode_string_create("", 0, GTA_UNICODE_STRING_TYPE_TRUSTED);
-  if (!context->output) {
-    GTA_VECTORX_DESTROY(context->stack);
-    GTA_VECTORX_DESTROY(context->garbage_collection);
-    return false;
-  }
-  context->globals = GTA_HASHX_CREATE(32);
-  if (!context->globals) {
-    GTA_VECTORX_DESTROY(context->stack);
-    GTA_VECTORX_DESTROY(context->garbage_collection);
-    gta_unicode_string_destroy(context->output);
-    return false;
-  }
   return true;
+
+  // Failure conditions.
+OUTPUT_STRING_CREATE_FAILED:
+  GTA_HASHX_DESTROY(globals);
+GLOBALS_HASH_CREATE_FAILED:
+  GTA_VECTORX_DESTROY(garbage_collection);
+GARBAGE_COLLECTION_VECTOR_CREATE_FAILED:
+  GTA_VECTORX_DESTROY(stack);
+  return false;
 }
 
 
