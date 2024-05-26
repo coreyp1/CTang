@@ -11,6 +11,7 @@
 #define REG_IS_8BIT(reg) ((reg) <= GTA_REG_DH && (reg) >= GTA_REG_AL)
 #define REG_IS_INTEGER(reg) ((reg) <= GTA_REG_DH)
 #define REG_IS_FLOAT(reg) ((reg) >= GTA_REG_XMM0)
+#define REG_IS_XMM(reg) ((reg) >= GTA_REG_XMM0 && (reg) <= GTA_REG_XMM15)
 
 
 bool gta_binary_optimistic_increase(GCU_Vector8 * vector, size_t additional) {
@@ -323,6 +324,33 @@ bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
     return true;
   }
 
+  return false;
+}
+
+
+bool gta_movq_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src) {
+  // https://www.felixcloutier.com/x86/movq
+  if (!gta_binary_optimistic_increase(vector, 5)) {
+    return false;
+  }
+  if (REG_IS_64BIT(src) && REG_IS_INTEGER(src) && REG_IS_XMM(dst)) {
+    // ex: movq xmm0, rax
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((src & 0x08) >> 1) | ((dst & 0x08) >> 3));
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x0F);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x6E);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + ((src & 0x07) << 3) + (dst & 0x07));
+    return true;
+  }
+  else if (REG_IS_XMM(src) && REG_IS_64BIT(dst) && REG_IS_INTEGER(dst)) {
+    // ex: movq rax, xmm0
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((src & 0x08) >> 1) | ((dst & 0x08) >> 3));
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x0F);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x7E);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + ((dst & 0x07) << 3) + (src & 0x07));
+    return true;
+  }
   return false;
 }
 

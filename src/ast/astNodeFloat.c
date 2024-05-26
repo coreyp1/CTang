@@ -4,8 +4,9 @@
 #include <cutil/memory.h>
 #include <tang/ast/astNodeFloat.h>
 #include <tang/computedValue/computedValueFloat.h>
-#include <tang/program/bytecode.h>
+#include <tang/program/binary.h>
 #include <tang/program/binaryCompilerContext.h>
+#include <tang/program/bytecode.h>
 #include <tang/program/bytecodeCompilerContext.h>
 
 GTA_Ast_Node_VTable gta_ast_node_float_vtable = {
@@ -71,45 +72,34 @@ bool gta_ast_node_float_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 bool gta_ast_node_float_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;
   GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 42)) {
-    return false;
-  }
-#if defined(GTA_X86_64)
-  // 64-bit x86
+
+  return true
   // Set up for a function call.
   //   push rbp
   //   mov rbp, rsp
   //   and rsp, 0xFFFFFFFFFFFFFFF0
-  GTA_BINARY_WRITE1(v, 0x55);
-  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
-  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, (int32_t)0xFFFFFFF0)
   // context is in r15.
   // gta_computed_value_float_create(float_node->value, context):
   //   mov rdi, r15
   //   mov rax, float_node->value
-  GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFF);
-  GTA_BINARY_WRITE2(v, 0x48, 0xB8);
-  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  memcpy(&v->data[v->count - 8], &float_node->value, 8);
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_R15)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_TYPEX_MAKE_F(float_node->value).i64)
 
-  //   mov xmm0, rax
-  GTA_BINARY_WRITE5(v, 0x66, 0x48, 0x0F, 0x6E, 0xC0);
+  //   movq xmm0, rax
+    && gta_movq_reg_reg__x86_64(v, GTA_REG_XMM0, GTA_REG_RAX)
 
   //   mov rax, gta_computed_value_float_create
-  GTA_BINARY_WRITE2(v, 0x48, 0xB8);
-  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_float_create);
-  memcpy(&v->data[v->count - 8], &fp, 8);
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (GTA_UInteger)gta_computed_value_float_create)
+  // GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_float_create);
 
   //   call rax
-  GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+    && gta_call_reg__x86_64(v, GTA_REG_RAX)
   // Tear down the function call.
   //   mov rsp, rbp
   //   pop rbp
-  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
-  GTA_BINARY_WRITE1(v, 0x5D);
-
-  return true;
-#endif
-  return false;
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(v, GTA_REG_RBP);
 }
