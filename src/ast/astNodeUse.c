@@ -7,6 +7,7 @@
 #include <tang/ast/astNodeParseError.h>
 #include <tang/ast/astNodeUse.h>
 #include <tang/computedValue/computedValueError.h>
+#include <tang/program/binary.h>
 #include <tang/program/binaryCompilerContext.h>
 #include <tang/program/variable.h>
 
@@ -152,43 +153,32 @@ static GTA_Computed_Value * GTA_CALL __load_library(GTA_Execution_Context * cont
 
 bool gta_ast_node_use_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GCU_Vector8 * v = context->binary_vector;
-  if (!gcu_vector8_reserve(v, v->count + 36)) {
-    return false;
-  }
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
 
   // Load the library.
   // TODO: JIT the __load_library function to avoid the extra function call.
-  if (!gcu_vector8_reserve(v, v->count + 25)) {
-    return false;
-  }
+  return true
   // Prepare function call.
   //   push rbp
   //   mov rbp, rsp
   //   and rsp, 0xFFFFFFFFFFFFFFF0
-  GTA_BINARY_WRITE1(v, 0x55);
-  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
-  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
   // __load_library(boolean->value, use->hash):
-  // context is in r15
   //   mov rdi, r15
-  GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFF);
   //   mov rsi, use->hash
-  GTA_BINARY_WRITE2(v, 0x48, 0xBE);
-  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  memcpy(&v->data[v->count - 8], &use->hash, 8);
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_R15)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, use->hash)
   //   mov rax, __load_library
-  GTA_BINARY_WRITE2(v, 0x48, 0xB8);
-  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  memcpy(&v->data[v->count - 8], &GTA_JIT_FUNCTION_CONVERTER(__load_library), 8);
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)__load_library)
   //   call rax
-  GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+    && gta_call_reg__x86_64(v, GTA_REG_RAX)
   // Restore stack.
   //   mov rsp, rbp
   //   pop rbp
-  GTA_BINARY_WRITE3(context->binary_vector, 0x48, 0x89, 0xEC);
-  GTA_BINARY_WRITE1(context->binary_vector, 0x5D);
-  return true;
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(v, GTA_REG_RBP);
 }
 
 
