@@ -12,6 +12,7 @@
 
 using namespace std;
 
+
 #define JIT(A,B) \
   { \
     GCU_Vector8 * v = gcu_vector8_create(0); \
@@ -21,6 +22,7 @@ using namespace std;
     gcu_vector8_destroy(v); \
   }
 
+
 #define JIT_FAIL(A) \
   { \
     GCU_Vector8 * v = gcu_vector8_create(0); \
@@ -28,6 +30,7 @@ using namespace std;
     ASSERT_FALSE(A); \
     gcu_vector8_destroy(v); \
   }
+
 
 TEST(x86_64, and_reg_imm) {
   // Special cases for forms of the AX register.
@@ -60,6 +63,7 @@ TEST(x86_64, and_reg_imm) {
   JIT(gta_and_reg_imm__x86_64(v, GTA_REG_RBX, (int8_t)0x7F), "\x48\x83\xE3\x7F");
 }
 
+
 TEST(x86_64, call_reg) {
   // General case. r64
   JIT(gta_call_reg__x86_64(v, GTA_REG_RBX), "\xFF\xD3");
@@ -70,6 +74,14 @@ TEST(x86_64, call_reg) {
   JIT_FAIL(gta_call_reg__x86_64(v, GTA_REG_CL));
   JIT_FAIL(gta_call_reg__x86_64(v, GTA_REG_DH));
 }
+
+
+TEST(x86_64, jnz) {
+  // General case.
+  JIT(gta_jnz__x86_64(v, 0x12345678), "\x0F\x85\x78\x56\x34\x12");
+  JIT(gta_jnz__x86_64(v, -0x12345678), "\x0F\x85\x88\xA9\xCB\xED");
+}
+
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
