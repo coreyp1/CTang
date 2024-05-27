@@ -876,6 +876,13 @@ $(APP_DIR)/testTangLanguageExecuteSimple: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
+$(APP_DIR)/testBinary: \
+	test/test-binary.cpp \
+	$(DEP_BINARY)
+	@echo "\n### Compiling Binary JIT functions Test ###"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
+
 $(APP_DIR)/test: \
 				test/test.cpp \
 				$(DEP_TANG) \
@@ -918,7 +925,8 @@ test: \
 				$(APP_DIR)/$(TARGET) \
 				$(APP_DIR)/testUnicodeString \
 				$(APP_DIR)/testTangLanguageParse \
-				$(APP_DIR)/testTangLanguageExecuteSimple
+				$(APP_DIR)/testTangLanguageExecuteSimple \
+				$(APP_DIR)/testBinary
 #				$(APP_DIR)/libtestLibrary.so \
 #				$(APP_DIR)/test \
 #				$(APP_DIR)/tang
@@ -934,6 +942,12 @@ test: \
 	@echo "####################################"
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1 --gtest_fail_fast
+	@echo "\033[0;32m"
+	@echo "################################"
+	@echo "### Running Binary JIT tests ###"
+	@echo "################################"
+	@echo "\033[0m"
+	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testBinary --gtest_brief=1
 	@echo "\033[0;32m"
 	@echo "########################################################"
 	@echo "### Running Bytecode Language Execution Simple tests ###"
