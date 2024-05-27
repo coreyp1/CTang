@@ -101,15 +101,19 @@ bool gta_binary_optimistic_increase(GCU_Vector8 * vector, size_t additional);
 uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg);
 bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t src);
 bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
+bool gta_jnz__x86_64(GCU_Vector8 * vector, int32_t offset);
 bool gta_lea_reg_mem__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, int32_t offset);
 bool gta_leave__x86_64(GCU_Vector8 * vector);
+bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, GTA_Register src);
 bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
 bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t value);
 bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset);
 bool gta_movq_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
+bool gta_or_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
 bool gta_pop_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 bool gta_push_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 bool gta_ret__x86_64(GCU_Vector8 * vector);
+bool gta_xor_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
 
 #ifdef __cplusplus
 }

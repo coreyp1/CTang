@@ -7,6 +7,7 @@
 #include <tang/ast/astNodeIdentifier.h>
 #include <tang/ast/astNodeIndex.h>
 #include <tang/ast/astNodePeriod.h>
+#include <tang/program/binary.h>
 #include <tang/program/binaryCompilerContext.h>
 #include <tang/program/variable.h>
 
@@ -167,6 +168,8 @@ static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Co
   bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
   bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
   GCU_Vector8 * v = context->binary_vector;
+  GTA_Integer label_done;
+  GTA_HashX_Value val;
 
   // Overview:
   // If the computed value is a singleton or temporary, then set the
@@ -174,126 +177,85 @@ static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Co
   // Otherwise, make a deep copy of the value and store the copy in the
   // appropriate location.
 
-  if (!gcu_vector8_reserve(v, v->count + 41 + 27 + 17 + 8)) {
+  // Find the identifier's position in the global or local positions.
+  bool look_in_global = (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY)
+    || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL);
+  val = look_in_global
+    ? GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash)
+    : GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+  if (!val.exists) {
+    printf("Error: Identifier %s not found in %s positions.\n", identifier->mangled_name, look_in_global ? "global" : "local");
     return false;
   }
+  // Reminder: r12 & r13 are pointers, but they point to the end of the
+  // variable stacks.  We will need to move the pointer back to the beginning
+  // of the memory address for whichever variable we're trying to access.
+  int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
 
+  return true
   /////////////////////////////////////////////////////////////////////////////
-  // if (is_singleton || is_temporary) jump to done - 41 bytes
+  // if (is_singleton || is_temporary) jump to done
   /////////////////////////////////////////////////////////////////////////////
   //   mov rdx, is_singleton_offset  ; Load the byte offset of is_singleton.
-  GTA_BINARY_WRITE2(v, 0x48, 0xBA);
-  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  memcpy(v->data + v->count - 8, &is_singleton_offset, 8);
   //   mov r8, [rax + rdx]           ; Load the is_singleton value.
-  GTA_BINARY_WRITE4(v, 0x4C, 0x8B, 0x04, 0x10);
   //   mov rdx, is_temporary_offset  ; Load the byte offset of is_temporary.
-  GTA_BINARY_WRITE2(v, 0x48, 0xBA);
-  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  memcpy(v->data + v->count - 8, &is_temporary_offset, 8);
   //   mov r9, [rax + rdx]           ; Load the is_temporary value.
-  GTA_BINARY_WRITE4(v, 0x4C, 0x8B, 0x0C, 0x10);
   //   or r8, r9                     ; Combine the is_singleton and is_temporary values.
-  GTA_BINARY_WRITE3(v, 0x4D, 0x09, 0xC8);
   //   jnz done                      ; If singleton, then jump to done.
-  GTA_BINARY_WRITE2(v, 0x0F, 0x85);
-  GTA_BINARY_WRITE4(v, 0xDE, 0xAD, 0xBE, 0xEF);
-  GTA_Integer label_done = gta_binary_compiler_context_get_label(context);
-  if (label_done < 0 || !gta_binary_compiler_context_add_label_jump(context, label_done, v->count - 4)) {
-    return false;
-  }
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (int64_t)is_singleton_offset)
+    && gta_mov_reg_ind__x86_64(v, GTA_REG_R8, GTA_REG_RAX, GTA_REG_RDX, 1, 0)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (int64_t)is_temporary_offset)
+    && gta_mov_reg_ind__x86_64(v, GTA_REG_R9, GTA_REG_RAX, GTA_REG_RDX, 1, 0)
+    && gta_or_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_R9)
+    && gta_jnz__x86_64(v, 0xDEADBEEF)
+    && ((label_done = gta_binary_compiler_context_get_label(context)) >= 0)
+    && gta_binary_compiler_context_add_label_jump(context, label_done, v->count - 4)
 
   /////////////////////////////////////////////////////////////////////////////
-  // Call the deep copy function. - 16 bytes
+  // Call the deep copy function.
   /////////////////////////////////////////////////////////////////////////////
   // Set up for a function call.
   //   push rbp
   //   mov rbp, rsp
   //   and rsp, 0xFFFFFFFFFFFFFFF0
-  GTA_BINARY_WRITE1(v, 0x55);
-  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
-  GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
   //   mov rdi, rax                  ; Move the value to RDI.
-  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xc7);
   //   mov rax, gta_computed_value_deep_copy ; Make a deep copy of the value.
-  GTA_BINARY_WRITE2(v, 0x48, 0xB8);
-  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_deep_copy);
-  memcpy(v->data + v->count - 8, &fp, 8);
   //   call rax
-  GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)gta_computed_value_deep_copy)
+    && gta_call_reg__x86_64(v, GTA_REG_RAX)
   // Tear down the function call.
   //   mov rsp, rbp
   //   pop rbp
-  GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
-  GTA_BINARY_WRITE1(v, 0x5D);
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
 
   /////////////////////////////////////////////////////////////////////////////
-  // done: - 16 bytes
+  // done:
   //   is_temporary = 0
   /////////////////////////////////////////////////////////////////////////////
   //   done:                         ; Done.
-  if (!gta_binary_compiler_context_set_label(context, label_done, v->count)) {
-    return false;
-  }
   //   mov rdx, is_temporary_offset  ; Load the byte offset of is_temporary.
-  GTA_BINARY_WRITE2(v, 0x48, 0xBA);
-  GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-  memcpy(v->data + v->count - 8, &is_temporary_offset, 8);
   //   xor rcx, rcx                  ; The the value for non-temporary.
-  GTA_BINARY_WRITE3(v, 0x48, 0x31, 0xC9);
-  //   mov [rax + rdx], al          ; Mark the value as non-temporary.
-  GTA_BINARY_WRITE3(v, 0x88, 0x04, 0x10);
+  //   mov [rax + rdx], cl           ; Mark the value as non-temporary.
+    && gta_binary_compiler_context_set_label(context, label_done, v->count)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (int64_t)is_temporary_offset)
+    && gta_xor_reg_reg__x86_64(v, GTA_REG_RCX, GTA_REG_RCX)
+    && gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 0, GTA_REG_CL)
 
   /////////////////////////////////////////////////////////////////////////////
-  // Store the value in the appropriate location. - 8 bytes max
+  // Store the value in the appropriate location.
   /////////////////////////////////////////////////////////////////////////////
   // RAX contains the final value of the RHS.
-  if ((identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY)
-    || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL)) {
-    // Find the identifier's position in the global positions.
-    GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
-    if (!val.exists) {
-      printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
-      return false;
-    }
-
-    // Reminder: r13 is the global pointer, but it points to the end of the
-    // global variables.  We need to move the pointer back to the beginning of
-    // the memory address for whichever variable we're trying to access.
-    int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
-
-    // Copy the value from the global position (GTA_TYPEX_UI(val.value)) to RAX.
-    //   mov [r13 + index], rax
-    GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x89, 0x85);
-    GTA_BINARY_WRITE4(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF);
-    memcpy(&context->binary_vector->data[context->binary_vector->count - 4], &index, 4);
-
-    return true;
-  }
-
-  if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
-    // Find the identifier's position in the local positions.
-    GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
-    if (!val.exists) {
-      printf("Error: Identifier %s not found in local positions.\n", identifier->mangled_name);
-      return false;
-    }
-
-    // Reminder: r12 is the local pointer, but it points to the end of the
-    // local variables.  We need to move the pointer back to the beginning of
-    // the memory address for whichever variable we're trying to access.
-    int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
-
-    // Copy the value from the local position (GTA_TYPEX_UI(val.value)) to RAX.
-    //   mov [r12 + index], rax
-    GTA_BINARY_WRITE4(context->binary_vector, 0x49, 0x89, 0x84, 0x24);
-    GTA_BINARY_WRITE4(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF);
-    memcpy(&context->binary_vector->data[context->binary_vector->count - 4], &index, 4);
-
-    return true;
-  }
-  return false;
+  // Copy the value from the indexed position (GTA_TYPEX_UI(val.value)) to RAX.
+  // If global:
+  //   mov [r13 + index], rax
+  // If local:
+  //   mov [r12 + index], rax
+    && gta_mov_ind_reg__x86_64(v, (look_in_global ? GTA_REG_R13 : GTA_REG_R12), GTA_REG_NONE, 0, index, GTA_REG_RAX);
 }
 
 
