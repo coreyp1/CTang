@@ -217,19 +217,10 @@ bool gta_ast_node_identifier_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_C
     // the memory address for whichever variable we're trying to access.
     int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
 
-    if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 15)) {
-      return false;
-    }
-
     // Copy the value from the global position (GTA_TYPEX_UI(val.value)) to RAX.
     //   mov rax, [r13 + index]
     return true
       && gta_mov_reg_ind__x86_64(context->binary_vector, GTA_REG_RAX, GTA_REG_R13, GTA_REG_NONE, 0, index);
-    // GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x8B, 0x85);
-    // GTA_BINARY_WRITE4(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF);
-    // memcpy(&context->binary_vector->data[context->binary_vector->count - 4], &index, 4);
-
-    // return true;
   }
 
   if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
@@ -245,17 +236,10 @@ bool gta_ast_node_identifier_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_C
     // the memory address for whichever variable we're trying to access.
     int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
 
-    if (!gcu_vector8_reserve(context->binary_vector, context->binary_vector->count + 14)) {
-      return false;
-    }
-
     // Copy the value from the local position (GTA_TYPEX_UI(val.value)) to RAX.
     //   mov rax, [r12 + index]
-    GTA_BINARY_WRITE4(context->binary_vector, 0x49, 0x8B, 0x84, 0x24);
-    GTA_BINARY_WRITE4(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF);
-    memcpy(&context->binary_vector->data[context->binary_vector->count - 4], &index, 4);
-
-    return true;
+    return true
+      && gta_mov_reg_ind__x86_64(context->binary_vector, GTA_REG_RAX, GTA_REG_R12, GTA_REG_NONE, 0, index);
   }
   return false;
 }

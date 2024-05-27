@@ -373,7 +373,7 @@ bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
     return true;
   }
 
-  // No Index.
+  // Base or Base + offset.  No Index.
   // e.g., mov rax, [rbx + 0xDEADBEEF]
   // also  mov rax, [rbx]
   // Note: RSP and R12 require a SIB byte.
@@ -433,7 +433,10 @@ bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
     // REX.WRXB prefix
     // Note: The REX byte must be here because either the dst or the base
     // register is 64-bit.  W is only set if dst is 64-bit.
-    vector->data[vector->count++] = GCU_TYPE8_UI8((REG_IS_64BIT(dst) ? 0x48 : 0x40) | ((dst_code & 0x08) >> 1) | ((index_code & 0x08) >> 2) | ((base_code & 0x08) >> 3));
+    vector->data[vector->count++] = GCU_TYPE8_UI8((REG_IS_64BIT(dst) ? 0x48 : 0x40)
+      | ((dst_code & 0x08) >> 1)
+      | (REG_IS_NONE(index) ? 0 : ((index_code & 0x08) >> 2))
+      | ((base_code & 0x08) >> 3));
   }
   if (REG_IS_8BIT(dst)) {
     if (dst == GTA_REG_AH || dst == GTA_REG_BH || dst == GTA_REG_CH || dst == GTA_REG_DH) {
@@ -459,7 +462,7 @@ bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
         ? 0x40
         : scale == 4
           ? 0x80
-          : 0xC0) | (index_code & 0x07) << 3 | (base_code & 0x07));
+          : 0xC0) | ((REG_IS_NONE(index) ? 0x04 : (index_code & 0x07)) << 3) | (base_code & 0x07));
   if (offset_32) {
     memcpy(&vector->data[vector->count], &offset, 4);
     vector->count += 4;
