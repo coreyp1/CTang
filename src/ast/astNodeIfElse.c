@@ -7,6 +7,10 @@
 GTA_Ast_Node_VTable gta_ast_node_if_else_vtable = {
   .name = "IfElse",
   .compile_to_bytecode = 0,
+  .compile_to_binary__x86_64 = 0,
+  .compile_to_binary__arm_64 = 0,
+  .compile_to_binary__x86_32 = 0,
+  .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_if_else_destroy,
   .print = gta_ast_node_if_else_print,
   .simplify = gta_ast_node_if_else_simplify,

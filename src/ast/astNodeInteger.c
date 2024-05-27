@@ -9,7 +9,10 @@
 GTA_Ast_Node_VTable gta_ast_node_integer_vtable = {
   .name = "Integer",
   .compile_to_bytecode = gta_ast_node_integer_compile_to_bytecode,
-  .compile_to_binary = gta_ast_node_integer_compile_to_binary,
+  .compile_to_binary__x86_64 = gta_ast_node_integer_compile_to_binary__x86_64,
+  .compile_to_binary__arm_64 = 0,
+  .compile_to_binary__x86_32 = 0,
+  .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_integer_destroy,
   .print = gta_ast_node_integer_print,
   .simplify = gta_ast_node_integer_simplify,
@@ -65,7 +68,7 @@ bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
 }
 
 
-bool gta_ast_node_integer_compile_to_binary(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
+bool gta_ast_node_integer_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
   GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) self;
   GCU_Vector8 * v = context->binary_vector;
 

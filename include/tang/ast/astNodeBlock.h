@@ -119,19 +119,19 @@ void gta_ast_node_block_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
 bool gta_ast_node_block_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
 
 /**
- * Compile the block to binary.
+ * Compile the block to binary for x86_64.
  *
  * This function should not be called directly. Use
  * gta_ast_node_compile_to_binary() instead.
  *
- * @see gta_ast_node_compile_to_binary()
+ * @see gta_ast_node_compile_to_binary__x86_64
  *
  * @param self The GTA_Ast_Node_Block object to compile.
  * @param context The compilation context to use when compiling the block.
  * @return True if the block was successfully compiled to binary, false
  *   otherwise.
  */
-bool gta_ast_node_block_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_block_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

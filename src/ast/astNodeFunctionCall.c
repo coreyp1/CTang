@@ -7,6 +7,10 @@
 GTA_Ast_Node_VTable gta_ast_node_function_call_vtable = {
   .name = "FunctionCall",
   .compile_to_bytecode = 0,
+  .compile_to_binary__x86_64 = 0,
+  .compile_to_binary__arm_64 = 0,
+  .compile_to_binary__x86_32 = 0,
+  .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_function_call_destroy,
   .print = gta_ast_node_function_call_print,
   .simplify = gta_ast_node_function_call_simplify,

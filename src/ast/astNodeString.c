@@ -9,7 +9,10 @@
 GTA_Ast_Node_VTable gta_ast_node_string_vtable = {
   .name = "String",
   .compile_to_bytecode = gta_ast_node_string_compile_to_bytecode,
-  .compile_to_binary = gta_ast_node_string_compile_to_binary,
+  .compile_to_binary__x86_64 = gta_ast_node_string_compile_to_binary__x86_64,
+  .compile_to_binary__arm_64 = 0,
+  .compile_to_binary__x86_32 = 0,
+  .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_string_destroy,
   .print = gta_ast_node_string_print,
   .simplify = gta_ast_node_string_simplify,
@@ -66,7 +69,7 @@ bool gta_ast_node_string_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_C
 }
 
 
-bool gta_ast_node_string_compile_to_binary(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
+bool gta_ast_node_string_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
   GCU_Vector8 * v = context->binary_vector;
 

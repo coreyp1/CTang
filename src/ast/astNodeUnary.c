@@ -11,6 +11,10 @@
 GTA_Ast_Node_VTable gta_ast_node_unary_vtable = {
   .name = "Unary",
   .compile_to_bytecode = gta_ast_node_unary_compile_to_bytecode,
+  .compile_to_binary__x86_64 = 0,
+  .compile_to_binary__arm_64 = 0,
+  .compile_to_binary__x86_32 = 0,
+  .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_unary_destroy,
   .print = gta_ast_node_unary_print,
   .simplify = gta_ast_node_unary_simplify,
@@ -118,7 +122,7 @@ bool gta_ast_node_unary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
   return false;
 }
 
-// bool gta_ast_node_unary_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+// bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
 //   GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;
 //   GCU_Vector8 * v = context->binary_vector;
 //   if (!gcu_vector8_reserve(v, v->count + 30)) {

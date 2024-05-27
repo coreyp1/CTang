@@ -10,7 +10,10 @@
 GTA_Ast_Node_VTable gta_ast_node_block_vtable = {
   .name = "Block",
   .compile_to_bytecode = gta_ast_node_block_compile_to_bytecode,
-  .compile_to_binary = gta_ast_node_block_compile_to_binary,
+  .compile_to_binary__x86_64 = gta_ast_node_block_compile_to_binary__x86_64,
+  .compile_to_binary__arm_64 = 0,
+  .compile_to_binary__x86_32 = 0,
+  .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_block_destroy,
   .print = gta_ast_node_block_print,
   .simplify = gta_ast_node_block_simplify,
@@ -124,13 +127,13 @@ bool gta_ast_node_block_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 }
 
 
-bool gta_ast_node_block_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_block_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Block * block = (GTA_Ast_Node_Block *) self;
 
   for (size_t i = 0; i < GTA_VECTORX_COUNT(block->statements); ++i) {
     GTA_Ast_Node * statement = (GTA_Ast_Node *)GTA_TYPEX_P(block->statements->data[i]);
     if (!GTA_AST_IS_USE(statement)) {
-      if (!gta_ast_node_compile_to_binary(statement, context)) {
+      if (!gta_ast_node_compile_to_binary__x86_64(statement, context)) {
         return false;
       }
     }

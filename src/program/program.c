@@ -404,7 +404,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
         &= use_node.exists
         && GTA_AST_IS_USE(use_node.value.p)
         // Compile the expression.  The result will be in RAX.
-        && gta_ast_node_compile_to_binary((GTA_Ast_Node *)use_node.value.p, context)
+        && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)use_node.value.p, context)
         // Push the result onto the stack.
         //   push rax
         && gta_push_reg__x86_64(v, GTA_REG_RAX);
@@ -442,7 +442,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
 
   // Actually compile the AST to binary.
   error_free
-    &= gta_ast_node_compile_to_binary(program->ast, context)
+    &= gta_ast_node_compile_to_binary__x86_64(program->ast, context)
 
   // Restore the stack pointer to before we added the global and local
   // variables.  This is faster than popping the locals and globals off the
@@ -534,3 +534,12 @@ GLOBALS_ORDER_CLEANUP:
 CONTEXT_CLEANUP:
   gta_binary_compiler_context_destroy(context);
 }
+
+
+void gta_program_compile_binary__arm_64(GTA_MAYBE_UNUSED(GTA_Program * program)) {}
+
+
+void gta_program_compile_binary__x86_32(GTA_MAYBE_UNUSED(GTA_Program * program)) {}
+
+
+void gta_program_compile_binary__arm_32(GTA_MAYBE_UNUSED(GTA_Program * program)) {}

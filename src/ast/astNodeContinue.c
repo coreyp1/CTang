@@ -7,6 +7,10 @@
 GTA_Ast_Node_VTable gta_ast_node_continue_vtable = {
   .name = "Continue",
   .compile_to_bytecode = 0,
+  .compile_to_binary__x86_64 = 0,
+  .compile_to_binary__arm_64 = 0,
+  .compile_to_binary__x86_32 = 0,
+  .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_continue_destroy,
   .print = gta_ast_node_continue_print,
   .simplify = gta_ast_node_continue_simplify,

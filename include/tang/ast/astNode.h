@@ -73,13 +73,37 @@ typedef struct GTA_Ast_Node_VTable {
    */
   const char * name;
   /**
-   * Compiles the node to binary.
+   * Compiles the node to binary for x86_64.
    *
    * @param self The node to compile.
    * @param context Contextual information for the compile process.
    * @return True on success, false on failure.
    */
-  bool (*compile_to_binary)(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+  bool (*compile_to_binary__x86_64)(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+  /**
+   * Compiles the node to binary for arm_64.
+   *
+   * @param self The node to compile.
+   * @param context Contextual information for the compile process.
+   * @return True on success, false on failure.
+   */
+  bool (*compile_to_binary__arm_64)(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+  /**
+   * Compiles the node to binary for 0x86_32.
+   *
+   * @param self The node to compile.
+   * @param context Contextual information for the compile process.
+   * @return True on success, false on failure.
+   */
+  bool (*compile_to_binary__x86_32)(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+  /**
+   * Compiles the node to binary for arm_32.
+   *
+   * @param self The node to compile.
+   * @param context Contextual information for the compile process.
+   * @return True on success, false on failure.
+   */
+  bool (*compile_to_binary__arm_32)(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
   /**
    * Compiles the node to bytecode.
    *
@@ -191,17 +215,60 @@ GTA_NO_DISCARD GTA_Ast_Node * GTA_CALL gta_ast_node_create(GTA_PARSER_LTYPE loca
 void GTA_CALL gta_ast_node_destroy(GTA_Ast_Node * self);
 
 /**
- * Compile the AST node to binary.
+ * Compile the AST node to binary for x86_64.
  *
- * The vtable's compile_to_binary function is called to compile the node.  This
- * function serves as a general dispatch function, and should be used in
- * preference to calling the vtable's compile_to_binary function directly.
+ * The vtable's compile_to_binary__x86_64 function is called to compile the
+ * node.  This function serves as a general dispatch function, and should be
+ * used in preference to calling the vtable's compile_to_binary__x86_64
+ * function directly.
  *
  * @param self The node to compile.
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+
+/**
+ * Compile the AST node to binary for arm_64.
+ *
+ * The vtable's compile_to_binary__arm_64 function is called to compile the
+ * node.  This function serves as a general dispatch function, and should be
+ * used in preference to calling the vtable's compile_to_binary__arm_64
+ * function directly.
+ *
+ * @param self The node to compile.
+ * @param context Contextual information for the compile process.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_compile_to_binary__arm_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+
+/**
+ * Compile the AST node to binary for x86_32.
+ *
+ * The vtable's compile_to_binary__x86_32 function is called to compile the
+ * node.  This function serves as a general dispatch function, and should be
+ * used in preference to calling the vtable's compile_to_binary__x86_32
+ * function directly.
+ *
+ * @param self The node to compile.
+ * @param context Contextual information for the compile process.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_compile_to_binary__x86_32(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+
+/**
+ * Compile the AST node to binary for arm_32.
+ *
+ * The vtable's compile_to_binary__arm_32 function is called to compile the
+ * node.  This function serves as a general dispatch function, and should be
+ * used in preference to calling the vtable's compile_to_binary__arm_32
+ * function directly.
+ *
+ * @param self The node to compile.
+ * @param context Contextual information for the compile process.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_compile_to_binary__arm_32(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
 
 /**
  * Compile the AST node to bytecode.
@@ -274,13 +341,13 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_simplify(GTA_Ast_Node * self, GTA_Ast
 void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 /**
- * Compile a NULL node to binary.
+ * Compile a NULL node to binary for x86_64.
  *
  * @param self The node to compile.
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_null_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_null_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
 
 /**
  * Compile a NULL node to bytecode.

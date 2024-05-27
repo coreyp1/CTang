@@ -11,6 +11,10 @@
 GTA_Ast_Node_VTable gta_ast_node_ranged_for_vtable = {
   .name = "RangedFor",
   .compile_to_bytecode = 0,
+  .compile_to_binary__x86_64 = 0,
+  .compile_to_binary__arm_64 = 0,
+  .compile_to_binary__x86_32 = 0,
+  .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_ranged_for_destroy,
   .print = gta_ast_node_ranged_for_print,
   .simplify = gta_ast_node_ranged_for_simplify,

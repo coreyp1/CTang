@@ -17,7 +17,10 @@
 
 GTA_Ast_Node_VTable gta_ast_node_identifier_vtable = {
   .name = "Identifier",
-  .compile_to_binary = gta_ast_node_identifier_compile_to_binary,
+  .compile_to_binary__x86_64 = gta_ast_node_identifier_compile_to_binary__x86_64,
+  .compile_to_binary__arm_64 = 0,
+  .compile_to_binary__x86_32 = 0,
+  .compile_to_binary__arm_32 = 0,
   .compile_to_bytecode = gta_ast_node_identifier_compile_to_bytecode,
   .destroy = gta_ast_node_identifier_destroy,
   .print = gta_ast_node_identifier_print,
@@ -202,7 +205,7 @@ void gta_ast_node_identifier_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callbac
 }
 
 
-bool gta_ast_node_identifier_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
   if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
     // Find the identifier's position in the global positions.

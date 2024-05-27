@@ -216,7 +216,45 @@ bool gta_program_execute_binary(GTA_Execution_Context * context);
  */
 void gta_program_bytecode_print(GTA_Program * program);
 
+/**
+ * Attempt to JIT compile the given program to binary for x86_64.
+ *
+ * If the compilation fails, then no binary will be produced in
+ * program->binary.
+ *
+ * @param program The program to be compiled.
+ */
 void gta_program_compile_binary__x86_64(GTA_Program * program);
+
+/**
+ * Attempt to JIT compile the given program to binary for arm_64.
+ *
+ * If the compilation fails, then no binary will be produced in
+ * program->binary.
+ *
+ * @param program The program to be compiled.
+ */
+void gta_program_compile_binary__arm_64(GTA_Program * program);
+
+/**
+ * Attempt to JIT compile the given program to binary for x86_32.
+ *
+ * If the compilation fails, then no binary will be produced in
+ * program->binary.
+ *
+ * @param program The program to be compiled.
+ */
+void gta_program_compile_binary__x86_32(GTA_Program * program);
+
+/**
+ * Attempt to JIT compile the given program to binary for arm_32.
+ *
+ * If the compilation fails, then no binary will be produced in
+ * program->binary.
+ *
+ * @param program The program to be compiled.
+ */
+void gta_program_compile_binary__arm_32(GTA_Program * program);
 
 #ifdef __cplusplus
 }

@@ -9,7 +9,10 @@
 GTA_Ast_Node_VTable gta_ast_node_boolean_vtable = {
   .name = "Boolean",
   .compile_to_bytecode = gta_ast_node_boolean_compile_to_bytecode,
-  .compile_to_binary = gta_ast_node_boolean_compile_to_binary,
+  .compile_to_binary__x86_64 = gta_ast_node_boolean_compile_to_binary__x86_64,
+  .compile_to_binary__arm_64 = 0,
+  .compile_to_binary__x86_32 = 0,
+  .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_boolean_destroy,
   .print = gta_ast_node_boolean_print,
   .simplify = gta_ast_node_boolean_simplify,
@@ -64,7 +67,7 @@ bool gta_ast_node_boolean_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
 }
 
 
-bool gta_ast_node_boolean_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_boolean_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;
   GCU_Vector8 * v = context->binary_vector;
 

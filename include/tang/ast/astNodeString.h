@@ -97,15 +97,15 @@ void gta_ast_node_string_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback ca
 bool gta_ast_node_string_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
 
 /**
- * Compile a GTA_Ast_Node_String object to binary.
+ * Compile a GTA_Ast_Node_String object to binary for x86_64.
  *
- * @see gta_ast_node_compile_to_binary
+ * @see gta_ast_node_compile_to_binary__x86_64
  *
  * @param self The GTA_Ast_Node_String object to compile.
  * @param context The binary compiler context.
  * @return true on success, false on failure.
  */
-bool gta_ast_node_string_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_string_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

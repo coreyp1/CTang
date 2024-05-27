@@ -109,18 +109,18 @@ GTA_Ast_Node * gta_ast_node_assign_analyze(GTA_Ast_Node * self, GTA_Program * pr
 void gta_ast_node_assign_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 /**
- * Compile the AST node to binary.
+ * Compile the AST node to binary for x86_64.
  *
  * This function should not be called directly. Use gta_ast_node_compile_to_binary()
  * instead.
  *
- * @see gta_ast_node_compile_to_binary
+ * @see gta_ast_node_compile_to_binary__x86_64
  *
  * @param self The node to compile.
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_assign_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_assign_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
 
 /**
  * Compiles the AST node to bytecode.
