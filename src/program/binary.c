@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include <tang/program/binary.h>
 
 #define VECTOR_GROWTH_FACTOR ((double)1.5)
@@ -12,6 +13,8 @@
 #define REG_IS_INTEGER(reg) ((reg) <= GTA_REG_DH)
 #define REG_IS_FLOAT(reg) ((reg) >= GTA_REG_XMM0)
 #define REG_IS_XMM(reg) ((reg) >= GTA_REG_XMM0 && (reg) <= GTA_REG_XMM15)
+#define REG_IS_YMM(reg) ((reg) >= GTA_REG_YMM0 && (reg) <= GTA_REG_YMM15)
+#define REG_IS_NONE(reg) ((reg) == GTA_REG_NONE)
 
 
 bool gta_binary_optimistic_increase(GCU_Vector8 * vector, size_t additional) {
@@ -45,6 +48,8 @@ uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg) {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
   //YMM8, YMM9, YMM10,YMM11,YMM12,YMM13,YMM14,YMM15,
     0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+  // NONE
+    0xFF
   };
   return reg < sizeof(reg_codes) ? reg_codes[reg] : 0;
 }
@@ -325,6 +330,145 @@ bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
   }
 
   return false;
+}
+
+
+bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset) {
+  // https://www.felixcloutier.com/x86/mov
+  if (!(REG_IS_INTEGER(dst)
+      && (REG_IS_INTEGER(base) || REG_IS_NONE(base))
+      && ((REG_IS_INTEGER(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
+        || (REG_IS_NONE(index) && (scale == 0))))
+    || !gta_binary_optimistic_increase(vector, 8)) {
+    return false;
+  }
+  uint8_t dst_code = gta_binary_get_register_code__x86_64(dst);
+  uint8_t base_code = gta_binary_get_register_code__x86_64(base);
+  uint8_t index_code = gta_binary_get_register_code__x86_64(index);
+  bool offset_32 = offset > 0xFFFF || offset < -0xFFFF;
+
+  // RIP-relative addressing.
+  // e.g., mov al, [RIP + 0xDEADBEEF]
+  if (REG_IS_NONE(base)) {
+    if (REG_IS_8BIT(dst)) {
+      // 8-bit register has its own opcode.
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8A);
+    }
+    else {
+      if (REG_IS_64BIT(dst)) {
+        // REX prefix
+        vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((dst_code & 0x08) >> 1));
+      }
+      if (REG_IS_16BIT(dst)) {
+        // 16-bit prefix
+        vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+      }
+      // 16-bit, 32-bit, and 64-bit registers share the same opcode.
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8B);
+    }
+    // Rip-relative *always* uses a 32-bit displacement.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x05 | ((dst_code & 0x07) << 3));
+    memcpy(&vector->data[vector->count], &offset, 4);
+    vector->count += 4;
+    return true;
+  }
+
+  // No Index.
+  // e.g., mov rax, [rbx + 0xDEADBEEF]
+  // also  mov rax, [rbx]
+  // Note: RSP and R12 require a SIB byte.
+  if (REG_IS_NONE(index) && (base != GTA_REG_RSP) && (base != GTA_REG_R12)) {
+    if (REG_IS_16BIT(dst)) {
+      // 16-bit prefix
+      // This must come before the REX byte (if any).
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+    }
+    if (REG_IS_64BIT(dst) || REG_IS_64BIT(base)) {
+      // REX.WRXB prefix
+      // Note: The REX byte must be here because either the dst or the base
+      // register is 64-bit.  W is only set if dst is 64-bit.
+      vector->data[vector->count++] = GCU_TYPE8_UI8((REG_IS_64BIT(dst) ? 0x48 : 0x40) | ((dst_code & 0x08) >> 1) | ((base_code & 0x08) >> 3));
+    }
+    if (REG_IS_8BIT(dst)) {
+      if (dst == GTA_REG_AH || dst == GTA_REG_BH || dst == GTA_REG_CH || dst == GTA_REG_DH) {
+        // AH, BH, CH, DH are not valid for 64-bit mode.
+        return false;
+      }
+      // 8-bit register has its own opcode.
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8A);
+    }
+    else {
+      // 16-bit, 32-bit, and 64-bit registers share the same opcode.
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8B);
+    }
+    // Note: RBP and R13 are used for RIP-relative addressing, so if they are
+    // being referenced, then we must force an offset encoding, even if the
+    // offset is zero.
+    bool force_offset = offset || ((base_code & 0x07) == 0x05);
+    vector->data[vector->count++] = GCU_TYPE8_UI8((force_offset ? offset_32 ? 0x80 : 0x40 : 0x00) | ((dst_code & 0x07) << 3) | (base_code & 0x07));
+    if (offset_32) {
+      memcpy(&vector->data[vector->count], &offset, 4);
+      vector->count += 4;
+    }
+    else if (force_offset) {
+      vector->data[vector->count++] = GCU_TYPE8_UI8(offset);
+    }
+    // Else, no offset.  No need to write anything else.
+    return true;
+  }
+
+  // All cases in which the index is a form of SP result in a weird encoding
+  // that we don't support.
+  if (index == GTA_REG_RSP || index == GTA_REG_ESP || index == GTA_REG_SP) {
+    return false;
+  }
+
+  // SIB required.
+  if (REG_IS_16BIT(dst)) {
+    // 16-bit prefix
+    // This must come before the REX byte (if any).
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+  }
+  if (REG_IS_64BIT(dst) || REG_IS_64BIT(base)) {
+    // REX.WRXB prefix
+    // Note: The REX byte must be here because either the dst or the base
+    // register is 64-bit.  W is only set if dst is 64-bit.
+    vector->data[vector->count++] = GCU_TYPE8_UI8((REG_IS_64BIT(dst) ? 0x48 : 0x40) | ((dst_code & 0x08) >> 1) | ((index_code & 0x08) >> 2) | ((base_code & 0x08) >> 3));
+  }
+  if (REG_IS_8BIT(dst)) {
+    if (dst == GTA_REG_AH || dst == GTA_REG_BH || dst == GTA_REG_CH || dst == GTA_REG_DH) {
+      // AH, BH, CH, DH are not valid for 64-bit mode.
+      return false;
+    }
+    // 8-bit register has its own opcode.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x8A);
+  }
+  else {
+    // 16-bit, 32-bit, and 64-bit registers share the same opcode.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x8B);
+  }
+  // Note: RBP and R13 are used for a specific encoding that we do not make use
+  // of, so if they are being referenced, then we must force an offset
+  // encoding, even if the offset is zero.
+  bool force_offset = offset || ((base_code & 0x07) == 0x05);
+  vector->data[vector->count++] = GCU_TYPE8_UI8((force_offset ? offset_32 ? 0x84 : 0x44 : 0x04) | ((dst_code & 0x07) << 3));
+  vector->data[vector->count++] = GCU_TYPE8_UI8((
+    scale < 2
+      ? 0x00
+      : scale == 2
+        ? 0x40
+        : scale == 4
+          ? 0x80
+          : 0xC0) | (index_code & 0x07) << 3 | (base_code & 0x07));
+  if (offset_32) {
+    memcpy(&vector->data[vector->count], &offset, 4);
+    vector->count += 4;
+  }
+  else if (force_offset) {
+    vector->data[vector->count++] = GCU_TYPE8_UI8(offset);
+  }
+  // Else, no offset.  No need to write anything else.
+  return true;
 }
 
 

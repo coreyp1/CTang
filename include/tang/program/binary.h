@@ -94,6 +94,7 @@ typedef enum GTA_Register {
   GTA_REG_YMM13,
   GTA_REG_YMM14,
   GTA_REG_YMM15,
+  GTA_REG_NONE,
 } GTA_Register;
 
 bool gta_binary_optimistic_increase(GCU_Vector8 * vector, size_t additional);
@@ -104,6 +105,7 @@ bool gta_lea_reg_mem__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
 bool gta_leave__x86_64(GCU_Vector8 * vector);
 bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
 bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t value);
+bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset);
 bool gta_movq_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
 bool gta_pop_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 bool gta_push_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);

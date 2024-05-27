@@ -12,6 +12,7 @@
 #include <tang/ast/astNodeParseError.h>
 #include <tang/ast/astNodeString.h>
 #include <tang/ast/astNodeUse.h>
+#include <tang/program/binary.h>
 #include <tang/program/variable.h>
 
 GTA_Ast_Node_VTable gta_ast_node_identifier_vtable = {
@@ -222,11 +223,13 @@ bool gta_ast_node_identifier_compile_to_binary(GTA_Ast_Node * self, GTA_Binary_C
 
     // Copy the value from the global position (GTA_TYPEX_UI(val.value)) to RAX.
     //   mov rax, [r13 + index]
-    GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x8B, 0x85);
-    GTA_BINARY_WRITE4(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF);
-    memcpy(&context->binary_vector->data[context->binary_vector->count - 4], &index, 4);
+    return true
+      && gta_mov_reg_ind__x86_64(context->binary_vector, GTA_REG_RAX, GTA_REG_R13, GTA_REG_NONE, 0, index);
+    // GTA_BINARY_WRITE3(context->binary_vector, 0x49, 0x8B, 0x85);
+    // GTA_BINARY_WRITE4(context->binary_vector, 0xDE, 0xAD, 0xBE, 0xEF);
+    // memcpy(&context->binary_vector->data[context->binary_vector->count - 4], &index, 4);
 
-    return true;
+    // return true;
   }
 
   if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
