@@ -269,9 +269,10 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
     return false;
   }
   uint8_t src_code = gta_binary_get_register_code__x86_64(src);
-  uint8_t base_code = gta_binary_get_register_code__x86_64(base);
+  uint8_t base_code = REG_IS_INTEGER(base) ? gta_binary_get_register_code__x86_64(base) : 0;
   uint8_t index_code = REG_IS_INTEGER(index) ? gta_binary_get_register_code__x86_64(index) : 0;
   bool offset_32 = offset > 0xFFFF || offset < -0xFFFF;
+  bool rex_required = (REG_IS_64BIT(src) && (src_code & 0x08)) || (REG_IS_64BIT(base) && (base_code & 0x08)) || (REG_IS_64BIT(index) && (index_code & 0x08) && !REG_IS_NONE(index));
 
   // RIP-relative addressing.
   // e.g., mov [RIP + 0xDEADBEEF], rax
@@ -309,14 +310,14 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
       // This must come before the REX byte (if any).
       vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
     }
-    if (REG_IS_64BIT(src) || REG_IS_64BIT(base)) {
+    if (rex_required) {
       // REX.WRXB prefix
       // Note: The REX byte must be here because either the src or the base
       // register is 64-bit.  W is only set if src is 64-bit.
       vector->data[vector->count++] = GCU_TYPE8_UI8((REG_IS_64BIT(src) ? 0x48 : 0x40) | ((src_code & 0x08) >> 1) | ((base_code & 0x08) >> 3));
     }
     if (REG_IS_8BIT(src)) {
-      if (src == GTA_REG_AH || src == GTA_REG_BH || src == GTA_REG_CH || src == GTA_REG_DH) {
+      if (rex_required && (src == GTA_REG_AH || src == GTA_REG_BH || src == GTA_REG_CH || src == GTA_REG_DH)) {
         // AH, BH, CH, DH are not valid for 64-bit mode.
         return false;
       }
@@ -358,7 +359,7 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
     // This must come before the REX byte (if any).
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
   }
-  if (REG_IS_64BIT(src) || REG_IS_64BIT(base) || (REG_IS_64BIT(index) && !REG_IS_NONE(index))) {
+  if (rex_required) {
     // REX.WRXB prefix
     // Note: The REX byte must be here because either the src, base, or index
     // register is 64-bit.  W is only set if src is 64-bit.
@@ -368,7 +369,7 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
       | ((index_code & 0x08) >> 2));
   }
   if (REG_IS_8BIT(src)) {
-    if (src == GTA_REG_AH || src == GTA_REG_BH || src == GTA_REG_CH || src == GTA_REG_DH) {
+    if (rex_required && (src == GTA_REG_AH || src == GTA_REG_BH || src == GTA_REG_CH || src == GTA_REG_DH)) {
       // AH, BH, CH, DH are not valid for 64-bit mode.
       return false;
     }
