@@ -644,22 +644,24 @@ bool gta_movq_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Regist
   if (!gta_binary_optimistic_increase(vector, 5)) {
     return false;
   }
+  uint8_t src_code = gta_binary_get_register_code__x86_64(src);
+  uint8_t dst_code = gta_binary_get_register_code__x86_64(dst);
   if (REG_IS_64BIT(src) && REG_IS_INTEGER(src) && REG_IS_XMM(dst)) {
     // ex: movq xmm0, rax
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
-    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((src & 0x08) >> 1) | ((dst & 0x08) >> 3));
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((src_code & 0x08) >> 3) | ((dst_code & 0x08) >> 1));
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x0F);
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x6E);
-    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + ((src & 0x07) << 3) + (dst & 0x07));
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 | ((src_code & 0x07) << 3) | (dst_code & 0x07));
     return true;
   }
   else if (REG_IS_XMM(src) && REG_IS_64BIT(dst) && REG_IS_INTEGER(dst)) {
     // ex: movq rax, xmm0
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
-    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((src & 0x08) >> 1) | ((dst & 0x08) >> 3));
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((dst_code & 0x08) >> 3) | ((src_code & 0x08) >> 1));
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x0F);
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x7E);
-    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + ((dst & 0x07) << 3) + (src & 0x07));
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 | ((src_code & 0x07) << 3) | (dst_code & 0x07));
     return true;
   }
   return false;

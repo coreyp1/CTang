@@ -315,6 +315,18 @@ TEST(x86_64, mov_reg_reg) {
 }
 
 
+TEST(x86_64, movq_reg_reg) {
+  // General case. xmm, r64
+  JIT(gta_movq_reg_reg__x86_64(v, GTA_REG_XMM0, GTA_REG_RAX), "\x66\x48\x0F\x6E\xC0");
+  JIT(gta_movq_reg_reg__x86_64(v, GTA_REG_XMM1, GTA_REG_R9), "\x66\x49\x0F\x6E\xC9");
+  JIT(gta_movq_reg_reg__x86_64(v, GTA_REG_XMM2, GTA_REG_R10), "\x66\x49\x0F\x6E\xD2");
+  // General case. r64, xmm
+  JIT(gta_movq_reg_reg__x86_64(v, GTA_REG_RBX, GTA_REG_XMM3), "\x66\x48\x0F\x7E\xDB");
+  JIT(gta_movq_reg_reg__x86_64(v, GTA_REG_R12, GTA_REG_XMM4), "\x66\x49\x0F\x7E\xE4");
+  JIT(gta_movq_reg_reg__x86_64(v, GTA_REG_R13, GTA_REG_XMM5), "\x66\x49\x0F\x7E\xED");
+}
+
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
