@@ -376,6 +376,29 @@ TEST(x86_64, ret) {
 }
 
 
+TEST(x86_64, xor_reg_reg) {
+  // General case. r8, r8
+  JIT(gta_xor_reg_reg__x86_64(v, GTA_REG_AL, GTA_REG_BL), "\x30\xD8");
+  JIT(gta_xor_reg_reg__x86_64(v, GTA_REG_BH, GTA_REG_CL), "\x30\xCF");
+  JIT_FAIL(gta_xor_reg_reg__x86_64(v, GTA_REG_AL, GTA_REG_AX));
+  JIT_FAIL(gta_xor_reg_reg__x86_64(v, GTA_REG_BH, GTA_REG_RBX));
+  // General case. r16, r16
+  JIT(gta_xor_reg_reg__x86_64(v, GTA_REG_CX, GTA_REG_DX), "\x66\x31\xD1");
+  JIT(gta_xor_reg_reg__x86_64(v, GTA_REG_DX, GTA_REG_SI), "\x66\x31\xF2");
+  JIT_FAIL(gta_xor_reg_reg__x86_64(v, GTA_REG_CX, GTA_REG_EAX));
+  JIT_FAIL(gta_xor_reg_reg__x86_64(v, GTA_REG_DX, GTA_REG_AH));
+  // General case. r32, r32
+  JIT(gta_xor_reg_reg__x86_64(v, GTA_REG_ESP, GTA_REG_EBP), "\x31\xEC");
+  JIT(gta_xor_reg_reg__x86_64(v, GTA_REG_EBP, GTA_REG_ESI), "\x31\xF5");
+  JIT_FAIL(gta_xor_reg_reg__x86_64(v, GTA_REG_ESP, GTA_REG_R8));
+  JIT_FAIL(gta_xor_reg_reg__x86_64(v, GTA_REG_EBP, GTA_REG_DX));
+  // General case. r64, r64
+  JIT(gta_xor_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_R9), "\x4D\x31\xC8");
+  JIT(gta_xor_reg_reg__x86_64(v, GTA_REG_RBX, GTA_REG_R12), "\x4C\x31\xE3");
+  JIT_FAIL(gta_xor_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_EAX));
+}
+
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -762,7 +762,6 @@ bool gta_xor_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
   }
   if (REG_IS_32BIT(src) && REG_IS_32BIT(dst)) {
     // 32-bit register
-    vector->data[vector->count++] = GCU_TYPE8_UI8(0x41);
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x31);
     vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + ((src_code & 0x07) << 3) + (dst_code & 0x07));
     return true;
