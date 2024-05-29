@@ -370,6 +370,12 @@ TEST(x86_64, push_reg) {
 }
 
 
+TEST(x86_64, ret) {
+  // General case.
+  JIT(gta_ret__x86_64(v), "\xC3");
+}
+
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
