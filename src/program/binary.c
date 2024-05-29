@@ -463,9 +463,6 @@ bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
   if (!REG_IS_INTEGER(dst) || !REG_IS_INTEGER(src) || !gta_binary_optimistic_increase(vector, 3)) {
     return false;
   }
-  if (REG_IS_8BIT(dst) || REG_IS_8BIT(src)) {
-    return false;
-  }
   uint8_t src_code = gta_binary_get_register_code__x86_64(src);
   uint8_t dst_code = gta_binary_get_register_code__x86_64(dst);
   if (REG_IS_64BIT(src) && REG_IS_64BIT(dst)) {
@@ -477,7 +474,6 @@ bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
   }
   if (REG_IS_32BIT(src) && REG_IS_32BIT(dst)) {
     // 32-bit register
-    vector->data[vector->count++] = GCU_TYPE8_UI8(0x41);
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x89);
     vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + ((src_code & 0x7) << 3) + (dst_code & 0x7));
     return true;
