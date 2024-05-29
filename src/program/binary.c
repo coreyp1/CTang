@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <tang/program/binary.h>
 
@@ -414,12 +415,23 @@ bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t val
   if (REG_IS_64BIT(dst)) {
     // REX prefix
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((dst_code & 0x08) >> 3));
+    if (value <= INT32_MAX && value >= INT32_MIN) {
+      // 32-bit immediate
+      // Use this opcode so that we can save 4 bytes.
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0xC7);
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + (dst_code & 0x7));
+      int32_t downsized_src = (int32_t)value;
+      memcpy(&vector->data[vector->count], &downsized_src, 4);
+      vector->count += 4;
+      return true;
+    }
+    // 64-bit immediate
     vector->data[vector->count++] = GCU_TYPE8_UI8(0xB8 + (dst_code & 0x7));
     memcpy(&vector->data[vector->count], &value, 8);
     vector->count += 8;
     return true;
   }
-  if (REG_IS_32BIT(dst) && value <= 0x7FFFFFFF && value >= -0x80000000) {
+  if (REG_IS_32BIT(dst) && value <= INT32_MAX && value >= INT32_MIN) {
     // 32-bit register
     vector->data[vector->count++] = GCU_TYPE8_UI8(0xB8 + (dst_code & 0x7));
     int32_t downsized_src = (int32_t)value;
@@ -427,7 +439,7 @@ bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t val
     vector->count += 4;
     return true;
   }
-  if (REG_IS_16BIT(dst) && value <= 0x7FFF && value >= -0x8000) {
+  if (REG_IS_16BIT(dst) && value <= INT16_MAX && value >= INT16_MIN) {
     // 16-bit register
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
     vector->data[vector->count++] = GCU_TYPE8_UI8(0xB8 + (dst_code & 0x7));
@@ -436,7 +448,7 @@ bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t val
     vector->count += 2;
     return true;
   }
-  if (REG_IS_8BIT(dst) && value <= 0x7F && value >= -0x80) {
+  if (REG_IS_8BIT(dst) && value <= INT8_MAX && value >= INT8_MIN) {
     // 8-bit register
     vector->data[vector->count++] = GCU_TYPE8_UI8(0xB0 + (dst_code & 0x7));
     vector->data[vector->count++] = GCU_TYPE8_I8((int8_t)value);

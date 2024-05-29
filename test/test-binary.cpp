@@ -4,6 +4,7 @@
  * Test for consistency of the binary code generation.
  */
 
+#include <stdint.h>
 #include <string>
 #include <gtest/gtest.h>
 #include <cutil/vector.h>
@@ -185,6 +186,33 @@ TEST(x86_64, mov_ind_reg) {
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0, GTA_REG_RDX), "\x49\x89\x14\x24");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0x5A5A5A5A, GTA_REG_RDX), "\x49\x89\x94\x24\x5A\x5A\x5A\x5A");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_R8, 1, 1, GTA_REG_RDX), "\x4B\x89\x54\x04\x01");
+}
+
+
+TEST(x86_64, mov_reg_imm) {
+  // General case. r8, imm8
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_AL, 0x7F), "\xB0\x7F");
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_BH, -0x42), "\xB7\xBE");
+  JIT_FAIL(gta_mov_reg_imm__x86_64(v, GTA_REG_AL, (int64_t)INT8_MAX + 1));
+  JIT_FAIL(gta_mov_reg_imm__x86_64(v, GTA_REG_BH, (int64_t)INT8_MIN - 1));
+  // General case. r16, imm16
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_CX, 0x1EAD), "\x66\xB9\xAD\x1E");
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_DX, -0x1EAD), "\x66\xBA\x53\xE1");
+  JIT_FAIL(gta_mov_reg_imm__x86_64(v, GTA_REG_CX, (int64_t)INT16_MAX + 1));
+  JIT_FAIL(gta_mov_reg_imm__x86_64(v, GTA_REG_DX, (int64_t)INT16_MIN - 1));
+  // General case. r32, imm32
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_ESP, 0x1EADBEEF), "\xBC\xEF\xBE\xAD\x1E");
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_EBP, -0x1EADBEEF), "\xBD\x11\x41\x52\xE1");
+  JIT_FAIL(gta_mov_reg_imm__x86_64(v, GTA_REG_ESP, (int64_t)INT32_MAX + 1));
+  JIT_FAIL(gta_mov_reg_imm__x86_64(v, GTA_REG_EBP, (int64_t)INT32_MIN - 1));
+  // General case. r64, imm32 (sign extended)
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_R8, 0x1EADBEEF), "\x49\xC7\xC0\xEF\xBE\xAD\x1E");
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_R9, -0x1EADBEEF), "\x49\xC7\xC1\x11\x41\x52\xE1");
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_RBX, 0x03), string("\x48\xC7\xC3\x03\x00\x00\x00", 7));
+  // General case. r64, imm64
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_R8, 0x1EADBEEFDEADBEEF), "\x49\xB8\xEF\xBE\xAD\xDE\xEF\xBE\xAD\x1E");
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_R9, -0x1EADBEEFDEADBEEF), "\x49\xB9\x11\x41\x52\x21\x10\x41\x52\xe1");
+  JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_RBX, 0x1EADBEEFDEADBEEF), "\x48\xBB\xEF\xBE\xAD\xDE\xEF\xBE\xAD\x1E");
 }
 
 
