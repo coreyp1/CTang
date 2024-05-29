@@ -272,7 +272,7 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
   uint8_t base_code = REG_IS_INTEGER(base) ? gta_binary_get_register_code__x86_64(base) : 0;
   uint8_t index_code = REG_IS_INTEGER(index) ? gta_binary_get_register_code__x86_64(index) : 0;
   bool offset_32 = offset > 0xFFFF || offset < -0xFFFF;
-  bool rex_required = (REG_IS_64BIT(src) && (src_code & 0x08)) || (REG_IS_64BIT(base) && (base_code & 0x08)) || (REG_IS_64BIT(index) && (index_code & 0x08) && !REG_IS_NONE(index));
+  bool rex_required = REG_IS_64BIT(src) || (REG_IS_64BIT(base) && (base_code & 0x08)) || (REG_IS_64BIT(index) && (index_code & 0x08) && !REG_IS_NONE(index));
 
   // RIP-relative addressing.
   // e.g., mov [RIP + 0xDEADBEEF], rax

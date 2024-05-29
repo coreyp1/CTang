@@ -119,6 +119,72 @@ TEST(x86_64, mov_ind_reg) {
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0x5A5A5A5A, GTA_REG_BL), "\x41\x88\x9C\x24\x5A\x5A\x5A\x5A");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_R8, 1, 1, GTA_REG_CL), "\x43\x88\x4C\x04\x01");
   JIT_FAIL(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0, GTA_REG_BH));
+
+  // General case. m16, r16
+  // mov word ptr [base + index * scale + offset], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RCX, 4, 42, GTA_REG_CX), "\x66\x89\x4C\x88\x2A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 42, GTA_REG_DX), "\x66\x89\x54\x10\x2A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 2, 0x7EADBEEF, GTA_REG_DX), "\x66\x89\x94\x50\xEF\xBE\xAD\x7E");
+  // mov word ptr [base + offset], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 13, GTA_REG_DX), "\x66\x89\x53\x0D");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, 42, GTA_REG_DX), "\x66\x89\x50\x2A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 0x01234567, GTA_REG_DX), "\x66\x41\x89\x92\x67\x45\x23\x01");
+  // mov word ptr [base], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, 0, GTA_REG_DX), "\x66\x89\x10");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 0, GTA_REG_DX), "\x66\x89\x13");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 0, GTA_REG_DX), "\x66\x41\x89\x12");
+  // mov word ptr [RIP + offset], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_NONE, GTA_REG_NONE, 0, 0x01234567, GTA_REG_DX), "\x66\x89\x15\x67\x45\x23\x01");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_NONE, GTA_REG_NONE, 0, 0, GTA_REG_DX), string("\x66\x89\x15\x00\x00\x00\x00", 7));
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_NONE, GTA_REG_NONE, 0, -42, GTA_REG_DX), "\x66\x89\x15\xD6\xFF\xFF\xFF");
+  // Special cases for R12, which forces the use of the SIB byte.
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0, GTA_REG_DX), "\x66\x41\x89\x14\x24");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0x5A5A5A5A, GTA_REG_DX), "\x66\x41\x89\x94\x24\x5A\x5A\x5A\x5A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_R8, 1, 1, GTA_REG_DX), "\x66\x43\x89\x54\x04\x01");
+
+  // General case. m32, r32
+  // mov dword ptr [base + index * scale + offset], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RCX, 4, 42, GTA_REG_ECX), "\x89\x4C\x88\x2A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 42, GTA_REG_EDX), "\x89\x54\x10\x2A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 2, 0x7EADBEEF, GTA_REG_EDX), "\x89\x94\x50\xEF\xBE\xAD\x7E");
+  // mov dword ptr [base + offset], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 13, GTA_REG_EDX), "\x89\x53\x0D");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, 42, GTA_REG_EDX), "\x89\x50\x2A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 0x01234567, GTA_REG_EDX), "\x41\x89\x92\x67\x45\x23\x01");
+  // mov dword ptr [base], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, 0, GTA_REG_EDX), "\x89\x10");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 0, GTA_REG_EDX), "\x89\x13");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 0, GTA_REG_EDX), "\x41\x89\x12");
+  // mov dword ptr [RIP + offset], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_NONE, GTA_REG_NONE, 0, 0x01234567, GTA_REG_EDX), "\x89\x15\x67\x45\x23\x01");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_NONE, GTA_REG_NONE, 0, 0, GTA_REG_EDX), string("\x89\x15\x00\x00\x00\x00", 6));
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_NONE, GTA_REG_NONE, 0, -42, GTA_REG_EDX), "\x89\x15\xD6\xFF\xFF\xFF");
+  // Special cases for R12, which forces the use of the SIB byte.
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0, GTA_REG_EDX), "\x41\x89\x14\x24");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0x5A5A5A5A, GTA_REG_EDX), "\x41\x89\x94\x24\x5A\x5A\x5A\x5A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_R8, 1, 1, GTA_REG_EDX), "\x43\x89\x54\x04\x01");
+
+  // General case. m64, r64
+  // mov qword ptr [base + index * scale + offset], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RCX, 4, 42, GTA_REG_RCX), "\x48\x89\x4C\x88\x2A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 42, GTA_REG_RDX), "\x48\x89\x54\x10\x2A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 2, 0x7EADBEEF, GTA_REG_RDX), "\x48\x89\x94\x50\xEF\xBE\xAD\x7E");
+  // mov qword ptr [base + offset], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 13, GTA_REG_RDX), "\x48\x89\x53\x0D");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, 42, GTA_REG_RDX), "\x48\x89\x50\x2A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 0x01234567, GTA_REG_RDX), "\x49\x89\x92\x67\x45\x23\x01");
+  // mov qword ptr [base], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, 0, GTA_REG_RDX), "\x48\x89\x10");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 0, GTA_REG_RDX), "\x48\x89\x13");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 0, GTA_REG_RDX), "\x49\x89\x12");
+  // mov qword ptr [RIP + offset], src
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_NONE, GTA_REG_NONE, 0, 0x01234567, GTA_REG_RDX), "\x48\x89\x15\x67\x45\x23\x01");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_NONE, GTA_REG_NONE, 0, 0, GTA_REG_RDX), string("\x48\x89\x15\x00\x00\x00\x00", 7));
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_NONE, GTA_REG_NONE, 0, -42, GTA_REG_RDX), "\x48\x89\x15\xD6\xFF\xFF\xFF");
+  // Special cases for R12, which forces the use of the SIB byte.
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0, GTA_REG_RDX), "\x49\x89\x14\x24");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0x5A5A5A5A, GTA_REG_RDX), "\x49\x89\x94\x24\x5A\x5A\x5A\x5A");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_R8, 1, 1, GTA_REG_RDX), "\x4B\x89\x54\x04\x01");
 }
 
 
