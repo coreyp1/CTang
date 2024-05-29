@@ -350,6 +350,16 @@ TEST(x86_64, or_reg_reg) {
 }
 
 
+TEST(x86_64, pop_reg) {
+  // General case. r64
+  JIT(gta_pop_reg__x86_64(v, GTA_REG_RAX), "\x58");
+  JIT(gta_pop_reg__x86_64(v, GTA_REG_RBX), "\x5B");
+  JIT(gta_pop_reg__x86_64(v, GTA_REG_R12), "\x41\x5C");
+  JIT(gta_pop_reg__x86_64(v, GTA_REG_R15), "\x41\x5F");
+  JIT_FAIL(gta_pop_reg__x86_64(v, GTA_REG_AX));
+}
+
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
