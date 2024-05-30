@@ -113,7 +113,7 @@ TEST(x86_64, mov_ind_reg) {
   // mov byte ptr [base + index * scale + offset], src
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RCX, 4, 42, GTA_REG_BL), "\x88\x5C\x88\x2A");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 42, GTA_REG_BH), "\x88\x7C\x10\x2A");
-  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 2, 0x7EADBEEF, GTA_REG_DH), "\x88\xB4\x50\xEF\xBE\xAD\x7E");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_R8, 2, 0x7EADBEEF, GTA_REG_DL), "\x42\x88\x94\x40\xEF\xBE\xAD\x7E");
   JIT_FAIL(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_R8, 1, 42, GTA_REG_BH));
   // mov byte ptr [base + offset], src
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 13, GTA_REG_CL), "\x88\x4b\x0D");
@@ -139,7 +139,7 @@ TEST(x86_64, mov_ind_reg) {
   // mov word ptr [base + index * scale + offset], src
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RCX, 4, 42, GTA_REG_CX), "\x66\x89\x4C\x88\x2A");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 42, GTA_REG_DX), "\x66\x89\x54\x10\x2A");
-  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 2, 0x7EADBEEF, GTA_REG_DX), "\x66\x89\x94\x50\xEF\xBE\xAD\x7E");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_R8, 2, 0x7EADBEEF, GTA_REG_DX), "\x66\x42\x89\x94\x40\xEF\xBE\xAD\x7E");
   // mov word ptr [base + offset], src
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 13, GTA_REG_DX), "\x66\x89\x53\x0D");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, 42, GTA_REG_DX), "\x66\x89\x50\x2A");
@@ -161,7 +161,7 @@ TEST(x86_64, mov_ind_reg) {
   // mov dword ptr [base + index * scale + offset], src
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RCX, 4, 42, GTA_REG_ECX), "\x89\x4C\x88\x2A");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 42, GTA_REG_EDX), "\x89\x54\x10\x2A");
-  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 2, 0x7EADBEEF, GTA_REG_EDX), "\x89\x94\x50\xEF\xBE\xAD\x7E");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_R8, 2, 0x7EADBEEF, GTA_REG_EDX), "\x42\x89\x94\x40\xEF\xBE\xAD\x7E");
   // mov dword ptr [base + offset], src
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 13, GTA_REG_EDX), "\x89\x53\x0D");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, 42, GTA_REG_EDX), "\x89\x50\x2A");
@@ -183,7 +183,7 @@ TEST(x86_64, mov_ind_reg) {
   // mov qword ptr [base + index * scale + offset], src
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RCX, 4, 42, GTA_REG_RCX), "\x48\x89\x4C\x88\x2A");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 42, GTA_REG_RDX), "\x48\x89\x54\x10\x2A");
-  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 2, 0x7EADBEEF, GTA_REG_RDX), "\x48\x89\x94\x50\xEF\xBE\xAD\x7E");
+  JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_R8, 2, 0x7EADBEEF, GTA_REG_RDX), "\x4A\x89\x94\x40\xEF\xBE\xAD\x7E");
   // mov qword ptr [base + offset], src
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 13, GTA_REG_RDX), "\x48\x89\x53\x0D");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, 42, GTA_REG_RDX), "\x48\x89\x50\x2A");

@@ -209,6 +209,7 @@ bool gta_lea_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
     || (!REG_IS_NONE(base) && (REG_IS_64BIT(base) && (base_code & 0x08)))
     || (!REG_IS_NONE(index) && REG_IS_64BIT(index) && (index_code & 0x08));
 
+  // Prefixes and Opcode.
   if (REG_IS_16BIT(dst)) {
     // 16-bit prefix
     // This must come before the REX byte (if any).
@@ -292,6 +293,9 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
       && ((REG_IS_INTEGER(base) && REG_IS_64BIT(base)) || REG_IS_NONE(base))
       && ((REG_IS_INTEGER(index) && REG_IS_64BIT(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
         || (REG_IS_NONE(index) && (scale == 0))))
+    // All cases in which the index is a form of SP result in a weird SIB
+    // encoding that we don't support.
+    || (index == GTA_REG_RSP || index == GTA_REG_ESP || index == GTA_REG_SP)
     || !gta_binary_optimistic_increase(vector, 8)) {
     return false;
   }
@@ -303,86 +307,7 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
     || (!REG_IS_NONE(base) && (REG_IS_64BIT(base) && (base_code & 0x08)))
     || (!REG_IS_NONE(index) && REG_IS_64BIT(index) && (index_code & 0x08));
 
-  // RIP-relative addressing.
-  // e.g., mov [RIP + 0xDEADBEEF], rax
-  if (REG_IS_NONE(base)) {
-    if (REG_IS_8BIT(src)) {
-      // 8-bit register has its own opcode.
-      vector->data[vector->count++] = GCU_TYPE8_UI8(0x88);
-    }
-    else {
-      if (REG_IS_64BIT(src)) {
-        // REX prefix
-        vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((src_code & 0x08) >> 1));
-      }
-      if (REG_IS_16BIT(src)) {
-        // 16-bit prefix
-        vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
-      }
-      // 16-bit, 32-bit, and 64-bit registers share the same opcode.
-      vector->data[vector->count++] = GCU_TYPE8_UI8(0x89);
-    }
-    // Rip-relative *always* uses a 32-bit displacement.
-    vector->data[vector->count++] = GCU_TYPE8_UI8(0x05 | ((src_code & 0x07) << 3));
-    memcpy(&vector->data[vector->count], &offset, 4);
-    vector->count += 4;
-    return true;
-  }
-
-  // Base or Base + offset.  No Index.
-  // e.g., mov [rbx + 0xDEADBEEF], rax
-  // also  mov [rbx], rax
-  // Note: RSP and R12 require a SIB byte.
-  if (REG_IS_NONE(index) && (base != GTA_REG_RSP) && (base != GTA_REG_R12)) {
-    if (REG_IS_16BIT(src)) {
-      // 16-bit prefix
-      // This must come before the REX byte (if any).
-      vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
-    }
-    if (rex_required) {
-      // REX.WRXB prefix
-      // Note: The REX byte must be here because either the src or the base
-      // register is 64-bit.  W is only set if src is 64-bit.
-      vector->data[vector->count++] = GCU_TYPE8_UI8((REG_IS_64BIT(src) ? 0x48 : 0x40) | ((src_code & 0x08) >> 1) | ((base_code & 0x08) >> 3));
-    }
-    if (REG_IS_8BIT(src)) {
-      if (rex_required && (src == GTA_REG_AH || src == GTA_REG_BH || src == GTA_REG_CH || src == GTA_REG_DH)) {
-        // AH, BH, CH, DH are not valid for 64-bit mode.
-        return false;
-      }
-      // 8-bit register has its own opcode.
-      vector->data[vector->count++] = GCU_TYPE8_UI8(0x88);
-    }
-    else {
-      // 16-bit, 32-bit, and 64-bit registers share the same opcode.
-      vector->data[vector->count++] = GCU_TYPE8_UI8(0x89);
-    }
-    // Note: RBP and R13 are used for RIP-relative addressing, so if they are
-    // being referenced, then we must force an offset encoding, even if the
-    // offset is zero.
-    bool force_offset = offset || ((base_code & 0x07) == 0x05);
-    vector->data[vector->count++] = GCU_TYPE8_UI8((force_offset ? offset_32 ? 0x80 : 0x40 : 0x00) | ((src_code & 0x07) << 3) | (base_code & 0x07));
-    if (offset_32) {
-      memcpy(&vector->data[vector->count], &offset, 4);
-      vector->count += 4;
-    }
-    else if (force_offset) {
-      vector->data[vector->count++] = GCU_TYPE8_UI8(offset);
-    }
-    // Else, no offset.  No need to write anything else.
-    return true;
-  }
-
-  // All cases in which the index is a form of SP result in a weird encoding
-  // that we don't support.
-  if (index == GTA_REG_RSP || index == GTA_REG_ESP || index == GTA_REG_SP) {
-    return false;
-  }
-
-  // Base + (Index * Scale) + Offset.
-  // e.g., mov [rbx + rsi * 4 + 0xDEADBEEF], rax
-  // also  mov [rbx + rsi * 4], rax
-  // also  mov [rbx + rcx], rax
+  // Prefixes and Opcode.
   if (REG_IS_16BIT(src)) {
     // 16-bit prefix
     // This must come before the REX byte (if any).
@@ -390,8 +315,6 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
   }
   if (rex_required) {
     // REX.WRXB prefix
-    // Note: The REX byte must be here because either the src, base, or index
-    // register is 64-bit.  W is only set if src is 64-bit.
     vector->data[vector->count++] = GCU_TYPE8_UI8((REG_IS_64BIT(src) ? 0x48 : 0x40)
       | ((src_code & 0x08) >> 1)
       | ((base_code & 0x08) >> 3)
@@ -409,19 +332,47 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
     // 16-bit, 32-bit, and 64-bit registers share the same opcode.
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x89);
   }
-  // Note: RBP and R13 are used for a specific encoding that we do not make use
-  // of, so if they are being referenced, then we must force an offset
-  // encoding, even if the offset is zero.
+
+  // RIP-relative addressing.
+  // e.g., mov [RIP + 0xDEADBEEF], rax
+  if (REG_IS_NONE(base)) {
+    // Rip-relative *always* uses a 32-bit displacement.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x05 | ((src_code & 0x07) << 3));
+    memcpy(&vector->data[vector->count], &offset, 4);
+    vector->count += 4;
+    return true;
+  }
+
+  // Note: RBP and R13 are used for RIP-relative addressing, so if they are
+  // being referenced, then we must force an offset encoding, even if the
+  // offset is zero.
   bool force_offset = offset || ((base_code & 0x07) == 0x05);
-  vector->data[vector->count++] = GCU_TYPE8_UI8((force_offset ? offset_32 ? 0x84 : 0x44 : 0x04) | ((src_code & 0x07) << 3));
-  vector->data[vector->count++] = GCU_TYPE8_UI8((
-    scale < 2
-      ? 0x00
-      : scale == 2
-        ? 0x40
-        : scale == 4
-          ? 0x80
-          : 0xC0) | ((REG_IS_NONE(index) ? 0x04 : (index_code & 0x07)) << 3) | (base_code & 0x07));
+
+  // Base or Base + offset.  No Index.
+  // e.g., mov [rbx + 0xDEADBEEF], rax
+  // also  mov [rbx], rax
+  // Note: RSP and R12 require a SIB byte.
+  if (REG_IS_NONE(index) && (base != GTA_REG_RSP) && (base != GTA_REG_R12)) {
+    vector->data[vector->count++] = GCU_TYPE8_UI8((force_offset ? offset_32 ? 0x80 : 0x40 : 0x00) | ((src_code & 0x07) << 3) | (base_code & 0x07));
+  }
+
+  // Base + (Index * Scale) + Offset.
+  // e.g., mov [rbx + rsi * 4 + 0xDEADBEEF], rax
+  // also  mov [rbx + rsi * 4], rax
+  // also  mov [rbx + rcx], rax
+  else {
+    vector->data[vector->count++] = GCU_TYPE8_UI8((force_offset ? offset_32 ? 0x84 : 0x44 : 0x04) | ((src_code & 0x07) << 3));
+    vector->data[vector->count++] = GCU_TYPE8_UI8((
+      scale < 2
+        ? 0x00
+        : scale == 2
+          ? 0x40
+          : scale == 4
+            ? 0x80
+            : 0xC0) | ((REG_IS_NONE(index) ? 0x04 : (index_code & 0x07)) << 3) | (base_code & 0x07));
+  }
+
+  // Write the offset.
   if (offset_32) {
     memcpy(&vector->data[vector->count], &offset, 4);
     vector->count += 4;
