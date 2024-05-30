@@ -186,66 +186,130 @@ bool gta_jnz__x86_64(GCU_Vector8 * vector, int32_t offset) {
 }
 
 
-bool gta_lea_reg_mem__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, int32_t offset) {
+bool gta_lea_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset) {
   // https://www.felixcloutier.com/x86/lea
-  if (!REG_IS_INTEGER(dst) || !gta_binary_optimistic_increase(vector, 8)) {
+  if (!(REG_IS_INTEGER(dst)
+      && ((REG_IS_INTEGER(base) && REG_IS_64BIT(base)) || REG_IS_NONE(base))
+      && ((REG_IS_INTEGER(index) && REG_IS_64BIT(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
+        || (REG_IS_NONE(index) && (scale == 0))))
+    || !gta_binary_optimistic_increase(vector, 8)) {
     return false;
   }
   uint8_t dst_code = gta_binary_get_register_code__x86_64(dst);
   uint8_t base_code = gta_binary_get_register_code__x86_64(base);
+  uint8_t index_code = REG_IS_INTEGER(index) ? gta_binary_get_register_code__x86_64(index) : 0;
+  bool offset_32 = offset > (int32_t)INT8_MAX || offset < (int32_t)INT8_MIN;
+  bool rex_required = REG_IS_64BIT(dst)
+    || (!REG_IS_NONE(base) && (REG_IS_64BIT(base) && (base_code & 0x08)))
+    || (!REG_IS_NONE(index) && REG_IS_64BIT(index) && (index_code & 0x08));
+
   // These are not valid for LEA.
   if (REG_IS_8BIT(dst) || REG_IS_8BIT(base) || REG_IS_16BIT(base)) {
     return false;
   }
-  // Prefixes.
-  if (REG_IS_32BIT(base)) {
-    vector->data[vector->count++] = GCU_TYPE8_UI8(0x67);
+
+  // RIP-relative addressing.
+  // e.g., lea [RIP + 0xDEADBEEF], rax
+  if (REG_IS_NONE(base)) {
+    if (REG_IS_16BIT(dst)) {
+      // 16-bit prefix
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+    }
+    if (rex_required) {
+      // REX prefix
+      vector->data[vector->count++] = GCU_TYPE8_UI8((REG_IS_64BIT(dst) ? 0x48 : 0x40) | ((dst_code & 0x08) >> 1));
+    }
+    // 16-bit, 32-bit, and 64-bit registers share the same opcode.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x8D);
+    // Rip-relative *always* uses a 32-bit displacement.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x05 | ((dst_code & 0x07) << 3));
+    memcpy(&vector->data[vector->count], &offset, 4);
+    vector->count += 4;
+    return true;
   }
+
+  // Base or Base + offset.  No Index.
+  // e.g., lea [rbx + 0xDEADBEEF], rax
+  // also  lea [rbx], rax
+  // Note: RSP and R12 require a SIB byte.
+  if (REG_IS_NONE(index) && (base != GTA_REG_RSP) && (base != GTA_REG_R12)) {
+    if (REG_IS_16BIT(dst)) {
+      // 16-bit prefix
+      // This must come before the REX byte (if any).
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+    }
+    if (rex_required) {
+      // REX.WRXB prefix
+      // Note: The REX byte must be here because either the dst or the base
+      // register is 64-bit.  W is only set if dst is 64-bit.
+      vector->data[vector->count++] = GCU_TYPE8_UI8((REG_IS_64BIT(dst) ? 0x48 : 0x40) | ((dst_code & 0x08) >> 1) | ((base_code & 0x08) >> 3));
+    }
+    // 16-bit, 32-bit, and 64-bit registers share the same opcode.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x8D);
+
+    // Note: RBP and R13 are used for RIP-relative addressing, so if they are
+    // being referenced, then we must force an offset encoding, even if the
+    // offset is zero.
+    bool force_offset = offset || ((base_code & 0x07) == 0x05);
+    vector->data[vector->count++] = GCU_TYPE8_UI8((force_offset ? offset_32 ? 0x80 : 0x40 : 0x00) | ((dst_code & 0x07) << 3) | (base_code & 0x07));
+    if (offset_32) {
+      memcpy(&vector->data[vector->count], &offset, 4);
+      vector->count += 4;
+    }
+    else if (force_offset) {
+      vector->data[vector->count++] = GCU_TYPE8_UI8(offset);
+    }
+    // Else, no offset.  No need to write anything else.
+    return true;
+  }
+
+  // All cases in which the index is a form of SP result in a weird encoding
+  // that we don't support.
+  if (index == GTA_REG_RSP || index == GTA_REG_ESP || index == GTA_REG_SP) {
+    return false;
+  }
+
+  // Base + (Index * Scale) + Offset.
+  // e.g., lea [rbx + rsi * 4 + 0xDEADBEEF], rax
+  // also  lea [rbx + rsi * 4], rax
+  // also  lea [rbx + rcx], rax
   if (REG_IS_16BIT(dst)) {
+    // 16-bit prefix
+    // This must come before the REX byte (if any).
     vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
   }
-  if (REG_IS_64BIT(dst) || REG_IS_64BIT(base)) {
-    // REX prefix.
-    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((dst_code & 0x08) >> 1) | ((base_code & 0x08) >> 3));
+  if (rex_required) {
+    // REX.WRXB prefix
+    // Note: The REX byte must be here because either the dst, base, or index
+    // register is 64-bit.  W is only set if dst is 64-bit.
+    vector->data[vector->count++] = GCU_TYPE8_UI8((REG_IS_64BIT(dst) ? 0x48 : 0x40)
+      | ((dst_code & 0x08) >> 1)
+      | ((base_code & 0x08) >> 3)
+      | ((index_code & 0x08) >> 2));
   }
-  // LEA opcode.
+  // 16-bit, 32-bit, and 64-bit registers share the same opcode.
   vector->data[vector->count++] = GCU_TYPE8_UI8(0x8D);
-  // ModR/M byte.
-  uint8_t modrm = ((dst_code & 0x7) << 3) + (base_code & 0x7);
-  bool sib = false;
-  // Determine the mode for the modrm byte.
-  if (offset == 0) {
-    if (base == GTA_REG_RBP || base == GTA_REG_ESP || base == GTA_REG_SP || base == GTA_REG_R12) {
-      // See https://wiki.osdev.org/X86-64_Instruction_Encoding
-      sib = true;
-    }
-  }
-  if (offset > 0xFFFF || offset < -0xFFFF || dst == GTA_REG_RBP || dst == GTA_REG_ESP) {
-    // 32-bit displacement.
-    modrm |= 0x80;
-    vector->data[vector->count++] = GCU_TYPE8_UI8(modrm);
-    if (sib) {
-      // SIB byte.
-      vector->data[vector->count++] = GCU_TYPE8_UI8(0x20 | (base_code & 0x07));
-    }
+  // Note: RBP and R13 are used for a specific encoding that we do not make use
+  // of, so if they are being referenced, then we must force an offset
+  // encoding, even if the offset is zero.
+  bool force_offset = offset || ((base_code & 0x07) == 0x05);
+  vector->data[vector->count++] = GCU_TYPE8_UI8((force_offset ? offset_32 ? 0x84 : 0x44 : 0x04) | ((dst_code & 0x07) << 3));
+  vector->data[vector->count++] = GCU_TYPE8_UI8((
+    scale < 2
+      ? 0x00
+      : scale == 2
+        ? 0x40
+        : scale == 4
+          ? 0x80
+          : 0xC0) | ((REG_IS_NONE(index) ? 0x04 : (index_code & 0x07)) << 3) | (base_code & 0x07));
+  if (offset_32) {
     memcpy(&vector->data[vector->count], &offset, 4);
     vector->count += 4;
   }
-  else if (offset || sib || dst == GTA_REG_R13) {
-    // 8-bit displacement.
-    modrm |= 0x40;
-    vector->data[vector->count++] = GCU_TYPE8_UI8(modrm);
-    if (sib) {
-      // SIB byte.
-      vector->data[vector->count++] = GCU_TYPE8_UI8(0x20 | (base_code & 0x07));
-    }
+  else if (force_offset) {
     vector->data[vector->count++] = GCU_TYPE8_UI8(offset);
   }
-  else {
-    // No displacement.
-    vector->data[vector->count++] = GCU_TYPE8_UI8(modrm);
-  }
-
+  // Else, no offset.  No need to write anything else.
   return true;
 }
 
@@ -263,8 +327,8 @@ bool gta_leave__x86_64(GCU_Vector8 * vector) {
 bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, GTA_Register src) {
   // https://www.felixcloutier.com/x86/mov
   if (!(REG_IS_INTEGER(src)
-      && (REG_IS_INTEGER(base) || REG_IS_NONE(base))
-      && ((REG_IS_INTEGER(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
+      && ((REG_IS_INTEGER(base) && REG_IS_64BIT(base)) || REG_IS_NONE(base))
+      && ((REG_IS_INTEGER(index) && REG_IS_64BIT(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
         || (REG_IS_NONE(index) && (scale == 0))))
     || !gta_binary_optimistic_increase(vector, 8)) {
     return false;
@@ -273,7 +337,9 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
   uint8_t base_code = REG_IS_INTEGER(base) ? gta_binary_get_register_code__x86_64(base) : 0;
   uint8_t index_code = REG_IS_INTEGER(index) ? gta_binary_get_register_code__x86_64(index) : 0;
   bool offset_32 = offset > 0xFFFF || offset < -0xFFFF;
-  bool rex_required = REG_IS_64BIT(src) || (!REG_IS_NONE(base) && (REG_IS_64BIT(base) && (base_code & 0x08))) || (!REG_IS_NONE(index) && REG_IS_64BIT(index) && (index_code & 0x08));
+  bool rex_required = REG_IS_64BIT(src)
+    || (!REG_IS_NONE(base) && (REG_IS_64BIT(base) && (base_code & 0x08)))
+    || (!REG_IS_NONE(index) && REG_IS_64BIT(index) && (index_code & 0x08));
 
   // RIP-relative addressing.
   // e.g., mov [RIP + 0xDEADBEEF], rax
@@ -499,8 +565,8 @@ bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
 bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset) {
   // https://www.felixcloutier.com/x86/mov
   if (!(REG_IS_INTEGER(dst)
-      && (REG_IS_INTEGER(base) || REG_IS_NONE(base))
-      && ((REG_IS_INTEGER(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
+      && ((REG_IS_INTEGER(base) && REG_IS_64BIT(base)) || REG_IS_NONE(base))
+      && ((REG_IS_INTEGER(index) && REG_IS_64BIT(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
         || (REG_IS_NONE(index) && (scale == 0))))
     || !gta_binary_optimistic_increase(vector, 8)) {
     return false;
@@ -509,7 +575,9 @@ bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
   uint8_t base_code = gta_binary_get_register_code__x86_64(base);
   uint8_t index_code = REG_IS_INTEGER(index) ? gta_binary_get_register_code__x86_64(index) : 0;
   bool offset_32 = offset > 0xFFFF || offset < -0xFFFF;
-  bool rex_required = REG_IS_64BIT(dst) || (!REG_IS_NONE(base) && (REG_IS_64BIT(base) && (base_code & 0x08))) || (!REG_IS_NONE(index) && REG_IS_64BIT(index) && (index_code & 0x08));
+  bool rex_required = REG_IS_64BIT(dst)
+    || (!REG_IS_NONE(base) && (REG_IS_64BIT(base) && (base_code & 0x08)))
+    || (!REG_IS_NONE(index) && REG_IS_64BIT(index) && (index_code & 0x08));
 
   // RIP-relative addressing.
   // e.g., mov al, [RIP + 0xDEADBEEF]
@@ -521,7 +589,7 @@ bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
     else {
       if (rex_required) {
         // REX prefix
-        vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((dst_code & 0x08) >> 1));
+        vector->data[vector->count++] = GCU_TYPE8_UI8((REG_IS_64BIT(dst) ? 0x48 : 0x40) | ((dst_code & 0x08) >> 1));
       }
       if (REG_IS_16BIT(dst)) {
         // 16-bit prefix

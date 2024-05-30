@@ -368,7 +368,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     && gta_mov_reg_reg__x86_64(v, GTA_REG_R15, GTA_REG_RDI)
 
   //   lea r14, [r15 + offsetof(GTA_Binary_Execution_Context, result)]
-    && gta_lea_reg_mem__x86_64(v, GTA_REG_R14, GTA_REG_R15, (int32_t)(size_t)(&((GTA_Execution_Context *)0)->result))
+    && gta_lea_reg_ind__x86_64(v, GTA_REG_R14, GTA_REG_R15, GTA_REG_NONE, 0, (int32_t)(size_t)(&((GTA_Execution_Context *)0)->result))
 
   //   mov r13, rsp          ; Store the global stack pointer in r13.
     && gta_mov_reg_reg__x86_64(v, GTA_REG_R13, GTA_REG_RSP);

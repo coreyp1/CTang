@@ -83,8 +83,22 @@ TEST(x86_64, jnz) {
 }
 
 
-TEST(x86_64, lea_reg_mem) {
-  // TODO: Implement after full SIB support is added.
+TEST(x86_64, lea_reg_ind) {
+  // General case. r16, m16
+  JIT(gta_lea_reg_ind__x86_64(v, GTA_REG_CX, GTA_REG_RBX, GTA_REG_RDX, 4, 42), "\x66\x8D\x4C\x93\x2A");
+  JIT(gta_lea_reg_ind__x86_64(v, GTA_REG_DX, GTA_REG_RDX, GTA_REG_RCX, 1, 42), "\x66\x8D\x54\x0A\x2A");
+  JIT(gta_lea_reg_ind__x86_64(v, GTA_REG_AX, GTA_REG_R9, GTA_REG_RAX, 2, 0x7EADBEEF), "\x66\x41\x8D\x84\x41\xEF\xBE\xAD\x7E");
+  // General case. r32, m32
+  JIT(gta_lea_reg_ind__x86_64(v, GTA_REG_ESP, GTA_REG_RCX, GTA_REG_RDX, 4, 42), "\x8D\x64\x91\x2A");
+  JIT(gta_lea_reg_ind__x86_64(v, GTA_REG_EBP, GTA_REG_RDX, GTA_REG_RCX, 1, 42), "\x8D\x6C\x0A\x2A");
+  JIT(gta_lea_reg_ind__x86_64(v, GTA_REG_ESI, GTA_REG_R9, GTA_REG_RAX, 2, 0x7EADBEEF), "\x41\x8D\xB4\x41\xEF\xBE\xAD\x7E");
+  // General case. r64, m64
+  JIT(gta_lea_reg_ind__x86_64(v, GTA_REG_RBX, GTA_REG_RCX, GTA_REG_RDX, 4, 42), "\x48\x8D\x5C\x91\x2A");
+  JIT(gta_lea_reg_ind__x86_64(v, GTA_REG_R9, GTA_REG_RDX, GTA_REG_RCX, 1, 42), "\x4C\x8D\x4C\x0A\x2A");
+  JIT(gta_lea_reg_ind__x86_64(v, GTA_REG_R9, GTA_REG_R9, GTA_REG_RAX, 2, 0x7EADBEEF), "\x4D\x8D\x8C\x41\xEF\xBE\xAD\x7E");
+  // Failures. SIB registers must be 64-bit.
+  JIT_FAIL(gta_lea_reg_ind__x86_64(v, GTA_REG_EAX, GTA_REG_BX, GTA_REG_RDX, 4, 42));
+  JIT_FAIL(gta_lea_reg_ind__x86_64(v, GTA_REG_EAX, GTA_REG_RBX, GTA_REG_EDX, 4, 42));
 }
 
 
@@ -186,6 +200,10 @@ TEST(x86_64, mov_ind_reg) {
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0, GTA_REG_RDX), "\x49\x89\x14\x24");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, 0x5A5A5A5A, GTA_REG_RDX), "\x49\x89\x94\x24\x5A\x5A\x5A\x5A");
   JIT(gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_R8, 1, 1, GTA_REG_RDX), "\x4B\x89\x54\x04\x01");
+
+  // Failures. SIB registers must be 64-bit.
+  JIT_FAIL(gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_BX, 4, 42, GTA_REG_CL));
+  JIT_FAIL(gta_mov_ind_reg__x86_64(v, GTA_REG_EAX, GTA_REG_RBX, 4, 42, GTA_REG_CL));
 }
 
 
@@ -287,6 +305,10 @@ TEST(x86_64, mov_reg_ind) {
   // mov r64, qword ptr [RIP + offset]
   JIT(gta_mov_reg_ind__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, GTA_REG_NONE, 0, 0x01234567), "\x48\x8B\x05\x67\x45\x23\x01");
   JIT(gta_mov_reg_ind__x86_64(v, GTA_REG_R10, GTA_REG_NONE, GTA_REG_NONE, 0, 0), string("\x4C\x8B\x15\x00\x00\x00\x00", 7));
+
+  // Failures. SIB registers must be 64-bit.
+  JIT_FAIL(gta_mov_reg_ind__x86_64(v, GTA_REG_RAX, GTA_REG_BX, GTA_REG_RDX, 4, 42));
+  JIT_FAIL(gta_mov_reg_ind__x86_64(v, GTA_REG_EAX, GTA_REG_RBX, GTA_REG_ECX, 1, 42));
 }
 
 

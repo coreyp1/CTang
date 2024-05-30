@@ -158,17 +158,19 @@ bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 bool gta_jnz__x86_64(GCU_Vector8 * vector, int32_t offset);
 
 /**
- * x86_64 instruction: LEA reg, [base + offset]
+ * x86_64 instruction: LEA reg, [base + index*scale + offset]
  *
  * TODO: Add support for index and scale.
  *
  * @param vector The vector in which to store the instruction.
  * @param dst The destination register.
  * @param base The base register for the memory address.
+ * @param index The index register for the memory address.
+ * @param scale The scale for the index register.
  * @param offset The offset to add to the base register.
  * @return True on success, false on failure.
  */
-bool gta_lea_reg_mem__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, int32_t offset);
+bool gta_lea_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset);
 
 /**
  * x86_64 instruction: LEAVE
