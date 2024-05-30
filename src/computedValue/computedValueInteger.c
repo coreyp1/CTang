@@ -92,6 +92,7 @@ char * GTA_CALL gta_computed_value_integer_to_string(GTA_Computed_Value * self) 
   return str;
 }
 
+
 GTA_Computed_Value * gta_computed_value_integer_negative(GTA_Computed_Value * self) {
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)self;
   if (integer->base.is_temporary) {

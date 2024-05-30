@@ -40,6 +40,18 @@ TEST(Syntax, InvalidSyntax) {
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
 }
 
+GTA_Computed_Value * GTA_CALL make_int_3(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(3, context);
+}
+
+GTA_Computed_Value * GTA_CALL make_int_42(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(42, context);
+}
+
+GTA_Computed_Value * GTA_CALL make_float_3_5(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_float_create(3.5, context);
+}
+
 TEST(Syntax, Empty) {
   // An empty program should return a null result.
   TEST_PROGRAM_SETUP("");
@@ -206,14 +218,6 @@ TEST(Identifier, Local) {
   }
 }
 
-GTA_Computed_Value * GTA_CALL make_int_3(GTA_Execution_Context * context) {
-  return (GTA_Computed_Value *)gta_computed_value_integer_create(3, context);
-}
-
-GTA_Computed_Value * GTA_CALL make_int_42(GTA_Execution_Context * context) {
-  return (GTA_Computed_Value *)gta_computed_value_integer_create(42, context);
-}
-
 TEST(Identifier, Library) {
   {
     // `a` is declared global, so should have the default value.
@@ -336,7 +340,7 @@ TEST(Unary, Negative) {
   // be simplified to a single AST node.  Therefore, we will use a variable to
   // prevent the optimization.
   {
-    // Assign a value to a library.
+    // Integer negation.
     TEST_PROGRAM_SETUP_NO_RUN("use a; -a;");
     ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
     ASSERT_TRUE(gta_program_execute(context));
@@ -346,13 +350,23 @@ TEST(Unary, Negative) {
     TEST_PROGRAM_TEARDOWN();
   }
   {
-    // Assign a value to a library.
+    // Double negation.
     TEST_PROGRAM_SETUP_NO_RUN("use a; -(-a);");
     ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
     ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float negation.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; -a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, -3.5);
     TEST_PROGRAM_TEARDOWN();
   }
 }
