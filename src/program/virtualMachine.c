@@ -78,25 +78,6 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         --*sp;
         break;
       }
-      case GTA_BYTECODE_LOAD_LIBRARY: {
-        // Load a library value.
-        // The value will be left on the stack.
-        GTA_HashX_Value func = GTA_HASHX_GET(context->globals, GTA_TYPEX_UI(*next++));
-        GTA_Computed_Value * library_value = func.exists
-          ? (GTA_Function_Converter){.b = GTA_TYPEX_P(func.value)}.f(context)
-          : gta_computed_value_null;
-        if (!library_value) {
-          context->result = gta_computed_value_error_out_of_memory;
-        }
-        if (!library_value->is_singleton && library_value->is_temporary) {
-          // This is an assignment, so make sure that it is not temporary.
-          library_value->is_temporary = false;
-        }
-        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(library_value))) {
-          context->result = gta_computed_value_error_out_of_memory;
-        }
-        break;
-      }
       case GTA_BYTECODE_PEEK_GLOBAL: {
         // Push a value on the stack, indexed by the base pointer.
         size_t index = GTA_TYPEX_UI(*next++);
@@ -142,6 +123,31 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       case GTA_BYTECODE_POP_FP: {
         // Pop the frame pointer from the stack.
         context->fp = GTA_TYPEX_UI(context->stack->data[--*sp]);
+        break;
+      }
+      case GTA_BYTECODE_LOAD_LIBRARY: {
+        // Load a library value.
+        // The value will be left on the stack.
+        GTA_HashX_Value func = GTA_HASHX_GET(context->globals, GTA_TYPEX_UI(*next++));
+        GTA_Computed_Value * library_value = func.exists
+          ? (GTA_Function_Converter){.b = GTA_TYPEX_P(func.value)}.f(context)
+          : gta_computed_value_null;
+        if (!library_value) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        if (!library_value->is_singleton && library_value->is_temporary) {
+          // This is an assignment, so make sure that it is not temporary.
+          library_value->is_temporary = false;
+        }
+        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(library_value))) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        break;
+      }
+      case GTA_BYTECODE_NEGATIVE: {
+        // Perform a negation.
+        // The value will be left on the stack.
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_negative(context->stack->data[*sp-1].p));
         break;
       }
       default: {

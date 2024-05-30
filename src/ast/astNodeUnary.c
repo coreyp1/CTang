@@ -7,18 +7,19 @@
 #include <tang/ast/astNodeInteger.h>
 #include <tang/ast/astNodeString.h>
 #include <tang/ast/astNodeUnary.h>
+#include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_unary_vtable = {
   .name = "Unary",
   .compile_to_bytecode = gta_ast_node_unary_compile_to_bytecode,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_binary__x86_64 = gta_ast_node_unary_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_unary_destroy,
   .print = gta_ast_node_unary_print,
   .simplify = gta_ast_node_unary_simplify,
-  .analyze = 0,
+  .analyze = gta_ast_node_unary_analyze,
   .walk = gta_ast_node_unary_walk,
 };
 
@@ -112,57 +113,43 @@ void gta_ast_node_unary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
   gta_ast_node_walk(unary->expression, callback, data, return_value);
 }
 
+GTA_Ast_Node * gta_ast_node_unary_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  GTA_Ast_Node_Unary * unary = (GTA_Ast_Node_Unary *) self;
+  return gta_ast_node_analyze(unary->expression, program, scope);
+}
+
 
 bool gta_ast_node_unary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
   GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;
   return gta_ast_node_compile_to_bytecode(unary_node->expression, context)
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(unary_node->operator_type == GTA_UNARY_TYPE_NEGATIVE ? GTA_BYTECODE_NEGATIVE : GTA_BYTECODE_NOT));
-
-  return false;
 }
 
-// bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
-//   GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;
-//   GCU_Vector8 * v = context->binary_vector;
-//   if (!gcu_vector8_reserve(v, v->count + 30)) {
-//     return false;
-//   }
-// #if defined(GTA_X86_64)
-//   // 64-bit x86
-  // // Set up for a function call.
-  // //   push rbp
-  // //   mov rbp, rsp
-  // //   and rsp, 0xFFFFFFFFFFFFFFF0
-  // GTA_BINARY_WRITE1(v, 0x55);
-  // GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xE5);
-  // GTA_BINARY_WRITE4(v, 0x48, 0x83, 0xE4, 0xF0);
-//   // Assembly to call gta_computed_value_float_create(float_node->value, context):
-//   // context is in r15.
-//   //   mov rdi, r15
-//   //   mov rax, float_node->value
-//   GTA_BINARY_WRITE3(v, 0x4C, 0x89, 0xFF);
-//   GTA_BINARY_WRITE2(v, 0x48, 0xB8);
-//   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
+bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;
+  GCU_Vector8 * v = context->binary_vector;
 
-//   //   mov xmm0, rax
-//   GTA_BINARY_WRITE5(v, 0x66, 0x48, 0x0F, 0x6E, 0xC0);
-//   memcpy(&v->data[v->count - 13], &float_node->value, 8);
-
-//   //   mov rax, gta_computed_value_float_create
-//   GTA_BINARY_WRITE2(v, 0x48, 0xB8);
-//   GTA_BINARY_WRITE8(v, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF);
-//   GTA_UInteger fp = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_float_create);
-//   memcpy(&v->data[v->count - 8], &fp, 8);
-
-//   //   call rax
-//   GTA_BINARY_WRITE2(v, 0xFF, 0xD0);
-  // // Tear down the function call.
-  // //   mov rsp, rbp
-  // //   pop rbp
-  // GTA_BINARY_WRITE3(v, 0x48, 0x89, 0xEC);
-  // GTA_BINARY_WRITE1(v, 0x5D);
-//   return true;
-// #endif
-//   return false;
-// }
+  return true
+  // Compile the expression.  The result will be in rax.
+    && gta_ast_node_compile_to_binary__x86_64(unary_node->expression, context)
+  // Set up for a function call.
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFFFFFFFFFF0
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
+  // function_to_be_called(GTA_Computed_Value * result_from_expression)
+  //   mov rdi, rax
+  //   mov rax, gta_computed_value_negative
+  //   call rax
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(unary_node->operator_type == GTA_UNARY_TYPE_NEGATIVE ? gta_computed_value_negative : gta_computed_value_logical_not))
+    && gta_call_reg__x86_64(v, GTA_REG_RAX)
+  // Tear down the function call.
+  //   mov rsp, rbp
+  //   pop rbp
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(v, GTA_REG_RBP);
+}

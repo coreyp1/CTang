@@ -16,7 +16,7 @@ GTA_Computed_Value_VTable gta_computed_value_integer_vtable = {
   .multiply = gta_computed_value_multiply_not_implemented,
   .divide = gta_computed_value_divide_not_implemented,
   .modulo = gta_computed_value_modulo_not_implemented,
-  .negative = gta_computed_value_negative_not_implemented,
+  .negative = gta_computed_value_integer_negative,
   .logical_and = gta_computed_value_logical_and_not_implemented,
   .logical_or = gta_computed_value_logical_or_not_implemented,
   .logical_not = gta_computed_value_logical_not_not_implemented,
@@ -90,4 +90,13 @@ char * GTA_CALL gta_computed_value_integer_to_string(GTA_Computed_Value * self) 
   }
   sprintf(str, sizeof(GTA_Integer) == 8 ? "%ld" : "%d", integer->value);
   return str;
+}
+
+GTA_Computed_Value * gta_computed_value_integer_negative(GTA_Computed_Value * self) {
+  GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)self;
+  if (integer->base.is_temporary) {
+    integer->value = -integer->value;
+    return self;
+  }
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(-integer->value, integer->base.context);
 }

@@ -36,10 +36,6 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%p\tPOP\n", (void *)current);
         ++current;
         break;
-      case GTA_BYTECODE_LOAD_LIBRARY:
-        printf("%p\tLOAD_LIBRARY\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
-        current += 2;
-        break;
       case GTA_BYTECODE_PEEK_GLOBAL:
         printf("%p\tPEEK_GLOBAL\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
@@ -66,6 +62,18 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         break;
       case GTA_BYTECODE_POP_FP:
         printf("%p\tPOP_FP\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_LOAD_LIBRARY:
+        printf("%p\tLOAD_LIBRARY\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        current += 2;
+        break;
+      case GTA_BYTECODE_NEGATIVE:
+        printf("%p\tNEGATIVE\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_NOT:
+        printf("%p\tNOT\n", (void *)current);
         ++current;
         break;
       default:

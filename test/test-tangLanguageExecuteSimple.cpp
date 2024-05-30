@@ -331,6 +331,31 @@ TEST(Assignment, ToIdentifier) {
   }
 }
 
+TEST(Unary, Negative) {
+  // Optimizations mean that something like "-3", which is two AST nodes, will
+  // be simplified to a single AST node.  Therefore, we will use a variable to
+  // prevent the optimization.
+  {
+    // Assign a value to a library.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; -a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -3);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Assign a value to a library.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; -(-a);");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 3);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

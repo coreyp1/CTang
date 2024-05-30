@@ -126,6 +126,22 @@ bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
  */
 bool gta_ast_node_unary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
 
+/**
+ * Perform pre-compilation analysis on the AST node.
+ *
+ * This step includes allocating constants, identifying libraries and variables
+ * (global and local), and creating namespace scopes for functions.
+ *
+ * This function should not be called directly. Use gta_ast_node_analyze()
+ * instead.
+ *
+ * @param self The node to analyze.
+ * @param program The program that the node is part of.
+ * @return NULL on success, otherwise return a parse error.
+ */
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_unary_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+
+
 #ifdef __cplusplus
 }
 #endif //__cplusplus
