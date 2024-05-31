@@ -150,6 +150,12 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_negative(context->stack->data[*sp-1].p));
         break;
       }
+      case GTA_BYTECODE_NOT: {
+        // Perform a logical not.
+        // The value will be left on the stack.
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_logical_not(context->stack->data[*sp-1].p));
+        break;
+      }
       default: {
         context->result = gta_computed_value_error_invalid_bytecode;
         break;

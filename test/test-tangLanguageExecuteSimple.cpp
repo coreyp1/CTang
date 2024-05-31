@@ -9,6 +9,7 @@
 #include <tang/program/bytecode.h>
 #include <tang/program/executionContext.h>
 #include <tang/program/variable.h>
+#include <tang/unicodeString.h>
 
 using namespace std;
 
@@ -40,6 +41,18 @@ TEST(Syntax, InvalidSyntax) {
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
 }
 
+GTA_Computed_Value * GTA_CALL make_bool_true(GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  return (GTA_Computed_Value *)gta_computed_value_boolean_true;
+}
+
+GTA_Computed_Value * GTA_CALL make_bool_false(GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  return (GTA_Computed_Value *)gta_computed_value_boolean_false;
+}
+
+GTA_Computed_Value * GTA_CALL make_int_0(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(0, context);
+}
+
 GTA_Computed_Value * GTA_CALL make_int_3(GTA_Execution_Context * context) {
   return (GTA_Computed_Value *)gta_computed_value_integer_create(3, context);
 }
@@ -50,6 +63,20 @@ GTA_Computed_Value * GTA_CALL make_int_42(GTA_Execution_Context * context) {
 
 GTA_Computed_Value * GTA_CALL make_float_3_5(GTA_Execution_Context * context) {
   return (GTA_Computed_Value *)gta_computed_value_float_create(3.5, context);
+}
+
+GTA_Computed_Value * GTA_CALL make_float_0(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_float_create(0.0, context);
+}
+
+GTA_Computed_Value * GTA_CALL make_string_hello(GTA_Execution_Context * context) {
+  GTA_Unicode_String * hello = gta_unicode_string_create("hello", 5, GTA_UNICODE_STRING_TYPE_TRUSTED);
+  return (GTA_Computed_Value *)gta_computed_value_string_create(hello, true, context);
+}
+
+GTA_Computed_Value * GTA_CALL make_string_empty(GTA_Execution_Context * context) {
+  GTA_Unicode_String * empty = gta_unicode_string_create("", 0, GTA_UNICODE_STRING_TYPE_TRUSTED);
+  return (GTA_Computed_Value *)gta_computed_value_string_create(empty, true, context);
 }
 
 TEST(Syntax, Empty) {
@@ -367,6 +394,107 @@ TEST(Unary, Negative) {
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
     ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, -3.5);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Unary, Not) {
+  {
+    // !null
+    TEST_PROGRAM_SETUP_NO_RUN("!a;");
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // !!null (double negation)
+    TEST_PROGRAM_SETUP_NO_RUN("!!a;");
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Boolean !true
+    TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Boolean !false
+    TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_false));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer !3
+    TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer !0
+    TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float !3.5
+    TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float !0.0
+    TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // String !"hello"
+    TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_hello));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // String !""
+    TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_empty));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
     TEST_PROGRAM_TEARDOWN();
   }
 }

@@ -632,6 +632,20 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_deep_copy(GTA_Comput
 GTA_NO_DISCARD char * gta_computed_value_null_to_string(GTA_Computed_Value * self);
 
 /**
+ * Return a logical not of a computed value based on the truthiness of the
+ * self->is_true field.
+ *
+ * This function can be used by many classes to implement the logical not
+ * operation.
+ *
+ * @see gta_computed_value_logical_not
+ *
+ * @param self The value to negate.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_logical_not(GTA_Computed_Value * self);
+
+/**
  * Generic "not implemented" version of the `assign_index` method for the
  * virtual table.
  *

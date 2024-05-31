@@ -2,6 +2,7 @@
 #include <string.h>
 #include <cutil/memory.h>
 #include <tang/computedValue/computedValue.h>
+#include <tang/computedValue/computedValueBoolean.h>
 #include <tang/computedValue/computedValueError.h>
 
 
@@ -20,7 +21,7 @@ GTA_Computed_Value_VTable gta_computed_value_null_vtable = {
   .negative = gta_computed_value_negative_not_implemented,
   .logical_and = gta_computed_value_logical_and_not_implemented,
   .logical_or = gta_computed_value_logical_or_not_implemented,
-  .logical_not = gta_computed_value_logical_not_not_implemented,
+  .logical_not = gta_computed_value_null_logical_not,
   .less_than = gta_computed_value_less_than_not_implemented,
   .equal = gta_computed_value_equal_not_implemented,
   .period = gta_computed_value_period_not_implemented,
@@ -196,6 +197,11 @@ char * gta_computed_value_null_to_string(GTA_MAYBE_UNUSED(GTA_Computed_Value * s
   }
   strcpy(str, "null");
   return str;
+}
+
+
+GTA_Computed_Value * gta_computed_value_null_logical_not(GTA_Computed_Value * self) {
+  return self->is_true ? gta_computed_value_boolean_false : gta_computed_value_boolean_true;
 }
 
 
