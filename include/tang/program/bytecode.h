@@ -32,6 +32,7 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_INTEGER,        ///< Push an integer onto the stack
   GTA_BYTECODE_NULL,           ///< Push a null onto the stack
   GTA_BYTECODE_STRING,         ///< Get len, char string: push string
+  GTA_BYTECODE_SET_NOT_TEMP,   ///< Set the top of the stack to not be a temporary value
 
   GTA_BYTECODE_POP,            ///< Pop a val
   GTA_BYTECODE_PUSH_BP,        ///< Push the base pointer onto the stack

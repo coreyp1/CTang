@@ -32,6 +32,10 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%p\tSTRING\t%p\n", (void *)current, (void *)GTA_TYPEX_P(*(current + 1)));
         current += 2;
         break;
+      case GTA_BYTECODE_SET_NOT_TEMP:
+        printf("%p\tSET_NOT_TEMP\n", (void *)current);
+        ++current;
+        break;
       case GTA_BYTECODE_POP:
         printf("%p\tPOP\n", (void *)current);
         ++current;

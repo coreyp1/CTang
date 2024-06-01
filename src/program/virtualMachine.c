@@ -72,6 +72,12 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         }
         break;
       }
+      case GTA_BYTECODE_SET_NOT_TEMP: {
+        // Set the top of the stack to not be temporary.
+        GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[*sp-1]);
+        value->is_temporary = false;
+        break;
+      }
       case GTA_BYTECODE_POP: {
         // Simply decrease the stack pointer.  The garbage collector will take
         // care of the rest.
