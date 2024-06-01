@@ -11,7 +11,7 @@
 
 GTA_Ast_Node_VTable gta_ast_node_binary_vtable = {
   .name = "Binary",
-  .compile_to_bytecode = 0,
+  .compile_to_bytecode = gta_ast_node_binary_compile_to_bytecode,
   .compile_to_binary__x86_64 = 0,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
@@ -19,7 +19,7 @@ GTA_Ast_Node_VTable gta_ast_node_binary_vtable = {
   .destroy = gta_ast_node_binary_destroy,
   .print = gta_ast_node_binary_print,
   .simplify = gta_ast_node_binary_simplify,
-  .analyze = 0,
+  .analyze = gta_ast_node_binary_analyze,
   .walk = gta_ast_node_binary_walk,
 };
 
@@ -259,3 +259,59 @@ void gta_ast_node_binary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback ca
   gta_ast_node_walk(binary->lhs, callback, data, return_value);
   gta_ast_node_walk(binary->rhs, callback, data, return_value);
 }
+
+
+GTA_Ast_Node * gta_ast_node_binary_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  GTA_Ast_Node_Binary * binary = (GTA_Ast_Node_Binary *) self;
+  GTA_Ast_Node * result = gta_ast_node_analyze(binary->lhs, program, scope);
+  return !result ? gta_ast_node_analyze(binary->rhs, program, scope) : result;
+}
+
+
+bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_Binary * binary_node = (GTA_Ast_Node_Binary *) self;
+  // TODO: AND and OR should short-circuit.
+  bool error_free = true
+    && gta_ast_node_compile_to_bytecode(binary_node->lhs, context)
+    && gta_ast_node_compile_to_bytecode(binary_node->rhs, context)
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count);
+  switch (binary_node->operator_type) {
+    case GTA_BINARY_TYPE_ADD:
+      error_free = error_free && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ADD));
+      break;
+    case GTA_BINARY_TYPE_SUBTRACT:
+      error_free = error_free && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SUBTRACT));
+      break;
+    case GTA_BINARY_TYPE_MULTIPLY:
+      error_free = error_free && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_MULTIPLY));
+      break;
+    case GTA_BINARY_TYPE_DIVIDE:
+      error_free = error_free && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_DIVIDE));
+      break;
+    case GTA_BINARY_TYPE_MODULO:
+      error_free = error_free && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_MODULO));
+      break;
+    case GTA_BINARY_TYPE_LESS_THAN:
+      error_free = error_free && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_LESS_THAN));
+      break;
+    case GTA_BINARY_TYPE_LESS_THAN_EQUAL:
+      error_free = error_free && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_LESS_THAN_EQUAL));
+      break;
+    case GTA_BINARY_TYPE_GREATER_THAN:
+      error_free = error_free && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_GREATER_THAN));
+      break;
+    case GTA_BINARY_TYPE_GREATER_THAN_EQUAL:
+      error_free = error_free && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_GREATER_THAN_EQUAL));
+      break;
+    case GTA_BINARY_TYPE_EQUAL:
+      error_free = error_free && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_EQUAL));
+      break;
+    case GTA_BINARY_TYPE_NOT_EQUAL:
+      error_free = error_free && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NOT_EQUAL));
+      break;
+    default:
+      error_free = false;
+  }
+  return error_free;
+}
+

@@ -36,6 +36,20 @@ extern GTA_Computed_Value * gta_computed_value_error_out_of_memory;
 extern GTA_Computed_Value * gta_computed_value_error_invalid_bytecode;
 
 /**
+ * Generic "not supported" singleton error value.
+ *
+ * In contrast to the "not implemented" error, this error is used when the
+ * operation is known but not supported by the current implementation.
+ * For example, in the code example `"hello" / 3`, the division operation is
+ * known but you can't divide a string by a number.
+ *
+ * If this error is encountered when evaluating a binary operation, then the
+ * operation should be retried with the operands swapped and the reversed flag
+ * set.
+ */
+extern GTA_Computed_Value * gta_computed_value_error_not_supported;
+
+/**
  * Represents an error value.
  */
 typedef struct GTA_Computed_Value_Error {

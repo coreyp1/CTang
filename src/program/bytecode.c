@@ -76,6 +76,58 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%p\tNOT\n", (void *)current);
         ++current;
         break;
+      case GTA_BYTECODE_ADD:
+        printf("%p\tADD\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_SUBTRACT:
+        printf("%p\tSUBTRACT\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_MULTIPLY:
+        printf("%p\tMULTIPLY\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_DIVIDE:
+        printf("%p\tDIVIDE\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_MODULO:
+        printf("%p\tMODULO\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_LESS_THAN:
+        printf("%p\tLESS_THAN\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_LESS_THAN_EQUAL:
+        printf("%p\tLESS_THAN_EQUAL\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_GREATER_THAN:
+        printf("%p\tGREATER_THAN\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_GREATER_THAN_EQUAL:
+        printf("%p\tGREATER_THAN_EQUAL\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_EQUAL:
+        printf("%p\tEQUAL\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_NOT_EQUAL:
+        printf("%p\tNOT_EQUAL\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_AND:
+        printf("%p\tAND\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_OR:
+        printf("%p\tOR\n", (void *)current);
+        ++current;
+        break;
       default:
         printf("%p\tUnknown\n", (void *)current);
         ++current;

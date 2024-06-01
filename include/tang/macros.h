@@ -270,7 +270,7 @@ typedef GCU_Hash64_Value GTA_HashX_Value;
  * @{
  */
 #define GTA_COMPUTED_VALUE_IS_NULL(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_null_vtable)
-#define GTA_COMPUTED_VALUE_IS_ERROR(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_error_vtable
+#define GTA_COMPUTED_VALUE_IS_ERROR(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_error_vtable)
 #define GTA_COMPUTED_VALUE_IS_BOOLEAN(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_boolean_vtable)
 #define GTA_COMPUTED_VALUE_IS_INTEGER(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_integer_vtable)
 #define GTA_COMPUTED_VALUE_IS_FLOAT(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_float_vtable)

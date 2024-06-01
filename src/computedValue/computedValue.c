@@ -6,6 +6,14 @@
 #include <tang/computedValue/computedValueError.h>
 
 
+#define BINARY_OPERATION_TRY_OR_REVERSE(A) \
+  GTA_Computed_Value * result = self->vtable->A(self, other, reverse); \
+  if (!reverse && ((result == gta_computed_value_error_not_implemented) || (result == gta_computed_value_error_not_supported))) { \
+    return other->vtable->A(other, self, true); \
+  } \
+  return result;
+
+
 GTA_Computed_Value_VTable gta_computed_value_null_vtable = {
   .name = "Null",
   .destroy = gta_computed_value_null_destroy,
@@ -86,27 +94,28 @@ GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed_Value * self, 
 
 
 GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  return self->vtable->add(self, other, reverse);
+  BINARY_OPERATION_TRY_OR_REVERSE(add)
 }
 
 
 GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  return self->vtable->subtract(self, other, reverse);
+  BINARY_OPERATION_TRY_OR_REVERSE(subtract)
+
 }
 
 
 GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  return self->vtable->multiply(self, other, reverse);
+  BINARY_OPERATION_TRY_OR_REVERSE(multiply)
 }
 
 
 GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  return self->vtable->divide(self, other, reverse);
+  BINARY_OPERATION_TRY_OR_REVERSE(divide)
 }
 
 
 GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  return self->vtable->modulo(self, other, reverse);
+  BINARY_OPERATION_TRY_OR_REVERSE(modulo)
 }
 
 
@@ -136,7 +145,7 @@ GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA
 
 
 GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  return self->vtable->equal(self, other, reverse);
+  BINARY_OPERATION_TRY_OR_REVERSE(equal)
 }
 
 

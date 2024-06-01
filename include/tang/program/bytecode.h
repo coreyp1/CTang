@@ -48,6 +48,19 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_LOAD_LIBRARY,   ///< Get identifier hash and load a library value
   GTA_BYTECODE_NEGATIVE,       ///< Perform a negation
   GTA_BYTECODE_NOT,            ///< Perform a logical not
+  GTA_BYTECODE_ADD,            ///< Perform an addition
+  GTA_BYTECODE_SUBTRACT,       ///< Perform a subtraction
+  GTA_BYTECODE_MULTIPLY,       ///< Perform a multiplication
+  GTA_BYTECODE_DIVIDE,         ///< Perform a division
+  GTA_BYTECODE_MODULO,         ///< Perform a modulo
+  GTA_BYTECODE_LESS_THAN,      ///< Perform a less than comparison
+  GTA_BYTECODE_LESS_THAN_EQUAL,///< Perform a less than or equal comparison
+  GTA_BYTECODE_GREATER_THAN,   ///< Perform a greater than comparison
+  GTA_BYTECODE_GREATER_THAN_EQUAL,///< Perform a greater than or equal comparison
+  GTA_BYTECODE_EQUAL,          ///< Perform an equality comparison
+  GTA_BYTECODE_NOT_EQUAL,      ///< Perform an inequality comparison
+  GTA_BYTECODE_AND,            ///< Perform a logical and
+  GTA_BYTECODE_OR,             ///< Perform a logical or
 
 
   GTA_BYTECODE_POKE,           ///< Stack # (from fp): Copy a val, store @ stack #

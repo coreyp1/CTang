@@ -114,6 +114,34 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_binary_simplify(GTA_Ast_Node * self, 
  */
 void gta_ast_node_binary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
+/**
+ * Compiles the AST node to bytecode.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_bytecode()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_bytecode
+ *
+ * @param self The node to compile.
+ * @param context The compiler state to use for compilation.
+ */
+bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
+
+/**
+ * Perform pre-compilation analysis on the AST node.
+ *
+ * This step includes allocating constants, identifying libraries and variables
+ * (global and local), and creating namespace scopes for functions.
+ *
+ * This function should not be called directly. Use gta_ast_node_analyze()
+ * instead.
+ *
+ * @param self The node to analyze.
+ * @param program The program that the node is part of.
+ * @return NULL on success, otherwise return a parse error.
+ */
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_binary_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+
 #ifdef __cplusplus
 }
 #endif //__cplusplus

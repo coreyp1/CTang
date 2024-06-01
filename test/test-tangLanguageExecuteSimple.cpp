@@ -499,6 +499,19 @@ TEST(Unary, Not) {
   }
 }
 
+TEST(Binary, Add) {
+  {
+    // Integer + integer.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a + b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 45);
+  }
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

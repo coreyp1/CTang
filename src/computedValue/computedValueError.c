@@ -76,9 +76,25 @@ static GTA_Computed_Value_Error gta_computed_value_error_invalid_bytecode_single
 };
 
 
+static GTA_Computed_Value_Error gta_computed_value_error_not_supported_singleton = {
+  .base = {
+    .vtable = &gta_computed_value_error_vtable,
+    .context = 0,
+    .is_true = false,
+    .is_error = true,
+    .is_temporary = false,
+    .requires_deep_copy = false,
+    .is_singleton = true,
+    .is_a_reference = false,
+  },
+  .message = "Not supported",
+};
+
+
 GTA_Computed_Value * gta_computed_value_error_not_implemented = (GTA_Computed_Value *)&gta_computed_value_error_not_implemented_singleton;
 GTA_Computed_Value * gta_computed_value_error_out_of_memory = (GTA_Computed_Value *)&gta_computed_value_error_out_of_memory_singleton;
 GTA_Computed_Value * gta_computed_value_error_invalid_bytecode = (GTA_Computed_Value *)&gta_computed_value_error_invalid_bytecode_singleton;
+GTA_Computed_Value * gta_computed_value_error_not_supported = (GTA_Computed_Value *)&gta_computed_value_error_not_supported_singleton;
 
 
 char * gta_computed_value_error_to_string(GTA_Computed_Value * self) {
