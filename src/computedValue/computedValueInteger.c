@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <cutil/memory.h>
+#include <tang/computedValue/computedValueError.h>
 #include <tang/computedValue/computedValueInteger.h>
 #include <tang/program/executionContext.h>
 
@@ -11,7 +12,7 @@ GTA_Computed_Value_VTable gta_computed_value_integer_vtable = {
   .deep_copy = gta_computed_value_integer_deep_copy,
   .to_string = gta_computed_value_integer_to_string,
   .assign_index = gta_computed_value_assign_index_not_implemented,
-  .add = gta_computed_value_add_not_implemented,
+  .add = gta_computed_value_integer_add,
   .subtract = gta_computed_value_subtract_not_implemented,
   .multiply = gta_computed_value_multiply_not_implemented,
   .divide = gta_computed_value_divide_not_implemented,
@@ -100,4 +101,24 @@ GTA_Computed_Value * gta_computed_value_integer_negative(GTA_Computed_Value * se
     return self;
   }
   return (GTA_Computed_Value *)gta_computed_value_integer_create(-integer->value, integer->base.context);
+}
+
+
+GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool reverse)) {
+  GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)self;
+  if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
+    GTA_Computed_Value_Integer * other_side = (GTA_Computed_Value_Integer *)other;
+    if (integer->base.is_temporary) {
+      integer->value += other_side->value;
+      integer->base.is_true = (bool)integer->value;
+      return self;
+    }
+    if (other_side->base.is_temporary) {
+      other_side->value += integer->value;
+      other_side->base.is_true = (bool)other_side->value;
+      return (GTA_Computed_Value *)other_side;
+    }
+    return (GTA_Computed_Value *)gta_computed_value_integer_create(integer->value + other_side->value, integer->base.context);
+  }
+  return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }

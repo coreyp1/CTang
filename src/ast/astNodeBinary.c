@@ -7,12 +7,13 @@
 #include <tang/ast/astNodeFloat.h>
 #include <tang/ast/astNodeBoolean.h>
 #include <tang/ast/astNodeString.h>
+#include <tang/program/binary.h>
 #include <tang/unicodeString.h>
 
 GTA_Ast_Node_VTable gta_ast_node_binary_vtable = {
   .name = "Binary",
   .compile_to_bytecode = gta_ast_node_binary_compile_to_bytecode,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_binary__x86_64 = gta_ast_node_binary_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
@@ -315,3 +316,92 @@ bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_C
   return error_free;
 }
 
+
+bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  GTA_Ast_Node_Binary * binary_node = (GTA_Ast_Node_Binary *) self;
+  GCU_Vector8 * v = context->binary_vector;
+
+  if (binary_node->operator_type < GTA_BINARY_TYPE_AND) {
+    // Determine the function to call.
+    // TODO: AND and OR should short-circuit.
+    GTA_Integer func = 0;
+    switch(binary_node->operator_type) {
+      case GTA_BINARY_TYPE_ADD:
+        func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_add);
+        break;
+      case GTA_BINARY_TYPE_SUBTRACT:
+        func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_subtract);
+        break;
+      case GTA_BINARY_TYPE_MULTIPLY:
+        func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_multiply);
+        break;
+      case GTA_BINARY_TYPE_DIVIDE:
+        func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_divide);
+        break;
+      case GTA_BINARY_TYPE_MODULO:
+        func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_modulo);
+        break;
+      case GTA_BINARY_TYPE_LESS_THAN:
+        func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_less_than);
+        break;
+      // case GTA_BINARY_TYPE_LESS_THAN_EQUAL:
+      //   func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_less_than_equal);
+      //   break;
+      // case GTA_BINARY_TYPE_GREATER_THAN:
+      //   func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_greater_than);
+      //   break;
+      // case GTA_BINARY_TYPE_GREATER_THAN_EQUAL:
+      //   func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_greater_than_equal);
+      //   break;
+      case GTA_BINARY_TYPE_EQUAL:
+        func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_equal);
+        break;
+      // case GTA_BINARY_TYPE_NOT_EQUAL:
+      //   func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_not_equal);
+      //   break;
+      default:
+        return false;
+    }
+
+    return true
+    // Compile the LHS expression.  The result will be in rax.
+      && gta_ast_node_compile_to_binary__x86_64(binary_node->lhs, context)
+    // Save the result of the LHS expression.
+    //   push rax
+      && gta_push_reg__x86_64(v, GTA_REG_RAX)
+    // Compile the RHS expression.  The result will be in rax.
+      && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)
+    // Prepare registers for: func(result_from_lhs, result_from_rhs, false)
+    //   pop rdi       ; result_from_lhs
+    //   mov rsi, rax  ; result_from_rhs
+    //   xor rdx, rdx  ; false
+    //   mov rdx, func ; func
+      && gta_pop_reg__x86_64(v, GTA_REG_RDI)
+      && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_RAX)
+      && gta_xor_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RDX)
+      && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(func))
+    // Set up for a function call.
+    //   push rbp
+    //   mov rbp, rsp
+    //   and rsp, 0xFFFFFFFFFFFFFFF0
+      && gta_push_reg__x86_64(v, GTA_REG_RBP)
+      && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+      && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
+    //   call func
+      && gta_call_reg__x86_64(v, GTA_REG_RAX)
+    // Tear down the function call.
+    //   mov rsp, rbp
+    //   pop rbp
+      && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+      && gta_pop_reg__x86_64(v, GTA_REG_RBP);
+  }
+  if (binary_node->operator_type == GTA_BINARY_TYPE_AND) {
+    // TODO: Implement short-circuiting.
+    return false;
+  }
+  if (binary_node->operator_type == GTA_BINARY_TYPE_OR) {
+    // TODO: Implement short-circuiting.
+    return false;
+  }
+  return false;
+}

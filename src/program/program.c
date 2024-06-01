@@ -96,6 +96,7 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
           gta_bytecode_compiler_context_destroy_in_place(&context);
           return;
         }
+        error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SET_NOT_TEMP));
       }
       GTA_VECTORX_DESTROY(globals_order);
 

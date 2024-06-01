@@ -142,7 +142,7 @@ bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
   // function_to_be_called(GTA_Computed_Value * result_from_expression)
   //   mov rdi, rax
-  //   mov rax, gta_computed_value_negative
+  //   mov rax, gta_computed_value_negative or gta_computed_value_logical_not
   //   call rax
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(unary_node->operator_type == GTA_UNARY_TYPE_NEGATIVE ? gta_computed_value_negative : gta_computed_value_logical_not))
