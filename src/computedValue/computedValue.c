@@ -21,24 +21,28 @@ GTA_Computed_Value_VTable gta_computed_value_null_vtable = {
   .deep_copy = gta_computed_value_null_deep_copy,
   .to_string = gta_computed_value_null_to_string,
   .assign_index = gta_computed_value_assign_index_not_implemented,
-  .add = gta_computed_value_add_not_implemented,
-  .subtract = gta_computed_value_subtract_not_implemented,
-  .multiply = gta_computed_value_multiply_not_implemented,
-  .divide = gta_computed_value_divide_not_implemented,
-  .modulo = gta_computed_value_modulo_not_implemented,
-  .negative = gta_computed_value_negative_not_implemented,
+  .add = gta_computed_value_add_not_supported,
+  .subtract = gta_computed_value_subtract_not_supported,
+  .multiply = gta_computed_value_multiply_not_supported,
+  .divide = gta_computed_value_divide_not_supported,
+  .modulo = gta_computed_value_modulo_not_supported,
+  .negative = gta_computed_value_negative_not_supported,
   .logical_and = gta_computed_value_logical_and_not_implemented,
   .logical_or = gta_computed_value_logical_or_not_implemented,
   .logical_not = gta_computed_value_null_logical_not,
-  .less_than = gta_computed_value_less_than_not_implemented,
+  .less_than = gta_computed_value_less_than_not_supported,
+  .less_than_equal = gta_computed_value_less_than_equal_not_supported,
+  .greater_than = gta_computed_value_greater_than_not_supported,
+  .greater_than_equal = gta_computed_value_greater_than_equal_not_supported,
   .equal = gta_computed_value_equal_not_implemented,
-  .period = gta_computed_value_period_not_implemented,
-  .index = gta_computed_value_index_not_implemented,
-  .slice = gta_computed_value_slice_not_implemented,
-  .iterator_get = gta_computed_value_iterator_get_not_implemented,
-  .iterator_next = gta_computed_value_iterator_next_not_implemented,
+  .not_equal = gta_computed_value_not_equal_not_implemented,
+  .period = gta_computed_value_period_not_supported,
+  .index = gta_computed_value_index_not_supported,
+  .slice = gta_computed_value_slice_not_supported,
+  .iterator_get = gta_computed_value_iterator_get_not_supported,
+  .iterator_next = gta_computed_value_iterator_next_not_supported,
   .cast = gta_computed_value_cast_not_implemented,
-  .call = gta_computed_value_call_not_implemented,
+  .call = gta_computed_value_call_not_supported,
 };
 
 
@@ -139,12 +143,32 @@ GTA_Computed_Value * gta_computed_value_logical_not(GTA_Computed_Value * self) {
 
 
 GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  return self->vtable->less_than(self, other, reverse);
+  BINARY_OPERATION_TRY_OR_REVERSE(less_than)
+}
+
+
+GTA_Computed_Value * gta_computed_value_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
+  BINARY_OPERATION_TRY_OR_REVERSE(less_than_equal)
+}
+
+
+GTA_Computed_Value * gta_computed_value_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
+  BINARY_OPERATION_TRY_OR_REVERSE(greater_than)
+}
+
+
+GTA_Computed_Value * gta_computed_value_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
+  BINARY_OPERATION_TRY_OR_REVERSE(greater_than_equal)
 }
 
 
 GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
   BINARY_OPERATION_TRY_OR_REVERSE(equal)
+}
+
+
+GTA_Computed_Value * gta_computed_value_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
+  BINARY_OPERATION_TRY_OR_REVERSE(not_equal)
 }
 
 
@@ -268,7 +292,27 @@ GTA_Computed_Value * gta_computed_value_less_than_not_implemented(GTA_MAYBE_UNUS
 }
 
 
+GTA_Computed_Value * gta_computed_value_less_than_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_implemented;
+}
+
+
+GTA_Computed_Value * gta_computed_value_greater_than_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_implemented;
+}
+
+
+GTA_Computed_Value * gta_computed_value_greater_than_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_implemented;
+}
+
+
 GTA_Computed_Value * gta_computed_value_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_implemented;
+}
+
+
+GTA_Computed_Value * gta_computed_value_not_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
   return gta_computed_value_error_not_implemented;
 }
 
@@ -305,4 +349,119 @@ GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_MAYBE_UNUSED(GT
 
 GTA_Computed_Value * gta_computed_value_call_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_Vector * arguments)) {
   return gta_computed_value_error_not_implemented;
+}
+
+
+GTA_Computed_Value * gta_computed_value_assign_index_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * index), GTA_MAYBE_UNUSED(GTA_Computed_Value * other)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_add_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_subtract_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_multiply_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_divide_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_modulo_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_negative_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_logical_and_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_logical_or_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_logical_not_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_less_than_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_less_than_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_greater_than_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_greater_than_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_not_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_period_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(const char * identifier)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_index_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * index)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_slice_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * start), GTA_MAYBE_UNUSED(GTA_Computed_Value * end), GTA_MAYBE_UNUSED(GTA_Computed_Value * step)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_iterator_get_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_iterator_next_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(bool reverse)) {
+  return gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_call_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_Vector * arguments)) {
+  return gta_computed_value_error_not_supported;
 }

@@ -86,7 +86,7 @@ typedef struct GTA_Computed_Value_VTable {
    *
    * @param self The first value.
    * @param other The second value.
-   * @param reverse Whether the operation should be reversed.
+   * @param reverse Whether the operands are provided reversed.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*add)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -95,7 +95,7 @@ typedef struct GTA_Computed_Value_VTable {
    *
    * @param self The first value.
    * @param other The second value.
-   * @param reverse Whether the operation should be reversed.
+   * @param reverse Whether the operands are provided reversed.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*subtract)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -104,7 +104,7 @@ typedef struct GTA_Computed_Value_VTable {
    *
    * @param self The first value.
    * @param other The second value.
-   * @param reverse Whether the operation should be reversed.
+   * @param reverse Whether the operands are provided reversed.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*multiply)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -115,7 +115,7 @@ typedef struct GTA_Computed_Value_VTable {
    *
    * @param self The first value.
    * @param other The second value.
-   * @param reverse Whether the operation should be reversed.
+   * @param reverse Whether the operands are provided reversed.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*divide)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -126,7 +126,7 @@ typedef struct GTA_Computed_Value_VTable {
    *
    * @param self The first value.
    * @param other The second value.
-   * @param reverse Whether the operation should be reversed.
+   * @param reverse Whether the operands are provided reversed.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*modulo)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -142,7 +142,7 @@ typedef struct GTA_Computed_Value_VTable {
    *
    * @param self The first value.
    * @param other The second value.
-   * @param reverse Whether the operation should be reversed.
+   * @param reverse Whether the operands are provided reversed.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*logical_and)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -151,7 +151,7 @@ typedef struct GTA_Computed_Value_VTable {
    *
    * @param self The first value.
    * @param other The second value.
-   * @param reverse Whether the operation should be reversed.
+   * @param reverse Whether the operands are provided reversed.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*logical_or)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -163,30 +163,61 @@ typedef struct GTA_Computed_Value_VTable {
    */
   GTA_Computed_Value * (*logical_not)(GTA_Computed_Value * self);
   /**
-   * Compares two values to see if the first is less than or equal to the
-   * second.
-   *
-   * Using this method, along with the `equal` method, all other comparison
-   * operations can be implemented.
+   * Compares two values to see if the first is less than the second.
    *
    * @param self The first value.
    * @param other The second value.
-   * @param reverse Whether the operation should be reversed.
+   * @param reverse Whether the operands are provided reversed.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*less_than)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
   /**
-   * Compares two values to see if they are equal.
-   *
-   * Using this method, along with the `less_than` method, all other comparison
-   * operations can be implemented.
+   * Compares two values to see if the first is less than or equal to the
+   * second.
    *
    * @param self The first value.
    * @param other The second value.
-   * @param reverse Whether the operation should be reversed.
+   * @param reverse Whether the operands are provided reversed.
+   * @return The result of the operation or NULL if the operation failed.
+   */
+  GTA_Computed_Value * (*less_than_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+  /**
+   * Compares two values to see if the first is greater than the second.
+   *
+   * @param self The first value.
+   * @param other The second value.
+   * @param reverse Whether the operands are provided reversed.
+   * @return The result of the operation or NULL if the operation failed.
+   */
+  GTA_Computed_Value * (*greater_than)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+  /**
+   * Compares two values to see if the first is greater than or equal to the
+   * second.
+   *
+   * @param self The first value.
+   * @param other The second value.
+   * @param reverse Whether the operands are provided reversed.
+   * @return The result of the operation or NULL if the operation failed.
+   */
+  GTA_Computed_Value * (*greater_than_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+  /**
+   * Compares two values to see if they are equal.
+   *
+   * @param self The first value.
+   * @param other The second value.
+   * @param reverse Whether the operands are provided reversed.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+  /**
+   * Compares two values to see if they are not equal.
+   *
+   * @param self The first value.
+   * @param other The second value.
+   * @param reverse Whether the operands are provided reversed.
+   * @return The result of the operation or NULL if the operation failed.
+   */
+  GTA_Computed_Value * (*not_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
   /**
    * Gets a value from the object using a period identifier.
    *
@@ -390,7 +421,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -402,7 +433,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * 
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -414,7 +445,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Val
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -426,7 +457,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Val
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -438,7 +469,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -460,7 +491,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Val
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -472,7 +503,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and(GTA_Computed_
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -488,17 +519,54 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or(GTA_Computed_V
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not(GTA_Computed_Value * self);
 
 /**
- * Compares two values to see if the first is less than or equal to the
- * second.
+ * Compares two values to see if the first is less than the second.
  *
  * Calls the `less_than` method of the virtual table.
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Compares two values to see if the first is less than or equal to the
+ * second.
+ *
+ * Calls the `less_than_equal` method of the virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Compares two values to see if the first is greater than the second.
+ *
+ * Calls the `greater_than` method of the virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Compares two values to see if the first is greater than or equal to the
+ * second.
+ *
+ * Calls the `greater_than_equal` method of the virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Compares two values to see if they are equal.
@@ -507,10 +575,22 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Va
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Compares two values to see if they are not equal.
+ *
+ * Calls the `not_equal` method of the virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Gets a value from a computed value using a period identifier.
@@ -661,7 +741,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index_not_implemen
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -672,7 +752,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_C
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -683,7 +763,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_implemented(
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -694,7 +774,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_implemented(
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -705,7 +785,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_implemented(GT
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -725,7 +805,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_implemented(
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -736,7 +816,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_implement
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
@@ -756,10 +836,43 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not_not_implement
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not implemented" version of the `less_than_equal` method for the
+ * virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not implemented" version of the `greater_than` method for the
+ * virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not implemented" version of the `greater_than_equal` method for the
+ * virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Generic "not implemented" version of the `equal` method for the virtual
@@ -767,10 +880,21 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_not_implemented
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param reverse Whether the operands are provided reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not implemented" version of the `not_equal` method for the virtual
+ * table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
 
 /**
  * Generic "not implemented" version of the `period` method for the virtual
@@ -842,6 +966,246 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments);
+
+/**
+ * Generic "not supported" version of the `assign_index` method for the virtual
+ * table.
+ *
+ * @param self The object to modify.
+ * @param index The index to assign to.
+ * @param other The value to assign.
+ * @return The modified object or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other);
+
+/**
+ * Generic "not supported" version of the `add` method for the virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `subtract` method for the virtual
+ * table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `multiply` method for the virtual
+ * table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `divide` method for the virtual
+ * table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `modulo` method for the virtual
+ * table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `negative` method for the virtual
+ * table.
+ *
+ * @param self The value to negate.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_supported(GTA_Computed_Value * self);
+
+/**
+ * Generic "not supported" version of the `logical_and` method for the virtual
+ * table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `logical_or` method for the virtual
+ * table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `logical_not` method for the virtual
+ * table.
+ *
+ * @param self The value to negate.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not_not_supported(GTA_Computed_Value * self);
+
+/**
+ * Generic "not supported" version of the `less_than` method for the virtual
+ * table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `less_than_equal` method for the
+ * virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `greater_than` method for the virtual
+ * table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `greater_than_equal` method for the
+ * virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `equal` method for the virtual
+ * table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `not_equal` method for the virtual
+ * table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param reverse Whether the operands are provided reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+
+/**
+ * Generic "not supported" version of the `period` method for the virtual
+ * table.
+ *
+ * @param self The object to get the value from.
+ * @param identifier The identifier to get.
+ * @return The value of the identifier or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period_not_supported(GTA_Computed_Value * self, const char * identifier);
+
+/**
+ * Generic "not supported" version of the `index` method for the virtual
+ * table.
+ *
+ * @param self The object to get the value from.
+ * @param index The index to get.
+ * @return The value of the index or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_index_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * index);
+
+/**
+ * Generic "not supported" version of the `slice` method for the virtual
+ * table.
+ *
+ * @param self The object to get the slice from.
+ * @param start The start of the slice.
+ * @param end The end of the slice.
+ * @param step The step of the slice.
+ * @return The slice of the object or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_slice_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step);
+
+/**
+ * Generic "not supported" version of the `iterator_get` method for the virtual
+ * table.
+ *
+ * @param self The object to get the value from.
+ * @return The value of the iterator or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_get_not_supported(GTA_Computed_Value * self);
+
+/**
+ * Generic "not supported" version of the `iterator_next` method for the
+ * virtual table.
+ *
+ * @param self The object to get the value from.
+ * @return The value of the iterator or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next_not_supported(GTA_Computed_Value * self);
+
+/**
+ * Generic "not supported" version of the `cast` method for the virtual table.
+ *
+ * @param self The object to cast.
+ * @param type The type to cast to.
+ * @param reverse Whether the operation should be reversed.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool reverse);
+
+/**
+ * Generic "not supported" version of the `call` method for the virtual table.
+ *
+ * @param self The object to call.
+ * @param arguments The arguments to call with.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call_not_supported(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments);
 
 #ifdef __cplusplus
 }
