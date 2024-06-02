@@ -1,7 +1,9 @@
 
 #include <stdio.h>
 #include <cutil/memory.h>
+#include <tang/computedValue/computedValueError.h>
 #include <tang/computedValue/computedValueFloat.h>
+#include <tang/computedValue/computedValueInteger.h>
 #include <tang/program/executionContext.h>
 
 GTA_Computed_Value_VTable gta_computed_value_float_vtable = {
@@ -11,7 +13,7 @@ GTA_Computed_Value_VTable gta_computed_value_float_vtable = {
   .deep_copy = gta_computed_value_float_deep_copy,
   .to_string = gta_computed_value_float_to_string,
   .assign_index = gta_computed_value_assign_index_not_implemented,
-  .add = gta_computed_value_add_not_implemented,
+  .add = gta_computed_value_float_add,
   .subtract = gta_computed_value_subtract_not_implemented,
   .multiply = gta_computed_value_multiply_not_implemented,
   .divide = gta_computed_value_divide_not_implemented,
@@ -97,4 +99,34 @@ GTA_Computed_Value * gta_computed_value_float_negative(GTA_Computed_Value * self
     return self;
   }
   return (GTA_Computed_Value *)gta_computed_value_float_create(-number->value, number->base.context);
+}
+
+
+GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
+  GTA_Computed_Value_Float * number = reverse ? (GTA_Computed_Value_Float *)other : (GTA_Computed_Value_Float *)self;
+  GTA_Computed_Value * other_number = reverse ? self : other;
+  if (GTA_COMPUTED_VALUE_IS_FLOAT(other_number)) {
+    GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other_number;
+    if (number->base.is_temporary) {
+      number->value += other_number_float->value;
+      number->base.is_true = (bool)number->value;
+      return (GTA_Computed_Value *)number;
+    }
+    if (other_number_float->base.is_temporary) {
+      other_number_float->value += number->value;
+      other_number_float->base.is_true = (bool)other_number_float->value;
+      return (GTA_Computed_Value *)other_number_float;
+    }
+    return (GTA_Computed_Value *)gta_computed_value_float_create(number->value + other_number_float->value, number->base.context);
+  }
+  if (GTA_COMPUTED_VALUE_IS_INTEGER(other_number)) {
+    GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other_number;
+    if (number->base.is_temporary) {
+      number->value += (GTA_Float)other_number_integer->value;
+      number->base.is_true = (bool)number->value;
+      return (GTA_Computed_Value *)number;
+    }
+    return (GTA_Computed_Value *)gta_computed_value_float_create(number->value + (GTA_Float)other_number_integer->value, number->base.context);
+  }
+  return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }

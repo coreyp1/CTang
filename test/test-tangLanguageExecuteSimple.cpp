@@ -501,7 +501,7 @@ TEST(Unary, Not) {
 
 TEST(Binary, Add) {
   {
-    // Integer + integer.
+    // Integer + Integer.
     TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a + b;");
     ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
     ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
@@ -512,10 +512,32 @@ TEST(Binary, Add) {
     TEST_PROGRAM_TEARDOWN();
   }
   {
-    // Integer + float.
+    // Integer + Float.
     TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a + b;");
     ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
     ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 6.5);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float + Float.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a + b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 7.0);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float + Integer.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a + b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
