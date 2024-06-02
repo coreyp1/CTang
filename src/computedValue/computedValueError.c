@@ -91,10 +91,42 @@ static GTA_Computed_Value_Error gta_computed_value_error_not_supported_singleton
 };
 
 
+static GTA_Computed_Value_Error gta_computed_value_error_divide_by_zero_singleton = {
+  .base = {
+    .vtable = &gta_computed_value_error_vtable,
+    .context = 0,
+    .is_true = false,
+    .is_error = true,
+    .is_temporary = false,
+    .requires_deep_copy = false,
+    .is_singleton = true,
+    .is_a_reference = false,
+  },
+  .message = "Divide by zero",
+};
+
+
+static GTA_Computed_Value_Error gta_computed_value_error_modulo_by_zero_singleton = {
+  .base = {
+    .vtable = &gta_computed_value_error_vtable,
+    .context = 0,
+    .is_true = false,
+    .is_error = true,
+    .is_temporary = false,
+    .requires_deep_copy = false,
+    .is_singleton = true,
+    .is_a_reference = false,
+  },
+  .message = "Modulo by zero",
+};
+
+
 GTA_Computed_Value * gta_computed_value_error_not_implemented = (GTA_Computed_Value *)&gta_computed_value_error_not_implemented_singleton;
 GTA_Computed_Value * gta_computed_value_error_out_of_memory = (GTA_Computed_Value *)&gta_computed_value_error_out_of_memory_singleton;
 GTA_Computed_Value * gta_computed_value_error_invalid_bytecode = (GTA_Computed_Value *)&gta_computed_value_error_invalid_bytecode_singleton;
 GTA_Computed_Value * gta_computed_value_error_not_supported = (GTA_Computed_Value *)&gta_computed_value_error_not_supported_singleton;
+GTA_Computed_Value * gta_computed_value_error_divide_by_zero = (GTA_Computed_Value *)&gta_computed_value_error_divide_by_zero_singleton;
+GTA_Computed_Value * gta_computed_value_error_modulo_by_zero = (GTA_Computed_Value *)&gta_computed_value_error_modulo_by_zero_singleton;
 
 
 char * gta_computed_value_error_to_string(GTA_Computed_Value * self) {

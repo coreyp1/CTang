@@ -21,12 +21,12 @@ extern "C" {
 extern GTA_Computed_Value_VTable gta_computed_value_error_vtable;
 
 /**
- * Generic "not implemented" singleton error value.
+ * Generic "Not implemented" singleton error value.
  */
 extern GTA_Computed_Value * gta_computed_value_error_not_implemented;
 
 /**
- * Generic "out of memory" singleton error value.
+ * Generic "Out of memory" singleton error value.
  */
 extern GTA_Computed_Value * gta_computed_value_error_out_of_memory;
 
@@ -34,6 +34,16 @@ extern GTA_Computed_Value * gta_computed_value_error_out_of_memory;
  * Generic "invalid bytecode" singleton error value.
  */
 extern GTA_Computed_Value * gta_computed_value_error_invalid_bytecode;
+
+/**
+ * Generic "Divide by zero" singleton error value.
+ */
+extern GTA_Computed_Value * gta_computed_value_error_divide_by_zero;
+
+/**
+ * Generic "Modulo by zero" singleton error value.
+ */
+extern GTA_Computed_Value * gta_computed_value_error_modulo_by_zero;
 
 /**
  * Generic "not supported" singleton error value.

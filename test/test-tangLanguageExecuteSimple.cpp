@@ -57,6 +57,10 @@ GTA_Computed_Value * GTA_CALL make_int_3(GTA_Execution_Context * context) {
   return (GTA_Computed_Value *)gta_computed_value_integer_create(3, context);
 }
 
+GTA_Computed_Value * GTA_CALL make_int_negative_10(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(-10, context);
+}
+
 GTA_Computed_Value * GTA_CALL make_int_42(GTA_Execution_Context * context) {
   return (GTA_Computed_Value *)gta_computed_value_integer_create(42, context);
 }
@@ -589,6 +593,202 @@ TEST(Binary, Subtract) {
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
     ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 0.5);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Binary, Multiply) {
+  {
+    // Integer * Integer.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a * b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 126);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer * Float.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a * b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 10.5);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float * Float.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a * b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 12.25);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float * Integer.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a * b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 10.5);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Binary, Divide) {
+  {
+    // Integer / Integer.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a / b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 14.0);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer / -Integer. (not evenly divisible)
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a / b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_negative_10));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -3);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer / Float.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a / b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 12.0);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float / Float.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a / b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 1.0);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float / Integer.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a / b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 1.1666666666666667);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Division by zero, Integer / Integer.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a / b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_divide_by_zero);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Division by zero, Integer / Float.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a / b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_divide_by_zero);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Division by zero, Float / Float.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a / b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_divide_by_zero);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Division by zero, Float / Integer.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a / b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_divide_by_zero);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Binary, Modulo) {
+  {
+    // Integer % Integer.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a % b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 0);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // -Integer % Integer. (not evenly divisible)
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a % b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_negative_10));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, -1);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer % -Integer. (not evenly divisible)
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a % b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_negative_10));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 2);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer % Float. Should error.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a % b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_not_supported);
     TEST_PROGRAM_TEARDOWN();
   }
 }
