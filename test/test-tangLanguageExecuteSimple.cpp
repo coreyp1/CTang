@@ -509,6 +509,18 @@ TEST(Binary, Add) {
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
     ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 45);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer + float.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a + b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)context->result)->value, 6.5);
+    TEST_PROGRAM_TEARDOWN();
   }
 }
 

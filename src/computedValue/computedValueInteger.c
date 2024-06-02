@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <cutil/memory.h>
 #include <tang/computedValue/computedValueError.h>
+#include <tang/computedValue/computedValueFloat.h>
 #include <tang/computedValue/computedValueInteger.h>
 #include <tang/program/executionContext.h>
 
@@ -104,21 +105,31 @@ GTA_Computed_Value * gta_computed_value_integer_negative(GTA_Computed_Value * se
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool reverse)) {
-  GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)self;
-  if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
-    GTA_Computed_Value_Integer * other_side = (GTA_Computed_Value_Integer *)other;
+GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
+  GTA_Computed_Value_Integer * integer = reverse ? (GTA_Computed_Value_Integer *)other : (GTA_Computed_Value_Integer *)self;
+  GTA_Computed_Value * other_side = reverse ? self : other;
+  if (GTA_COMPUTED_VALUE_IS_INTEGER(other_side)) {
+    GTA_Computed_Value_Integer * other_side_integer = (GTA_Computed_Value_Integer *)other_side;
     if (integer->base.is_temporary) {
-      integer->value += other_side->value;
+      integer->value += other_side_integer->value;
       integer->base.is_true = (bool)integer->value;
-      return self;
+      return (GTA_Computed_Value *)integer;
     }
-    if (other_side->base.is_temporary) {
-      other_side->value += integer->value;
-      other_side->base.is_true = (bool)other_side->value;
-      return (GTA_Computed_Value *)other_side;
+    if (other_side_integer->base.is_temporary) {
+      other_side_integer->value += integer->value;
+      other_side_integer->base.is_true = (bool)other_side_integer->value;
+      return (GTA_Computed_Value *)other_side_integer;
     }
-    return (GTA_Computed_Value *)gta_computed_value_integer_create(integer->value + other_side->value, integer->base.context);
+    return (GTA_Computed_Value *)gta_computed_value_integer_create(integer->value + other_side_integer->value, integer->base.context);
+  }
+  if (GTA_COMPUTED_VALUE_IS_FLOAT(other_side)) {
+    GTA_Computed_Value_Float * other_side_float = (GTA_Computed_Value_Float *)other;
+    if (other_side_float->base.is_temporary) {
+      other_side_float->value += (GTA_Float)integer->value;
+      other_side_float->base.is_true = (bool)other_side_float->value;
+      return (GTA_Computed_Value *)other_side_float;
+    }
+    return (GTA_Computed_Value *)gta_computed_value_float_create((GTA_Float)integer->value + other_side_float->value, integer->base.context);
   }
   return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }

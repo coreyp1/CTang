@@ -100,7 +100,6 @@ GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Compu
 
 GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
   BINARY_OPERATION_TRY_OR_REVERSE(subtract)
-
 }
 
 
