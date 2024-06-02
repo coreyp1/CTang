@@ -344,21 +344,21 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bina
       case GTA_BINARY_TYPE_LESS_THAN:
         func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_less_than);
         break;
-      // case GTA_BINARY_TYPE_LESS_THAN_EQUAL:
-      //   func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_less_than_equal);
-      //   break;
-      // case GTA_BINARY_TYPE_GREATER_THAN:
-      //   func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_greater_than);
-      //   break;
-      // case GTA_BINARY_TYPE_GREATER_THAN_EQUAL:
-      //   func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_greater_than_equal);
-      //   break;
+      case GTA_BINARY_TYPE_LESS_THAN_EQUAL:
+        func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_less_than_equal);
+        break;
+      case GTA_BINARY_TYPE_GREATER_THAN:
+        func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_greater_than);
+        break;
+      case GTA_BINARY_TYPE_GREATER_THAN_EQUAL:
+        func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_greater_than_equal);
+        break;
       case GTA_BINARY_TYPE_EQUAL:
         func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_equal);
         break;
-      // case GTA_BINARY_TYPE_NOT_EQUAL:
-      //   func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_not_equal);
-      //   break;
+      case GTA_BINARY_TYPE_NOT_EQUAL:
+        func = GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_not_equal);
+        break;
       default:
         return false;
     }
