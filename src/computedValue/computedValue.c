@@ -8,8 +8,8 @@
 
 #define BINARY_OPERATION_TRY_OR_REVERSE(A) \
   GTA_Computed_Value * result = self->vtable->A(self, other, reverse); \
-  if (!reverse && ((result == gta_computed_value_error_not_implemented) || (result == gta_computed_value_error_not_supported))) { \
-    return other->vtable->A(other, self, true); \
+  if (reverse && ((result == gta_computed_value_error_not_implemented) || (result == gta_computed_value_error_not_supported))) { \
+    return other->vtable->A(other, self, !reverse); \
   } \
   return result;
 

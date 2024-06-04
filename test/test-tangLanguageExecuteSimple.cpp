@@ -65,6 +65,10 @@ GTA_Computed_Value * GTA_CALL make_int_42(GTA_Execution_Context * context) {
   return (GTA_Computed_Value *)gta_computed_value_integer_create(42, context);
 }
 
+GTA_Computed_Value * GTA_CALL make_float_3(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_float_create(3., context);
+}
+
 GTA_Computed_Value * GTA_CALL make_float_3_5(GTA_Execution_Context * context) {
   return (GTA_Computed_Value *)gta_computed_value_float_create(3.5, context);
 }
@@ -789,6 +793,673 @@ TEST(Binary, Modulo) {
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
     ASSERT_EQ(context->result, gta_computed_value_error_not_supported);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Binary, LessThan) {
+  {
+    // Integer < Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a < b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer < Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a < b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer < Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a < b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer < Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a < b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer < Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a < b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float < Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a < b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float < Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a < b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float < Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a < b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float < Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a < b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float < Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a < b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Binary, LessThanEqual) {
+  {
+    // Integer <= Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer <= Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer <= Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer <= Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer <= Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer <= Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float <= Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float <= Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float <= Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float <= Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float <= Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float <= Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a <= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Binary, GreaterThan) {
+  {
+    // Integer > Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a > b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer > Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a > b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer > Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a > b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer > Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a > b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer > Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a > b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float > Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a > b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float > Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a > b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float > Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a > b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float > Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a > b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float > Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a > b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Binary, GreaterThanEqual) {
+  {
+    // Integer >= Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a >= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer >= Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a >= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer >= Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a >= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer >= Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a >= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer >= Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a >= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer >= Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a >= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float >= Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a >= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float >= Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a >= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float >= Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a >= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float >= Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a >= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float >= Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a >= b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Binary, Equal) {
+  {
+    // Integer == Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a == b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer == Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a == b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer == Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a == b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer == Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a == b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float == Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a == b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float == Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a == b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float == Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a == b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float == Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a == b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Binary, NotEqual) {
+  {
+    // Integer != Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a != b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer != Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a != b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer != Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a != b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer != Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a != b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float != Float => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a != b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float != Float => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a != b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float != Integer => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a != b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Float != Integer => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a != b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
     TEST_PROGRAM_TEARDOWN();
   }
 }

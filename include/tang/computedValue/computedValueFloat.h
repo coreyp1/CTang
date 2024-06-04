@@ -97,10 +97,11 @@ GTA_NO_DISCARD char * GTA_CALL gta_computed_value_float_to_string(GTA_Computed_V
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
+ *   otherwise.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
 
 /**
  * Subtracts two values.
@@ -109,10 +110,11 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Va
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
+ *   otherwise.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
 
 /**
  * Multiplies two values together.
@@ -121,10 +123,11 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Comput
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
+ *   otherwise.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
 
 /**
  * Divides two values.
@@ -133,10 +136,11 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Comput
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
+ *   otherwise.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
 
 /**
  * Computes the modulo of two values.
@@ -145,10 +149,11 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
+ *   otherwise.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
 
 /**
  * Computes the negative of a value.
@@ -161,17 +166,57 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_modulo(GTA_Computed
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_negative(GTA_Computed_Value * self);
 
 /**
- * Compares two values to see if the first is less than or equal to the
- * second.
+ * Compares two values to see if the first is less than the second.
  *
  * Calls the `less_than` method of the virtual table.
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
+ *   otherwise.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+
+/**
+ * Compares two values to see if the first is less than or equal to the second.
+ *
+ * Calls the `less_than_equal` method of the virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
+ *   otherwise.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+
+/**
+ * Compares two values to see if the first is greater than the second.
+ *
+ * Calls the `greater_than` method of the virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
+ *   otherwise.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+
+/**
+ * Compares two values to see if the first is greater than or equal to the
+ * second.
+ *
+ * Calls the `greater_than_equal` method of the virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
+ *   otherwise.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
 
 /**
  * Compares two values to see if they are equal.
@@ -180,10 +225,24 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_less_than(GTA_Compu
  *
  * @param self The first value.
  * @param other The second value.
- * @param reverse Whether the operation should be reversed.
+ * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
+ *   otherwise.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+
+/**
+ * Compares two values to see if they are not equal.
+ *
+ * Calls the `not_equal` method of the virtual table.
+ *
+ * @param self The first value.
+ * @param other The second value.
+ * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
+ *   otherwise.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
 
 /**
  * Casts a computed value to a different type.
@@ -195,7 +254,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_equal(GTA_Computed_
  * @param reverse Whether the operation should be reversed.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool reverse);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool self_is_lhs);
 
 #ifdef __cplusplus
 }

@@ -725,6 +725,7 @@ $(OBJ_DIR)/computedValue/computedValueError.o: \
 $(OBJ_DIR)/computedValue/computedValueFloat.o: \
 	src/computedValue/computedValueFloat.c \
 	$(DEP_COMPUTEDVALUEFLOAT) \
+	$(DEP_COMPUTEDVALUEBOOLEAN) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_EXECUTIONCONTEXT)
@@ -732,6 +733,7 @@ $(OBJ_DIR)/computedValue/computedValueFloat.o: \
 $(OBJ_DIR)/computedValue/computedValueInteger.o: \
 	src/computedValue/computedValueInteger.c \
 	$(DEP_COMPUTEDVALUEINTEGER) \
+	$(DEP_COMPUTEDVALUEBOOLEAN) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_EXECUTIONCONTEXT)
@@ -739,6 +741,7 @@ $(OBJ_DIR)/computedValue/computedValueInteger.o: \
 $(OBJ_DIR)/computedValue/computedValueString.o: \
 	src/computedValue/computedValueString.c \
 	$(DEP_COMPUTEDVALUESTRING) \
+	$(DEP_COMPUTEDVALUEBOOLEAN) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_UNICODESTRING)
