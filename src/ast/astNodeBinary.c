@@ -371,14 +371,16 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bina
       && gta_push_reg__x86_64(v, GTA_REG_RAX)
     // Compile the RHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)
-    // Prepare registers for: func(result_from_lhs, result_from_rhs, true)
+    // Prepare registers for: func(result_from_lhs, result_from_rhs, true, is_assignment)
     //   pop rdi       ; result_from_lhs
     //   mov rsi, rax  ; result_from_rhs
     //   mov rdx, 1    ; true
-    //   mov rdx, func ; func
+    //   mov rcx, is_assignment ; is_assignment
+    //   mov rax, func ; func
       && gta_pop_reg__x86_64(v, GTA_REG_RDI)
       && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_RAX)
       && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, 1)
+      && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, 0)
       && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(func))
     // Set up for a function call.
     //   push rbp

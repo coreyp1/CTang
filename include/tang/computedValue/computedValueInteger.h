@@ -100,9 +100,10 @@ GTA_NO_DISCARD char * GTA_CALL gta_computed_value_integer_to_string(GTA_Computed
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Subtracts two values.
@@ -113,9 +114,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Multiplies two values together.
@@ -126,9 +128,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_subtract(GTA_Comp
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Divides two values.
@@ -139,9 +142,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_multiply(GTA_Comp
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Computes the modulo of two values.
@@ -152,9 +156,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_divide(GTA_Comput
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Computes the negative of a value.
@@ -162,9 +167,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_modulo(GTA_Comput
  * Calls the `negative` method of the virtual table.
  *
  * @param self The value to negate.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_negative(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_integer_negative(GTA_Computed_Value * self, bool is_assignment);
 
 /**
  * Compares two values to see if the first is less than the second.

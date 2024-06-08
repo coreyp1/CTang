@@ -99,9 +99,10 @@ GTA_NO_DISCARD char * GTA_CALL gta_computed_value_float_to_string(GTA_Computed_V
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Subtracts two values.
@@ -112,9 +113,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Va
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Multiplies two values together.
@@ -125,9 +127,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Comput
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Divides two values.
@@ -138,9 +141,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Comput
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Computes the modulo of two values.
@@ -151,9 +155,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Computes the negative of a value.
@@ -161,9 +166,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_modulo(GTA_Computed
  * Calls the `negative` method of the virtual table.
  *
  * @param self The value to negate.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_negative(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_negative(GTA_Computed_Value * self, bool is_assignment);
 
 /**
  * Compares two values to see if the first is less than the second.

@@ -1,4 +1,5 @@
 
+#include <stdbool.h>
 #include <string.h>
 #include <cutil/memory.h>
 #include <tang/computedValue/computedValue.h>
@@ -7,9 +8,17 @@
 
 
 #define BINARY_OPERATION_TRY_OR_REVERSE(A) \
-  GTA_Computed_Value * result = self->vtable->A(self, other, reverse); \
-  if (reverse && ((result == gta_computed_value_error_not_implemented) || (result == gta_computed_value_error_not_supported))) { \
-    return other->vtable->A(other, self, !reverse); \
+  GTA_Computed_Value * result = self->vtable->A(self, other, self_is_lhs, is_assignment); \
+  if (self_is_lhs && ((result == gta_computed_value_error_not_implemented) || (result == gta_computed_value_error_not_supported))) { \
+    return other->vtable->A(other, self, !self_is_lhs, is_assignment); \
+  } \
+  return result;
+
+
+#define BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(A) \
+  GTA_Computed_Value * result = self->vtable->A(self, other, self_is_lhs); \
+  if (self_is_lhs && ((result == gta_computed_value_error_not_implemented) || (result == gta_computed_value_error_not_supported))) { \
+    return other->vtable->A(other, self, !self_is_lhs); \
   } \
   return result;
 
@@ -97,78 +106,78 @@ GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed_Value * self, 
 }
 
 
-GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
+GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment) {
   BINARY_OPERATION_TRY_OR_REVERSE(add)
 }
 
 
-GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
+GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment) {
   BINARY_OPERATION_TRY_OR_REVERSE(subtract)
 }
 
 
-GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
+GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment) {
   BINARY_OPERATION_TRY_OR_REVERSE(multiply)
 }
 
 
-GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
+GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment) {
   BINARY_OPERATION_TRY_OR_REVERSE(divide)
 }
 
 
-GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
+GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment) {
   BINARY_OPERATION_TRY_OR_REVERSE(modulo)
 }
 
 
-GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self) {
-  return self->vtable->negative(self);
+GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self, bool is_assignment) {
+  return self->vtable->negative(self, is_assignment);
 }
 
 
-GTA_Computed_Value * gta_computed_value_logical_and(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  return self->vtable->logical_and(self, other, reverse);
+GTA_Computed_Value * gta_computed_value_logical_and(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment) {
+  return self->vtable->logical_and(self, other, self_is_lhs, is_assignment);
 }
 
 
-GTA_Computed_Value * gta_computed_value_logical_or(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  return self->vtable->logical_or(self, other, reverse);
+GTA_Computed_Value * gta_computed_value_logical_or(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment) {
+  return self->vtable->logical_or(self, other, self_is_lhs, is_assignment);
 }
 
 
-GTA_Computed_Value * gta_computed_value_logical_not(GTA_Computed_Value * self) {
-  return self->vtable->logical_not(self);
+GTA_Computed_Value * gta_computed_value_logical_not(GTA_Computed_Value * self, bool is_assignment) {
+  return self->vtable->logical_not(self, is_assignment);
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  BINARY_OPERATION_TRY_OR_REVERSE(less_than)
+GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs) {
+  BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(less_than)
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  BINARY_OPERATION_TRY_OR_REVERSE(less_than_equal)
+GTA_Computed_Value * gta_computed_value_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs) {
+  BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(less_than_equal)
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  BINARY_OPERATION_TRY_OR_REVERSE(greater_than)
+GTA_Computed_Value * gta_computed_value_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs) {
+  BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(greater_than)
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  BINARY_OPERATION_TRY_OR_REVERSE(greater_than_equal)
+GTA_Computed_Value * gta_computed_value_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs) {
+  BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(greater_than_equal)
 }
 
 
-GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  BINARY_OPERATION_TRY_OR_REVERSE(equal)
+GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs) {
+  BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(equal)
 }
 
 
-GTA_Computed_Value * gta_computed_value_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool reverse) {
-  BINARY_OPERATION_TRY_OR_REVERSE(not_equal)
+GTA_Computed_Value * gta_computed_value_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs) {
+  BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(not_equal)
 }
 
 
@@ -197,8 +206,8 @@ GTA_Computed_Value * gta_computed_value_iterator_next(GTA_Computed_Value * self)
 }
 
 
-GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool reverse) {
-  return self->vtable->cast(self, type, reverse);
+GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool self_is_lhs) {
+  return self->vtable->cast(self, type, self_is_lhs);
 }
 
 
@@ -232,7 +241,7 @@ char * gta_computed_value_null_to_string(GTA_MAYBE_UNUSED(GTA_Computed_Value * s
 }
 
 
-GTA_Computed_Value * gta_computed_value_null_logical_not(GTA_Computed_Value * self) {
+GTA_Computed_Value * gta_computed_value_null_logical_not(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(bool is_assignment)) {
   return self->is_true ? gta_computed_value_boolean_false : gta_computed_value_boolean_true;
 }
 
@@ -242,77 +251,77 @@ GTA_Computed_Value * gta_computed_value_assign_index_not_implemented(GTA_MAYBE_U
 }
 
 
-GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_subtract_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_subtract_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_multiply_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_multiply_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_divide_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_divide_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_negative_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+GTA_Computed_Value * gta_computed_value_negative_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_logical_and_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_logical_and_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_logical_or_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_logical_or_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_logical_not_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+GTA_Computed_Value * gta_computed_value_logical_not_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_less_than_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_less_than_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_greater_than_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_greater_than_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_not_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_not_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_implemented;
 }
 
@@ -342,7 +351,7 @@ GTA_Computed_Value * gta_computed_value_iterator_next_not_implemented(GTA_MAYBE_
 }
 
 
-GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_implemented;
 }
 
@@ -357,77 +366,77 @@ GTA_Computed_Value * gta_computed_value_assign_index_not_supported(GTA_MAYBE_UNU
 }
 
 
-GTA_Computed_Value * gta_computed_value_add_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_add_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_subtract_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_subtract_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_multiply_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_multiply_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_divide_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_divide_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_modulo_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_modulo_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_negative_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+GTA_Computed_Value * gta_computed_value_negative_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_logical_and_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_logical_and_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_logical_or_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_logical_or_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_logical_not_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+GTA_Computed_Value * gta_computed_value_logical_not_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(bool is_assignment)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_less_than_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_less_than_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_greater_than_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_greater_than_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_not_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_not_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_supported;
 }
 
@@ -457,7 +466,7 @@ GTA_Computed_Value * gta_computed_value_iterator_next_not_supported(GTA_MAYBE_UN
 }
 
 
-GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(bool reverse)) {
+GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
   return gta_computed_value_error_not_supported;
 }
 

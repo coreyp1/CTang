@@ -153,13 +153,13 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       case GTA_BYTECODE_NEGATIVE: {
         // Perform a negation.
         // The value will be left on the stack.
-        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_negative(context->stack->data[*sp-1].p));
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_negative(context->stack->data[*sp-1].p, false));
         break;
       }
       case GTA_BYTECODE_NOT: {
         // Perform a logical not.
         // The value will be left on the stack.
-        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_logical_not(context->stack->data[*sp-1].p));
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_logical_not(context->stack->data[*sp-1].p, false));
         break;
       }
       case GTA_BYTECODE_ADD: {
@@ -167,7 +167,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         // The value will be left on the stack.
         GTA_Computed_Value * rhs = GTA_TYPEX_P(context->stack->data[--*sp]);
         GTA_Computed_Value * lhs = GTA_TYPEX_P(context->stack->data[*sp-1]);
-        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_add(lhs, rhs, true));
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_add(lhs, rhs, true, false));
         break;
       }
       case GTA_BYTECODE_SUBTRACT: {
@@ -175,7 +175,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         // The value will be left on the stack.
         GTA_Computed_Value * rhs = GTA_TYPEX_P(context->stack->data[--*sp]);
         GTA_Computed_Value * lhs = GTA_TYPEX_P(context->stack->data[*sp-1]);
-        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_subtract(lhs, rhs, true));
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_subtract(lhs, rhs, true, false));
         break;
       }
       case GTA_BYTECODE_MULTIPLY: {
@@ -183,7 +183,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         // The value will be left on the stack.
         GTA_Computed_Value * rhs = GTA_TYPEX_P(context->stack->data[--*sp]);
         GTA_Computed_Value * lhs = GTA_TYPEX_P(context->stack->data[*sp-1]);
-        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_multiply(lhs, rhs, true));
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_multiply(lhs, rhs, true, false));
         break;
       }
       case GTA_BYTECODE_DIVIDE: {
@@ -191,7 +191,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         // The value will be left on the stack.
         GTA_Computed_Value * rhs = GTA_TYPEX_P(context->stack->data[--*sp]);
         GTA_Computed_Value * lhs = GTA_TYPEX_P(context->stack->data[*sp-1]);
-        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_divide(lhs, rhs, true));
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_divide(lhs, rhs, true, false));
         break;
       }
       case GTA_BYTECODE_MODULO: {
@@ -199,7 +199,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         // The value will be left on the stack.
         GTA_Computed_Value * rhs = GTA_TYPEX_P(context->stack->data[--*sp]);
         GTA_Computed_Value * lhs = GTA_TYPEX_P(context->stack->data[*sp-1]);
-        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_modulo(lhs, rhs, true));
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_modulo(lhs, rhs, true, false));
         break;
       }
       case GTA_BYTECODE_LESS_THAN: {

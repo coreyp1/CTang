@@ -11,6 +11,7 @@
 extern "C" {
 #endif // __cplusplus
 
+#include <stdbool.h>
 #include <cutil/vector.h>
 #include <tang/macros.h>
 
@@ -87,30 +88,33 @@ typedef struct GTA_Computed_Value_VTable {
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
+   * @param is_assignment If `true`, lhs is being assigned to.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*add)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+  GTA_Computed_Value * (*add)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
   /**
    * Subtracts two values.
    *
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
+   * @param is_assignment If `true`, lhs is being assigned to.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*subtract)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+  GTA_Computed_Value * (*subtract)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
   /**
    * Multiplies two values together.
    *
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
+   * @param is_assignment If `true`, lhs is being assigned to.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*multiply)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+  GTA_Computed_Value * (*multiply)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
   /**
    * Divides two values.
    *
@@ -119,10 +123,11 @@ typedef struct GTA_Computed_Value_VTable {
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
+   * @param is_assignment If `true`, lhs is being assigned to.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*divide)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+  GTA_Computed_Value * (*divide)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
   /**
    * Computes the modulo of two values.
    *
@@ -131,51 +136,56 @@ typedef struct GTA_Computed_Value_VTable {
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
+   * @param is_assignment If `true`, lhs is being assigned to.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*modulo)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+  GTA_Computed_Value * (*modulo)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
   /**
    * Computes the negative of a value.
    *
    * @param self The value to negate.
+   * @param is_assignment If `true`, operand is being assigned to.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*negative)(GTA_Computed_Value * self);
+  GTA_Computed_Value * (*negative)(GTA_Computed_Value * self, bool is_assignment);
   /**
    * Computes the logical `and` of two values.
    *
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
+   * @param is_assignment If `true`, lhs is being assigned to.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*logical_and)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+  GTA_Computed_Value * (*logical_and)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
   /**
    * Computes the logical `or` of two values.
    *
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
+   * @param is_assignment If `true`, lhs is being assigned to.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*logical_or)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+  GTA_Computed_Value * (*logical_or)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
   /**
    * Computes the logical `not` of a value.
    *
    * @param self The value to negate.
+   * @param is_assignment If `true`, operand is being assigned to.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*logical_not)(GTA_Computed_Value * self);
+  GTA_Computed_Value * (*logical_not)(GTA_Computed_Value * self, bool is_assignment);
   /**
    * Compares two values to see if the first is less than the second.
    *
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*less_than)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
@@ -186,7 +196,7 @@ typedef struct GTA_Computed_Value_VTable {
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*less_than_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
@@ -196,7 +206,7 @@ typedef struct GTA_Computed_Value_VTable {
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*greater_than)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
@@ -207,7 +217,7 @@ typedef struct GTA_Computed_Value_VTable {
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*greater_than_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
@@ -217,7 +227,7 @@ typedef struct GTA_Computed_Value_VTable {
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
@@ -227,7 +237,7 @@ typedef struct GTA_Computed_Value_VTable {
    * @param self The first value.
    * @param other The second value.
    * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
+   *   otherwise.
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*not_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
@@ -436,9 +446,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Subtracts two values.
@@ -449,9 +460,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * 
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Multiplies two values together.
@@ -462,9 +474,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Val
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Divides two values.
@@ -475,9 +488,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Val
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Computes the modulo of two values.
@@ -488,9 +502,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Computes the negative of a value.
@@ -498,9 +513,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value
  * Calls the `negative` method of the virtual table.
  *
  * @param self The value to negate.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self, bool is_assignment);
 
 /**
  * Computes the logical `and` of two values.
@@ -511,9 +527,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Val
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Computes the logical `or` of two values.
@@ -524,9 +541,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and(GTA_Computed_
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Computes the logical `not` of a value.
@@ -536,7 +554,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or(GTA_Computed_V
  * @param self The value to negate.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not(GTA_Computed_Value * self, bool is_assignment);
 
 /**
  * Compares two values to see if the first is less than the second.
@@ -749,7 +767,7 @@ GTA_NO_DISCARD char * gta_computed_value_null_to_string(GTA_Computed_Value * sel
  * @param self The value to negate.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_logical_not(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_logical_not(GTA_Computed_Value * self, bool is_assignment);
 
 /**
  * Generic "not implemented" version of the `assign_index` method for the
@@ -769,9 +787,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index_not_implemen
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not implemented" version of the `subtract` method for the virtual
@@ -781,9 +800,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_C
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not implemented" version of the `multiply` method for the virtual
@@ -793,9 +813,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_implemented(
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not implemented" version of the `divide` method for the virtual
@@ -805,9 +826,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_implemented(
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not implemented" version of the `modulo` method for the virtual
@@ -817,18 +839,20 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_implemented(GT
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not implemented" version of the `negative` method for the virtual
  * table.
  *
  * @param self The value to negate.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_implemented(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_implemented(GTA_Computed_Value * self, bool is_assignment);
 
 /**
  * Generic "not implemented" version of the `logical_and` method for the virtual
@@ -838,9 +862,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_implemented(
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not implemented" version of the `logical_or` method for the virtual
@@ -850,18 +875,20 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_implement
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not implemented" version of the `logical_not` method for the virtual
  * table.
  *
  * @param self The value to negate.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not_not_implemented(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not_not_implemented(GTA_Computed_Value * self, bool is_assignment);
 
 /**
  * Generic "not implemented" version of the `less_than` method for the virtual
@@ -1024,9 +1051,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index_not_supporte
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not supported" version of the `subtract` method for the virtual
@@ -1036,9 +1064,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_supported(GTA_Com
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not supported" version of the `multiply` method for the virtual
@@ -1048,9 +1077,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_supported(GT
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not supported" version of the `divide` method for the virtual
@@ -1060,9 +1090,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_supported(GT
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not supported" version of the `modulo` method for the virtual
@@ -1072,18 +1103,20 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_supported(GTA_
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not supported" version of the `negative` method for the virtual
  * table.
  *
  * @param self The value to negate.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_supported(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_supported(GTA_Computed_Value * self, bool is_assignment);
 
 /**
  * Generic "not supported" version of the `logical_and` method for the virtual
@@ -1093,9 +1126,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_supported(GT
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not supported" version of the `logical_or` method for the virtual
@@ -1105,18 +1139,20 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_supported
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
 
 /**
  * Generic "not supported" version of the `logical_not` method for the virtual
  * table.
  *
  * @param self The value to negate.
+ * @param is_assignment If `true`, operand is being assigned to.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not_not_supported(GTA_Computed_Value * self);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not_not_supported(GTA_Computed_Value * self, bool is_assignment);
 
 /**
  * Generic "not supported" version of the `less_than` method for the virtual
