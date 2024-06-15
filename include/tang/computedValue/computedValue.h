@@ -150,36 +150,6 @@ typedef struct GTA_Computed_Value_VTable {
    */
   GTA_Computed_Value * (*negative)(GTA_Computed_Value * self, bool is_assignment);
   /**
-   * Computes the logical `and` of two values.
-   *
-   * @param self The first value.
-   * @param other The second value.
-   * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
-   *   otherwise.
-   * @param is_assignment If `true`, lhs is being assigned to.
-   * @return The result of the operation or NULL if the operation failed.
-   */
-  GTA_Computed_Value * (*logical_and)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
-  /**
-   * Computes the logical `or` of two values.
-   *
-   * @param self The first value.
-   * @param other The second value.
-   * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
-   *   otherwise.
-   * @param is_assignment If `true`, lhs is being assigned to.
-   * @return The result of the operation or NULL if the operation failed.
-   */
-  GTA_Computed_Value * (*logical_or)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
-  /**
-   * Computes the logical `not` of a value.
-   *
-   * @param self The value to negate.
-   * @param is_assignment If `true`, operand is being assigned to.
-   * @return The result of the operation or NULL if the operation failed.
-   */
-  GTA_Computed_Value * (*logical_not)(GTA_Computed_Value * self, bool is_assignment);
-  /**
    * Compares two values to see if the first is less than the second.
    *
    * @param self The first value.
@@ -519,44 +489,6 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self, bool is_assignment);
 
 /**
- * Computes the logical `and` of two values.
- *
- * Calls the `logical_and` method of the virtual table.
- *
- * @param self The first value.
- * @param other The second value.
- * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
- * @param is_assignment If `true`, operand is being assigned to.
- * @return The result of the operation or NULL if the operation failed.
- */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
-
-/**
- * Computes the logical `or` of two values.
- *
- * Calls the `logical_or` method of the virtual table.
- *
- * @param self The first value.
- * @param other The second value.
- * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
- * @param is_assignment If `true`, operand is being assigned to.
- * @return The result of the operation or NULL if the operation failed.
- */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
-
-/**
- * Computes the logical `not` of a value.
- *
- * Calls the `logical_not` method of the virtual table.
- *
- * @param self The value to negate.
- * @return The result of the operation or NULL if the operation failed.
- */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not(GTA_Computed_Value * self, bool is_assignment);
-
-/**
  * Compares two values to see if the first is less than the second.
  *
  * Calls the `less_than` method of the virtual table.
@@ -756,20 +688,6 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_deep_copy(GTA_Comput
 GTA_NO_DISCARD char * gta_computed_value_null_to_string(GTA_Computed_Value * self);
 
 /**
- * Return a logical not of a computed value based on the truthiness of the
- * self->is_true field.
- *
- * This function can be used by many classes to implement the logical not
- * operation.
- *
- * @see gta_computed_value_logical_not
- *
- * @param self The value to negate.
- * @return The result of the operation or NULL if the operation failed.
- */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_logical_not(GTA_Computed_Value * self, bool is_assignment);
-
-/**
  * Generic "not implemented" version of the `assign_index` method for the
  * virtual table.
  *
@@ -853,42 +771,6 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GT
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_implemented(GTA_Computed_Value * self, bool is_assignment);
-
-/**
- * Generic "not implemented" version of the `logical_and` method for the virtual
- * table.
- *
- * @param self The first value.
- * @param other The second value.
- * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
- * @param is_assignment If `true`, operand is being assigned to.
- * @return The result of the operation or NULL if the operation failed.
- */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
-
-/**
- * Generic "not implemented" version of the `logical_or` method for the virtual
- * table.
- *
- * @param self The first value.
- * @param other The second value.
- * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
- * @param is_assignment If `true`, operand is being assigned to.
- * @return The result of the operation or NULL if the operation failed.
- */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
-
-/**
- * Generic "not implemented" version of the `logical_not` method for the virtual
- * table.
- *
- * @param self The value to negate.
- * @param is_assignment If `true`, operand is being assigned to.
- * @return The result of the operation or NULL if the operation failed.
- */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not_not_implemented(GTA_Computed_Value * self, bool is_assignment);
 
 /**
  * Generic "not implemented" version of the `less_than` method for the virtual
@@ -1117,42 +999,6 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_supported(GTA_
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_supported(GTA_Computed_Value * self, bool is_assignment);
-
-/**
- * Generic "not supported" version of the `logical_and` method for the virtual
- * table.
- *
- * @param self The first value.
- * @param other The second value.
- * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
- * @param is_assignment If `true`, operand is being assigned to.
- * @return The result of the operation or NULL if the operation failed.
- */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_and_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
-
-/**
- * Generic "not supported" version of the `logical_or` method for the virtual
- * table.
- *
- * @param self The first value.
- * @param other The second value.
- * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
- *   otherwise.
- * @param is_assignment If `true`, operand is being assigned to.
- * @return The result of the operation or NULL if the operation failed.
- */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_or_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
-
-/**
- * Generic "not supported" version of the `logical_not` method for the virtual
- * table.
- *
- * @param self The value to negate.
- * @param is_assignment If `true`, operand is being assigned to.
- * @return The result of the operation or NULL if the operation failed.
- */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_logical_not_not_supported(GTA_Computed_Value * self, bool is_assignment);
 
 /**
  * Generic "not supported" version of the `less_than` method for the virtual

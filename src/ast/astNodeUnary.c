@@ -7,6 +7,7 @@
 #include <tang/ast/astNodeInteger.h>
 #include <tang/ast/astNodeString.h>
 #include <tang/ast/astNodeUnary.h>
+#include <tang/computedValue/computedValueBoolean.h>
 #include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_unary_vtable = {
@@ -130,28 +131,46 @@ bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
   GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;
   GCU_Vector8 * v = context->binary_vector;
 
+  if (unary_node->operator_type == GTA_UNARY_TYPE_NEGATIVE) {
+    return true
+    // Compile the expression.  The result will be in rax.
+      && gta_ast_node_compile_to_binary__x86_64(unary_node->expression, context)
+    // Set up for a function call.
+    //   push rbp
+    //   mov rbp, rsp
+    //   and rsp, 0xFFFFFFFFFFFFFFF0
+      && gta_push_reg__x86_64(v, GTA_REG_RBP)
+      && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+      && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
+    // function_to_be_called(GTA_Computed_Value * result_from_expression)
+    //   mov rdi, rax
+    //   mov rsi, is_assignment
+    //   mov rax, gta_computed_value_negative
+    //   call rax
+      && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
+      && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, 0)
+      && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_negative))
+      && gta_call_reg__x86_64(v, GTA_REG_RAX)
+    // Tear down the function call.
+    //   mov rsp, rbp
+    //   pop rbp
+      && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+      && gta_pop_reg__x86_64(v, GTA_REG_RBP);
+  }
+
+  // Get the offset of is_true.
+  int32_t is_true_offset = (int32_t)(size_t)(&((GTA_Computed_Value *)0)->is_true);
+  //   lea r10, [rax + is_true_offset]
+  //   mov rax, gta_computed_value_boolean_true
+  //   mov rdx, gta_computed_value_boolean_false
+  //   cmp byte [r10], 0
+  //   cmovne rax, rdx
   return true
-  // Compile the expression.  The result will be in rax.
+    // Compile the expression.  The result will be in rax.
     && gta_ast_node_compile_to_binary__x86_64(unary_node->expression, context)
-  // Set up for a function call.
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFFFFFFFFFF0
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-  // function_to_be_called(GTA_Computed_Value * result_from_expression)
-  //   mov rdi, rax
-  //   mov rsi, is_assignment
-  //   mov rax, gta_computed_value_negative or gta_computed_value_logical_not
-  //   call rax
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, 0)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(unary_node->operator_type == GTA_UNARY_TYPE_NEGATIVE ? gta_computed_value_negative : gta_computed_value_logical_not))
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-  // Tear down the function call.
-  //   mov rsp, rbp
-  //   pop rbp
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP);
+    && gta_lea_reg_ind__x86_64(v, GTA_REG_R10, GTA_REG_RAX, GTA_REG_NONE, 0, is_true_offset)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (GTA_Integer)gta_computed_value_boolean_true)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (GTA_Integer)gta_computed_value_boolean_false)
+    && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 0, 0)
+    && gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NE, GTA_REG_RAX, GTA_REG_RDX);
 }

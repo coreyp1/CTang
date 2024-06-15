@@ -159,7 +159,9 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       case GTA_BYTECODE_NOT: {
         // Perform a logical not.
         // The value will be left on the stack.
-        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_logical_not(context->stack->data[*sp-1].p, false));
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(((GTA_Computed_Value *)context->stack->data[*sp-1].p)->is_true
+          ? gta_computed_value_boolean_false
+          : gta_computed_value_boolean_true);
         break;
       }
       case GTA_BYTECODE_ADD: {
