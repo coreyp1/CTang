@@ -102,6 +102,43 @@ typedef enum GTA_Register {
 } GTA_Register;
 
 /**
+ * A representation for the condition codes that may be available in the target
+ * architecture.
+ */
+typedef enum GTA_Condition_Code {
+  GTA_CC_A,
+  GTA_CC_AE,
+  GTA_CC_B,
+  GTA_CC_BE,
+  GTA_CC_C,
+  GTA_CC_E,
+  GTA_CC_G,
+  GTA_CC_GE,
+  GTA_CC_L,
+  GTA_CC_LE,
+  GTA_CC_O,
+  GTA_CC_P,
+  GTA_CC_PE,
+  GTA_CC_PO,
+  GTA_CC_S,
+  GTA_CC_Z,
+  GTA_CC_NA,
+  GTA_CC_NAE,
+  GTA_CC_NB,
+  GTA_CC_NBE,
+  GTA_CC_NC,
+  GTA_CC_NE,
+  GTA_CC_NG,
+  GTA_CC_NGE,
+  GTA_CC_NL,
+  GTA_CC_NLE,
+  GTA_CC_NO,
+  GTA_CC_NP,
+  GTA_CC_NS,
+  GTA_CC_NZ,
+} GTA_Condition_Code;
+
+/**
  * Verify that the vector has enough space to store the additional bytes.
  *
  * If the vector has enough space, the function returns true. Otherwise, it
@@ -143,6 +180,32 @@ bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t imm
  * @return True on success, false on failure.
  */
 bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
+
+/**
+ * x86_64 instruction: CMOVcc reg, reg
+ *
+ * The two registers must be the same size.
+ *
+ * @param vector The vector in which to store the instruction.
+ * @param condition The condition code.
+ * @param dst The destination register.
+ * @param src The source register.
+ * @return True on success, false on failure.
+ */
+bool gta_cmovcc_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, GTA_Register dst, GTA_Register src);
+
+/**
+ * x86_64 instruction: CMP byte ind, imm8
+ *
+ * @param vector The vector in which to store the instruction.
+ * @param base The base register for the memory address.
+ * @param index The index register for the memory address.
+ * @param scale The scale for the index register.
+ * @param offset The offset to add to the base register.
+ * @param immediate The immediate value (8-bit).
+ * @return True on success, false on failure.
+ */
+bool gta_cmp_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, int8_t immediate);
 
 /**
  * x86_64 instruction: JNZ offset

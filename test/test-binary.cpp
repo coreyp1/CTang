@@ -76,6 +76,75 @@ TEST(x86_64, call_reg) {
 }
 
 
+TEST(x86_64, cmovcc_reg_imm) {
+  // Testing register encodings.
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x44\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_R10, GTA_REG_RCX), "\x4C\x0F\x44\xD1");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RDX, GTA_REG_R11), "\x49\x0F\x44\xD3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_R12, GTA_REG_R13), "\x4D\x0F\x44\xE5");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_EAX, GTA_REG_EBX), "\x0F\x44\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_CX, GTA_REG_DX), "\x66\x0F\x44\xCA");
+  // Failures. The destination register must be 64-bit.
+  JIT_FAIL(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_AH, GTA_REG_BH));
+  // Failures. The registers must be the same size.
+  JIT_FAIL(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_REG_EBX));
+  JIT_FAIL(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RBX, GTA_REG_CX));
+  JIT_FAIL(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_EDX, GTA_REG_SI));
+  // Failure. The condition code must be valid.
+  JIT_FAIL(gta_cmovcc_reg_reg__x86_64(v, (GTA_Condition_Code)(GTA_CC_NZ + 1), GTA_REG_RAX, GTA_REG_RBX));
+  // Test the condition codes.
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_A, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x47\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_AE, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x43\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_B, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x42\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_BE, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x46\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x44\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_G, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4F\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_GE, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4D\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_L, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4C\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_LE, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4E\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NA, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x46\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NAE, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x42\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NB, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x43\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NBE, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x47\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NE, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x45\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NG, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4E\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NGE, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4C\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NL, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4D\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NLE, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4F\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NO, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x41\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NP, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4B\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NS, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x49\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NZ, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x45\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_O, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x40\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_P, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4A\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_PE, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4A\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_PO, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x4B\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_S, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x48\xC3");
+  JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_Z, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x44\xC3");
+}
+
+
+TEST(x86_64, cmp_ind8_imm) {
+  // General case. m8, imm8
+  JIT(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, 0, 0x7F), "\x80\x38\x7F");
+  JIT(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 0, -0x42), "\x80\x3B\xBE");
+  JIT(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 0, 0), string("\x41\x80\x3A\x00", 4));
+  JIT(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 42, 1), "\x41\x80\x7A\x2A\x01");
+  // General case. m8, imm8
+  JIT(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_RBX, 1, 42, 0x7F), "\x80\x7c\x18\x2A\x7F");
+  JIT(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RBX, GTA_REG_R10, 2, -1, -0x42), "\x42\x80\x7C\x53\xFF\xBE");
+  JIT(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_R10, GTA_REG_R11, 4, 7, 0), string("\x43\x80\x7C\x9A\x07\x00", 6));
+  JIT(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RCX, GTA_REG_R12, 8, -10, -0x42), "\x42\x80\x7C\xE1\xF6\xBE");
+  // Failures. The base register must be 64-bit.
+  JIT_FAIL(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_AX, GTA_REG_NONE, 0, 0, 0x7F));
+  // Failures. SIB registers must be 64-bit.
+  JIT_FAIL(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_BX, 1, 42, 0x7F));
+  // Failures. The scale must be 1, 2, 4, or 8.
+  JIT_FAIL(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 3, 0, 0x7F));
+  JIT_FAIL(gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_RBX, 5, 0, 0x7F));
+}
+
+
 TEST(x86_64, jnz) {
   // General case.
   JIT(gta_jnz__x86_64(v, 0x12345678), "\x0F\x85\x78\x56\x34\x12");

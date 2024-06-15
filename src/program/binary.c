@@ -173,6 +173,217 @@ bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
 }
 
 
+bool gta_cmovcc_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, GTA_Register dst, GTA_Register src) {
+  // https://www.felixcloutier.com/x86/cmovcc
+  if (!(REG_IS_INTEGER(dst) && REG_IS_INTEGER(src)
+    && ((REG_IS_64BIT(dst) && REG_IS_64BIT(src))
+      || (REG_IS_32BIT(dst) && REG_IS_32BIT(src))
+      || (REG_IS_16BIT(dst) && REG_IS_16BIT(src))))
+  || (condition > GTA_CC_NZ)
+  || !gta_binary_optimistic_increase(vector, 4)) {
+  return false;
+  }
+  uint8_t dst_code = gta_binary_get_register_code__x86_64(dst);
+  uint8_t src_code = gta_binary_get_register_code__x86_64(src);
+
+  // Prefix.
+  if (REG_IS_64BIT(dst)) {
+    // 64-bit register.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((dst_code & 0x08) >> 1) | ((src_code & 0x08) >> 3));
+  }
+  else if (REG_IS_16BIT(dst)) {
+    // 16-bit register.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+  }
+
+  // Opcode (2 bytes).
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x0F);
+  switch (condition) {
+    case GTA_CC_A:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x47);
+      break;
+    case GTA_CC_AE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x43);
+      break;
+    case GTA_CC_B:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x42);
+      break;
+    case GTA_CC_BE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x46);
+      break;
+    case GTA_CC_E:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x44);
+      break;
+    case GTA_CC_G:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4F);
+      break;
+    case GTA_CC_GE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4D);
+      break;
+    case GTA_CC_L:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4C);
+      break;
+    case GTA_CC_LE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4E);
+      break;
+    case GTA_CC_NA:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x46);
+      break;
+    case GTA_CC_NAE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x42);
+      break;
+    case GTA_CC_NB:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x43);
+      break;
+    case GTA_CC_NBE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x47);
+      break;
+    case GTA_CC_NC:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x43);
+      break;
+    case GTA_CC_NE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x45);
+      break;
+    case GTA_CC_NG:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4E);
+      break;
+    case GTA_CC_NGE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4C);
+      break;
+    case GTA_CC_NL:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4D);
+      break;
+    case GTA_CC_NLE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4F);
+      break;
+    case GTA_CC_NO:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x41);
+      break;
+    case GTA_CC_NP:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4B);
+      break;
+    case GTA_CC_NS:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x49);
+      break;
+    case GTA_CC_NZ:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x45);
+      break;
+    case GTA_CC_O:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x40);
+      break;
+    case GTA_CC_P:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4A);
+      break;
+    case GTA_CC_PE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4A);
+      break;
+    case GTA_CC_PO:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x4B);
+      break;
+    case GTA_CC_S:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x48);
+      break;
+    case GTA_CC_Z:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x44);
+      break;
+    default:
+      return false;
+  }
+
+  // ModR/M byte.
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 | ((dst_code & 0x07) << 3) | (src_code & 0x07));
+  return true;
+}
+
+
+bool gta_cmp_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, int8_t immediate) {
+  // https://www.felixcloutier.com/x86/cmp
+  if (!(REG_IS_INTEGER(base) && REG_IS_64BIT(base)
+      && ((REG_IS_INTEGER(index) && REG_IS_64BIT(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
+        || (REG_IS_NONE(index) && (scale == 0))))
+    // All cases in which the index is a form of SP result in a weird SIB
+    // encoding that we don't support.
+    || (index == GTA_REG_RSP)
+    || !gta_binary_optimistic_increase(vector, 8)) {
+    return false;
+  }
+
+  uint8_t base_code = gta_binary_get_register_code__x86_64(base);
+  uint8_t index_code = REG_IS_INTEGER(index) ? gta_binary_get_register_code__x86_64(index) : 0;
+  bool offset_32 = offset > (int32_t)INT8_MAX || offset < (int32_t)INT8_MIN;
+  bool rex_required = (base_code & 0x08)
+    || (!REG_IS_NONE(index) && (index_code & 0x08));
+
+  // Prefixes and Opcode.
+  if (rex_required) {
+    // REX prefix
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x40
+      | ((base_code & 0x08) >> 3)
+      | ((index_code & 0x08) >> 2));
+  }
+
+  // There is only one option for the opcode (since this is a byte comparison).
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x80);
+
+  // RIP-relative addressing.
+  // e.g., cmp byte [RIP + 0xDEADBEEF], 0x42
+  if (REG_IS_NONE(base)) {
+    // Rip-relative *always* uses a 32-bit displacement.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x3D);
+    memcpy(&vector->data[vector->count], &offset, 4);
+    vector->count += 4;
+    vector->data[vector->count++] = GCU_TYPE8_UI8(immediate);
+    return true;
+  }
+
+  // Note: RBP and R13 are used for RIP-relative addressing, so if they are
+  // being referenced, then we must force an offset encoding, even if the
+  // offset is zero.
+  bool force_offset = offset || base == GTA_REG_RBP || base == GTA_REG_R13;
+
+  // Base or Base + offset.  No Index.
+  // e.g., cmp [rbx + 0xDEADBEEF], 0x42
+  // also  cmp [rbx], 0x42
+  // Note: RSP and R12 require a SIB byte.
+  if (REG_IS_NONE(index) && (base != GTA_REG_RSP) && (base != GTA_REG_R12)) {
+    vector->data[vector->count++] = GCU_TYPE8_UI8((force_offset ? offset_32 ? 0x80 : 0x40 : 0x00)
+      | (0x07 << 3) // Opcode extension
+      | (base_code & 0x07));
+  }
+
+  // Base + (Index * Scale) + Offset.
+  // e.g., cmp [rbx + rsi * 4 + 0xDEADBEEF], 0x42
+  // also  cmp [rbx + rsi * 4], 0x42
+  // also  cmp [rbx + rcx], 0x42
+  else {
+    vector->data[vector->count++] = GCU_TYPE8_UI8((force_offset ? offset_32 ? 0x84 : 0x44 : 0x04)
+      | (0x07 << 3) // Opcode extension
+      | (0x04));    // SIB byte
+    vector->data[vector->count++] = GCU_TYPE8_UI8((
+      scale < 2
+        ? 0x00
+        : scale == 2
+          ? 0x40
+          : scale == 4
+            ? 0x80
+            : 0xC0) | ((REG_IS_NONE(index) ? 0x04 : (index_code & 0x07)) << 3) | (base_code & 0x07));
+  }
+
+  // Write the offset.
+  if (offset_32) {
+    memcpy(&vector->data[vector->count], &offset, 4);
+    vector->count += 4;
+  }
+  else if (force_offset) {
+    vector->data[vector->count++] = GCU_TYPE8_UI8(offset);
+  }
+  // Else, no offset.
+  // Now write the immediate value.
+  vector->data[vector->count++] = GCU_TYPE8_UI8(immediate);
+  return true;
+}
+
+
 bool gta_jnz__x86_64(GCU_Vector8 * vector, int32_t offset) {
   // https://www.felixcloutier.com/x86/jnz
   if (!gta_binary_optimistic_increase(vector, 6)) {
