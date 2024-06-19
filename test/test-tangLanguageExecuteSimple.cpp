@@ -1511,6 +1511,53 @@ TEST(Binary, And) {
   }
 }
 
+TEST(Binary, Or) {
+  {
+    // true || true => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a || b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_true));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // true || false => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a || b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_false));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // false || true => true.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a || b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_false));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_true));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // false || false => false.
+    TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a || b;");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_false));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_false));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
