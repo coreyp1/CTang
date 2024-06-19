@@ -252,6 +252,25 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_not_equal(lhs, rhs, true));
         break;
       }
+      case GTA_BYTECODE_JMP: {
+        // Jump to the specified address.
+        next += GTA_TYPEX_I(*next);
+        break;
+      }
+      case GTA_BYTECODE_JMPF: {
+        // Jump to the specified address if the top of the stack is false.
+        next += ((GTA_Computed_Value *)context->stack->data[*sp-1].p)->is_true
+          ? 1
+          : GTA_TYPEX_I(*next);
+        break;
+      }
+      case GTA_BYTECODE_JMPT: {
+        // Jump to the specified address if the top of the stack is true.
+        next += ((GTA_Computed_Value *)context->stack->data[*sp-1].p)->is_true
+          ? GTA_TYPEX_I(*next)
+          : 1;
+        break;
+      }
       default: {
         context->result = gta_computed_value_error_invalid_bytecode;
         break;

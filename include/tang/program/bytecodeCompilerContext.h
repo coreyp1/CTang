@@ -60,6 +60,15 @@ typedef struct GTA_Bytecode_Compiler_Context {
    * variable in the stack.
    */
   GTA_HashX * globals;
+  /**
+   * A vector of vectors to store, for each label, the binary offsets which
+   * should be patched with the label's position, once it is known.
+   */
+  GTA_VectorX * labels_from;
+  /**
+   * A vector to store the position of each label, once it is known.
+   */
+  GTA_VectorX * labels;
 } GTA_Bytecode_Compiler_Context;
 
 /**
@@ -109,6 +118,49 @@ void gta_bytecode_compiler_context_destroy(GTA_Bytecode_Compiler_Context * conte
  * @param self The bytecode compiler context to destroy.
  */
 void gta_bytecode_compiler_context_destroy_in_place(GTA_Bytecode_Compiler_Context * context);
+
+/**
+ * Get a new label identifier.
+ *
+ * This will ensure that the label is unique within the program and that
+ * adequate space is reserved in the labels vector.
+ *
+ * Note: 0 is a valid label id, so the return value should be checked against
+ * -1.
+ *
+ * @param context The bytecode compiler context.
+ * @return The new label id, or -1 on failure.
+ */
+GTA_NO_DISCARD GTA_Integer gta_bytecode_compiler_context_get_label(GTA_Bytecode_Compiler_Context * context);
+
+/**
+ * Mark an offset as needing to be patched with the label's position, once
+ * it is known.
+ *
+ * The offset should be the position in the bytecode where the label needs
+ * to be patched.  It is relative to the start of the bytecode.  This is
+ * commonly used for jump instructions.
+ *
+ * @param context The bytecode compiler context.
+ * @param label The label id that the jump will go to.
+ * @param from_offset The offset to patch with the label's position.
+ * @return True on success, false on failure.
+ */
+bool gta_bytecode_compiler_context_add_label_jump(GTA_Bytecode_Compiler_Context * context, GTA_Integer label, GTA_Integer from_offset);
+
+/**
+ * Record the position of a label in the bytecode.
+ *
+ * The offset is the "jump target" for jump instructions.  It will be used
+ * to calculate the relative offset for jump instructions and will be patched
+ * into the bytecode at the end of compilation.
+ *
+ * @param context The bytecode compiler context.
+ * @param label The label id.
+ * @param offset The target position of the label in the bytecode.
+ * @return True on success, false on failure.
+ */
+bool gta_bytecode_compiler_context_set_label(GTA_Bytecode_Compiler_Context * context, GTA_Integer label, GTA_Integer offset);
 
 #ifdef __cplusplus
 }

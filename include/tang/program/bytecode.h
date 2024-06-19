@@ -62,12 +62,15 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_NOT_EQUAL,      ///< Perform an inequality comparison
   GTA_BYTECODE_AND,            ///< Perform a logical and
   GTA_BYTECODE_OR,             ///< Perform a logical or
+  GTA_BYTECODE_JMP,            ///< PC offset: set pc + offset
+  GTA_BYTECODE_JMPF,           ///< PC offset: pop val, if false, set pc + offset
+  GTA_BYTECODE_JMPT,           ///< PC offset: pop val, if true, set pc + offset
 
 
   GTA_BYTECODE_POKE,           ///< Stack # (from fp): Copy a val, store @ stack #
   GTA_BYTECODE_COPY,           ///< Stack # (from fp): Deep copy val @ stack #, store @
                   ///<   stack #
-  GTA_BYTECODE_JMP,            ///< PC #: set pc to PC #
+  //GTA_BYTECODE_JMP,            ///< PC #: set pc to PC #
   GTA_BYTECODE_JMPF_S,         ///< PC #: read val, if false, set pc to PC #
   GTA_BYTECODE_JMPF_I,         ///< PC #: read val, if false, set pc to PC #
   GTA_BYTECODE_JMPF_POP,       ///< PC #: pop val, if false, set pc to PC #

@@ -27,102 +27,112 @@
 
 static void gta_program_compile_bytecode(GTA_Program * program) {
   GTA_VectorX * bytecode = GTA_VECTORX_CREATE(0);
+  if (!bytecode) {
+    goto BYTECODE_SET_NULL;
+  }
+
   bool error_free = true;
-  if (bytecode) {
-    GTA_Bytecode_Compiler_Context context;
-    if (!gta_bytecode_compiler_context_create_in_place(&context, program)) {
-      GTA_VECTORX_DESTROY(bytecode);
-      bytecode = 0;
+  GTA_Bytecode_Compiler_Context context;
+  if (!gta_bytecode_compiler_context_create_in_place(&context, program)) {
+    goto BYTECODE_VECTOR_CLEANUP;
+  }
+  program->bytecode = bytecode;
+
+  // Push the globals onto the stack in the correct order.
+  // First, we must determine the order that globals should be pushed onto
+  // the stack.
+  GTA_VectorX * globals_order = GTA_VECTORX_CREATE(program->scope->global_positions->entries);
+  if (!globals_order) {
+    goto BYTECODE_COMPILER_CONTEXT_CLEANUP;
+  }
+  globals_order->count = program->scope->global_positions->entries;
+  GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(program->scope->global_positions);
+  while (iterator.exists) {
+    globals_order->data[GTA_TYPEX_UI(iterator.value)] = GTA_TYPEX_MAKE_UI(iterator.hash);
+    iterator = GTA_HASHX_ITERATOR_NEXT(iterator);
+  }
+  // Now, loop through the globals in the correct order.  If it is a
+  // library, then load the library.  Otherwise, push a NULL onto the
+  // stack.
+  // TODO: Handle Functions definitions.
+  for (size_t i = 0; i < globals_order->count; ++i) {
+    GTA_HashX_Value value = GTA_HASHX_GET(program->scope->identified_variables, GTA_TYPEX_UI(globals_order->data[i]));
+    if (!value.exists) {
+      goto BYTECODE_DESTROY_GLOBALS_ORDER;
+    }
+    GTA_Ast_Node_Identifier * identifier = value.value.p;
+    if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
+      // Find the library AST and compile it.
+      GTA_HashX_Value use_node = GTA_HASHX_GET(program->scope->library_declarations, identifier->mangled_name_hash);
+      if (use_node.exists && GTA_AST_IS_USE(use_node.value.p)) {
+        if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)use_node.value.p, &context)) {
+          goto BYTECODE_DESTROY_GLOBALS_ORDER;
+        }
+      }
+      else {
+        // Library not found, but it should exist.
+        goto BYTECODE_DESTROY_GLOBALS_ORDER;
+      }
     }
     else {
-      program->bytecode = bytecode;
-
-      // Push the globals onto the stack in the correct order.
-      // First, we must determine the order that globals should be pushed onto
-      // the stack.
-      GTA_VectorX * globals_order = GTA_VECTORX_CREATE(program->scope->global_positions->entries);
-      if (!globals_order) {
-        GTA_VECTORX_DESTROY(bytecode);
-        program->bytecode = 0;
-        gta_bytecode_compiler_context_destroy_in_place(&context);
-        return;
-      }
-      globals_order->count = program->scope->global_positions->entries;
-      GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(program->scope->global_positions);
-      while (iterator.exists) {
-        globals_order->data[GTA_TYPEX_UI(iterator.value)] = GTA_TYPEX_MAKE_UI(iterator.hash);
-        iterator = GTA_HASHX_ITERATOR_NEXT(iterator);
-      }
-      // Now, loop through the globals in the correct order.  If it is a
-      // library, then load the library.  Otherwise, push a NULL onto the
-      // stack.
-      // TODO: Handle Functions definitions.
-      for (size_t i = 0; i < globals_order->count; ++i) {
-        GTA_HashX_Value value = GTA_HASHX_GET(program->scope->identified_variables, GTA_TYPEX_UI(globals_order->data[i]));
-        if (!value.exists) {
-          GTA_VECTORX_DESTROY(bytecode);
-          program->bytecode = 0;
-          GTA_VECTORX_DESTROY(globals_order);
-          gta_bytecode_compiler_context_destroy_in_place(&context);
-          return;
-        }
-        GTA_Ast_Node_Identifier * identifier = value.value.p;
-        if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
-          // Find the library AST and compile it.
-          GTA_HashX_Value use_node = GTA_HASHX_GET(program->scope->library_declarations, identifier->mangled_name_hash);
-          if (use_node.exists && GTA_AST_IS_USE(use_node.value.p)) {
-            if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)use_node.value.p, &context)) {
-              GTA_VECTORX_DESTROY(bytecode);
-              program->bytecode = 0;
-              GTA_VECTORX_DESTROY(globals_order);
-              gta_bytecode_compiler_context_destroy_in_place(&context);
-              return;
-            }
-          }
-          else {
-            // Library not found, but it should exist.
-            GTA_VECTORX_DESTROY(bytecode);
-            program->bytecode = 0;
-            GTA_VECTORX_DESTROY(globals_order);
-            gta_bytecode_compiler_context_destroy_in_place(&context);
-            return;
-          }
-        }
-        else {
-          // We don't know how to handle this type of global.
-          GTA_VECTORX_DESTROY(bytecode);
-          program->bytecode = 0;
-          GTA_VECTORX_DESTROY(globals_order);
-          gta_bytecode_compiler_context_destroy_in_place(&context);
-          return;
-        }
-        error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SET_NOT_TEMP));
-      }
-      GTA_VECTORX_DESTROY(globals_order);
-
-      // Update the frame pointer to the current stack pointer.
-      GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_MARK_FP));
-
-      // Initialize all locals to null.
-      for (size_t i = 0; i < program->scope->local_positions->entries; ++i) {
-        GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
-      }
-
-      if (!gta_ast_node_compile_to_bytecode(program->ast, &context)) {
-        GTA_VECTORX_DESTROY(bytecode);
-        program->bytecode = 0;
-      }
-      gta_bytecode_compiler_context_destroy_in_place(&context);
+      // We don't know how to handle this type of global.
+      goto BYTECODE_DESTROY_GLOBALS_ORDER;
     }
-    if (program->bytecode) {
-      error_free &= GTA_VECTORX_APPEND(program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_RETURN));
-      // If there was a memory error, then the bytecode is not valid.
-      if (!error_free) {
-        GTA_VECTORX_DESTROY(program->bytecode);
-        program->bytecode = 0;
+    error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SET_NOT_TEMP));
+  }
+
+  // Update the frame pointer to the current stack pointer.
+  error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_MARK_FP));
+
+  // Initialize all locals to null.
+  for (size_t i = 0; i < program->scope->local_positions->entries; ++i) {
+    error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
+  }
+
+  // Actually compile the AST to bytecode.
+  error_free &= gta_ast_node_compile_to_bytecode(program->ast, &context);
+
+  // Add the return instruction.
+  error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_RETURN));
+
+  // The compilation is finished.  If there were any errors, then the bytecode
+  // is not valid.
+  if (!error_free) {
+    goto BYTECODE_DESTROY_GLOBALS_ORDER;
+  }
+
+  // Correct the JUMP instructions to point to the correct location in the
+  // bytecode.  The jump targets are relative to the instruction after the
+  // jump (because the PC will have already been incremented).
+  for (size_t i = 0; i < context.labels->count; ++i) {
+    GTA_Integer label = GTA_TYPEX_UI(context.labels->data[i]);
+    GTA_VectorX * jumps = GTA_TYPEX_P(context.labels_from->data[i]);
+    for (size_t j = 0; j < jumps->count; ++j) {
+      GTA_Integer jump = GTA_TYPEX_UI(jumps->data[j]);
+      if (jump < 0 || (GTA_UInteger)jump >= bytecode->count) {
+        goto BYTECODE_DESTROY_GLOBALS_ORDER;
       }
+      // Jump is relative to the next instruction.
+      int32_t offset = (int32_t)(label - jump - 1);
+      bytecode->data[jump] = GTA_TYPEX_MAKE_UI(offset);
     }
   }
+
+  // Cleanup and exit.
+  GTA_VECTORX_DESTROY(globals_order);
+  gta_bytecode_compiler_context_destroy_in_place(&context);
+  return;
+
+  // Failure conditions.  Cleanup and exit.
+BYTECODE_DESTROY_GLOBALS_ORDER:
+  GTA_VECTORX_DESTROY(globals_order);
+BYTECODE_COMPILER_CONTEXT_CLEANUP:
+  gta_bytecode_compiler_context_destroy_in_place(&context);
+BYTECODE_VECTOR_CLEANUP:
+  GTA_VECTORX_DESTROY(bytecode);
+BYTECODE_SET_NULL:
+  program->bytecode = 0;
+  return;
 }
 
 

@@ -272,6 +272,21 @@ GTA_Ast_Node * gta_ast_node_binary_analyze(GTA_Ast_Node * self, GTA_Program * pr
 bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
   GTA_Ast_Node_Binary * binary_node = (GTA_Ast_Node_Binary *) self;
   // TODO: AND and OR should short-circuit.
+
+  // Short-circuiting for AND.
+  if (binary_node->operator_type == GTA_BINARY_TYPE_AND) {
+    GTA_Integer lhs_was_false;
+    return true
+      && ((lhs_was_false = gta_bytecode_compiler_context_get_label(context)) >= 0)
+      && gta_ast_node_compile_to_bytecode(binary_node->lhs, context)
+      && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPF))
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
+      && gta_bytecode_compiler_context_add_label_jump(context, lhs_was_false, context->program->bytecode->count - 1)
+      && gta_ast_node_compile_to_bytecode(binary_node->rhs, context)
+      && gta_bytecode_compiler_context_set_label(context, lhs_was_false, context->program->bytecode->count);
+  }
+
   bool error_free = true
     && gta_ast_node_compile_to_bytecode(binary_node->lhs, context)
     && gta_ast_node_compile_to_bytecode(binary_node->rhs, context)
@@ -320,6 +335,27 @@ bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_C
 bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_Binary * binary_node = (GTA_Ast_Node_Binary *) self;
   GCU_Vector8 * v = context->binary_vector;
+
+  // Short-circuiting for AND.
+  if (binary_node->operator_type == GTA_BINARY_TYPE_AND) {
+    bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
+    GTA_Integer lhs_was_false;
+    return true
+      && ((lhs_was_false = gta_binary_compiler_context_get_label(context)) >= 0)
+      && gta_ast_node_compile_to_binary__x86_64(binary_node->lhs, context)
+    // The result of the LHS is in rax.  If it is false, then we do not need to
+    // evaluate the RHS.
+    //   cmp byte ptr [rax + is_true_offset], 1
+    //   jnz lhs_was_false
+      && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 1)
+      && gta_jnz__x86_64(v, 0xDEADBEEF)
+      && gta_binary_compiler_context_add_label_jump(context, lhs_was_false, v->count - 4)
+    // Compile the RHS expression.  The result will be in rax.
+      && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)
+    // Set the `lhs_was_false` label to the current offset.
+      && gta_binary_compiler_context_set_label(context, lhs_was_false, v->count);
+  }
+
 
   if (binary_node->operator_type < GTA_BINARY_TYPE_AND) {
     // Determine the function to call.

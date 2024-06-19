@@ -163,7 +163,7 @@ bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
   //   lea r10, [rax + is_true_offset]
   //   mov rax, gta_computed_value_boolean_true
   //   mov rdx, gta_computed_value_boolean_false
-  //   cmp byte [r10], 0
+  //   cmp byte ptr [r10], 0
   //   cmovne rax, rdx
   return true
     // Compile the expression.  The result will be in rax.
