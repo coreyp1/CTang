@@ -85,13 +85,13 @@ void gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self) {
 }
 
 
-GTA_Computed_Value * gta_computed_value_string_deep_copy(GTA_Computed_Value * value) {
+GTA_Computed_Value * gta_computed_value_string_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context) {
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) value;
   GTA_Unicode_String * unicodeString = gta_unicode_string_substring(string->value, 0, string->value->grapheme_length);
   if (!unicodeString) {
     return 0;
   }
-  return (GTA_Computed_Value *)gta_computed_value_string_create(unicodeString, true, string->base.context);
+  return (GTA_Computed_Value *)gta_computed_value_string_create(unicodeString, true, context);
 }
 
 

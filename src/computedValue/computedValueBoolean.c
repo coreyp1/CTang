@@ -106,7 +106,7 @@ void gta_computed_value_boolean_destroy(GTA_Computed_Value * self) {
 void gta_computed_value_boolean_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
 
 
-GTA_Computed_Value * gta_computed_value_boolean_deep_copy(GTA_Computed_Value * value) {
+GTA_Computed_Value * gta_computed_value_boolean_deep_copy(GTA_Computed_Value * value, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return value;
 }
 

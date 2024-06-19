@@ -82,9 +82,10 @@ void GTA_CALL gta_computed_value_boolean_destroy_in_place(GTA_Computed_Value * s
  * @see gta_computed_value_deep_copy
  *
  * @param value The computed value to be copied.
+ * @param context The execution context of the program.
  * @return The deep copy of the GTA_Computed_Value_Boolean or NULL if an error occurred.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_deep_copy(GTA_Computed_Value * value);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
 
 /**
  * Get a string representation of the computed value for a boolean.
@@ -105,7 +106,7 @@ GTA_NO_DISCARD char * GTA_CALL gta_computed_value_boolean_to_string(GTA_Computed
  *
  * @param self The object to cast.
  * @param type The type to cast to.
- * @param context The execution context in which to create the value.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_boolean_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);

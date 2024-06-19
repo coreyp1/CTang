@@ -73,9 +73,10 @@ void GTA_CALL gta_computed_value_float_destroy_in_place(GTA_Computed_Value * sel
  * @see gta_computed_value_deep_copy
  *
  * @param value The computed value to be copied.
+ * @param context The execution context of the program.
  * @return The deep copy of the ComputedValueInteger or NULL if an error occurred.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_deep_copy(GTA_Computed_Value * value);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
 
 /**
  * Get a string representation of the computed value for a float.
@@ -100,9 +101,10 @@ GTA_NO_DISCARD char * GTA_CALL gta_computed_value_float_to_string(GTA_Computed_V
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
  * @param is_assignment If `true`, operand is being assigned to.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Subtracts two values.
@@ -114,9 +116,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Va
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
  * @param is_assignment If `true`, operand is being assigned to.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Multiplies two values together.
@@ -128,9 +131,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Comput
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
  * @param is_assignment If `true`, operand is being assigned to.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Divides two values.
@@ -142,9 +146,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Comput
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
  * @param is_assignment If `true`, operand is being assigned to.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Computes the modulo of two values.
@@ -156,9 +161,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
  * @param is_assignment If `true`, operand is being assigned to.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Computes the negative of a value.
@@ -167,9 +173,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_modulo(GTA_Computed
  *
  * @param self The value to negate.
  * @param is_assignment If `true`, operand is being assigned to.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_negative(GTA_Computed_Value * self, bool is_assignment);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_negative(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is less than the second.
@@ -180,9 +187,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_negative(GTA_Comput
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is less than or equal to the second.
@@ -193,9 +201,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_less_than(GTA_Compu
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is greater than the second.
@@ -206,9 +215,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_less_than_equal(GTA
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is greater than or equal to the
@@ -220,9 +230,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_greater_than(GTA_Co
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if they are equal.
@@ -233,9 +244,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_greater_than_equal(
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if they are not equal.
@@ -246,9 +258,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_equal(GTA_Computed_
  * @param other The second value.
  * @param self_is_lhs `true` if `self` is the lhs of the expression, `false`
  *   otherwise.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Casts a computed value to a different type.
@@ -257,7 +270,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_not_equal(GTA_Compu
  *
  * @param self The object to cast.
  * @param type The type to cast to.
- * @param context The execution context in which to create the value.
+ * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);

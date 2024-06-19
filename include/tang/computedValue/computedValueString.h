@@ -102,9 +102,10 @@ void GTA_CALL gta_computed_value_string_destroy_in_place(GTA_Computed_Value * se
  * @see gta_computed_value_deep_copy
  *
  * @param self The object.
+ * @param context The execution context of the program.
  * @return The new object or NULL on failure.
  */
-GTA_Computed_Value * GTA_CALL gta_computed_value_string_deep_copy(GTA_Computed_Value * self);
+GTA_Computed_Value * GTA_CALL gta_computed_value_string_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Get a string representation of a GTA_Computed_Value_String object.

@@ -145,10 +145,12 @@ bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     // function_to_be_called(GTA_Computed_Value * result_from_expression)
     //   mov rdi, rax
     //   mov rsi, is_assignment
+    //   mov rdx, context
     //   mov rax, gta_computed_value_negative
     //   call rax
       && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
       && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, 0)
+      && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_R15)
       && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_negative))
       && gta_call_reg__x86_64(v, GTA_REG_RAX)
     // Tear down the function call.

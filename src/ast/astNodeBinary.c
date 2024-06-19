@@ -445,11 +445,13 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bina
     //   mov rsi, rax  ; result_from_rhs
     //   mov rdx, 1    ; true
     //   mov rcx, is_assignment ; is_assignment
+    //   mov r8, r15   ; context
     //   mov rax, func ; func
       && gta_pop_reg__x86_64(v, GTA_REG_RDI)
       && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_RAX)
       && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, 1)
       && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, 0)
+      && gta_mov_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_R15)
       && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(func))
     // Set up for a function call.
     //   push rbp

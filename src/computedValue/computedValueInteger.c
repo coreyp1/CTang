@@ -83,23 +83,23 @@ void GTA_CALL gta_computed_value_integer_destroy(GTA_Computed_Value * computed_v
 void GTA_CALL gta_computed_value_integer_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
 
 
-GTA_Computed_Value * GTA_CALL gta_computed_value_integer_deep_copy(GTA_Computed_Value * value) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_integer_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context) {
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)value;
-  return (GTA_Computed_Value *)gta_computed_value_integer_create(integer->value, integer->base.context);
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(integer->value, context);
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_negative(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(bool is_assignment)) {
+GTA_Computed_Value * gta_computed_value_integer_negative(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)self;
   if (integer->base.is_temporary) {
     integer->value = -integer->value;
     return self;
   }
-  return (GTA_Computed_Value *)gta_computed_value_integer_create(-integer->value, integer->base.context);
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(-integer->value, context);
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
+GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
@@ -113,7 +113,7 @@ GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_Value * self, G
       other_number_integer->base.is_true = (bool)other_number_integer->value;
       return (GTA_Computed_Value *)other_number_integer;
     }
-    return (GTA_Computed_Value *)gta_computed_value_integer_create(number->value + other_number_integer->value, number->base.context);
+    return (GTA_Computed_Value *)gta_computed_value_integer_create(number->value + other_number_integer->value, context);
   }
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
@@ -122,13 +122,13 @@ GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_Value * self, G
       other_number_float->base.is_true = (bool)other_number_float->value;
       return (GTA_Computed_Value *)other_number_float;
     }
-    return (GTA_Computed_Value *)gta_computed_value_float_create((GTA_Float)number->value + other_number_float->value, number->base.context);
+    return (GTA_Computed_Value *)gta_computed_value_float_create((GTA_Float)number->value + other_number_float->value, context);
   }
   return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment)) {
+GTA_Computed_Value * gta_computed_value_integer_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
@@ -145,7 +145,7 @@ GTA_Computed_Value * gta_computed_value_integer_subtract(GTA_Computed_Value * se
       other_number_integer->base.is_true = (bool)other_number_integer->value;
       return (GTA_Computed_Value *)other_number_integer;
     }
-    return (GTA_Computed_Value *)gta_computed_value_integer_create(result, number->base.context);
+    return (GTA_Computed_Value *)gta_computed_value_integer_create(result, context);
   }
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
@@ -157,13 +157,13 @@ GTA_Computed_Value * gta_computed_value_integer_subtract(GTA_Computed_Value * se
       other_number_float->base.is_true = (bool)other_number_float->value;
       return (GTA_Computed_Value *)other_number_float;
     }
-    return (GTA_Computed_Value *)gta_computed_value_float_create(result, number->base.context);
+    return (GTA_Computed_Value *)gta_computed_value_float_create(result, context);
   }
   return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment)) {
+GTA_Computed_Value * gta_computed_value_integer_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
@@ -177,7 +177,7 @@ GTA_Computed_Value * gta_computed_value_integer_multiply(GTA_Computed_Value * se
       other_number_integer->base.is_true = (bool)other_number_integer->value;
       return (GTA_Computed_Value *)other_number_integer;
     }
-    return (GTA_Computed_Value *)gta_computed_value_integer_create(number->value * other_number_integer->value, number->base.context);
+    return (GTA_Computed_Value *)gta_computed_value_integer_create(number->value * other_number_integer->value, context);
   }
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
@@ -186,13 +186,13 @@ GTA_Computed_Value * gta_computed_value_integer_multiply(GTA_Computed_Value * se
       other_number_float->base.is_true = (bool)other_number_float->value;
       return (GTA_Computed_Value *)other_number_float;
     }
-    return (GTA_Computed_Value *)gta_computed_value_float_create((GTA_Float)number->value * other_number_float->value, number->base.context);
+    return (GTA_Computed_Value *)gta_computed_value_float_create((GTA_Float)number->value * other_number_float->value, context);
   }
   return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment)) {
+GTA_Computed_Value * gta_computed_value_integer_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
@@ -213,7 +213,7 @@ GTA_Computed_Value * gta_computed_value_integer_divide(GTA_Computed_Value * self
       other_number_integer->base.is_true = (bool)other_number_integer->value;
       return (GTA_Computed_Value *)other_number_integer;
     }
-    return (GTA_Computed_Value *)gta_computed_value_integer_create(result, number->base.context);
+    return (GTA_Computed_Value *)gta_computed_value_integer_create(result, context);
   }
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
@@ -229,13 +229,13 @@ GTA_Computed_Value * gta_computed_value_integer_divide(GTA_Computed_Value * self
       other_number_float->base.is_true = (bool)other_number_float->value;
       return (GTA_Computed_Value *)other_number_float;
     }
-    return (GTA_Computed_Value *)gta_computed_value_float_create(result, number->base.context);
+    return (GTA_Computed_Value *)gta_computed_value_float_create(result, context);
   }
   return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment)) {
+GTA_Computed_Value * gta_computed_value_integer_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
@@ -256,7 +256,7 @@ GTA_Computed_Value * gta_computed_value_integer_modulo(GTA_Computed_Value * self
       other_number_integer->base.is_true = (bool)other_number_integer->value;
       return (GTA_Computed_Value *)other_number_integer;
     }
-    return (GTA_Computed_Value *)gta_computed_value_integer_create(result, number->base.context);
+    return (GTA_Computed_Value *)gta_computed_value_integer_create(result, context);
   }
   return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }
@@ -273,7 +273,7 @@ char * GTA_CALL gta_computed_value_integer_to_string(GTA_Computed_Value * self) 
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs) {
+GTA_Computed_Value * gta_computed_value_integer_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
@@ -290,7 +290,7 @@ GTA_Computed_Value * gta_computed_value_integer_less_than(GTA_Computed_Value * s
   return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }
 
-GTA_Computed_Value * gta_computed_value_integer_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs) {
+GTA_Computed_Value * gta_computed_value_integer_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
@@ -308,7 +308,7 @@ GTA_Computed_Value * gta_computed_value_integer_less_than_equal(GTA_Computed_Val
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs) {
+GTA_Computed_Value * gta_computed_value_integer_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
@@ -326,7 +326,7 @@ GTA_Computed_Value * gta_computed_value_integer_greater_than(GTA_Computed_Value 
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs) {
+GTA_Computed_Value * gta_computed_value_integer_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
@@ -344,7 +344,7 @@ GTA_Computed_Value * gta_computed_value_integer_greater_than_equal(GTA_Computed_
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs)) {
+GTA_Computed_Value * gta_computed_value_integer_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
@@ -358,7 +358,7 @@ GTA_Computed_Value * gta_computed_value_integer_equal(GTA_Computed_Value * self,
 }
 
 
-GTA_Computed_Value * gta_computed_value_integer_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs)) {
+GTA_Computed_Value * gta_computed_value_integer_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;

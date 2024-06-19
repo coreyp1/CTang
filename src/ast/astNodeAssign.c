@@ -225,9 +225,11 @@ static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Co
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
     && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
   //   mov rdi, rax                  ; Move the value to RDI.
+  //   mov rsi, r15                  ; Move the context to RSI.
   //   mov rax, gta_computed_value_deep_copy ; Make a deep copy of the value.
   //   call rax
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)gta_computed_value_deep_copy)
     && gta_call_reg__x86_64(v, GTA_REG_RAX)
   // Tear down the function call.

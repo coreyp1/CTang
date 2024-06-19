@@ -86,10 +86,12 @@ bool gta_ast_node_boolean_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bin
     // gta_computed_value_boolean_create(boolean->value, context):
     //   mov rsi, r15
     //   mov rdi, boolean->value
+    //   mov rdx, context
     //   mov rax, gta_computed_value_boolean_create
     //   call rax
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, boolean->value ? 1 : 0)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_R15)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (GTA_UInteger)gta_computed_value_boolean_create)
     && gta_call_reg__x86_64(v, GTA_REG_RAX)
     // Tear down the function call.
