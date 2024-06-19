@@ -1,11 +1,13 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <cutil/memory.h>
 #include <tang/computedValue/computedValueBoolean.h>
 #include <tang/computedValue/computedValueError.h>
 #include <tang/computedValue/computedValueFloat.h>
 #include <tang/computedValue/computedValueInteger.h>
+#include <tang/computedValue/computedValueString.h>
 #include <tang/program/executionContext.h>
 
 GTA_Computed_Value_VTable gta_computed_value_integer_vtable = {
@@ -32,7 +34,7 @@ GTA_Computed_Value_VTable gta_computed_value_integer_vtable = {
   .slice = gta_computed_value_slice_not_supported,
   .iterator_get = gta_computed_value_iterator_get_not_supported,
   .iterator_next = gta_computed_value_iterator_next_not_supported,
-  .cast = gta_computed_value_cast_not_implemented,
+  .cast = gta_computed_value_integer_cast,
   .call = gta_computed_value_call_not_supported,
 };
 
@@ -365,6 +367,38 @@ GTA_Computed_Value * gta_computed_value_integer_not_equal(GTA_Computed_Value * s
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
     return (GTA_Computed_Value *)((GTA_Float)number->value != other_number_float->value ? gta_computed_value_boolean_true : gta_computed_value_boolean_false);
+  }
+  return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
+}
+
+
+GTA_Computed_Value * gta_computed_value_integer_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+  GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+  if (type == &gta_computed_value_integer_vtable) {
+    return self;
+  }
+  if (type == &gta_computed_value_float_vtable) {
+    return (GTA_Computed_Value *)gta_computed_value_float_create((GTA_Float)number->value, context);
+  }
+  if (type == &gta_computed_value_boolean_vtable) {
+    return (GTA_Computed_Value *)(number->value ? gta_computed_value_boolean_true : gta_computed_value_boolean_false);
+  }
+  if (type == &gta_computed_value_string_vtable) {
+    char * str = gta_computed_value_integer_to_string(self);
+    if (!str) {
+      return gta_computed_value_error_out_of_memory;
+    }
+    GTA_Unicode_String * unicode_str = gta_unicode_string_create(str, strlen(str), GTA_UNICODE_STRING_TYPE_UNTRUSTED);
+    if (!unicode_str) {
+      gcu_free(str);
+      return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+    }
+    GTA_Computed_Value * return_value = (GTA_Computed_Value *)gta_computed_value_string_create(unicode_str, true, context);
+    if (!return_value) {
+      gta_unicode_string_destroy(unicode_str);
+      return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+    }
+    return return_value;
   }
   return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }

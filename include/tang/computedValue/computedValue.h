@@ -256,10 +256,10 @@ typedef struct GTA_Computed_Value_VTable {
    *
    * @param self The object to cast.
    * @param type The type to cast to.
-   * @param reverse Whether the operation should be reversed.
+   * @param context The execution context to cast in.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*cast)(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool self_is_lhs);
+  GTA_Computed_Value * (*cast)(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
   /**
    * Calls the object as a function.
    *
@@ -630,10 +630,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next(GTA_Compute
  *
  * @param self The object to cast.
  * @param type The type to cast to.
- * @param reverse Whether the operation should be reversed.
+ * @param context The execution context to cast in.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
  * Calls a computed value as a function.
@@ -686,6 +686,18 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_deep_copy(GTA_Comput
  *   failed.
  */
 GTA_NO_DISCARD char * gta_computed_value_null_to_string(GTA_Computed_Value * self);
+
+/**
+ * Casts a computed value to a different type.
+ *
+ * Calls the `cast` method of the virtual table.
+ *
+ * @param self The object to cast.
+ * @param type The type to cast to.
+ * @param context The execution context to cast in.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `assign_index` method for the
@@ -900,10 +912,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next_not_impleme
  *
  * @param self The object to cast.
  * @param type The type to cast to.
- * @param reverse Whether the operation should be reversed.
+ * @param context The execution context to cast in.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `call` method for the virtual
@@ -1127,10 +1139,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next_not_support
  *
  * @param self The object to cast.
  * @param type The type to cast to.
- * @param reverse Whether the operation should be reversed.
+ * @param context The execution context to cast in.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `call` method for the virtual table.

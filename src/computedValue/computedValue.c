@@ -5,6 +5,9 @@
 #include <tang/computedValue/computedValue.h>
 #include <tang/computedValue/computedValueBoolean.h>
 #include <tang/computedValue/computedValueError.h>
+#include <tang/computedValue/computedValueFloat.h>
+#include <tang/computedValue/computedValueInteger.h>
+#include <tang/computedValue/computedValueString.h>
 
 
 #define BINARY_OPERATION_TRY_OR_REVERSE(A) \
@@ -47,7 +50,7 @@ GTA_Computed_Value_VTable gta_computed_value_null_vtable = {
   .slice = gta_computed_value_slice_not_supported,
   .iterator_get = gta_computed_value_iterator_get_not_supported,
   .iterator_next = gta_computed_value_iterator_next_not_supported,
-  .cast = gta_computed_value_cast_not_implemented,
+  .cast = gta_computed_value_null_cast,
   .call = gta_computed_value_call_not_supported,
 };
 
@@ -188,8 +191,8 @@ GTA_Computed_Value * gta_computed_value_iterator_next(GTA_Computed_Value * self)
 }
 
 
-GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool self_is_lhs) {
-  return self->vtable->cast(self, type, self_is_lhs);
+GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+  return self->vtable->cast(self, type, context);
 }
 
 
@@ -220,6 +223,37 @@ char * gta_computed_value_null_to_string(GTA_MAYBE_UNUSED(GTA_Computed_Value * s
   }
   strcpy(str, "null");
   return str;
+}
+
+
+GTA_Computed_Value * gta_computed_value_null_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+  if (type == &gta_computed_value_boolean_vtable) {
+    return gta_computed_value_boolean_false;
+  }
+  if (type == &gta_computed_value_integer_vtable) {
+    return (GTA_Computed_Value *)gta_computed_value_integer_create(0, context);
+  }
+  if (type == &gta_computed_value_float_vtable) {
+    return (GTA_Computed_Value *)gta_computed_value_float_create(0.0, context);
+  }
+  if (type == &gta_computed_value_string_vtable) {
+    char * str = gta_computed_value_null_to_string(self);
+    if (!str) {
+      return NULL;
+    }
+    GTA_Unicode_String * unicode_str = gta_unicode_string_create(str, strlen(str), GTA_UNICODE_STRING_TYPE_UNTRUSTED);
+    if (!unicode_str) {
+      gcu_free(str);
+      return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+    }
+    GTA_Computed_Value * return_value = (GTA_Computed_Value *)gta_computed_value_string_create(unicode_str, true, context);
+    if (!return_value) {
+      gta_unicode_string_destroy(unicode_str);
+      return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+    }
+    return return_value;
+  }
+  return gta_computed_value_error_not_supported;
 }
 
 
@@ -313,7 +347,7 @@ GTA_Computed_Value * gta_computed_value_iterator_next_not_implemented(GTA_MAYBE_
 }
 
 
-GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
+GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
@@ -413,7 +447,7 @@ GTA_Computed_Value * gta_computed_value_iterator_next_not_supported(GTA_MAYBE_UN
 }
 
 
-GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(bool self_is_lhs)) {
+GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 

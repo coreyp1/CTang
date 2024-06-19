@@ -100,6 +100,48 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_cast_simplify(GTA_Ast_Node * self, GT
  */
 void gta_ast_node_cast_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
+/**
+ * Compile the AST node to binary for x86_64.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_binary()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_binary
+ *
+ * @param self The node to compile.
+ * @param context Contextual information for the compile process.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_cast_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+
+/**
+ * Compiles the AST node to bytecode.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_bytecode()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_bytecode
+ *
+ * @param self The node to compile.
+ * @param context The compiler state to use for compilation.
+ */
+bool gta_ast_node_cast_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
+
+/**
+ * Perform pre-compilation analysis on the AST node.
+ *
+ * This step includes allocating constants, identifying libraries and variables
+ * (global and local), and creating namespace scopes for functions.
+ *
+ * This function should not be called directly. Use gta_ast_node_analyze()
+ * instead.
+ *
+ * @param self The node to analyze.
+ * @param program The program that the node is part of.
+ * @return NULL on success, otherwise return a parse error.
+ */
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_cast_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+
 #ifdef __cplusplus
 }
 #endif //__cplusplus

@@ -72,6 +72,10 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         }
         break;
       }
+      case GTA_BYTECODE_CAST: {
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_cast(context->stack->data[*sp-1].p, (GTA_Computed_Value_VTable *)(*next++).p, context));
+        break;
+      }
       case GTA_BYTECODE_SET_NOT_TEMP: {
         // Set the top of the stack to not be temporary.
         GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[*sp-1]);

@@ -1625,6 +1625,73 @@ TEST(Binary, Or) {
   }
 }
 
+TEST(Cast, ToBoolean) {
+  {
+    TEST_REUSABLE_PROGRAM("use a; a as bool;");
+    {
+      // Integer => true.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+      ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
+    {
+      // Integer => false.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_0));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+      ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
+    {
+      // Float => true.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+      ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
+    {
+      // Float => false.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+      ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
+    {
+      // Boolean => true.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+      ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
+    {
+      // Null => false.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+      ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
+    TEST_REUSABLE_PROGRAM_TEARDOWN();
+  }
+
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

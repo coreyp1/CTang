@@ -257,10 +257,10 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_not_equal(GTA_Compu
  *
  * @param self The object to cast.
  * @param type The type to cast to.
- * @param reverse Whether the operation should be reversed.
+ * @param context The execution context in which to create the value.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, bool self_is_lhs);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_float_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

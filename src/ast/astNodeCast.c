@@ -7,18 +7,24 @@
 #include <tang/ast/astNodeFloat.h>
 #include <tang/ast/astNodeInteger.h>
 #include <tang/ast/astNodeString.h>
+#include <tang/computedValue/computedValue.h>
+#include <tang/computedValue/computedValueBoolean.h>
+#include <tang/computedValue/computedValueFloat.h>
+#include <tang/computedValue/computedValueInteger.h>
+#include <tang/computedValue/computedValueString.h>
+#include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_cast_vtable = {
   .name = "Cast",
-  .compile_to_bytecode = 0,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_bytecode = gta_ast_node_cast_compile_to_bytecode,
+  .compile_to_binary__x86_64 = gta_ast_node_cast_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_cast_destroy,
   .print = gta_ast_node_cast_print,
   .simplify = gta_ast_node_cast_simplify,
-  .analyze = 0,
+  .analyze = gta_ast_node_cast_analyze,
   .walk = gta_ast_node_cast_walk,
 };
 
@@ -236,4 +242,57 @@ void gta_ast_node_cast_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback call
   callback(self, data, return_value);
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
   callback(cast->expression, data, return_value);
+}
+
+
+bool gta_ast_node_cast_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
+  GCU_Vector8 * v = context->binary_vector;
+  return true
+    && gta_ast_node_compile_to_binary__x86_64(cast->expression, context)
+  // gta_computed_value_cast(rax, cast->type, context)
+  //   mov rdi, rax
+  //   mov rsi, cast->type
+  //   mov rdx, context
+  //   mov rax, gta_computed_value_cast
+  //   call rax
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI,(GTA_UInteger)(
+      cast->type == GTA_CAST_TYPE_INTEGER
+        ? &gta_computed_value_integer_vtable
+        : cast->type == GTA_CAST_TYPE_FLOAT
+          ? &gta_computed_value_float_vtable
+          : cast->type == GTA_CAST_TYPE_BOOLEAN
+            ? &gta_computed_value_boolean_vtable
+            : cast->type == GTA_CAST_TYPE_STRING
+              ? &gta_computed_value_string_vtable
+              : &gta_computed_value_null_vtable))
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_R15)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_cast))
+    && gta_call_reg__x86_64(v, GTA_REG_RAX);
+}
+
+
+bool gta_ast_node_cast_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
+  return true
+    && gta_ast_node_compile_to_bytecode(cast->expression, context)
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_CAST))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_P(
+      cast->type == GTA_CAST_TYPE_INTEGER
+        ? &gta_computed_value_integer_vtable
+        : cast->type == GTA_CAST_TYPE_FLOAT
+          ? &gta_computed_value_float_vtable
+          : cast->type == GTA_CAST_TYPE_BOOLEAN
+            ? &gta_computed_value_boolean_vtable
+            : cast->type == GTA_CAST_TYPE_STRING
+              ? &gta_computed_value_string_vtable
+              : &gta_computed_value_null_vtable));
+}
+
+
+GTA_Ast_Node * gta_ast_node_cast_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
+  return gta_ast_node_analyze(cast->expression, program, scope);
 }

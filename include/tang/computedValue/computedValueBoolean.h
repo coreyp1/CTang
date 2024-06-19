@@ -98,6 +98,18 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_deep_cop
  */
 GTA_NO_DISCARD char * GTA_CALL gta_computed_value_boolean_to_string(GTA_Computed_Value * self);
 
+/**
+ * Casts a computed value to a different type.
+ *
+ * Calls the `cast` method of the virtual table.
+ *
+ * @param self The object to cast.
+ * @param type The type to cast to.
+ * @param context The execution context in which to create the value.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_boolean_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
