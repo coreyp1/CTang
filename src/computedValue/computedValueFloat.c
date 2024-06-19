@@ -93,6 +93,9 @@ char * gta_computed_value_float_to_string(GTA_Computed_Value * self) {
     return 0;
   }
   sprintf(str, sizeof(GTA_Integer) == 8 ? "%lf" : "%f", float_value->value);
+  for (size_t i = strlen(str); (i > 2) && (str[i-1] == '0'); i--) {
+    str[i-1] = '\0';
+  }
   return str;
 }
 
@@ -365,8 +368,8 @@ GTA_Computed_Value * gta_computed_value_float_cast(GTA_Computed_Value * self, GT
       return NULL;
     }
     GTA_Unicode_String * unicode_str = gta_unicode_string_create(str, strlen(str), GTA_UNICODE_STRING_TYPE_UNTRUSTED);
+    gcu_free(str);
     if (!unicode_str) {
-      gcu_free(str);
       return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
     }
     GTA_Computed_Value * return_value = (GTA_Computed_Value *)gta_computed_value_string_create(unicode_str, true, context);
