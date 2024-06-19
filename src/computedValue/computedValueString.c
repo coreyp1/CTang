@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
+#include <tang/computedValue/computedValue.h>
+#include <tang/computedValue/computedValueBoolean.h>
+#include <tang/computedValue/computedValueError.h>
+#include <tang/computedValue/computedValueFloat.h>
+#include <tang/computedValue/computedValueInteger.h>
 #include <tang/computedValue/computedValueString.h>
 #include <tang/program/executionContext.h>
 
@@ -29,7 +34,7 @@ GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .slice = gta_computed_value_slice_not_implemented,
   .iterator_get = gta_computed_value_iterator_get_not_implemented,
   .iterator_next = gta_computed_value_iterator_next_not_implemented,
-  .cast = gta_computed_value_cast_not_implemented,
+  .cast = gta_computed_value_string_cast,
   .call = gta_computed_value_call_not_supported,
 };
 
@@ -104,4 +109,21 @@ char * gta_computed_value_string_to_string(GTA_Computed_Value * value) {
   }
   memcpy(str, source->buffer, source->byte_length + 1);
   return str;
+}
+
+GTA_Computed_Value * gta_computed_value_string_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+  GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;
+  if (type == &gta_computed_value_string_vtable) {
+    return self;
+  }
+  if (type == &gta_computed_value_boolean_vtable) {
+    return string->value->byte_length > 0 ? gta_computed_value_boolean_true : gta_computed_value_boolean_false;
+  }
+  if (type == &gta_computed_value_float_vtable) {
+    return (GTA_Computed_Value *)gta_computed_value_float_create(atof(string->value->buffer), context);
+  }
+  if (type == &gta_computed_value_integer_vtable) {
+    return (GTA_Computed_Value *)gta_computed_value_integer_create(atoll(string->value->buffer), context);
+  }
+  return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }

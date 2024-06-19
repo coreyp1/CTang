@@ -102,6 +102,16 @@ GTA_Computed_Value * GTA_CALL make_string_empty(GTA_Execution_Context * context)
   return (GTA_Computed_Value *)gta_computed_value_string_create(empty, true, context);
 }
 
+GTA_Computed_Value * GTA_CALL make_string_3(GTA_Execution_Context * context) {
+  GTA_Unicode_String * three = gta_unicode_string_create("3", 1, GTA_UNICODE_STRING_TYPE_TRUSTED);
+  return (GTA_Computed_Value *)gta_computed_value_string_create(three, true, context);
+}
+
+GTA_Computed_Value * GTA_CALL make_string_42f5(GTA_Execution_Context * context) {
+  GTA_Unicode_String * forty_two = gta_unicode_string_create("42.5", 4, GTA_UNICODE_STRING_TYPE_TRUSTED);
+  return (GTA_Computed_Value *)gta_computed_value_string_create(forty_two, true, context);
+}
+
 TEST(Syntax, Empty) {
   // An empty program should return a null result.
   TEST_PROGRAM_SETUP("");
@@ -1687,6 +1697,26 @@ TEST(Cast, ToBoolean) {
       ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
       TEST_CONTEXT_TEARDOWN();
     }
+    {
+      // String => true.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_hello));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+      ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
+    {
+      // Empty String => false.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_empty));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+      ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
     TEST_REUSABLE_PROGRAM_TEARDOWN();
   }
 }
@@ -1731,6 +1761,16 @@ TEST(Case, ToInteger) {
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
       ASSERT_EQ(0, ((GTA_Computed_Value_Integer *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
+    {
+      // String => Integer.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_3));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+      ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)context->result)->value);
       TEST_CONTEXT_TEARDOWN();
     }
     TEST_REUSABLE_PROGRAM_TEARDOWN();
@@ -1779,6 +1819,16 @@ TEST(Cast, ToFloat) {
       ASSERT_EQ(0.0, ((GTA_Computed_Value_Float *)context->result)->value);
       TEST_CONTEXT_TEARDOWN();
     }
+    {
+      // String => Float.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_42f5));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+      ASSERT_EQ(42.5, ((GTA_Computed_Value_Float *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
     TEST_REUSABLE_PROGRAM_TEARDOWN();
   }
 }
@@ -1823,6 +1873,16 @@ TEST(Cast, ToString) {
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
       ASSERT_STREQ("null", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+      TEST_CONTEXT_TEARDOWN();
+    }
+    {
+      // String => String.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_hello));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+      ASSERT_STREQ("hello", ((GTA_Computed_Value_String *)context->result)->value->buffer);
       TEST_CONTEXT_TEARDOWN();
     }
     TEST_REUSABLE_PROGRAM_TEARDOWN();
