@@ -110,7 +110,8 @@ typedef enum {
  * Construct a new Unicode String object and copy the source string buffer.
  *
  * @param source The source string.
- * @param length The length of the source string in bytes.
+ * @param length The length of the source string in bytes (not including the
+ *   null terminator).
  * @param type The type of string being created.
  * @return A pointer to the Unicode String object, or NULL if there was an error.
  */
@@ -121,7 +122,8 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_create(const char * sourc
  * string buffer.
  *
  * @param source The source string.
- * @param length The length of the source string in bytes.
+ * @param length The length of the source string in bytes (not including the
+ *   null terminator).
  * @param type The type of string being created.
  * @return A pointer to the Unicode String object, or NULL if there was an error.
 
@@ -137,6 +139,8 @@ void gta_unicode_string_destroy(GTA_Unicode_String * string);
 /**
  * Concatenate two Unicode Strings.
  *
+ * The caller is responsible for handling the memory of the input strings.
+ *
  * @param string1 The first string.
  * @param string2 The second string.
  * @return A pointer to the new string, or NULL if there was an error.
@@ -145,6 +149,8 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_concat(const GTA_Unicode_
 
 /**
  * Get the substring of a Unicode String.
+ *
+ * The caller is responsible for handling the memory of the input string.
  *
  * @param string The string.
  * @param grapheme_start The start position of the substring in graphemes.

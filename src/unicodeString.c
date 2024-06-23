@@ -133,7 +133,9 @@ GTA_Unicode_String * gta_unicode_string_create(const char * source, size_t lengt
   if (!buffer) {
     return NULL;
   }
-  memcpy(buffer, source, length);
+  if (length) {
+    memcpy(buffer, source, length);
+  }
   buffer[length] = '\0';
   GTA_Unicode_String * string = gta_unicode_string_create_and_adopt(buffer, length, type);
   if (!string) {
@@ -213,10 +215,14 @@ GTA_Unicode_String * gta_unicode_string_concat(const GTA_Unicode_String * string
     gcu_free(newString);
     return NULL;
   }
-  memcpy((char *)newString->buffer, string1->buffer, string1->byte_length);
-  memcpy((char *)newString->buffer + string1->byte_length, string2->buffer, string2->byte_length);
-  ((char *)newString->buffer)[string1->byte_length + string2->byte_length] = '\0';
+  if (string1->byte_length) {
+    memcpy((char *)newString->buffer, string1->buffer, string1->byte_length);
+  }
+  if (string2->byte_length) {
+    memcpy((char *)newString->buffer + string1->byte_length, string2->buffer, string2->byte_length);
+  }
   newString->byte_length = string1->byte_length + string2->byte_length;
+  ((char *)newString->buffer)[newString->byte_length] = '\0';
 
   // Create the grapheme offsets.
   // For ease of use, we will add an extra offset at the end of the string
