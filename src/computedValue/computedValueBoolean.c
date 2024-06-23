@@ -14,6 +14,7 @@ GTA_Computed_Value_VTable gta_computed_value_boolean_vtable = {
   .destroy_in_place = gta_computed_value_boolean_destroy,
   .deep_copy = gta_computed_value_boolean_deep_copy,
   .to_string = gta_computed_value_boolean_to_string,
+  .print = gta_computed_value_print_not_supported,
   .assign_index = gta_computed_value_assign_index_not_implemented,
   .add = gta_computed_value_add_not_supported,
   .subtract = gta_computed_value_subtract_not_supported,

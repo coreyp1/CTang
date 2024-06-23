@@ -66,6 +66,7 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_JMP,            ///< PC offset: set pc + offset
   GTA_BYTECODE_JMPF,           ///< PC offset: pop val, if false, set pc + offset
   GTA_BYTECODE_JMPT,           ///< PC offset: pop val, if true, set pc + offset
+  GTA_BYTECODE_PRINT,          ///< Pop val, print(val), push error or NULL
 
 
   GTA_BYTECODE_POKE,           ///< Stack # (from fp): Copy a val, store @ stack #

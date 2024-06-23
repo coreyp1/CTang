@@ -16,6 +16,7 @@ GTA_Computed_Value_VTable gta_computed_value_integer_vtable = {
   .destroy_in_place = gta_computed_value_integer_destroy_in_place,
   .deep_copy = gta_computed_value_integer_deep_copy,
   .to_string = gta_computed_value_integer_to_string,
+  .print = gta_computed_value_integer_print,
   .assign_index = gta_computed_value_assign_index_not_supported,
   .add = gta_computed_value_integer_add,
   .subtract = gta_computed_value_integer_subtract,
@@ -270,6 +271,20 @@ char * GTA_CALL gta_computed_value_integer_to_string(GTA_Computed_Value * self) 
   }
   sprintf(str, sizeof(GTA_Integer) == 8 ? "%ld" : "%d", integer->value);
   return str;
+}
+
+
+GTA_Unicode_String * gta_computed_value_integer_print(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  char * str = gta_computed_value_integer_to_string(self);
+  if (!str) {
+    return 0;
+  }
+  GTA_Unicode_String * unicode_str = gta_unicode_string_create_and_adopt(str, strlen(str) + 1, GTA_UNICODE_STRING_TYPE_TRUSTED);
+  if (!unicode_str) {
+    gcu_free(str);
+    return 0;
+  }
+  return unicode_str;
 }
 
 

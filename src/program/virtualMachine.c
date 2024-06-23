@@ -263,6 +263,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       }
       case GTA_BYTECODE_JMPF: {
         // Jump to the specified address if the top of the stack is false.
+        // The value will be left on the stack.
         next += ((GTA_Computed_Value *)context->stack->data[*sp-1].p)->is_true
           ? 1
           : GTA_TYPEX_I(*next) + 1;
@@ -270,9 +271,50 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       }
       case GTA_BYTECODE_JMPT: {
         // Jump to the specified address if the top of the stack is true.
+        // The value will be left on the stack.
         next += ((GTA_Computed_Value *)context->stack->data[*sp-1].p)->is_true
           ? GTA_TYPEX_I(*next) + 1
           : 1;
+        break;
+      }
+      case GTA_BYTECODE_PRINT: {
+        // Print the top of the stack.
+        GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[*sp-1]);
+        // Assume this will succeed (most common case).
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_null);
+        // Get the "printed" value.
+        GTA_Unicode_String * string = gta_computed_value_print(value, context);
+        if (!string) {
+          // No string was produced.
+          if (!((value->vtable->print == gta_computed_value_print_not_implemented)
+            || (value->vtable->print == gta_computed_value_print_not_supported))) {
+            // The print function was actually implemented, so it must have failed.
+            context->result = gta_computed_value_error_out_of_memory;
+            break;
+          }
+          // The print function was not implemented.  Do nothing.
+          break;
+        }
+        if (context->output->byte_length == 0) {
+          // This is the first string to be printed, so we can just adopt it.
+          gta_unicode_string_destroy(context->output);
+          context->output = string;
+          break;
+        }
+        // Concatenate the string with the output.
+        GTA_Unicode_String * new_string = gta_unicode_string_concat(context->output, string);
+        printf("context->output: %s, length: %ld\n", context->output->buffer, context->output->byte_length);
+        printf("string: %s, length: %ld\n", string->buffer, string->byte_length);
+        printf("new_string: %s, length: %ld\n", new_string->buffer, new_string->byte_length);
+        if (!new_string) {
+          // If it failed, it is because we ran out of memory.
+          context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_error_out_of_memory);
+        }
+        else {
+          // No failures, so adopt the new string.
+          gta_unicode_string_destroy(context->output);
+          context->output = new_string;
+        }
         break;
       }
       default: {

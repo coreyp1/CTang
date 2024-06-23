@@ -148,6 +148,10 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf(GTA_64_BIT ? "%p\tJMPT\t%ld\n" : "%p\tJMPT\t%d\n", (void *)current, GTA_TYPEX_I(*(current + 1)));
         current += 2;
         break;
+      case GTA_BYTECODE_PRINT:
+        printf("%p\tPRINT\n", (void *)current);
+        ++current;
+        break;
       default:
         printf("%p\tUnknown\n", (void *)current);
         ++current;

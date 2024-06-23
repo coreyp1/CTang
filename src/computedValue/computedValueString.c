@@ -16,6 +16,7 @@ GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .destroy_in_place = gta_computed_value_string_destroy_in_place,
   .deep_copy = gta_computed_value_string_deep_copy,
   .to_string = gta_computed_value_string_to_string,
+  .print = gta_computed_value_print_not_supported,
   .assign_index = gta_computed_value_assign_index_not_supported,
   .add = gta_computed_value_add_not_implemented,
   .subtract = gta_computed_value_subtract_not_supported,

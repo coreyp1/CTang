@@ -14,6 +14,7 @@ extern "C" {
 #include <stdbool.h>
 #include <cutil/vector.h>
 #include <tang/macros.h>
+#include <tang/unicodeString.h>
 
 /**
  * A vector of computed values.
@@ -74,6 +75,19 @@ typedef struct GTA_Computed_Value_VTable {
    *   failed.
    */
   char * (*to_string)(GTA_Computed_Value * self);
+  /**
+   * Produce a "printable" version of the object.
+   *
+   * Because the text is intended to be displayed, it is up to the object to
+   * indicate the type of text being provided, whether it should be trusted
+   * as-is or otherwise escaped.
+   *
+   * @param self The object to print.
+   * @param context The execution context of the program.
+   * @return A string representation of the object or NULL if the operation
+   *  failed.
+   */
+  GTA_Unicode_String * (*print)(GTA_Computed_Value * self, GTA_Execution_Context * context);
   /**
    * Assigns a value to an index of the object.
    *
@@ -418,6 +432,18 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_deep_copy(GTA_Computed_Va
 GTA_NO_DISCARD char * gta_computed_value_to_string(GTA_Computed_Value * self);
 
 /**
+ * Prints a computed value.
+ *
+ * Calls the `print` method of the virtual table.
+ *
+ * @param self The object to print.
+ * @param context The execution context of the program.
+ * @return A string representation of the object or NULL if the operation
+ *  failed.
+ */
+GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_print(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+/**
  * Assigns a value to an index of a computed value.
  *
  * Calls the `assign_index` method of the virtual table.
@@ -742,6 +768,18 @@ GTA_NO_DISCARD char * gta_computed_value_null_to_string(GTA_Computed_Value * sel
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
+ * Prints a computed value.
+ *
+ * Calls the `print` method of the virtual table.
+ *
+ * @param self The object to print.
+ * @param context The execution context of the program.
+ * @return A string representation of the object or NULL if the operation
+ *  failed.
+ */
+GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_print_not_implemented(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+/**
  * Generic "not implemented" version of the `assign_index` method for the
  * virtual table.
  *
@@ -987,6 +1025,18 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_
  * @return The result of the operation or NULL if the operation failed.
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
+
+/**
+ * Prints a computed value.
+ *
+ * Calls the `print` method of the virtual table.
+ *
+ * @param self The object to print.
+ * @param context The execution context of the program.
+ * @return A string representation of the object or NULL if the operation
+ *  failed.
+ */
+GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_print_not_supported(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `assign_index` method for the virtual

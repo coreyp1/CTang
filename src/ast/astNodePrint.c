@@ -3,11 +3,12 @@
 #include <string.h>
 #include <cutil/memory.h>
 #include <tang/ast/astNodePrint.h>
+#include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_print_vtable = {
   .name = "Print",
-  .compile_to_bytecode = 0,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_bytecode = gta_ast_node_print_compile_to_bytecode,
+  .compile_to_binary__x86_64 = gta_ast_node_print_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
@@ -74,4 +75,19 @@ void gta_ast_node_print_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
   callback(self, data, return_value);
   GTA_Ast_Node_Print * print = (GTA_Ast_Node_Print *)self;
   callback(print->expression, data, return_value);
+}
+
+
+bool gta_ast_node_print_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_Print * print = (GTA_Ast_Node_Print *)self;
+  return gta_ast_node_compile_to_bytecode(print->expression, context)
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_PRINT));
+}
+
+
+bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  (void)self;
+  (void)context;
+  return false;
 }

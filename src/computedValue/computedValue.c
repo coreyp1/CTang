@@ -32,6 +32,7 @@ GTA_Computed_Value_VTable gta_computed_value_null_vtable = {
   .destroy_in_place = gta_computed_value_null_destroy_in_place,
   .deep_copy = gta_computed_value_null_deep_copy,
   .to_string = gta_computed_value_null_to_string,
+  .print = gta_computed_value_print_not_supported,
   .assign_index = gta_computed_value_assign_index_not_implemented,
   .add = gta_computed_value_add_not_supported,
   .subtract = gta_computed_value_subtract_not_supported,
@@ -98,6 +99,11 @@ GTA_Computed_Value * gta_computed_value_deep_copy(GTA_Computed_Value * self, GTA
 
 char * gta_computed_value_to_string(GTA_Computed_Value * self) {
   return self->vtable->to_string(self);
+}
+
+
+GTA_Unicode_String * gta_computed_value_print(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  return self->vtable->print(self, context);
 }
 
 
@@ -257,6 +263,11 @@ GTA_Computed_Value * gta_computed_value_null_cast(GTA_Computed_Value * self, GTA
 }
 
 
+GTA_Unicode_String * gta_computed_value_print_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  return NULL;
+}
+
+
 GTA_Computed_Value * gta_computed_value_assign_index_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * index), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
@@ -354,6 +365,11 @@ GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_MAYBE_UNUSED(GT
 
 GTA_Computed_Value * gta_computed_value_call_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_Vector * arguments), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
+}
+
+
+GTA_Unicode_String * gta_computed_value_print_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  return NULL;
 }
 
 
