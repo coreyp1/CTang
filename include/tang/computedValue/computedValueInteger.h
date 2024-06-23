@@ -93,18 +93,6 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_integer_deep_cop
 GTA_NO_DISCARD char * GTA_CALL gta_computed_value_integer_to_string(GTA_Computed_Value * self);
 
 /**
- * Prints a computed value.
- *
- * Calls the `print` method of the virtual table.
- *
- * @param self The object to print.
- * @param context The execution context of the program.
- * @return A string representation of the object or NULL if the operation
- *  failed.
- */
-GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_integer_print(GTA_Computed_Value * self, GTA_Execution_Context * context);
-
-/**
  * Adds two values together.
  *
  * Calls the `add` method of the virtual table.

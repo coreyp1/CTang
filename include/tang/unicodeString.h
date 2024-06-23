@@ -63,8 +63,6 @@ extern "C" {
 #define GTA_UC_MAKE_TYPE_OFFSET_PAIR(top, bot) GCU_TYPE64_UI64(((uint64_t)(top) << 32) | (uint64_t)(bot))
 
 
-
-
 /**
  * Basic Unicode String object.
  *
@@ -126,8 +124,7 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_create(const char * sourc
  *   null terminator).
  * @param type The type of string being created.
  * @return A pointer to the Unicode String object, or NULL if there was an error.
-
-*/
+ */
 GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_create_and_adopt(const char * source, size_t length, GTA_String_Type type);
 
 /**

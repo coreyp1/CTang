@@ -90,7 +90,6 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_deep_copy(
  */
 GTA_NO_DISCARD char * GTA_CALL gta_computed_value_float_to_string(GTA_Computed_Value * self);
 
-
 /**
  * Adds two values together.
  *

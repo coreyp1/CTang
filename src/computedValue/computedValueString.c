@@ -16,7 +16,7 @@ GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .destroy_in_place = gta_computed_value_string_destroy_in_place,
   .deep_copy = gta_computed_value_string_deep_copy,
   .to_string = gta_computed_value_string_to_string,
-  .print = gta_computed_value_print_not_supported,
+  .print = gta_computed_value_string_print,
   .assign_index = gta_computed_value_assign_index_not_supported,
   .add = gta_computed_value_add_not_implemented,
   .subtract = gta_computed_value_subtract_not_supported,
@@ -111,6 +111,13 @@ char * gta_computed_value_string_to_string(GTA_Computed_Value * value) {
   memcpy(str, source->buffer, source->byte_length + 1);
   return str;
 }
+
+
+GTA_Unicode_String * gta_computed_value_string_print(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  GTA_Computed_Value_String * string = (GTA_Computed_Value_String *)self;
+  return gta_unicode_string_substring(string->value, 0, string->value->grapheme_length);
+}
+
 
 GTA_Computed_Value * gta_computed_value_string_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;

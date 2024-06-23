@@ -1891,16 +1891,28 @@ TEST(Cast, ToString) {
 
 TEST(Print, Simple) {
   {
-    TEST_REUSABLE_PROGRAM("print(42);");
-    {
-      TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_program_execute(context));
-      ASSERT_TRUE(context->result);
-      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
-      ASSERT_STREQ("42", context->output->buffer);
-      TEST_CONTEXT_TEARDOWN();
-    }
-    TEST_REUSABLE_PROGRAM_TEARDOWN();
+    // Print an integer.
+    TEST_PROGRAM_SETUP("print(42);");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ("42", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Print a float.
+    TEST_PROGRAM_SETUP("print(3.5);");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ("3.5", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Print a string.
+    TEST_PROGRAM_SETUP("print(\"hello\");");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ("hello", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
   }
 }
 

@@ -471,3 +471,16 @@ GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_MAYBE_UNUSED(GTA_
 GTA_Computed_Value * gta_computed_value_call_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_Vector * arguments), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
+
+GTA_Unicode_String * gta_computed_value_generic_print_from_to_string(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  char * str = gta_computed_value_to_string(self);
+  if (!str) {
+    return NULL;
+  }
+  GTA_Unicode_String * unicode_str = gta_unicode_string_create_and_adopt(str, strlen(str), GTA_UNICODE_STRING_TYPE_UNTRUSTED);
+  if (!unicode_str) {
+    gcu_free(str);
+    return NULL;
+  }
+  return unicode_str;
+}

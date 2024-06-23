@@ -1283,6 +1283,18 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_Co
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call_not_supported(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
 
+/**
+ * Generic function to use the "to_string" method to generate a printed value.
+ *
+ * Calls the `print` method of the virtual table.
+ *
+ * @param self The object to print.
+ * @param context The execution context of the program.
+ * @return A string representation of the object or NULL if the operation
+ *  failed.
+ */
+GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_generic_print_from_to_string(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
