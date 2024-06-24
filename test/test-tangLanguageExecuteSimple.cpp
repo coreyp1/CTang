@@ -1914,6 +1914,22 @@ TEST(Print, Simple) {
     ASSERT_STREQ("hello", context->output->buffer);
     TEST_PROGRAM_TEARDOWN();
   }
+  {
+    // Print a null (should print nothing).
+    TEST_PROGRAM_SETUP("print(null);");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ("", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Multiple prints.
+    TEST_PROGRAM_SETUP("print(42); print(3.5); print(\"hello\"); print(null); print(-42);");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ("423.5hello-42", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
 }
 
 int main(int argc, char **argv) {

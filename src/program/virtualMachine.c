@@ -303,6 +303,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         }
         // Concatenate the string with the output.
         GTA_Unicode_String * new_string = gta_unicode_string_concat(context->output, string);
+        gta_unicode_string_destroy(string);
         if (!new_string) {
           // If it failed, it is because we ran out of memory.
           context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_error_out_of_memory);
