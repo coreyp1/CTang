@@ -370,10 +370,12 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   //   push r14
   //   push r13
   //   push r12
+  //   push rbx
     && gta_push_reg__x86_64(v, GTA_REG_R15)
     && gta_push_reg__x86_64(v, GTA_REG_R14)
     && gta_push_reg__x86_64(v, GTA_REG_R13)
     && gta_push_reg__x86_64(v, GTA_REG_R12)
+    && gta_push_reg__x86_64(v, GTA_REG_RBX)
 
   //   mov r15, rdi          ; Store context in r15.
     && gta_mov_reg_reg__x86_64(v, GTA_REG_R15, GTA_REG_RDI)
@@ -437,13 +439,13 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   // Store the frame (local variable) stack pointer into R12.
   //   mov r12, rsp
   error_free
-    &= gta_mov_reg_reg__x86_64(context->binary_vector, GTA_REG_R12, GTA_REG_RSP)
+    &= gta_mov_reg_reg__x86_64(v, GTA_REG_R12, GTA_REG_RSP)
 
   // Put the memory location of the null value into rdx.
   // (RDX may have been overwritten by a function call in the global
   // initializations.)
   //   mov rdx, gta_computed_value_null
-    && gta_mov_reg_imm__x86_64(context->binary_vector, GTA_REG_RDX, (uint64_t)gta_computed_value_null);
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (uint64_t)gta_computed_value_null);
 
   // Initialize all locals to null.
   for (size_t i = 0; i < local_orders_count; ++i) {
@@ -462,20 +464,22 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_R13)
 
   // Pop callee-saved registers off the stack.
+  //   pop rbx
   //   pop r12
   //   pop r13
   //   pop r14
   //   pop r15
-    && gta_pop_reg__x86_64(context->binary_vector, GTA_REG_R12)
-    && gta_pop_reg__x86_64(context->binary_vector, GTA_REG_R13)
-    && gta_pop_reg__x86_64(context->binary_vector, GTA_REG_R14)
-    && gta_pop_reg__x86_64(context->binary_vector, GTA_REG_R15)
+    && gta_pop_reg__x86_64(v, GTA_REG_RBX)
+    && gta_pop_reg__x86_64(v, GTA_REG_R12)
+    && gta_pop_reg__x86_64(v, GTA_REG_R13)
+    && gta_pop_reg__x86_64(v, GTA_REG_R14)
+    && gta_pop_reg__x86_64(v, GTA_REG_R15)
 
   // Set up the end of the function:
   //   leave
   //   ret
-    && gta_leave__x86_64(context->binary_vector)
-    && gta_ret__x86_64(context->binary_vector);
+    && gta_leave__x86_64(v)
+    && gta_ret__x86_64(v);
 
   // The compilation is finished (aside from writing the jump targets).  If
   // there were any errors, then the binary is not valid.
@@ -494,21 +498,21 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     GTA_VectorX * jumps = GTA_TYPEX_P(context->labels_from->data[i]);
     for (size_t j = 0; j < jumps->count; ++j) {
       GTA_Integer jump = GTA_TYPEX_UI(jumps->data[j]);
-      if (jump < 0 || (GTA_UInteger)jump >= context->binary_vector->count) {
+      if (jump < 0 || (GTA_UInteger)jump >= v->count) {
         goto CONTEXT_CLEANUP;
       }
       // Jump is relative to the next instruction and is 4 bytes long.
       int32_t offset = (int32_t)(label - jump - 4);
-      memcpy(&context->binary_vector->data[jump], &offset, 4);
+      memcpy(&v->data[jump], &offset, 4);
     }
   }
 
   // Lastly, copy the binary into executable memory.
-  size_t length = gcu_vector8_count(context->binary_vector);
+  size_t length = gcu_vector8_count(v);
 #ifdef _WIN32
   program->binary = VirtualAlloc(0, length, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
   if (program->binary) {
-    memcpy(program->binary, context->binary_vector->data, length);
+    memcpy(program->binary, v->data, length);
   }
 #else
 #if !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
@@ -524,7 +528,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   program->binary = mmap(0, length, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 #endif // !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
   if (program->binary != MAP_FAILED) {
-    memcpy(program->binary, context->binary_vector->data, length);
+    memcpy(program->binary, v->data, length);
     if (mprotect(program->binary, length, PROT_EXEC | PROT_READ) != 0) {
       munmap(program->binary, length);
       program->binary = 0;
@@ -532,7 +536,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     else {
       // dump the binary to stderr
       // printf("\nProgram code:\n%s\n", program->code);
-      // fwrite(context->binary_vector->data, 1, length, stderr);
+      // fwrite(v->data, 1, length, stderr);
     }
   }
 #endif
