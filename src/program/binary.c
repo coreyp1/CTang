@@ -384,13 +384,107 @@ bool gta_cmp_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regi
 }
 
 
-bool gta_jnz__x86_64(GCU_Vector8 * vector, int32_t offset) {
-  // https://www.felixcloutier.com/x86/jnz
+bool gta_jcc__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, int32_t offset) {
+  // https://www.felixcloutier.com/x86/jcc
   if (!gta_binary_optimistic_increase(vector, 6)) {
     return false;
   }
+
+  // Opcode (2 bytes).
   vector->data[vector->count++] = GCU_TYPE8_UI8(0x0F);
-  vector->data[vector->count++] = GCU_TYPE8_UI8(0x85);
+  switch (condition) {
+    case GTA_CC_A:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x87);
+      break;
+    case GTA_CC_AE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x83);
+      break;
+    case GTA_CC_B:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x82);
+      break;
+    case GTA_CC_BE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x86);
+      break;
+    case GTA_CC_E:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x84);
+      break;
+    case GTA_CC_G:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8F);
+      break;
+    case GTA_CC_GE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8D);
+      break;
+    case GTA_CC_L:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8C);
+      break;
+    case GTA_CC_LE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8E);
+      break;
+    case GTA_CC_NA:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x86);
+      break;
+    case GTA_CC_NAE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x82);
+      break;
+    case GTA_CC_NB:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x83);
+      break;
+    case GTA_CC_NBE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x87);
+      break;
+    case GTA_CC_NC:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x83);
+      break;
+    case GTA_CC_NE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x85);
+      break;
+    case GTA_CC_NG:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8E);
+      break;
+    case GTA_CC_NGE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8C);
+      break;
+    case GTA_CC_NL:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8D);
+      break;
+    case GTA_CC_NLE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8F);
+      break;
+    case GTA_CC_NO:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x81);
+      break;
+    case GTA_CC_NP:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8B);
+      break;
+    case GTA_CC_NS:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x89);
+      break;
+    case GTA_CC_NZ:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x85);
+      break;
+    case GTA_CC_O:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x80);
+      break;
+    case GTA_CC_P:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8A);
+      break;
+    case GTA_CC_PE:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8A);
+      break;
+    case GTA_CC_PO:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x8B);
+      break;
+    case GTA_CC_S:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x88);
+      break;
+    case GTA_CC_Z:
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x84);
+      break;
+    default:
+      return false;
+  }
+
+  // Offset.
   memcpy(&vector->data[vector->count], &offset, 4);
   vector->count += 4;
   return true;

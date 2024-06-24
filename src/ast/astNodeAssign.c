@@ -210,7 +210,7 @@ static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Co
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (int64_t)is_temporary_offset)
     && gta_mov_reg_ind__x86_64(v, GTA_REG_R9, GTA_REG_RAX, GTA_REG_RDX, 1, 0)
     && gta_or_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_R9)
-    && gta_jnz__x86_64(v, 0xDEADBEEF)
+    && gta_jcc__x86_64(v, GTA_CC_NZ, 0xDEADBEEF)
     && ((label_done = gta_binary_compiler_context_get_label(context)) >= 0)
     && gta_binary_compiler_context_add_label_jump(context, label_done, v->count - 4)
 

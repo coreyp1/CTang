@@ -208,17 +208,18 @@ bool gta_cmovcc_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Condition_Code conditi
 bool gta_cmp_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, int8_t immediate);
 
 /**
- * x86_64 instruction: JNZ offset
+ * x86_64 instruction: Jcc offset
  *
  * The instruction jumps either forward or backward by the given offset.  The
  * offset is relative to the next instruction and is limited to a signed 32-bit
  * integer.
  *
  * @param vector The vector in which to store the instruction.
+ * @param condition The condition code.
  * @param offset The offset to jump to.
  * @return True on success, false on failure.
  */
-bool gta_jnz__x86_64(GCU_Vector8 * vector, int32_t offset);
+bool gta_jcc__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, int32_t offset);
 
 /**
  * x86_64 instruction: LEA reg, [base + index*scale + offset]

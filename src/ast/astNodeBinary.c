@@ -362,7 +362,7 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bina
     //   cmp byte ptr [rax + is_true_offset], 1
     //   jnz lhs_was_false
       && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 1)
-      && gta_jnz__x86_64(v, 0xDEADBEEF)
+      && gta_jcc__x86_64(v, GTA_CC_NZ, 0xDEADBEEF)
       && gta_binary_compiler_context_add_label_jump(context, lhs_was_false, v->count - 4)
     // Compile the RHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)
@@ -382,7 +382,7 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bina
     //   cmp byte ptr [rax + is_true_offset], 0
     //   jz lhs_was_true
       && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
-      && gta_jnz__x86_64(v, 0xDEADBEEF)
+      && gta_jcc__x86_64(v, GTA_CC_NZ, 0xDEADBEEF)
       && gta_binary_compiler_context_add_label_jump(context, lhs_was_true, v->count - 4)
     // Compile the RHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)

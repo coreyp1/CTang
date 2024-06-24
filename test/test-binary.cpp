@@ -145,10 +145,36 @@ TEST(x86_64, cmp_ind8_imm) {
 }
 
 
-TEST(x86_64, jnz) {
+TEST(x86_64, jcc) {
   // General case.
-  JIT(gta_jnz__x86_64(v, 0x12345678), "\x0F\x85\x78\x56\x34\x12");
-  JIT(gta_jnz__x86_64(v, -0x12345678), "\x0F\x85\x88\xA9\xCB\xED");
+  JIT(gta_jcc__x86_64(v, GTA_CC_A, 0x12345678), "\x0F\x87\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_AE, 0x12345678), "\x0F\x83\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_B, 0x12345678), "\x0F\x82\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_BE, 0x12345678), "\x0F\x86\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_E, 0x12345678), "\x0F\x84\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_G, 0x12345678), "\x0F\x8F\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_GE, 0x12345678), "\x0F\x8D\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_L, 0x12345678), "\x0F\x8C\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_LE, 0x12345678), "\x0F\x8E\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NA, 0x12345678), "\x0F\x86\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NAE, 0x12345678), "\x0F\x82\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NB, 0x12345678), "\x0F\x83\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NBE, 0x12345678), "\x0F\x87\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NE, 0x12345678), "\x0F\x85\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NG, 0x12345678), "\x0F\x8E\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NGE, 0x12345678), "\x0F\x8C\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NL, 0x12345678), "\x0F\x8D\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NLE, 0x12345678), "\x0F\x8F\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NO, 0x12345678), "\x0F\x81\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NP, 0x12345678), "\x0F\x8B\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NS, 0x12345678), "\x0F\x89\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_NZ, 0x12345678), "\x0F\x85\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_O, 0x12345678), "\x0F\x80\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_P, 0x12345678), "\x0F\x8A\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_PE, 0x12345678), "\x0F\x8A\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_PO, 0x12345678), "\x0F\x8B\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_S, 0x12345678), "\x0F\x88\x78\x56\x34\x12");
+  JIT(gta_jcc__x86_64(v, GTA_CC_Z, 0x12345678), "\x0F\x84\x78\x56\x34\x12");
 }
 
 
