@@ -208,6 +208,16 @@ bool gta_cmovcc_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Condition_Code conditi
 bool gta_cmp_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, int8_t immediate);
 
 /**
+ * x86_64 instruction: CMP reg, reg
+ *
+ * @param vector The vector in which to store the instruction.
+ * @param op1 The first operand register.
+ * @param op2 The second operand register.
+ * @return True on success, false on failure.
+ */
+bool gta_cmp_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Register op2);
+
+/**
  * x86_64 instruction: Jcc offset
  *
  * The instruction jumps either forward or backward by the given offset.  The

@@ -384,6 +384,47 @@ bool gta_cmp_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regi
 }
 
 
+bool gta_cmp_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Register op2) {
+  // https://www.felixcloutier.com/x86/cmp
+  if (!(REG_IS_INTEGER(op1) && REG_IS_INTEGER(op2)
+      // The registers must be the same size.
+      && ((REG_IS_64BIT(op1) && REG_IS_64BIT(op2))
+        || (REG_IS_32BIT(op1) && REG_IS_32BIT(op2))
+        || (REG_IS_16BIT(op1) && REG_IS_16BIT(op2))
+        || (REG_IS_8BIT(op1) && REG_IS_8BIT(op2))))
+    || !gta_binary_optimistic_increase(vector, 3)) {
+    return false;
+  }
+  uint8_t op1_code = gta_binary_get_register_code__x86_64(op1);
+  uint8_t op2_code = gta_binary_get_register_code__x86_64(op2);
+
+  if (REG_IS_8BIT(op1)) {
+    // 8-bit register.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x38);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 | (op1_code & 0x07) | ((op2_code & 0x07) << 3));
+    return true;
+  }
+  if (REG_IS_16BIT(op1)) {
+    // 16-bit register.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x39);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 | (op1_code & 0x07) | ((op2_code & 0x07) << 3));
+    return true;
+  }
+  if (REG_IS_32BIT(op1)) {
+    // 32-bit register.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x39);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 | (op1_code & 0x07) | ((op2_code & 0x07) << 3));
+    return true;
+  }
+  // 64-bit register.
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((op1_code & 0x08) >> 3) | ((op2_code & 0x08) >> 1));
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x39);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 | (op1_code & 0x07) | ((op2_code & 0x07) << 3));
+  return true;
+}
+
+
 bool gta_jcc__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, int32_t offset) {
   // https://www.felixcloutier.com/x86/jcc
   if (!gta_binary_optimistic_increase(vector, 6)) {

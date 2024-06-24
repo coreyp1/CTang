@@ -145,6 +145,29 @@ TEST(x86_64, cmp_ind8_imm) {
 }
 
 
+TEST(x86_64, cmp_reg_reg) {
+  // Testing register encodings.
+  JIT(gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RBX), "\x48\x39\xD8");
+  JIT(gta_cmp_reg_reg__x86_64(v, GTA_REG_R10, GTA_REG_RCX), "\x49\x39\xCA");
+  // General case. r8, r8
+  JIT(gta_cmp_reg_reg__x86_64(v, GTA_REG_BL, GTA_REG_BH), "\x38\xFB");
+  JIT(gta_cmp_reg_reg__x86_64(v, GTA_REG_AH, GTA_REG_DL), "\x38\xD4");
+  // General case. r16, r16
+  JIT(gta_cmp_reg_reg__x86_64(v, GTA_REG_CX, GTA_REG_DX), "\x66\x39\xD1");
+  JIT(gta_cmp_reg_reg__x86_64(v, GTA_REG_SI, GTA_REG_DI), "\x66\x39\xFE");
+  // General case. r32, r32
+  JIT(gta_cmp_reg_reg__x86_64(v, GTA_REG_ESP, GTA_REG_EBP), "\x39\xEC");
+  JIT(gta_cmp_reg_reg__x86_64(v, GTA_REG_EDX, GTA_REG_EAX), "\x39\xC2");
+  // General case. r64, r64
+  JIT(gta_cmp_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_R9), "\x4D\x39\xC8");
+  JIT(gta_cmp_reg_reg__x86_64(v, GTA_REG_RBX, GTA_REG_RAX), "\x48\x39\xC3");
+  // Failures. The registers must be the same size.
+  JIT_FAIL(gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_EBX));
+  JIT_FAIL(gta_cmp_reg_reg__x86_64(v, GTA_REG_EDX, GTA_REG_CX));
+  JIT_FAIL(gta_cmp_reg_reg__x86_64(v, GTA_REG_SI, GTA_REG_AH));
+}
+
+
 TEST(x86_64, jcc) {
   // General case.
   JIT(gta_jcc__x86_64(v, GTA_CC_A, 0x12345678), "\x0F\x87\x78\x56\x34\x12");
