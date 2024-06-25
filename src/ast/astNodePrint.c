@@ -16,7 +16,7 @@ GTA_Ast_Node_VTable gta_ast_node_print_vtable = {
   .destroy = gta_ast_node_print_destroy,
   .print = gta_ast_node_print_print,
   .simplify = gta_ast_node_print_simplify,
-  .analyze = 0,
+  .analyze = gta_ast_node_print_analyze,
   .walk = gta_ast_node_print_walk,
 };
 
@@ -69,6 +69,12 @@ GTA_Ast_Node * gta_ast_node_print_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
     print->expression = simplified_expression;
   }
   return 0;
+}
+
+
+GTA_Ast_Node * gta_ast_node_print_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  GTA_Ast_Node_Print * print = (GTA_Ast_Node_Print *)self;
+  return gta_ast_node_analyze(print->expression, program, scope);
 }
 
 

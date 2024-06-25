@@ -78,6 +78,24 @@ void gta_ast_node_while_print(GTA_Ast_Node * self, const char * indent);
 GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_while_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
+ * Perform pre-compilation analysis on the AST node.
+ *
+ * This step includes allocating constants, identifying libraries and variables
+ * (global and local), and creating namespace scopes for functions.
+ *
+ * This function serves as a general dispatch function, and should be used in
+ * preference to calling the vtable's analyze function directly.
+ *
+ * @see gta_ast_node_analyze()
+ *
+ * @param self The node to analyze.
+ * @param program The program that the node is part of.
+ * @param scope The current variable scope.
+ * @return NULL on success, otherwise return a parse error.
+ */
+GTA_Ast_Node * gta_ast_node_while_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+
+/**
  * Walks a GTA_Ast_Node_While object.
  *
  * This function should not be called directly. Use gta_ast_node_walk()
@@ -89,6 +107,34 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_while_simplify(GTA_Ast_Node * self, G
  * @param return_value The return value of the walk, populated by the callback.
  */
 void gta_ast_node_while_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+
+/**
+ * Compile the AST node to binary for x86_64.
+ *
+ * The vtable's compile_to_binary function is called to compile the node.  This
+ * function serves as a general dispatch function, and should be used in
+ * preference to calling the vtable's compile_to_binary function directly.
+ *
+ * @see gta_ast_node_compile_to_binary__x86_64
+ *
+ * @param self The node to compile.
+ * @param context Contextual information for the compile process.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+
+/**
+ * Compiles a GTA_Ast_Node_Integer object to bytecode.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_bytecode()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_bytecode
+ *
+ * @param self The GTA_Ast_Node_Integer object.
+ * @param context The compiler state to use for compilation.
+ */
+bool gta_ast_node_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

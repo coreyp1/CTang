@@ -15,7 +15,7 @@ GTA_Ast_Node_VTable gta_ast_node_if_else_vtable = {
   .destroy = gta_ast_node_if_else_destroy,
   .print = gta_ast_node_if_else_print,
   .simplify = gta_ast_node_if_else_simplify,
-  .analyze = 0,
+  .analyze = gta_ast_node_if_else_analyze,
   .walk = gta_ast_node_if_else_walk,
 };
 
@@ -125,6 +125,26 @@ GTA_Ast_Node * gta_ast_node_if_else_simplify(GTA_Ast_Node * self, GTA_Ast_Simpli
   gcu_hash64_destroy(if_variable_map);
   gcu_hash64_destroy(else_variable_map);
 
+  return 0;
+}
+
+
+GTA_Ast_Node * gta_ast_node_if_else_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
+  GTA_Ast_Node * error = gta_ast_node_analyze(if_else->condition, program, scope);
+  if (error) {
+    return error;
+  }
+  error = gta_ast_node_analyze(if_else->ifBlock, program, scope);
+  if (error) {
+    return error;
+  }
+  if (if_else->elseBlock) {
+    error = gta_ast_node_analyze(if_else->elseBlock, program, scope);
+    if (error) {
+      return error;
+    }
+  }
   return 0;
 }
 

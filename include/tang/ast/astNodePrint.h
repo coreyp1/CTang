@@ -83,6 +83,24 @@ void gta_ast_node_print_print(GTA_Ast_Node * self, const char * indent);
 GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_print_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
+ * Perform pre-compilation analysis on the AST node.
+ *
+ * This step includes allocating constants, identifying libraries and variables
+ * (global and local), and creating namespace scopes for functions.
+ *
+ * This function serves as a general dispatch function, and should be used in
+ * preference to calling the vtable's analyze function directly.
+ *
+ * @see gta_ast_node_analyze()
+ *
+ * @param self The node to analyze.
+ * @param program The program that the node is part of.
+ * @param scope The current variable scope.
+ * @return NULL on success, otherwise return a parse error.
+ */
+GTA_Ast_Node * gta_ast_node_print_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+
+/**
  * Walks a GTA_Ast_Node_Print object.
  *
  * This function should not be called directly. Use gta_ast_node_walk()
