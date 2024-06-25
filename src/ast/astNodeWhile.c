@@ -7,11 +7,12 @@
 #include <tang/ast/astNodeBinary.h>
 #include <tang/ast/astNodeIdentifier.h>
 #include <tang/ast/astNodeWhile.h>
+#include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_while_vtable = {
   .name = "While",
   .compile_to_bytecode = gta_ast_node_while_compile_to_bytecode,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_binary__x86_64 = gta_ast_node_while_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
@@ -206,4 +207,42 @@ bool gta_ast_node_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
     && gta_bytecode_compiler_context_add_label_jump(context, condition_start, context->program->bytecode->count - 1)
   // block_end:
     && gta_bytecode_compiler_context_set_label(context, block_end, context->program->bytecode->count);
+}
+
+
+bool gta_ast_node_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  GTA_Ast_Node_While * while_node = (GTA_Ast_Node_While *) self;
+  GCU_Vector8 * v = context->binary_vector;
+
+  // Jump labels.
+  GTA_Integer condition_start;
+  GTA_Integer block_end;
+
+  // Offsets.
+  bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
+
+  // Compile the while loop.
+  return true
+  // Create jump labels.
+    && ((condition_start = gta_binary_compiler_context_get_label(context)) >= 0)
+    && ((block_end = gta_binary_compiler_context_get_label(context)) >= 0)
+  // condition_start:        ; Start of the while loop
+    && gta_binary_compiler_context_set_label(context, condition_start, v->count)
+  // Compile the condition.
+    && gta_ast_node_compile_to_binary__x86_64(while_node->condition, context)
+  // ; The condition result is in RAX.
+  //   cmp byte ptr [rax + is_true_offset], 0
+  //   je block_end
+    && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
+    && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+    && gta_binary_compiler_context_add_label_jump(context, block_end, v->count - 4)
+  // Compile the code block.
+    && gta_ast_node_compile_to_binary__x86_64(while_node->block, context)
+  // jmp condition_start
+    // TODO: Replace this with an actual JMP command.
+    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
+    && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+    && gta_binary_compiler_context_add_label_jump(context, condition_start, v->count - 4)
+  // block_end:
+    && gta_binary_compiler_context_set_label(context, block_end, v->count);
 }

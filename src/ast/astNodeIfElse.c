@@ -225,7 +225,7 @@ bool gta_ast_node_if_else_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bin
     && ((end = gta_binary_compiler_context_get_label(context)) >= 0)
   // Compile the condition.
     && gta_ast_node_compile_to_binary__x86_64(if_else->condition, context)
-  // ; The condition is in RAX.
+  // ; The condition result is in RAX.
   //   cmp byte ptr [rax + is_true_offset], 0
   //   je else_block (or end, if there is no else block)
     && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
