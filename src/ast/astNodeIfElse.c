@@ -3,11 +3,12 @@
 #include <string.h>
 #include <cutil/memory.h>
 #include <tang/ast/astNodeIfElse.h>
+#include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_if_else_vtable = {
   .name = "IfElse",
-  .compile_to_bytecode = 0,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_bytecode = gta_ast_node_if_else_compile_to_bytecode,
+  .compile_to_binary__x86_64 = gta_ast_node_if_else_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
@@ -136,4 +137,84 @@ void gta_ast_node_if_else_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback c
   if (if_else->elseBlock) {
     gta_ast_node_walk(if_else->elseBlock, callback, data, return_value);
   }
+}
+
+bool gta_ast_node_if_else_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
+  GTA_Integer else_block;
+  GTA_Integer end;
+  return true
+  // Create jump labels.
+    && ((else_block = gta_bytecode_compiler_context_get_label(context)) >= 0)
+    && ((end = gta_bytecode_compiler_context_get_label(context)) >= 0)
+  // Compile the condition.
+    && gta_ast_node_compile_to_bytecode(if_else->condition, context)
+  // JMPF else_block         ; value is not popped
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPF))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
+    && gta_bytecode_compiler_context_add_label_jump(context, else_block, context->program->bytecode->count - 1)
+  // POP
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+  // Compile the if block.
+    && gta_ast_node_compile_to_bytecode(if_else->ifBlock, context)
+  // JMP end
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMP))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
+    && gta_bytecode_compiler_context_add_label_jump(context, end, context->program->bytecode->count - 1)
+  // else_block:
+    && gta_bytecode_compiler_context_set_label(context, else_block, context->program->bytecode->count)
+  // POP
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+  // Compile the else block.
+    && (!if_else->elseBlock || gta_ast_node_compile_to_bytecode(if_else->elseBlock, context))
+  // end:
+    && gta_bytecode_compiler_context_set_label(context, end, context->program->bytecode->count);
+}
+
+
+bool gta_ast_node_if_else_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
+  GCU_Vector8 * v = context->binary_vector;
+
+  // Jump labels.
+  GTA_Integer else_block;
+  GTA_Integer end;
+
+  // Offsets.
+  bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
+
+  // Compile the if-else statement.
+  return true
+  // Create jump labels.
+    && ((else_block = gta_binary_compiler_context_get_label(context)) >= 0)
+    && ((end = gta_binary_compiler_context_get_label(context)) >= 0)
+  // Compile the condition.
+    && gta_ast_node_compile_to_binary__x86_64(if_else->condition, context)
+  // ; The condition is in RAX.
+  //   cmp byte ptr [rax + is_true_offset], 0
+  //   je else_block (or end, if there is no else block)
+    && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
+    && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+    && gta_binary_compiler_context_add_label_jump(context, if_else->elseBlock ? else_block : end, v->count - 4)
+  // ; Compile the ifBlock.
+    && gta_ast_node_compile_to_binary__x86_64(if_else->ifBlock, context)
+  // ; The jump to the end and the else block are only needed if there actually
+  // ; is an else block.
+    && ((if_else->elseBlock
+      // ; jmp end
+        // TODO: Replace this with an actual JMP command.
+        && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
+        && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+        && gta_binary_compiler_context_add_label_jump(context, end, v->count - 4)
+      // else_block:
+        && gta_binary_compiler_context_set_label(context, else_block, v->count)
+      // ; Compile the elseBlock.
+        && (!if_else->elseBlock || gta_ast_node_compile_to_binary__x86_64(if_else->elseBlock, context))
+      ) || true)
+  // end:
+    && gta_binary_compiler_context_set_label(context, end, v->count);
 }
