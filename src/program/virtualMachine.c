@@ -99,7 +99,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       case GTA_BYTECODE_POKE_GLOBAL: {
         // Poke a value into the stack, indexed by the base pointer.
         size_t index = GTA_TYPEX_UI(*next++);
-        context->stack->data[index] = context->stack->data[--*sp];
+        context->stack->data[index] = context->stack->data[*sp-1];
         GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[index]);
         value->is_temporary = false;
         break;
@@ -115,7 +115,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       case GTA_BYTECODE_POKE_LOCAL: {
         // Poke a value into the stack, indexed by the frame pointer.
         size_t index = GTA_TYPEX_UI(*next++);
-        context->stack->data[context->fp + index] = context->stack->data[--*sp];
+        context->stack->data[context->fp + index] = context->stack->data[*sp-1];
         break;
       }
       case GTA_BYTECODE_MARK_FP: {
