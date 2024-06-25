@@ -258,7 +258,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       }
       case GTA_BYTECODE_JMP: {
         // Jump to the specified address.
-        next += GTA_TYPEX_I(*next);
+        next += GTA_TYPEX_I(*next) + 1;
         break;
       }
       case GTA_BYTECODE_JMPF: {

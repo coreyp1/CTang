@@ -10,7 +10,7 @@
 
 GTA_Ast_Node_VTable gta_ast_node_while_vtable = {
   .name = "While",
-  .compile_to_bytecode = 0,
+  .compile_to_bytecode = gta_ast_node_while_compile_to_bytecode,
   .compile_to_binary__x86_64 = 0,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
@@ -18,7 +18,7 @@ GTA_Ast_Node_VTable gta_ast_node_while_vtable = {
   .destroy = gta_ast_node_while_destroy,
   .print = gta_ast_node_while_print,
   .simplify = gta_ast_node_while_simplify,
-  .analyze = 0,
+  .analyze = gta_ast_node_while_analyze,
   .walk = gta_ast_node_while_walk,
 };
 
@@ -151,9 +151,59 @@ GTA_Ast_Node * gta_ast_node_while_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
 }
 
 
+GTA_Ast_Node * gta_ast_node_while_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  GTA_Ast_Node_While * while_node = (GTA_Ast_Node_While *) self;
+  GTA_Ast_Node * error = gta_ast_node_analyze(while_node->condition, program, scope);
+  if (error) {
+    return error;
+  }
+  error = gta_ast_node_analyze(while_node->block, program, scope);
+  if (error) {
+    return error;
+  }
+  return 0;
+}
+
+
 void gta_ast_node_while_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   callback(self, data, return_value);
   GTA_Ast_Node_While * while_node = (GTA_Ast_Node_While *) self;
   gta_ast_node_walk(while_node->condition, callback, data, return_value);
   gta_ast_node_walk(while_node->block, callback, data, return_value);
+}
+
+
+bool gta_ast_node_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_While * while_node = (GTA_Ast_Node_While *) self;
+
+  // Jump labels.
+  GTA_Integer condition_start = gta_bytecode_compiler_context_get_label(context);
+  GTA_Integer block_end = gta_bytecode_compiler_context_get_label(context);
+
+  // Compile the while loop.
+  return true
+  // condition_start:        ; Start of the while loop
+    && gta_bytecode_compiler_context_set_label(context, condition_start, context->program->bytecode->count)
+  // Compile the condition.
+    && gta_ast_node_compile_to_bytecode(while_node->condition, context)
+  // JMPF block_end          ; Value is not popped
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPF))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
+    && gta_bytecode_compiler_context_add_label_jump(context, block_end, context->program->bytecode->count - 1)
+  // POP                     ; Pop the condition value
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+  // Compile the code block.
+    && gta_ast_node_compile_to_bytecode(while_node->block, context)
+  // POP
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+  // JMP condition_start
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMP))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
+    && gta_bytecode_compiler_context_add_label_jump(context, condition_start, context->program->bytecode->count - 1)
+  // block_end:
+    && gta_bytecode_compiler_context_set_label(context, block_end, context->program->bytecode->count);
 }

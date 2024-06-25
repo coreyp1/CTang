@@ -161,8 +161,12 @@ void gta_ast_node_if_else_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback c
 
 bool gta_ast_node_if_else_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
+
+  // Jump labels.
   GTA_Integer else_block;
   GTA_Integer end;
+
+  // Compile the if-else statement.
   return true
   // Create jump labels.
     && ((else_block = gta_bytecode_compiler_context_get_label(context)) >= 0)
@@ -186,13 +190,20 @@ bool gta_ast_node_if_else_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
     && gta_bytecode_compiler_context_add_label_jump(context, end, context->program->bytecode->count - 1)
   // else_block:
     && gta_bytecode_compiler_context_set_label(context, else_block, context->program->bytecode->count)
-  // POP
-    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
   // Compile the else block.
-    && (!if_else->elseBlock || gta_ast_node_compile_to_bytecode(if_else->elseBlock, context))
+    && ((if_else->elseBlock
+      // POP                 ; Pop the condition value
+        && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+        && gta_ast_node_compile_to_bytecode(if_else->elseBlock, context))
+      || true)
   // end:
     && gta_bytecode_compiler_context_set_label(context, end, context->program->bytecode->count);
+
+  // The value left on the stack will be:
+  // - The value of the last statement in the if block, if the if block is executed.
+  // - The value of the last statement in the else block, if the else block is executed.
+  // - The value of the condition, if the condition is false and there is no else block.
 }
 
 

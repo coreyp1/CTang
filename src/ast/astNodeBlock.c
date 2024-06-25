@@ -111,14 +111,14 @@ bool gta_ast_node_block_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
     GTA_Ast_Node * statement = (GTA_Ast_Node *)GTA_TYPEX_P(block->statements->data[i]);
     if (!GTA_AST_IS_USE(statement)) {
       statements_compiled = true;
-      if (!gta_ast_node_compile_to_bytecode(statement, context)
-        && !(GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+      if (!(gta_ast_node_compile_to_bytecode(statement, context)
+        && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
         && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP)))) {
         return false;
       }
     }
   }
-  if (!statements_compiled) {
+  if (statements_compiled) {
     // The last statement should be left on the stack, so remove the last pop.
     --context->bytecode_offsets->count;
     --context->program->bytecode->count;
