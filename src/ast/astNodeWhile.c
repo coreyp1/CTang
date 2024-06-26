@@ -155,14 +155,7 @@ GTA_Ast_Node * gta_ast_node_while_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
 GTA_Ast_Node * gta_ast_node_while_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
   GTA_Ast_Node_While * while_node = (GTA_Ast_Node_While *) self;
   GTA_Ast_Node * error = gta_ast_node_analyze(while_node->condition, program, scope);
-  if (error) {
-    return error;
-  }
-  error = gta_ast_node_analyze(while_node->block, program, scope);
-  if (error) {
-    return error;
-  }
-  return 0;
+  return error ? error : gta_ast_node_analyze(while_node->block, program, scope);
 }
 
 
@@ -178,11 +171,14 @@ bool gta_ast_node_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
   GTA_Ast_Node_While * while_node = (GTA_Ast_Node_While *) self;
 
   // Jump labels.
-  GTA_Integer condition_start = gta_bytecode_compiler_context_get_label(context);
-  GTA_Integer block_end = gta_bytecode_compiler_context_get_label(context);
+  GTA_Integer condition_start;
+  GTA_Integer block_end;
 
   // Compile the while loop.
   return true
+  // Create jump labels.
+    && ((condition_start = gta_bytecode_compiler_context_get_label(context)) >= 0)
+    && ((block_end = gta_bytecode_compiler_context_get_label(context)) >= 0)
   // condition_start:        ; Start of the while loop
     && gta_bytecode_compiler_context_set_label(context, condition_start, context->program->bytecode->count)
   // Compile the condition.
