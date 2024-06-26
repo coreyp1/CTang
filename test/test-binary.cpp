@@ -201,6 +201,12 @@ TEST(x86_64, jcc) {
 }
 
 
+TEST(x86_64, jmp) {
+  // General case.
+  JIT(gta_jmp__x86_64(v, 0x12345678), "\xE9\x78\x56\x34\x12");
+}
+
+
 TEST(x86_64, lea_reg_ind) {
   // General case. r16, m16
   JIT(gta_lea_reg_ind__x86_64(v, GTA_REG_CX, GTA_REG_RBX, GTA_REG_RDX, 4, 42), "\x66\x8D\x4C\x93\x2A");

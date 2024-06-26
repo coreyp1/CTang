@@ -232,6 +232,19 @@ bool gta_cmp_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Registe
 bool gta_jcc__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, int32_t offset);
 
 /**
+ * x86_64 instruction: JMP offset
+ *
+ * The instruction jumps either forward or backward by the given offset.  The
+ * offset is relative to the next instruction and is limited to a signed 32-bit
+ * integer.
+ *
+ * @param vector The vector in which to store the instruction.
+ * @param offset The offset to jump to.
+ * @return True on success, false on failure.
+ */
+bool gta_jmp__x86_64(GCU_Vector8 * vector, int32_t offset);
+
+/**
  * x86_64 instruction: LEA reg, [base + index*scale + offset]
  *
  * TODO: Add support for index and scale.
