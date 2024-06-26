@@ -237,9 +237,7 @@ bool gta_ast_node_if_else_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bin
   // ; is an else block.
     && ((if_else->elseBlock
       // ; jmp end
-        // TODO: Replace this with an actual JMP command.
-        && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
-        && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+        && gta_jmp__x86_64(v, 0xDEADBEEF)
         && gta_binary_compiler_context_add_label_jump(context, end, v->count - 4)
       // else_block:
         && gta_binary_compiler_context_set_label(context, else_block, v->count)

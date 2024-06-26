@@ -184,9 +184,7 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     && gta_call_reg__x86_64(v, GTA_REG_RAX)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
     && gta_pop_reg__x86_64(v, GTA_REG_RBP)
-    // TODO: Replace this with an actual JMP command.
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
-    && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_binary_compiler_context_add_label_jump(context, success_return_null, v->count - 4)
   // output_string_not_empty:
       && gta_binary_compiler_context_set_label(context, output_string_not_empty, v->count)
@@ -258,9 +256,7 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     && gta_call_reg__x86_64(v, GTA_REG_RAX)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
     && gta_pop_reg__x86_64(v, GTA_REG_RBP)
-    // TODO: Replace this with an actual JMP command.
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
-    && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_binary_compiler_context_add_label_jump(context, success_return_null, v->count - 4)
   // no_string_created_by_print:
     && gta_binary_compiler_context_set_label(context, no_string_created_by_print, v->count)
@@ -288,18 +284,14 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     && gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_REG_RDI)
     && gta_cmp_reg_reg__x86_64(v, GTA_REG_RBX, GTA_REG_RDX)
     && gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_REG_RDI)
-    // TODO: Replace this with an actual JMP command.
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
-    && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_binary_compiler_context_add_label_jump(context, print_return, v->count - 4)
   // error_out_of_memory:
   //   mov rax, gta_computed_value_error_out_of_memory
   //   jmp print_return
     && gta_binary_compiler_context_set_label(context, error_out_of_memory, v->count)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_computed_value_error_out_of_memory)
-    // TODO: Replace this with an actual JMP command.
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
-    && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_binary_compiler_context_add_label_jump(context, print_return, v->count - 4)
   // success_return_null:
   //   mov rax, gta_computed_value_null

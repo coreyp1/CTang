@@ -239,9 +239,7 @@ bool gta_ast_node_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
   // Compile the code block.
     && gta_ast_node_compile_to_binary__x86_64(while_node->block, context)
   // jmp condition_start
-    // TODO: Replace this with an actual JMP command.
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
-    && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_binary_compiler_context_add_label_jump(context, condition_start, v->count - 4)
   // block_end:
     && gta_binary_compiler_context_set_label(context, block_end, v->count);
