@@ -141,7 +141,6 @@ bool gta_ast_node_unary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
  */
 GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_unary_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
 
-
 #ifdef __cplusplus
 }
 #endif //__cplusplus
