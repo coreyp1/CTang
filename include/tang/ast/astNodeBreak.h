@@ -77,6 +77,33 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_break_simplify(GTA_Ast_Node * self, G
  */
 void gta_ast_node_break_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
+/**
+ * Compile the AST node to binary for x86_64.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_binary()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_binary__x86_64
+ *
+ * @param self The node to compile.
+ * @param context Contextual information for the compile process.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_break_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+
+/**
+ * Compiles the AST node to bytecode.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_bytecode()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_bytecode
+ *
+ * @param self The node to compile.
+ * @param context The compiler state to use for compilation.
+ */
+bool gta_ast_node_break_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
+
 #ifdef __cplusplus
 }
 #endif //__cplusplus
