@@ -271,7 +271,6 @@ GTA_Ast_Node * gta_ast_node_binary_analyze(GTA_Ast_Node * self, GTA_Program * pr
 
 bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
   GTA_Ast_Node_Binary * binary_node = (GTA_Ast_Node_Binary *) self;
-  // TODO: AND and OR should short-circuit.
 
   // Short-circuiting for AND.
   if (binary_node->operator_type == GTA_BINARY_TYPE_AND) {
@@ -392,7 +391,6 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bina
 
   if (binary_node->operator_type < GTA_BINARY_TYPE_AND) {
     // Determine the function to call.
-    // TODO: AND and OR should short-circuit.
     GTA_Integer func = 0;
     switch(binary_node->operator_type) {
       case GTA_BINARY_TYPE_ADD:
@@ -467,14 +465,6 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bina
     //   pop rbp
       && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
       && gta_pop_reg__x86_64(v, GTA_REG_RBP);
-  }
-  if (binary_node->operator_type == GTA_BINARY_TYPE_AND) {
-    // TODO: Implement short-circuiting.
-    return false;
-  }
-  if (binary_node->operator_type == GTA_BINARY_TYPE_OR) {
-    // TODO: Implement short-circuiting.
-    return false;
   }
   return false;
 }

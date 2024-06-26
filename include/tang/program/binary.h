@@ -247,8 +247,6 @@ bool gta_jmp__x86_64(GCU_Vector8 * vector, int32_t offset);
 /**
  * x86_64 instruction: LEA reg, [base + index*scale + offset]
  *
- * TODO: Add support for index and scale.
- *
  * @param vector The vector in which to store the instruction.
  * @param dst The destination register.
  * @param base The base register for the memory address.
