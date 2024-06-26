@@ -137,6 +137,38 @@ TEST(ControlFlow, While) {
 }
 
 
+TEST(ControlFlow, DoWhile) {
+  {
+    // True condition.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      i = 0;
+      do {
+        print(i);
+        i = i + 1;
+      } while (i < 3);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 012 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // False condition.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      i = 3;
+      do {
+        print(i);
+        i = i + 1;
+      } while (i < 3);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 3 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -104,7 +104,8 @@ void gta_ast_node_block_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
 bool gta_ast_node_block_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
   GTA_Ast_Node_Block * block = (GTA_Ast_Node_Block *) self;
   if (!GTA_VECTORX_COUNT(block->statements)) {
-    return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count) && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
+    return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
   }
   bool statements_compiled = false;
   for (size_t i = 0; i < GTA_VECTORX_COUNT(block->statements); ++i) {

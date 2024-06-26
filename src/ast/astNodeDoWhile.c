@@ -7,18 +7,19 @@
 #include <tang/ast/astNodeBinary.h>
 #include <tang/ast/astNodeDoWhile.h>
 #include <tang/ast/astNodeIdentifier.h>
+#include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_do_while_vtable = {
   .name = "DoWhile",
-  .compile_to_bytecode = 0,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_bytecode = gta_ast_node_do_while_compile_to_bytecode,
+  .compile_to_binary__x86_64 = gta_ast_node_do_while_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_do_while_destroy,
   .print = gta_ast_node_do_while_print,
   .simplify = gta_ast_node_do_while_simplify,
-  .analyze = 0,
+  .analyze = gta_ast_node_do_while_analyze,
   .walk = gta_ast_node_do_while_walk,
 };
 
@@ -156,4 +157,78 @@ void gta_ast_node_do_while_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback 
   GTA_Ast_Node_Do_While * do_while = (GTA_Ast_Node_Do_While *) self;
   gta_ast_node_walk(do_while->condition, callback, data, return_value);
   gta_ast_node_walk(do_while->block, callback, data, return_value);
+}
+
+
+GTA_Ast_Node * gta_ast_node_do_while_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  GTA_Ast_Node_Do_While * do_while = (GTA_Ast_Node_Do_While *) self;
+  GTA_Ast_Node * error = gta_ast_node_analyze(do_while->condition, program, scope);
+  return error ? error : gta_ast_node_analyze(do_while->block, program, scope);
+}
+
+
+bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_Do_While * do_while = (GTA_Ast_Node_Do_While *) self;
+
+  // Jump labels.
+  GTA_Integer start_label;
+
+  // Compile the do-while loop.
+  return true
+  // Create jump labels.
+    && ((start_label = gta_bytecode_compiler_context_get_label(context)) >= 0)
+  // Put something on the stack so that the first instruction of the block has
+  // something to pop.  When the condition is true, the condition will still be
+  // on the stack and so the first instruction of the block will be to pop it.
+  // NULL
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))
+  // start_label:            ; Start of the do-while loop
+    && gta_bytecode_compiler_context_set_label(context, start_label, context->program->bytecode->count)
+  // POP
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+  // Compile the code block.
+    && gta_ast_node_compile_to_bytecode(do_while->block, context)
+  // POP
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+  // Compile the condition.
+    && gta_ast_node_compile_to_bytecode(do_while->condition, context)
+  // JMPT start_label
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPT))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
+    && gta_bytecode_compiler_context_add_label_jump(context, start_label, context->program->bytecode->count - 1)
+  // The condition is left on the stack.
+  ;
+}
+
+
+bool gta_ast_node_do_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  GTA_Ast_Node_Do_While * do_while_node = (GTA_Ast_Node_Do_While *) self;
+  GCU_Vector8 * v = context->binary_vector;
+
+  // Jump labels.
+  GTA_Integer block_start;
+
+  // Offsets.
+  bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
+
+  // Compile the while loop.
+  return true
+  // Create jump labels.
+    && ((block_start = gta_binary_compiler_context_get_label(context)) >= 0)
+  // block_start:            ; Start of the while loop
+    && gta_binary_compiler_context_set_label(context, block_start, v->count)
+  // Compile the code block.
+    && gta_ast_node_compile_to_binary__x86_64(do_while_node->block, context)
+  // Compile the condition.
+    && gta_ast_node_compile_to_binary__x86_64(do_while_node->condition, context)
+  // ; The condition result is in RAX.
+  //   cmp byte ptr [rax + is_true_offset], 0
+  //   jne block_start
+    && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
+    && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
+    && gta_binary_compiler_context_add_label_jump(context, block_start, v->count - 4);
 }
