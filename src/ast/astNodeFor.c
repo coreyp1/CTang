@@ -7,18 +7,19 @@
 #include <tang/ast/astNodeBinary.h>
 #include <tang/ast/astNodeFor.h>
 #include <tang/ast/astNodeIdentifier.h>
+#include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_for_vtable = {
   .name = "For",
-  .compile_to_bytecode = 0,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_bytecode = gta_ast_node_for_compile_to_bytecode,
+  .compile_to_binary__x86_64 = gta_ast_node_for_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_for_destroy,
   .print = gta_ast_node_for_print,
   .simplify = gta_ast_node_for_simplify,
-  .analyze = 0,
+  .analyze = gta_ast_node_for_analyze,
   .walk = gta_ast_node_for_walk,
 };
 
@@ -183,4 +184,104 @@ void gta_ast_node_for_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callb
   gta_ast_node_walk(for_node->condition, callback, data, return_value);
   gta_ast_node_walk(for_node->update, callback, data, return_value);
   gta_ast_node_walk(for_node->block, callback, data, return_value);
+}
+
+
+GTA_Ast_Node * gta_ast_node_for_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
+  GTA_Ast_Node * error;
+  bool has_error = false
+    || (error = gta_ast_node_analyze(for_node->init, program, scope))
+    || (error = gta_ast_node_analyze(for_node->condition, program, scope))
+    || (error = gta_ast_node_analyze(for_node->update, program, scope))
+    || (error = gta_ast_node_analyze(for_node->block, program, scope));
+  return has_error ? error : 0;
+}
+
+
+bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+  GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
+
+  // Jump labels.
+  GTA_Integer condition_start;
+  GTA_Integer block_end;
+
+  // Compile the for loop.
+  return true
+  // Create the labels.
+    && ((condition_start = gta_bytecode_compiler_context_get_label(context)) >= 0)
+    && ((block_end = gta_bytecode_compiler_context_get_label(context)) >= 0)
+  // Compile the init.
+    && gta_ast_node_compile_to_bytecode(for_node->init, context)
+  // POP
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+  // condition_start:
+    && gta_bytecode_compiler_context_set_label(context, condition_start, context->program->bytecode->count)
+  // Compile the condition.
+    && gta_ast_node_compile_to_bytecode(for_node->condition, context)
+  // JMPF block_end
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPF))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
+    && gta_bytecode_compiler_context_add_label_jump(context, block_end, context->program->bytecode->count - 1)
+  // Compile the block.
+    && gta_ast_node_compile_to_bytecode(for_node->block, context)
+  // POP
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+  // Compile the update.
+    && gta_ast_node_compile_to_bytecode(for_node->update, context)
+  // POP
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+  // JMP condition_start
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMP))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
+    && gta_bytecode_compiler_context_add_label_jump(context, condition_start, context->program->bytecode->count - 1)
+  // block_end:
+    && gta_bytecode_compiler_context_set_label(context, block_end, context->program->bytecode->count)
+  // The condition is left on the stack.
+  ;
+}
+
+
+bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+  GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
+  GCU_Vector8 * v = context->binary_vector;
+
+  // Jump labels.
+  GTA_Integer condition_start;
+  GTA_Integer block_end;
+
+  // Offsets.
+  bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
+
+  // Compile the for loop.
+  return true
+  // Create the labels.
+    && ((condition_start = gta_binary_compiler_context_get_label(context)) >= 0)
+    && ((block_end = gta_binary_compiler_context_get_label(context)) >= 0)
+  // Compile the init.
+    && gta_ast_node_compile_to_binary__x86_64(for_node->init, context)
+  // condition_start:
+    && gta_binary_compiler_context_set_label(context, condition_start, context->binary_vector->count)
+  // Compile the condition.
+    && gta_ast_node_compile_to_binary__x86_64(for_node->condition, context)
+  // ; The condition result is in RAX.
+  //   cmp byte ptr [rax + is_true_offset], 0
+  //   je block_end
+    && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
+    && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+    && gta_binary_compiler_context_add_label_jump(context, block_end, v->count - 4)
+  // Compile the block.
+    && gta_ast_node_compile_to_binary__x86_64(for_node->block, context)
+  // Compile the update.
+    && gta_ast_node_compile_to_binary__x86_64(for_node->update, context)
+  // JMP condition_start
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
+    && gta_binary_compiler_context_add_label_jump(context, condition_start, v->count - 4)
+  // block_end:
+    && gta_binary_compiler_context_set_label(context, block_end, v->count);
 }

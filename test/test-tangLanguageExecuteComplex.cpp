@@ -169,6 +169,32 @@ TEST(ControlFlow, DoWhile) {
 }
 
 
+TEST(ControlFlow, For) {
+  {
+    // True condition.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      for (i = 0; i < 3; i = i + 1) {
+        print(i);
+      }
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 012 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // False condition.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      for (i = 3; i < 3; i = i + 1) {
+        print(i);
+      }
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start  end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
