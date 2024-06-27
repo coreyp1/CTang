@@ -9,6 +9,13 @@
 #include <tang/ast/astNodeIdentifier.h>
 #include <tang/program/binary.h>
 
+
+// Helper macro to determine if a location indicates that the node was
+// actually present in the code (as opposed to being added by the parser as a
+// default value).
+#define LOCATION_IS_PRESENT(location) ((location).first_line || (location).first_column || (location).last_line || (location).last_column)
+
+
 GTA_Ast_Node_VTable gta_ast_node_for_vtable = {
   .name = "For",
   .compile_to_bytecode = gta_ast_node_for_compile_to_bytecode,
@@ -206,35 +213,61 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Comp
   GTA_Integer condition_start;
   GTA_Integer block_end;
 
+  // The init, condition, and update are all optional, so account for that
+  // when compiling.
+  // Knowing whether the optional parts are present is determined by checking
+  // the location of the nodes.  If all location values are 0, then the node
+  // was not present in the code.
+  bool has_init = LOCATION_IS_PRESENT(for_node->init->location);
+  bool has_condition = LOCATION_IS_PRESENT(for_node->condition->location);
+  bool has_update = LOCATION_IS_PRESENT(for_node->update->location);
+
+  // Because the bytecode compilation is stack-based, and we must ensure that
+  // there is always a value left on the stack even if the init, condition, or
+  // update are not present, then we have to do some compilcated checks to
+  // ensure that the stack is always left in a valid state.
+
   // Compile the for loop.
   return true
   // Create the labels.
     && ((condition_start = gta_bytecode_compiler_context_get_label(context)) >= 0)
     && ((block_end = gta_bytecode_compiler_context_get_label(context)) >= 0)
   // Compile the init.
-    && gta_ast_node_compile_to_bytecode(for_node->init, context)
-  // POP
-    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+    && (has_init
+      ? (true
+        && gta_ast_node_compile_to_bytecode(for_node->init, context)
+      // POP
+        && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+      )
+      : true)
   // condition_start:
     && gta_bytecode_compiler_context_set_label(context, condition_start, context->program->bytecode->count)
   // Compile the condition.
-    && gta_ast_node_compile_to_bytecode(for_node->condition, context)
-  // JMPF block_end
-    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPF))
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-    && gta_bytecode_compiler_context_add_label_jump(context, block_end, context->program->bytecode->count - 1)
+    && (has_condition
+      ? (true
+        && gta_ast_node_compile_to_bytecode(for_node->condition, context)
+      // JMPF block_end
+        && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPF))
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
+        && gta_bytecode_compiler_context_add_label_jump(context, block_end, context->program->bytecode->count - 1)
+      )
+      : true)
   // Compile the block.
     && gta_ast_node_compile_to_bytecode(for_node->block, context)
   // POP
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
   // Compile the update.
-    && gta_ast_node_compile_to_bytecode(for_node->update, context)
-  // POP
-    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+    && (has_update
+      ? (true
+        && gta_ast_node_compile_to_bytecode(for_node->update, context)
+      // POP
+        && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+      )
+      : true)
   // JMP condition_start
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMP))
@@ -242,10 +275,18 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Comp
     && gta_bytecode_compiler_context_add_label_jump(context, condition_start, context->program->bytecode->count - 1)
   // block_end:
     && gta_bytecode_compiler_context_set_label(context, block_end, context->program->bytecode->count)
-  // The condition is left on the stack.
+  // If the condition exists, then it is left on the stack.  If it does not
+  // exist, then we must push a NULL value onto the stack so that the stack is
+  // always left in a valid state.
+    && (has_condition
+      ? true
+      : (true
+        && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))
+      )
+    )
   ;
 }
-
 
 bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
   GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
@@ -258,27 +299,45 @@ bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_
   // Offsets.
   bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
 
-  // Compile the for loop.
+  // The init, condition, and update are all optional, so account for that
+  // when compiling.
+  // Knowing whether the optional parts are present is determined by checking
+  // the location of the nodes.  If all location values are 0, then the node
+  // was not present in the code.
+  bool has_init = LOCATION_IS_PRESENT(for_node->init->location);
+  bool has_condition = LOCATION_IS_PRESENT(for_node->condition->location);
+  bool has_update = LOCATION_IS_PRESENT(for_node->update->location);
+
+  // Compile the for() loop.
   return true
   // Create the labels.
     && ((condition_start = gta_binary_compiler_context_get_label(context)) >= 0)
     && ((block_end = gta_binary_compiler_context_get_label(context)) >= 0)
   // Compile the init.
-    && gta_ast_node_compile_to_binary__x86_64(for_node->init, context)
+    && (has_init
+      ? gta_ast_node_compile_to_binary__x86_64(for_node->init, context)
+      : true)
   // condition_start:
     && gta_binary_compiler_context_set_label(context, condition_start, context->binary_vector->count)
   // Compile the condition.
+    && (has_condition
+      ? (true
+        && gta_ast_node_compile_to_binary__x86_64(for_node->condition, context)
+      // ; The condition result is in RAX.
+      //   cmp byte ptr [rax + is_true_offset], 0
+      //   je block_end
+        && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
+        && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+        && gta_binary_compiler_context_add_label_jump(context, block_end, v->count - 4)
+      )
+      : true)
     && gta_ast_node_compile_to_binary__x86_64(for_node->condition, context)
-  // ; The condition result is in RAX.
-  //   cmp byte ptr [rax + is_true_offset], 0
-  //   je block_end
-    && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
-    && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, block_end, v->count - 4)
   // Compile the block.
     && gta_ast_node_compile_to_binary__x86_64(for_node->block, context)
   // Compile the update.
-    && gta_ast_node_compile_to_binary__x86_64(for_node->update, context)
+    && (has_update
+      ? gta_ast_node_compile_to_binary__x86_64(for_node->update, context)
+      : true)
   // JMP condition_start
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_binary_compiler_context_add_label_jump(context, condition_start, v->count - 4)
