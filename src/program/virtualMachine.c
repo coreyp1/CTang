@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <string.h>
 #include <cutil/memory.h>
 #include <tang/program/bytecode.h>
 #include <tang/program/virtualMachine.h>
@@ -69,6 +70,44 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         GTA_Computed_Value_String * string = gta_computed_value_string_create(GTA_TYPEX_P(*next++), false, context);
         if (!string || !GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(string))) {
           context->result = gta_computed_value_error_out_of_memory;
+        }
+        break;
+      }
+      case GTA_BYTECODE_ARRAY: {
+        size_t count = GTA_TYPEX_UI(*next++);
+        GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)gta_computed_value_array_create(count, context);
+        // Move the stack pointer back by the count of elements.
+        *sp -= count;
+        if (!array) {
+          context->result = gta_computed_value_error_out_of_memory;
+          break;
+        }
+        if (count) {
+          // Copy the elements from the stack to the array.
+          for (size_t i = 0; i < count; ++i) {
+            GTA_Computed_Value * element = GTA_TYPEX_P(context->stack->data[*sp + i]);
+            if (element->is_temporary) {
+              element->is_temporary = false;
+              array->elements->data[i] = GTA_TYPEX_MAKE_P(element);
+            }
+            else {
+              GTA_Computed_Value * element_copy = gta_computed_value_deep_copy(element, context);
+              if (!element_copy) {
+                context->result = gta_computed_value_error_out_of_memory;
+                break;
+              }
+              array->elements->data[i] = GTA_TYPEX_MAKE_P(element_copy);
+            }
+          }
+          array->elements->count = count;
+          // Push the array onto the stack.  We know that there is already room
+          // on the stack because one or more elements were popped off.
+          context->stack->data[(*sp)++] = GTA_TYPEX_MAKE_P(array);
+        }
+        else {
+          if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(array))) {
+            context->result = gta_computed_value_error_out_of_memory;
+          }
         }
         break;
       }

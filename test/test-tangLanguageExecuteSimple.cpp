@@ -259,6 +259,58 @@ TEST(Declare, Block) {
   }
 }
 
+TEST(Declare, Array) {
+  {
+    // Empty array.
+    TEST_PROGRAM_SETUP("[]");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
+    ASSERT_EQ(((GTA_Computed_Value_Array *)context->result)->elements->count, 0);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Array with a single element.
+    TEST_PROGRAM_SETUP("[3]");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
+    GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)context->result;
+    ASSERT_EQ(array->elements->count, 1);
+    GTA_Computed_Value * value = (GTA_Computed_Value *)GTA_TYPEX_P(array->elements->data[0]);
+    ASSERT_FALSE(value->is_temporary);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(value));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)(value))->value, 3);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Array with multiple elements.
+    TEST_PROGRAM_SETUP("[3, 4.5, true, \"hello\"]");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
+    GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)context->result;
+
+    gta_program_bytecode_print(context->program);
+    char * str = gta_computed_value_to_string((GTA_Computed_Value *)context->result);
+    cout << str << endl;
+    gcu_free(str);
+
+    ASSERT_EQ(array->elements->count, 4);
+    GTA_Computed_Value * value = (GTA_Computed_Value *)GTA_TYPEX_P(array->elements->data[0]);
+    ASSERT_FALSE(value->is_temporary);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(value));
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)(value))->value, 3);
+    value = (GTA_Computed_Value *)GTA_TYPEX_P(array->elements->data[1]);
+    ASSERT_FALSE(value->is_temporary);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(value));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)(value))->value, 4.5);
+    value = (GTA_Computed_Value *)GTA_TYPEX_P(array->elements->data[2]);
+    ASSERT_FALSE(value->is_temporary);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(value));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)(value))->value);
+    value = (GTA_Computed_Value *)GTA_TYPEX_P(array->elements->data[3]);
+    ASSERT_FALSE(value->is_temporary);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(value));
+    ASSERT_STREQ(((GTA_Computed_Value_String *)(value))->value->buffer, "hello");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(Identifier, Local) {
   {
     // `a` is not declared global, so should not have a value.

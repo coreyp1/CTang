@@ -56,6 +56,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/ast/astNodeUse.o \
 	$(OBJ_DIR)/ast/astNodeWhile.o \
 	$(OBJ_DIR)/computedValue/computedValue.o \
+	$(OBJ_DIR)/computedValue/computedValueArray.o \
 	$(OBJ_DIR)/computedValue/computedValueBoolean.o \
 	$(OBJ_DIR)/computedValue/computedValueError.o \
 	$(OBJ_DIR)/computedValue/computedValueFloat.o \
@@ -270,6 +271,9 @@ DEP_ASTNODE_ALL = \
 DEP_COMPUTEDVALUE = \
 	include/tang/computedValue/computedValue.h \
 	$(DEP_MACROS)
+DEP_COMPUTEDVALUEARRAY = \
+	include/tang/computedValue/computedValueArray.h \
+	$(DEP_COMPUTEDVALUE)
 DEP_COMPUTEDVALUEBOOLEAN = \
 	include/tang/computedValue/computedValueBoolean.h \
 	$(DEP_COMPUTEDVALUE)
@@ -289,6 +293,8 @@ DEP_COMPUTEDVALUESTRING = \
 
 DEP_COMPUTEDVALUEALL = \
 	$(DEP_COMPUTEDVALUE) \
+	$(DEP_COMPUTEDVALUEARRAY) \
+	$(DEP_COMPUTEDVALUEBOOLEAN) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
@@ -747,6 +753,14 @@ $(OBJ_DIR)/computedValue/computedValue.o: \
 	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUESTRING) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_MACROS)
+
+$(OBJ_DIR)/computedValue/computedValueArray.o: \
+	src/computedValue/computedValueArray.c \
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_COMPUTEDVALUEARRAY) \
+	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_MACROS)
 
