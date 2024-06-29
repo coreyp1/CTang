@@ -284,12 +284,6 @@ TEST(Declare, Array) {
     TEST_PROGRAM_SETUP("[3, 4.5, true, \"hello\"]");
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
     GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)context->result;
-
-    gta_program_bytecode_print(context->program);
-    char * str = gta_computed_value_to_string((GTA_Computed_Value *)context->result);
-    cout << str << endl;
-    gcu_free(str);
-
     ASSERT_EQ(array->elements->count, 4);
     GTA_Computed_Value * value = (GTA_Computed_Value *)GTA_TYPEX_P(array->elements->data[0]);
     ASSERT_FALSE(value->is_temporary);
