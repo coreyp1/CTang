@@ -86,7 +86,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
           // Copy the elements from the stack to the array.
           for (size_t i = 0; i < count; ++i) {
             GTA_Computed_Value * element = GTA_TYPEX_P(context->stack->data[*sp + i]);
-            if (element->is_temporary) {
+            if (element->is_temporary || element->is_singleton) {
               element->is_temporary = false;
               array->elements->data[i] = GTA_TYPEX_MAKE_P(element);
             }
