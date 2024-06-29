@@ -348,6 +348,7 @@ TEST(x86_64, mov_ind8_imm8) {
   JIT_FAIL(gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_BX, 1, 42, 0x7F));
 }
 
+
 TEST(x86_64, mov_reg_imm) {
   // General case. r8, imm8
   JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_AL, 0x7F), "\xB0\x7F");
