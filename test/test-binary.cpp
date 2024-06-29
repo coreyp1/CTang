@@ -331,6 +331,23 @@ TEST(x86_64, mov_ind_reg) {
 }
 
 
+TEST(x86_64, mov_ind8_imm8) {
+  // General case. m8, imm8
+  JIT(gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, 0, 0x7F), string("\xC6\x00\x7F", 3));
+  JIT(gta_mov_ind8_imm8__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, 0, -0x42), "\xC6\x03\xBE");
+  JIT(gta_mov_ind8_imm8__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 0, 0), string("\x41\xC6\x02\x00", 4));
+  JIT(gta_mov_ind8_imm8__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 42, 1), "\x41\xC6\x42\x2A\x01");
+  // General case. m8, imm8
+  JIT(gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_RBX, 1, 42, 0x7F), "\xC6\x44\x18\x2A\x7F");
+  JIT(gta_mov_ind8_imm8__x86_64(v, GTA_REG_RBX, GTA_REG_R10, 2, -1, -0x42), "\x42\xC6\x44\x53\xFF\xBE");
+  JIT(gta_mov_ind8_imm8__x86_64(v, GTA_REG_R10, GTA_REG_R11, 4, 7, 0), string("\x43\xC6\x44\x9A\x07\x00", 6));
+  JIT(gta_mov_ind8_imm8__x86_64(v, GTA_REG_RCX, GTA_REG_R12, 8, -10, -0x42), "\x42\xC6\x44\xE1\xF6\xBE");
+  // Failures. The base register must be 64-bit.
+  JIT_FAIL(gta_mov_ind8_imm8__x86_64(v, GTA_REG_AX, GTA_REG_NONE, 0, 0, 0x7F));
+  // Failures. SIB registers must be 64-bit.
+  JIT_FAIL(gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_BX, 1, 42, 0x7F));
+}
+
 TEST(x86_64, mov_reg_imm) {
   // General case. r8, imm8
   JIT(gta_mov_reg_imm__x86_64(v, GTA_REG_AL, 0x7F), "\xB0\x7F");
@@ -519,6 +536,26 @@ TEST(x86_64, push_reg) {
 TEST(x86_64, ret) {
   // General case.
   JIT(gta_ret__x86_64(v), "\xC3");
+}
+
+
+TEST(x86_64, test_reg_reg) {
+  // General case. r8, r8
+  JIT(gta_test_reg_reg__x86_64(v, GTA_REG_AL, GTA_REG_BL), "\x84\xD8");
+  JIT(gta_test_reg_reg__x86_64(v, GTA_REG_BH, GTA_REG_CL), "\x84\xCF");
+  // General case. r16, r16
+  JIT(gta_test_reg_reg__x86_64(v, GTA_REG_CX, GTA_REG_DX), "\x66\x85\xD1");
+  JIT(gta_test_reg_reg__x86_64(v, GTA_REG_DX, GTA_REG_SI), "\x66\x85\xF2");
+  // General case. r32, r32
+  JIT(gta_test_reg_reg__x86_64(v, GTA_REG_ESP, GTA_REG_EBP), "\x85\xEC");
+  JIT(gta_test_reg_reg__x86_64(v, GTA_REG_EAX, GTA_REG_EDX), "\x85\xD0");
+  // General case. r64, r64
+  JIT(gta_test_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_R9), "\x4D\x85\xC8");
+  JIT(gta_test_reg_reg__x86_64(v, GTA_REG_RBX, GTA_REG_R12), "\x4C\x85\xE3");
+  // Failures.  Register sizes must match.
+  JIT_FAIL(gta_test_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_EDX));
+  JIT_FAIL(gta_test_reg_reg__x86_64(v, GTA_REG_EBX, GTA_REG_BP));
+  JIT_FAIL(gta_test_reg_reg__x86_64(v, GTA_REG_CX, GTA_REG_AL));
 }
 
 

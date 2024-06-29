@@ -281,6 +281,19 @@ bool gta_leave__x86_64(GCU_Vector8 * vector);
 bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, GTA_Register src);
 
 /**
+ * x86_64 instruction: MOV byte ptr [base + index*scale + offset], imm8
+ *
+ * @param vector The vector in which to store the instruction.
+ * @param base The base register for the memory address.
+ * @param index The index register for the memory address.
+ * @param scale The scale for the index register.
+ * @param offset The offset to add to the base register.
+ * @param immediate The immediate value (8-bit).
+ * @return True on success, false on failure.
+ */
+bool gta_mov_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, int8_t immediate);
+
+/**
  * x86_64 instruction: MOV reg, reg
  *
  * @param vector The vector in which to store the instruction.
@@ -361,6 +374,16 @@ bool gta_push_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
  * @return True on success, false on failure.
  */
 bool gta_ret__x86_64(GCU_Vector8 * vector);
+
+/**
+ * x86_64 instruction: TEST reg, reg
+ *
+ * @param vector The vector in which to store the instruction.
+ * @param op1 The first operand register.
+ * @param op2 The second operand register.
+ * @return True on success, false on failure.
+ */
+bool gta_test_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Register op2);
 
 /**
  * x86_64 instruction: XOR reg
