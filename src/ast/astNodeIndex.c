@@ -123,6 +123,7 @@ bool gta_ast_node_index_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
   // gta_computed_value_index(collection, index, context)
   //   pop rdi
   //   mov rsi, rax
+  //   mov rdx, r15
   //   mov rcx, gta_computed_value_index
   //   push rbp
   //   mov rbp, rsp
@@ -132,6 +133,7 @@ bool gta_ast_node_index_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
   //   pop rbp
     && gta_pop_reg__x86_64(v, GTA_REG_RDI)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_RAX)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_R15)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, (size_t)gta_computed_value_index)
     && gta_push_reg__x86_64(v, GTA_REG_RBP)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
