@@ -144,6 +144,16 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_string_print(GTA_Computed
  */
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_string_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
+/**
+ * Gets a value from the object using an index.
+ *
+ * @param self The object to get the value from.
+ * @param index The index to get.
+ * @param context The execution context of the program.
+ * @return The value of the index or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

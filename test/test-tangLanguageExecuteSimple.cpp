@@ -1984,6 +1984,57 @@ TEST(Index, Array) {
   }
 }
 
+TEST(Index, String) {
+  {
+    // First character.
+    TEST_PROGRAM_SETUP("a = \"hello\"; a[0];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("h", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Last character.
+    TEST_PROGRAM_SETUP("a = \"hello\"; a[4];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("o", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Out of bounds.
+    TEST_PROGRAM_SETUP("a = \"hello\"; a[5];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Negative index from end.
+    TEST_PROGRAM_SETUP("a = \"hello\"; a[-4];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("e", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Negative index out of bounds.
+    TEST_PROGRAM_SETUP("a = \"hello\"; a[-6];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Non-integer index.
+    TEST_PROGRAM_SETUP("a = \"hello\"; a[3.5];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_invalid_index);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(Print, Simple) {
   {
     // Print an integer.
