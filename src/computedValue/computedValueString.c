@@ -204,6 +204,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_index(GTA_Computed_Value
   if (normalized_index < 0 || normalized_index >= (GTA_Integer)string->value->grapheme_length) {
     return gta_computed_value_string_empty;
   }
+
   GTA_Unicode_String * unicode_substring = gta_unicode_string_substring(string->value, normalized_index, 1);
   if (!unicode_substring) {
     return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
