@@ -31,7 +31,7 @@ GTA_Computed_Value_VTable gta_computed_value_array_vtable = {
   .not_equal = gta_computed_value_array_not_equal,
   .period = gta_computed_value_period_not_implemented,
   .index = gta_computed_value_array_index,
-  .slice = gta_computed_value_slice_not_implemented,
+  .slice = gta_computed_value_array_slice,
   .iterator_get = gta_computed_value_iterator_get_not_implemented,
   .iterator_next = gta_computed_value_iterator_next_not_implemented,
   .cast = gta_computed_value_cast,
@@ -328,4 +328,119 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_Computed_Value 
   }
 
   return GTA_TYPEX_P(array->elements->data[normalized_index]);
+}
+
+
+static GTA_Integer correct_bounds(GTA_Integer value, GTA_Integer boundary, GTA_Integer step) {
+  GTA_Integer interval = (boundary - value) / step;
+  GTA_Integer roundup = (interval * step) == (boundary - value) ? 0 : 1;
+  return value + ((interval + roundup) * step);
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context) {
+  GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self;
+
+  // First, validate the step value.  If null, it will default to 1.
+  if (!(GTA_COMPUTED_VALUE_IS_INTEGER(step) || GTA_COMPUTED_VALUE_IS_NULL(step))) {
+    return gta_computed_value_error_invalid_index;
+  }
+  GTA_Integer step_value = GTA_COMPUTED_VALUE_IS_NULL(step)
+    ? 1
+    : ((GTA_Computed_Value_Integer *)step)->value;
+  if (step_value == 0) {
+    return gta_computed_value_error_invalid_index;
+  }
+
+  // Convert the start value to an integer.
+  if (!(GTA_COMPUTED_VALUE_IS_INTEGER(start) || GTA_COMPUTED_VALUE_IS_NULL(start))) {
+    return gta_computed_value_error_invalid_index;
+  }
+  GTA_Integer start_value = GTA_COMPUTED_VALUE_IS_NULL(start)
+    ? step_value > 0
+      ? 0
+      : (GTA_Integer)array->elements->count - 1
+    : ((GTA_Computed_Value_Integer *)start)->value >= 0
+      ? ((GTA_Computed_Value_Integer *)start)->value
+      : ((GTA_Computed_Value_Integer *)start)->value + (GTA_Integer)array->elements->count;
+
+  // Convert the end value to an integer.
+  if (!(GTA_COMPUTED_VALUE_IS_INTEGER(end) || GTA_COMPUTED_VALUE_IS_NULL(end))) {
+    return gta_computed_value_error_invalid_index;
+  }
+  GTA_Integer end_value = GTA_COMPUTED_VALUE_IS_NULL(end)
+    ? step_value > 0
+      ? (GTA_Integer)array->elements->count
+      : -1
+    : ((GTA_Computed_Value_Integer *)end)->value >= 0
+      ? ((GTA_Computed_Value_Integer *)end)->value
+      : ((GTA_Computed_Value_Integer *)end)->value + (GTA_Integer)array->elements->count;
+
+  GTA_Integer array_count = (GTA_Integer)array->elements->count;
+
+  if (step_value > 0) {
+    // If the step value is positive, then the start value should be the first
+    // eligible value that is greater than or equal to 0.
+    if (start_value < 0) {
+      start_value = correct_bounds(start_value, 0, step_value);
+    }
+    // It is possible that the start_value is outside of the bounds of the
+    // array (e.g., [1, 2, 3][-4::10]).
+    // It is possible that end_value is less than start_value.  If so, then do
+    // nothing so that the first sanity check will catch it.  Otherwise, if
+    // end_value is greater than the end of the array, then set it to the first
+    // eligible value that is after the end of the array.
+    if ((end_value > start_value) && (end_value > array_count)) {
+      end_value = correct_bounds(start_value, array_count, step_value);
+    }
+  }
+  else {
+    // If the step value is negative, then the start value should be the first
+    // eligible value that is less than or equal to the end of the array.
+    if (start_value > array_count - 1) {
+      start_value = correct_bounds(start_value, array_count - 1, step_value);
+    }
+    // It is possible that the start_value is outside of the bounds of the
+    // array (e.g., [1, 2, 3][4::-10]).
+    // It is possible that end_value is greater than start_value.  If so, then
+    // do nothing so that the first sanity check will catch it.  Otherwise, if
+    // end_value is less than the start of the array, then set it to the first
+    // eligible value that is before the start of the array.
+    if ((end_value < start_value) && (end_value < -1)) {
+      end_value = correct_bounds(start_value, -1, step_value);
+    }
+  }
+
+  // First sanity check.  If the start, end, and step values do not intersect,
+  // then the result is an empty array.
+  if ((step_value > 0 && start_value >= end_value) || (step_value < 0 && start_value <= end_value)) {
+    GTA_Computed_Value * result = gta_computed_value_array_create(0, context);
+    if (!result) {
+      return gta_computed_value_error_out_of_memory;
+    }
+    return result;
+  }
+
+  GTA_Integer slice_length = step_value > 0
+    ? ((end_value - start_value) / step_value)
+    : ((start_value - end_value) / -step_value);
+
+  // Create a new array that will be the slice of the source array.
+  GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)gta_computed_value_array_create(slice_length, context);
+  if (!result) {
+    return gta_computed_value_error_out_of_memory;
+  }
+
+  // Build the array.
+  size_t new_i = 0;
+  for (GTA_Integer i = start_value; step_value > 0 ? i < end_value : i > end_value; i += step_value) {
+    GTA_Computed_Value * element_copy = gta_computed_value_deep_copy(GTA_TYPEX_P(array->elements->data[i]), context);
+    if (!element_copy) {
+      return gta_computed_value_error_out_of_memory;
+    }
+    result->elements->data[new_i++] = GTA_TYPEX_MAKE_P(element_copy);
+    ++result->elements->count;
+  }
+
+  return (GTA_Computed_Value *)result;
 }

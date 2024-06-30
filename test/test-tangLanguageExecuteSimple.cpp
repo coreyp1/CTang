@@ -2035,6 +2035,37 @@ TEST(Index, String) {
   }
 }
 
+TEST(Slice, Array) {
+  {
+    // Slice from start, no skip.
+    TEST_PROGRAM_SETUP("a = [3, 4.5, true, \"hello\"]; a[:2];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
+    GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)context->result;
+    ASSERT_EQ(2, result->elements->count);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[0].p));
+    ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)result->elements->data[0].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(result->elements->data[1].p));
+    ASSERT_EQ(4.5, ((GTA_Computed_Value_Float *)result->elements->data[1].p)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Slice from end with negative index, no end, negative skip.
+    TEST_PROGRAM_SETUP("a = [3, 4.5, true, \"hello\"]; a[-2::-1];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
+    GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)context->result;
+    ASSERT_EQ(3, result->elements->count);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(result->elements->data[0].p));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)result->elements->data[0].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(result->elements->data[1].p));
+    ASSERT_EQ(4.5, ((GTA_Computed_Value_Float *)result->elements->data[1].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[2].p));
+    ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)result->elements->data[2].p)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(Print, Simple) {
   {
     // Print an integer.

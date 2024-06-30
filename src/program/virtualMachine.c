@@ -362,6 +362,16 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_index(collection, index, context));
         break;
       }
+      case GTA_BYTECODE_SLICE: {
+        // Perform a slice operation.
+        // The value will be left on the stack.
+        GTA_Computed_Value * step = GTA_TYPEX_P(context->stack->data[--*sp]);
+        GTA_Computed_Value * end = GTA_TYPEX_P(context->stack->data[--*sp]);
+        GTA_Computed_Value * start = GTA_TYPEX_P(context->stack->data[--*sp]);
+        GTA_Computed_Value * collection = GTA_TYPEX_P(context->stack->data[*sp-1]);
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_slice(collection, start, end, step, context));
+        break;
+      }
       default: {
         context->result = gta_computed_value_error_invalid_bytecode;
         break;

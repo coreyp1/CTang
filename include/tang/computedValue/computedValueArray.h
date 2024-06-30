@@ -181,6 +181,18 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_
  */
 GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_append(GTA_Computed_Value_Array * self, GTA_Computed_Value * value, GTA_Execution_Context * context);
 
+/**
+ * Gets a slice of the object.
+ *
+ * @param self The object to get the slice from.
+ * @param start The start of the slice.
+ * @param end The end of the slice.
+ * @param step The step of the slice.
+ * @param context The execution context of the program.
+ * @return The slice of the object or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

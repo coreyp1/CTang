@@ -113,7 +113,7 @@ void gta_ast_node_slice_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
  * @param program The program that the node is part of.
  * @return NULL on success, otherwise return a parse error.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_binary_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_slice_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
 
 /**
  * Compile the AST node to binary for x86_64.

@@ -71,6 +71,8 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_JMPT,           ///< PC offset: pop val, if true, set pc + offset
   GTA_BYTECODE_PRINT,          ///< Pop val, print(val), push error or NULL
   GTA_BYTECODE_INDEX,          ///< Pop index, pop collection, push collection[index]
+  GTA_BYTECODE_SLICE,          ///< Pop skip, pop end, pop begin, pop collection,
+                               ///<   push collection[begin:end:skip]
 
 
   GTA_BYTECODE_POKE,           ///< Stack # (from fp): Copy a val, store @ stack #
@@ -147,8 +149,6 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_INDEX_SI,       ///< Push collection[index]
   GTA_BYTECODE_INDEX_IS,       ///< Push collection[index]
   GTA_BYTECODE_INDEX_II,       ///< Push collection[index]
-  GTA_BYTECODE_SLICE,          ///< Pop skip, pop end, pop begin, pop collection,
-                  ///<   push collection[begin:end:skip]
   GTA_BYTECODE_GETITERATOR_SI, ///< Save collection iterator to a stack index
   GTA_BYTECODE_GETITERATOR_II, ///< Save collection iterator to a stack index
   GTA_BYTECODE_ITERATORNEXT_II,///< Use the iterator at supplied index to calculate the
