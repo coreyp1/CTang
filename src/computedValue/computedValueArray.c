@@ -30,7 +30,7 @@ GTA_Computed_Value_VTable gta_computed_value_array_vtable = {
   .equal = gta_computed_value_array_equal,
   .not_equal = gta_computed_value_array_not_equal,
   .period = gta_computed_value_period_not_implemented,
-  .index = gta_computed_value_index_not_implemented,
+  .index = gta_computed_value_array_index,
   .slice = gta_computed_value_slice_not_implemented,
   .iterator_get = gta_computed_value_iterator_get_not_implemented,
   .iterator_next = gta_computed_value_iterator_next_not_implemented,
@@ -308,4 +308,24 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_append(GTA_Computed_Value
   }
   value->is_temporary = false;
   return (GTA_Computed_Value *)self;
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  if (!GTA_COMPUTED_VALUE_IS_INTEGER(index)) {
+    return gta_computed_value_error_invalid_index;
+  }
+
+  GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)index;
+  GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self;
+
+  GTA_Integer normalized_index = integer->value >= 0
+    ? integer->value
+    : (GTA_Integer)array->elements->count + integer->value;
+
+  if ((normalized_index >= (GTA_Integer)array->elements->count) || (normalized_index < 0)) {
+    return gta_computed_value_null;
+  }
+
+  return GTA_TYPEX_P(array->elements->data[normalized_index]);
 }

@@ -1935,6 +1935,55 @@ TEST(Cast, ToString) {
   }
 }
 
+TEST(Index, Array) {
+  {
+    // First element.
+    TEST_PROGRAM_SETUP("a = [3, 4.5, true, \"hello\"]; a[0];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Last element.
+    TEST_PROGRAM_SETUP("a = [3, 4.5, true, \"hello\"]; a[3];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("hello", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Out of bounds.
+    TEST_PROGRAM_SETUP("a = [3, 4.5, true, \"hello\"]; a[4];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Negative index from end.
+    TEST_PROGRAM_SETUP("a = [3, 4.5, true, \"hello\"]; a[-2];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Negative index out of bounds.
+    TEST_PROGRAM_SETUP("a = [3, 4.5, true, \"hello\"]; a[-5];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Non-integer index.
+    TEST_PROGRAM_SETUP("a = [3, 4.5, true, \"hello\"]; a[3.5];");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_invalid_index);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(Print, Simple) {
   {
     // Print an integer.

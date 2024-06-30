@@ -151,6 +151,27 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_array_equal(GTA_Computed_
 GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_array_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
+ * Assigns a value to an index of the object.
+ *
+ * @param self The object to modify.
+ * @param index The index to assign to.
+ * @param other The value to assign.
+ * @param context The execution context of the program.
+ * @return The modified object or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_index_assign(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
+
+/**
+ * Gets a value from the object using an index.
+ *
+ * @param self The object to get the value from.
+ * @param index The index to get.
+ * @param context The execution context of the program.
+ * @return The value of the index or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
+
+/**
  * Append a value to the array.
  *
  * @param self The array to append to.

@@ -156,6 +156,10 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%p\tPRINT\n", (void *)current);
         ++current;
         break;
+      case GTA_BYTECODE_INDEX:
+        printf("%p\tINDEX\n", (void *)current);
+        ++current;
+        break;
       default:
         printf("%p\tUnknown\n", (void *)current);
         ++current;

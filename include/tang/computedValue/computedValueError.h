@@ -60,6 +60,12 @@ extern GTA_Computed_Value * gta_computed_value_error_modulo_by_zero;
 extern GTA_Computed_Value * gta_computed_value_error_not_supported;
 
 /**
+ * Indicates that the supplied index is not valid.  Only integer indexes are
+ * supported.
+ */
+extern GTA_Computed_Value * gta_computed_value_error_invalid_index;
+
+/**
  * Represents an error value.
  */
 typedef struct GTA_Computed_Value_Error {
