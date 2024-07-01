@@ -331,6 +331,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_Computed_Value 
 }
 
 
+// Helper function to correct start and end values of a slice.
 static GTA_Integer correct_bounds(GTA_Integer value, GTA_Integer boundary, GTA_Integer step) {
   GTA_Integer interval = (boundary - value) / step;
   GTA_Integer roundup = (interval * step) == (boundary - value) ? 0 : 1;

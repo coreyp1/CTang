@@ -32,7 +32,7 @@ GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .not_equal = gta_computed_value_not_equal_not_implemented,
   .period = gta_computed_value_period_not_implemented,
   .index = gta_computed_value_string_index,
-  .slice = gta_computed_value_slice_not_implemented,
+  .slice = gta_computed_value_string_slice,
   .iterator_get = gta_computed_value_iterator_get_not_implemented,
   .iterator_next = gta_computed_value_iterator_next_not_implemented,
   .cast = gta_computed_value_string_cast,
@@ -130,12 +130,18 @@ bool gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self,
 
 
 void gta_computed_value_string_destroy(GTA_Computed_Value * self) {
+  if (!self || self->is_singleton) {
+    return;
+  }
   gta_computed_value_string_destroy_in_place(self);
   gcu_free(self);
 }
 
 
 void gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self) {
+  if (!self || self->is_singleton) {
+    return;
+  }
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;
   if (string->is_owned) {
     gta_unicode_string_destroy(string->value);
@@ -213,6 +219,141 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_index(GTA_Computed_Value
 
   if (!result) {
     gta_unicode_string_destroy(unicode_substring);
+    return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+  }
+
+  return result;
+}
+
+
+// Helper function to correct start and end values of a slice.
+static GTA_Integer correct_bounds(GTA_Integer value, GTA_Integer boundary, GTA_Integer step) {
+  GTA_Integer interval = (boundary - value) / step;
+  GTA_Integer roundup = (interval * step) == (boundary - value) ? 0 : 1;
+  return value + ((interval + roundup) * step);
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_string_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context) {
+  GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;
+  GTA_Integer grapheme_length = (GTA_Integer)string->value->grapheme_length;
+
+  // First, validate the step value.  If null, it will default to 1.
+  if (!(GTA_COMPUTED_VALUE_IS_INTEGER(step) || GTA_COMPUTED_VALUE_IS_NULL(step))) {
+    return gta_computed_value_error_invalid_index;
+  }
+  GTA_Integer step_value = GTA_COMPUTED_VALUE_IS_NULL(step)
+    ? 1
+    : ((GTA_Computed_Value_Integer *)step)->value;
+  if (step_value == 0) {
+    return gta_computed_value_error_invalid_index;
+  }
+
+  // Convert the start value to an integer.
+  if (!(GTA_COMPUTED_VALUE_IS_INTEGER(start) || GTA_COMPUTED_VALUE_IS_NULL(start))) {
+    return gta_computed_value_error_invalid_index;
+  }
+  GTA_Integer start_value = GTA_COMPUTED_VALUE_IS_NULL(start)
+    ? step_value > 0
+      ? 0
+      : grapheme_length - 1
+    : ((GTA_Computed_Value_Integer *)start)->value >= 0
+      ? ((GTA_Computed_Value_Integer *)start)->value
+      : ((GTA_Computed_Value_Integer *)start)->value + grapheme_length;
+
+  // Convert the end value to an integer.
+  if (!(GTA_COMPUTED_VALUE_IS_INTEGER(end) || GTA_COMPUTED_VALUE_IS_NULL(end))) {
+    return gta_computed_value_error_invalid_index;
+  }
+  GTA_Integer end_value = GTA_COMPUTED_VALUE_IS_NULL(end)
+    ? step_value > 0
+      ? grapheme_length
+      : -1
+    : ((GTA_Computed_Value_Integer *)end)->value >= 0
+      ? ((GTA_Computed_Value_Integer *)end)->value
+      : ((GTA_Computed_Value_Integer *)end)->value + grapheme_length;
+
+  if (step_value > 0) {
+    // If the step value is positive, then the start value should be the first
+    // eligible value that is greater than or equal to 0.
+    if (start_value < 0) {
+      start_value = correct_bounds(start_value, 0, step_value);
+    }
+    // It is possible that the start_value is outside of the bounds of the
+    // string (e.g., "abc"[-4::10]).
+    // It is possible that end_value is less than start_value.  If so, then do
+    // nothing so that the first sanity check will catch it.  Otherwise, if
+    // end_value is greater than the end of the string, then set it to the
+    // first eligible value that is after the end of the string.
+    if ((end_value > start_value) && (end_value > grapheme_length)) {
+      end_value = correct_bounds(start_value, grapheme_length, step_value);
+    }
+  }
+  else {
+    // If the step value is negative, then the start value should be the first
+    // eligible value that is less than or equal to the end of the string.
+    if (start_value > grapheme_length - 1) {
+      start_value = correct_bounds(start_value, grapheme_length - 1, step_value);
+    }
+    // It is possible that the start_value is outside of the bounds of the
+    // string (e.g., "abc"[4::-10]).
+    // It is possible that end_value is greater than start_value.  If so, then
+    // do nothing so that the first sanity check will catch it.  Otherwise, if
+    // end_value is less than the start of the string, then set it to the
+    // first eligible value that is before the start of the string.
+    if ((end_value < start_value) && (end_value < -1)) {
+      end_value = correct_bounds(start_value, -1, step_value);
+    }
+  }
+
+  // First sanity check.  If the start, end, and step values do not intersect,
+  // then the result is an empty string.
+  if ((step_value > 0 && start_value >= end_value) || (step_value < 0 && start_value <= end_value)) {
+    return gta_computed_value_string_empty;
+  }
+
+  // If the step value is 1, then we can just return the substring.
+  if (step_value == 1) {
+    GTA_Unicode_String * substring = gta_unicode_string_substring(string->value, start_value, end_value - start_value);
+    if (!substring) {
+      return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+    }
+    GTA_Computed_Value * result = (GTA_Computed_Value *)gta_computed_value_string_create(substring, true, context);
+
+    if (!result) {
+      gta_unicode_string_destroy(substring);
+      return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+    }
+
+    return result;
+  }
+
+  // If the step value is not 1, then we need to iterate through the string.
+  // TODO: Make this more efficient!
+  GTA_Unicode_String * new_string = &gta_unicode_string_empty_singleton;
+  for (GTA_Integer i = start_value; step_value > 0 ? i < end_value : i > end_value; i += step_value) {
+    GTA_Unicode_String * substring = gta_unicode_string_substring(string->value, i, 1);
+    if (!substring) {
+      if (new_string != &gta_unicode_string_empty_singleton) {
+        gta_unicode_string_destroy(new_string);
+      }
+      return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+    }
+    GTA_Unicode_String * temp = gta_unicode_string_concat(new_string, substring);
+    if (new_string != &gta_unicode_string_empty_singleton) {
+      gta_unicode_string_destroy(new_string);
+    }
+    gta_unicode_string_destroy(substring);
+    if (!temp) {
+      return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+    }
+    new_string = temp;
+  }
+
+  GTA_Computed_Value * result = (GTA_Computed_Value *)gta_computed_value_string_create(new_string, new_string == &gta_unicode_string_empty_singleton ? false : true, context);
+
+  if (!result) {
+    gta_unicode_string_destroy(new_string);
     return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
   }
 

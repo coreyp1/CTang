@@ -2114,6 +2114,57 @@ TEST(Slice, Array) {
   }
 }
 
+TEST(Slice, String) {
+  {
+    // Slice from start, no skip.
+    TEST_PROGRAM_SETUP(R"("abcdefghijklmnopqrstuvwxyz"[:2])");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("ab", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Slice from end with negative index, no end, negative skip.
+    TEST_PROGRAM_SETUP(R"("abcdefghijklmnopqrstuvwxyz"[-2::-1])");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("yxwvutsrqponmlkjihgfedcba", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Slice from negative index (past beginning) to end, positive skip.
+    TEST_PROGRAM_SETUP(R"("abcdefghijklmnopqrstuvwxyz"[-34::3])");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("behknqtwz", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Slice from index past end to beginning, negative skip.
+    TEST_PROGRAM_SETUP(R"("abcdefghijklmnopqrstuvwxyz"[33::-5])");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("xsnid", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Slice with both indices out of bounds, positive skip (negative).
+    TEST_PROGRAM_SETUP(R"("abcdefghijklmnopqrstuvwxyz"[-40:-35])");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Slice with both indices out of bounds, negative skip (positive).
+    TEST_PROGRAM_SETUP(R"("abcdefghijklmnopqrstuvwxyz"[40:30:-1])");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
+    ASSERT_STREQ("", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(Print, Simple) {
   {
     // Print an integer.
