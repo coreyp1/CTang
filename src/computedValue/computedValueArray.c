@@ -421,9 +421,13 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value 
     return result;
   }
 
-  GTA_Integer slice_length = step_value > 0
+  // TODO: Sometimes this is one larger than it should be, and sometimes not.
+  //   Leaving it as-is for now because in this state it may allocate one item
+  //   too large, but it does not allocate too few.
+  //   Example of too few when not adding 1: [0,1,2,3,4,5,6,7,8,9,0][-13::3]
+  GTA_Integer slice_length = (step_value > 0
     ? ((end_value - start_value) / step_value)
-    : ((start_value - end_value) / -step_value);
+    : ((start_value - end_value) / -step_value)) + 1;
 
   // Create a new array that will be the slice of the source array.
   GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)gta_computed_value_array_create(slice_length, context);
