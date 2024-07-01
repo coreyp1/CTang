@@ -70,7 +70,9 @@ void gta_ast_node_slice_print(GTA_Ast_Node * self, const char * indent) {
   printf("%s  End:\n", indent);
   gta_ast_node_print(slice->end, new_indent);
   printf("%s  Skip:\n", indent);
-  gta_ast_node_print(slice->skip, new_indent);
+  if (slice->skip) {
+    gta_ast_node_print(slice->skip, new_indent);
+  }
   gcu_free(new_indent);
 }
 
