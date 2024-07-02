@@ -155,7 +155,7 @@ GTA_Ast_Node * gta_ast_node_ternary_analyze(GTA_Ast_Node * self, GTA_Program * p
 }
 
 
-bool gta_ast_node_ternary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_ternary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
 
   // Jump labels.
@@ -165,15 +165,15 @@ bool gta_ast_node_ternary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
   // Compile the expression.
   return true
   // Create jump labels.
-    && ((false_label = gta_bytecode_compiler_context_get_label(context)) >= 0)
-    && ((end_label = gta_bytecode_compiler_context_get_label(context)) >= 0)
+    && ((false_label = gta_compiler_context_get_label(context)) >= 0)
+    && ((end_label = gta_compiler_context_get_label(context)) >= 0)
   // Compile the condition.
     && gta_ast_node_compile_to_bytecode(ternary->condition, context)
   // JMPF false_label          ; Value is not popped
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPF))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-    && gta_bytecode_compiler_context_add_label_jump(context, false_label, context->program->bytecode->count - 1)
+    && gta_compiler_context_add_label_jump(context, false_label, context->program->bytecode->count - 1)
   // POP                       ; Pop the condition value
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
@@ -183,16 +183,16 @@ bool gta_ast_node_ternary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMP))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-    && gta_bytecode_compiler_context_add_label_jump(context, end_label, context->program->bytecode->count - 1)
+    && gta_compiler_context_add_label_jump(context, end_label, context->program->bytecode->count - 1)
   // false_label:
-    && gta_bytecode_compiler_context_set_label(context, false_label, context->program->bytecode->count)
+    && gta_compiler_context_set_label(context, false_label, context->program->bytecode->count)
   // POP
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
   // Compile the false branch.
     && gta_ast_node_compile_to_bytecode(ternary->ifFalse, context)
   // end_label:
-    && gta_bytecode_compiler_context_set_label(context, end_label, context->program->bytecode->count);
+    && gta_compiler_context_set_label(context, end_label, context->program->bytecode->count);
 }
 
 

@@ -98,7 +98,7 @@ GTA_Ast_Node * gta_ast_node_index_analyze(GTA_Ast_Node * self, GTA_Program * pro
 }
 
 
-bool gta_ast_node_index_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_index_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Index * index = (GTA_Ast_Node_Index *) self;
   return gta_ast_node_compile_to_bytecode(index->lhs, context)
     && gta_ast_node_compile_to_bytecode(index->rhs, context)

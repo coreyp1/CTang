@@ -248,7 +248,7 @@ bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
 }
 
 
-bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
   if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL) {
     GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);

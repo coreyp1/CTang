@@ -100,7 +100,7 @@ GTA_Ast_Node * gta_ast_node_array_analyze(GTA_Ast_Node * self, GTA_Program * pro
 }
 
 
-bool gta_ast_node_array_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_array_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
   for (size_t i = 0; i < array->elements->count; ++i) {
     if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)GTA_TYPEX_P(array->elements->data[i]), context)) {

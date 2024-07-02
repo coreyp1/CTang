@@ -16,9 +16,13 @@ GTA_Compiler_Context * gta_compiler_context_create(GTA_Program * program) {
 
 
 bool gta_compiler_context_create_in_place(GTA_Compiler_Context * context, GTA_Program * program) {
+  GTA_VectorX * bytecode_offsets = GTA_VECTORX_CREATE(32);
+  if (!bytecode_offsets) {
+    return false;
+  }
   GCU_Vector8 * binary_vector = gcu_vector8_create(1024);
   if (!binary_vector) {
-    return false;
+    goto BINARY_VECTOR_CREATE_FAILED;
   }
   GTA_VectorX * scope_stack = GTA_VECTORX_CREATE(32);
   if (!scope_stack) {
@@ -46,6 +50,7 @@ bool gta_compiler_context_create_in_place(GTA_Compiler_Context * context, GTA_Pr
     .program = program,
     .binary_vector = binary_vector,
     .binary = 0,
+    .bytecode_offsets = bytecode_offsets,
     .stack_depth = 0,
     .scope_stack = scope_stack,
     .globals = globals,
@@ -65,6 +70,8 @@ SCOPE_HASH_CREATE_FAILED:
   GTA_VECTORX_DESTROY(scope_stack);
 SCOPE_STACK_VECTOR_CREATE_FAILED:
   gcu_vector8_destroy(binary_vector);
+BINARY_VECTOR_CREATE_FAILED:
+  GTA_VECTORX_DESTROY(bytecode_offsets);
   return false;
 }
 
@@ -76,6 +83,7 @@ void gta_compiler_context_destroy(GTA_Compiler_Context * context) {
 
 
 void gta_compiler_context_destroy_in_place(GTA_Compiler_Context * context) {
+  GTA_VECTORX_DESTROY(context->bytecode_offsets);
   gcu_vector8_destroy(context->binary_vector);
   for (size_t i = 0; i < context->scope_stack->count; ++i) {
     GTA_HASHX_DESTROY(GTA_TYPEX_P(context->scope_stack->data[i]));

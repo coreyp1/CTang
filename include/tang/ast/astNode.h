@@ -17,7 +17,6 @@ extern "C" {
 #include <tang/location.h>
 #include <tang/macros.h>
 #include <tang/program/compilerContext.h>
-#include <tang/program/bytecodeCompilerContext.h>
 #include <tang/unicodeString.h>
 
 /**
@@ -111,7 +110,7 @@ typedef struct GTA_Ast_Node_VTable {
    * @param compiler The compiler to compile the node to.
    * @return True on success, false on failure.
    */
-  bool (*compile_to_bytecode)(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
+  bool (*compile_to_bytecode)(GTA_Ast_Node * self, GTA_Compiler_Context * context);
   /**
    * Destroys the node and all of its children.
    *
@@ -281,7 +280,7 @@ bool gta_ast_node_compile_to_binary__arm_32(GTA_Ast_Node * self, GTA_Compiler_Co
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
+bool gta_ast_node_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Print the AST node and all of its children to stdout.
@@ -356,7 +355,7 @@ bool gta_ast_node_null_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compil
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_null_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
+bool gta_ast_node_null_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * The destroy function for the GTA_Ast_Node class when the node is a null.

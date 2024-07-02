@@ -32,8 +32,8 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
   }
 
   bool error_free = true;
-  GTA_Bytecode_Compiler_Context context;
-  if (!gta_bytecode_compiler_context_create_in_place(&context, program)) {
+  GTA_Compiler_Context context;
+  if (!gta_compiler_context_create_in_place(&context, program)) {
     goto BYTECODE_VECTOR_CLEANUP;
   }
   program->bytecode = bytecode;
@@ -120,14 +120,14 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
 
   // Cleanup and exit.
   GTA_VECTORX_DESTROY(globals_order);
-  gta_bytecode_compiler_context_destroy_in_place(&context);
+  gta_compiler_context_destroy_in_place(&context);
   return;
 
   // Failure conditions.  Cleanup and exit.
 BYTECODE_DESTROY_GLOBALS_ORDER:
   GTA_VECTORX_DESTROY(globals_order);
 BYTECODE_COMPILER_CONTEXT_CLEANUP:
-  gta_bytecode_compiler_context_destroy_in_place(&context);
+  gta_compiler_context_destroy_in_place(&context);
 BYTECODE_VECTOR_CLEANUP:
   GTA_VECTORX_DESTROY(bytecode);
 BYTECODE_SET_NULL:

@@ -5,9 +5,7 @@
 #include <tang/ast/astNodeFloat.h>
 #include <tang/computedValue/computedValueFloat.h>
 #include <tang/program/binary.h>
-#include <tang/program/compilerContext.h>
 #include <tang/program/bytecode.h>
-#include <tang/program/bytecodeCompilerContext.h>
 
 GTA_Ast_Node_VTable gta_ast_node_float_vtable = {
   .name = "Float",
@@ -63,7 +61,7 @@ void gta_ast_node_float_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
 }
 
 
-bool gta_ast_node_float_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_float_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;
   return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count) && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_FLOAT))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_F(float_node->value));

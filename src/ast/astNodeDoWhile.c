@@ -167,7 +167,7 @@ GTA_Ast_Node * gta_ast_node_do_while_analyze(GTA_Ast_Node * self, GTA_Program * 
 }
 
 
-bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Do_While * do_while = (GTA_Ast_Node_Do_While *) self;
 
   // Jump labels.
@@ -176,7 +176,7 @@ bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode
   // Compile the do-while loop.
   return true
   // Create jump labels.
-    && ((start_label = gta_bytecode_compiler_context_get_label(context)) >= 0)
+    && ((start_label = gta_compiler_context_get_label(context)) >= 0)
   // Put something on the stack so that the first instruction of the block has
   // something to pop.  When the condition is true, the condition will still be
   // on the stack and so the first instruction of the block will be to pop it.
@@ -184,7 +184,7 @@ bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))
   // start_label:            ; Start of the do-while loop
-    && gta_bytecode_compiler_context_set_label(context, start_label, context->program->bytecode->count)
+    && gta_compiler_context_set_label(context, start_label, context->program->bytecode->count)
   // POP
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
@@ -199,7 +199,7 @@ bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPT))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-    && gta_bytecode_compiler_context_add_label_jump(context, start_label, context->program->bytecode->count - 1)
+    && gta_compiler_context_add_label_jump(context, start_label, context->program->bytecode->count - 1)
   // The condition is left on the stack.
   ;
 }

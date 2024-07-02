@@ -269,35 +269,35 @@ GTA_Ast_Node * gta_ast_node_binary_analyze(GTA_Ast_Node * self, GTA_Program * pr
 }
 
 
-bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Binary * binary_node = (GTA_Ast_Node_Binary *) self;
 
   // Short-circuiting for AND.
   if (binary_node->operator_type == GTA_BINARY_TYPE_AND) {
     GTA_Integer lhs_was_false;
     return true
-      && ((lhs_was_false = gta_bytecode_compiler_context_get_label(context)) >= 0)
+      && ((lhs_was_false = gta_compiler_context_get_label(context)) >= 0)
       && gta_ast_node_compile_to_bytecode(binary_node->lhs, context)
       && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
       && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPF))
       && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-      && gta_bytecode_compiler_context_add_label_jump(context, lhs_was_false, context->program->bytecode->count - 1)
+      && gta_compiler_context_add_label_jump(context, lhs_was_false, context->program->bytecode->count - 1)
       && gta_ast_node_compile_to_bytecode(binary_node->rhs, context)
-      && gta_bytecode_compiler_context_set_label(context, lhs_was_false, context->program->bytecode->count);
+      && gta_compiler_context_set_label(context, lhs_was_false, context->program->bytecode->count);
   }
 
   // Short-circuiting for OR.
   if (binary_node->operator_type == GTA_BINARY_TYPE_OR) {
     GTA_Integer lhs_was_true;
     return true
-      && ((lhs_was_true = gta_bytecode_compiler_context_get_label(context)) >= 0)
+      && ((lhs_was_true = gta_compiler_context_get_label(context)) >= 0)
       && gta_ast_node_compile_to_bytecode(binary_node->lhs, context)
       && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
       && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPT))
       && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-      && gta_bytecode_compiler_context_add_label_jump(context, lhs_was_true, context->program->bytecode->count - 1)
+      && gta_compiler_context_add_label_jump(context, lhs_was_true, context->program->bytecode->count - 1)
       && gta_ast_node_compile_to_bytecode(binary_node->rhs, context)
-      && gta_bytecode_compiler_context_set_label(context, lhs_was_true, context->program->bytecode->count);
+      && gta_compiler_context_set_label(context, lhs_was_true, context->program->bytecode->count);
   }
 
   bool error_free = true

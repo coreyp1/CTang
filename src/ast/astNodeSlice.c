@@ -132,7 +132,7 @@ GTA_Ast_Node * gta_ast_node_slice_analyze(GTA_Ast_Node * self, GTA_Program * pro
 }
 
 
-bool gta_ast_node_slice_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_slice_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Slice * slice = (GTA_Ast_Node_Slice *)self;
   return true
     && gta_ast_node_compile_to_bytecode(slice->lhs, context)

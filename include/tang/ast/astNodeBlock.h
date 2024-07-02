@@ -116,7 +116,7 @@ void gta_ast_node_block_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
  * @return True if the block was successfully compiled to bytecode, false
  *   otherwise.
  */
-bool gta_ast_node_block_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
+bool gta_ast_node_block_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compile the block to binary for x86_64.

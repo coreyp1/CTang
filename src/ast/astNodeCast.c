@@ -285,7 +285,7 @@ bool gta_ast_node_cast_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compil
 }
 
 
-bool gta_ast_node_cast_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_cast_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
   return true
     && gta_ast_node_compile_to_bytecode(cast->expression, context)

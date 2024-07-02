@@ -8,7 +8,6 @@
 #include <tang/ast/astNodeIndex.h>
 #include <tang/ast/astNodePeriod.h>
 #include <tang/program/binary.h>
-#include <tang/program/compilerContext.h>
 #include <tang/program/variable.h>
 
 GTA_Ast_Node_VTable gta_ast_node_assign_vtable = {
@@ -123,7 +122,7 @@ void gta_ast_node_assign_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback ca
 }
 
 
-bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
 
   if (!gta_ast_node_compile_to_bytecode(assign->rhs, context)) {

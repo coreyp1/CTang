@@ -12,12 +12,20 @@ extern "C" {
 #endif // __cplusplus
 
 #include <cutil/vector.h>
+#include <tang/program/bytecode.h>
 #include <tang/program/program.h>
+
+#define GTA_BYTECODE_APPEND(X,Y) \
+  GTA_VECTORX_APPEND(X, GTA_TYPEX_MAKE_UI(Y))
 
 /**
  * The context for the compiler.
  */
 typedef struct GTA_Compiler_Context {
+  /**
+   * The program that the compiler is compiling.
+   */
+  GTA_Program * program;
   /**
    * The program that the compiler is compiling.
    *
@@ -31,9 +39,13 @@ typedef struct GTA_Compiler_Context {
   */
   void * binary;
   /**
-   * The program that the compiler is compiling.
+   * Bytecode offsets.
+   *
+   * Some bytecode instructions have different sizes, so we need to keep track
+   * of the offsets of the bytecode instructions so that we can navigate
+   * the bytecode later.
    */
-  GTA_Program * program;
+  GTA_VectorX * bytecode_offsets;
   /**
    * Tracking the current stack depth so that the stack can be properly byte
    * aligned.

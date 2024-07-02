@@ -7,7 +7,6 @@
 #include <tang/computedValue/computedValue.h>
 #include <tang/program/binary.h>
 #include <tang/program/bytecode.h>
-#include <tang/program/bytecodeCompilerContext.h>
 #include <tang/program/program.h>
 
 GTA_Ast_Node_VTable gta_ast_node_null_vtable = {
@@ -54,7 +53,7 @@ bool gta_ast_node_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Co
 }
 
 
-bool gta_ast_node_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   return self->vtable->compile_to_bytecode
     ? self->vtable->compile_to_bytecode(self, context)
     : true;
@@ -117,7 +116,7 @@ bool gta_ast_node_null_compile_to_binary__x86_64(GTA_MAYBE_UNUSED(GTA_Ast_Node *
 }
 
 
-bool gta_ast_node_null_compile_to_bytecode(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_null_compile_to_bytecode(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_Compiler_Context * context) {
   return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count) && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
 }
 

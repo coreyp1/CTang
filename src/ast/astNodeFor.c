@@ -206,7 +206,7 @@ GTA_Ast_Node * gta_ast_node_for_analyze(GTA_Ast_Node * self, GTA_Program * progr
 }
 
 
-bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
 
   // Jump labels.
@@ -230,8 +230,8 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Comp
   // Compile the for loop.
   return true
   // Create the labels.
-    && ((condition_start = gta_bytecode_compiler_context_get_label(context)) >= 0)
-    && ((block_end = gta_bytecode_compiler_context_get_label(context)) >= 0)
+    && ((condition_start = gta_compiler_context_get_label(context)) >= 0)
+    && ((block_end = gta_compiler_context_get_label(context)) >= 0)
   // Compile the init.
     && (has_init
       ? (true
@@ -242,7 +242,7 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Comp
       )
       : true)
   // condition_start:
-    && gta_bytecode_compiler_context_set_label(context, condition_start, context->program->bytecode->count)
+    && gta_compiler_context_set_label(context, condition_start, context->program->bytecode->count)
   // Compile the condition.
     && (has_condition
       ? (true
@@ -251,7 +251,7 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Comp
         && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
         && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPF))
         && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-        && gta_bytecode_compiler_context_add_label_jump(context, block_end, context->program->bytecode->count - 1)
+        && gta_compiler_context_add_label_jump(context, block_end, context->program->bytecode->count - 1)
       )
       : true)
   // Compile the block.
@@ -272,9 +272,9 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Comp
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMP))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-    && gta_bytecode_compiler_context_add_label_jump(context, condition_start, context->program->bytecode->count - 1)
+    && gta_compiler_context_add_label_jump(context, condition_start, context->program->bytecode->count - 1)
   // block_end:
-    && gta_bytecode_compiler_context_set_label(context, block_end, context->program->bytecode->count)
+    && gta_compiler_context_set_label(context, block_end, context->program->bytecode->count)
   // If the condition exists, then it is left on the stack.  If it does not
   // exist, then we must push a NULL value onto the stack so that the stack is
   // always left in a valid state.

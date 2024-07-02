@@ -85,7 +85,7 @@ void gta_ast_node_print_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
 }
 
 
-bool gta_ast_node_print_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context) {
+bool gta_ast_node_print_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Print * print = (GTA_Ast_Node_Print *)self;
   return gta_ast_node_compile_to_bytecode(print->expression, context)
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)

@@ -139,7 +139,7 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
  * @param self The node to compile.
  * @param context The compiler state to use for compilation.
  */
-bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Compiler_Context * context);
+bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Perform pre-compilation analysis on the AST node.
