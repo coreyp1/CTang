@@ -1681,6 +1681,37 @@ TEST(Binary, Or) {
   }
 }
 
+TEST(Ternary, Conditional) {
+  {
+    TEST_REUSABLE_PROGRAM("use a; use b; use c; a ? b : c;");
+    {
+      // true ? 42 : 3 => 42.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
+      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_execution_context_add_library(context, "c", make_int_3));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+      ASSERT_EQ(42, ((GTA_Computed_Value_Integer *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
+    {
+      // false ? 42 : 3 => 3.
+      TEST_CONTEXT_SETUP();
+      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_false));
+      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_execution_context_add_library(context, "c", make_int_3));
+      ASSERT_TRUE(gta_program_execute(context));
+      ASSERT_TRUE(context->result);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+      ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)context->result)->value);
+      TEST_CONTEXT_TEARDOWN();
+    }
+    TEST_REUSABLE_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(Cast, ToBoolean) {
   {
     TEST_REUSABLE_PROGRAM("use a; a as bool;");
