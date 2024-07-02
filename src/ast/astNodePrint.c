@@ -93,7 +93,7 @@ bool gta_ast_node_print_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 }
 
 
-bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Print * print = (GTA_Ast_Node_Print *)self;
   GCU_Vector8 * v = context->binary_vector;
 
@@ -115,11 +115,11 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
   // Compile the expression to be printed.  The result will be in RAX.
     && gta_ast_node_compile_to_binary__x86_64(print->expression, context)
   // Create the labels.
-    && ((success_return_null = gta_binary_compiler_context_get_label(context)) >= 0)
-    && ((no_string_created_by_print = gta_binary_compiler_context_get_label(context)) >= 0)
-    && ((output_string_not_empty = gta_binary_compiler_context_get_label(context)) >= 0)
-    && ((error_out_of_memory = gta_binary_compiler_context_get_label(context)) >= 0)
-    && ((print_return = gta_binary_compiler_context_get_label(context)) >= 0)
+    && ((success_return_null = gta_compiler_context_get_label(context)) >= 0)
+    && ((no_string_created_by_print = gta_compiler_context_get_label(context)) >= 0)
+    && ((output_string_not_empty = gta_compiler_context_get_label(context)) >= 0)
+    && ((error_out_of_memory = gta_compiler_context_get_label(context)) >= 0)
+    && ((print_return = gta_compiler_context_get_label(context)) >= 0)
   // ; Save the computed value to the stack so that we can check it's vtable
   // ; later (if necessary).
   //   push rax              ; The computed value to be printed.
@@ -150,7 +150,7 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     && gta_xor_reg_reg__x86_64(v, GTA_REG_RBX, GTA_REG_RBX)
     && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RBX)
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, no_string_created_by_print, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, no_string_created_by_print, v->count - 4)
   // ; The computed value is no longer needed for this execution path.
   //   pop rdx               ; Intentionally overwritten in the next instruction.
     && gta_pop_reg__x86_64(v, GTA_REG_RDX)
@@ -163,7 +163,7 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     && gta_mov_reg_ind__x86_64(v, GTA_REG_RDX, GTA_REG_RDI, GTA_REG_NONE, 0, (size_t)context_output_byte_length_offset)
     && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RBX)
     && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, output_string_not_empty, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, output_string_not_empty, v->count - 4)
   // ; This is the first string to be printed, so we can just adopt it.
   // ; Set the context output string to the current string.
   //   mov [r15 + context_output_offset], rax
@@ -185,9 +185,9 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
     && gta_pop_reg__x86_64(v, GTA_REG_RBP)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, success_return_null, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, success_return_null, v->count - 4)
   // output_string_not_empty:
-      && gta_binary_compiler_context_set_label(context, output_string_not_empty, v->count)
+      && gta_compiler_context_set_label(context, output_string_not_empty, v->count)
   // ; Concatenate the string with the output.
   //   push rax              ; The unicode string to be printed.
   //   mov rdi, [r15 + context_output_offset]
@@ -235,7 +235,7 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     && gta_pop_reg__x86_64(v, GTA_REG_RAX)
     && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RBX)
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, error_out_of_memory, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, error_out_of_memory, v->count - 4)
   // ; No failure, so adopt the new string.
   //   mov rdi, [r15 + context_output_offset]
   //   mov [r15 + context_output_offset], rax
@@ -257,9 +257,9 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
     && gta_pop_reg__x86_64(v, GTA_REG_RBP)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, success_return_null, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, success_return_null, v->count - 4)
   // no_string_created_by_print:
-    && gta_binary_compiler_context_set_label(context, no_string_created_by_print, v->count)
+    && gta_compiler_context_set_label(context, no_string_created_by_print, v->count)
   // ; No string was produced by the print function.  Is this an error?
   //   pop rax               ; The computed value.
   //   mov rbx, [rax + vtable_offset]
@@ -285,18 +285,18 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     && gta_cmp_reg_reg__x86_64(v, GTA_REG_RBX, GTA_REG_RDX)
     && gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_REG_RDI)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, print_return, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, print_return, v->count - 4)
   // error_out_of_memory:
   //   mov rax, gta_computed_value_error_out_of_memory
   //   jmp print_return
-    && gta_binary_compiler_context_set_label(context, error_out_of_memory, v->count)
+    && gta_compiler_context_set_label(context, error_out_of_memory, v->count)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_computed_value_error_out_of_memory)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, print_return, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, print_return, v->count - 4)
   // success_return_null:
   //   mov rax, gta_computed_value_null
-    && gta_binary_compiler_context_set_label(context, success_return_null, v->count)
+    && gta_compiler_context_set_label(context, success_return_null, v->count)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_computed_value_null)
   // print_return:
-    && gta_binary_compiler_context_set_label(context, print_return, v->count);
+    && gta_compiler_context_set_label(context, print_return, v->count);
 }

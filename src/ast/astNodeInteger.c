@@ -68,7 +68,7 @@ bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
 }
 
 
-bool gta_ast_node_integer_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
+bool gta_ast_node_integer_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Compiler_Context * context)) {
   GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) self;
   GCU_Vector8 * v = context->binary_vector;
 

@@ -17,7 +17,7 @@
 #include <cutil/memory.h>
 #include <tang/ast/astNodeAll.h>
 #include <tang/computedValue/computedValue.h>
-#include <tang/program/binaryCompilerContext.h>
+#include <tang/program/compilerContext.h>
 #include <tang/program/executionContext.h>
 #include <tang/program/binary.h>
 #include <tang/program/program.h>
@@ -344,7 +344,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   //        pop rbp
   //   4. Restore caller-saved registers
 
-  GTA_Binary_Compiler_Context * context = gta_binary_compiler_context_create(program);
+  GTA_Compiler_Context * context = gta_compiler_context_create(program);
   if (!context) {
     return;
   }
@@ -547,7 +547,7 @@ GLOBALS_ORDER_CLEANUP:
   gcu_free(globals_order);
 
 CONTEXT_CLEANUP:
-  gta_binary_compiler_context_destroy(context);
+  gta_compiler_context_destroy(context);
 }
 
 

@@ -284,11 +284,6 @@ typedef GCU_Hash64_Value GTA_HashX_Value;
  */
 
 /**
- * Macros for dealing with x86 and x86-64 assembly.
- */
-#define GTA_X86_RAX
-
-/**
  * Type prototypes.
  */
 typedef uint32_t GTA_Program_Flags;
@@ -327,7 +322,7 @@ typedef struct GTA_Ast_Node_String GTA_Ast_Node_String;
 typedef struct GTA_Ast_Node_Ternary GTA_Ast_Node_Ternary;
 typedef struct GTA_Ast_Node_Unary GTA_Ast_Node_Unary;
 typedef struct GTA_Ast_Node_VTable GTA_Ast_Node_VTable;
-typedef struct GTA_Binary_Compiler_Context GTA_Binary_Compiler_Context;
+typedef struct GTA_Compiler_Context GTA_Compiler_Context;
 typedef struct GTA_Bytecode_Compiler_Context GTA_Bytecode_Compiler_Context;
 typedef struct GTA_Computed_Value GTA_Computed_Value;
 typedef struct GTA_Computed_Value_Array GTA_Computed_Value_Array;

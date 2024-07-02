@@ -345,7 +345,7 @@ bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_C
 }
 
 
-bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Binary * binary_node = (GTA_Ast_Node_Binary *) self;
   GCU_Vector8 * v = context->binary_vector;
 
@@ -354,7 +354,7 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bina
     bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
     GTA_Integer lhs_was_false;
     return true
-      && ((lhs_was_false = gta_binary_compiler_context_get_label(context)) >= 0)
+      && ((lhs_was_false = gta_compiler_context_get_label(context)) >= 0)
       && gta_ast_node_compile_to_binary__x86_64(binary_node->lhs, context)
     // The result of the LHS is in rax.  If it is false, then we do not need to
     // evaluate the RHS.
@@ -362,11 +362,11 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bina
     //   jnz lhs_was_false
       && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 1)
       && gta_jcc__x86_64(v, GTA_CC_NZ, 0xDEADBEEF)
-      && gta_binary_compiler_context_add_label_jump(context, lhs_was_false, v->count - 4)
+      && gta_compiler_context_add_label_jump(context, lhs_was_false, v->count - 4)
     // Compile the RHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)
     // Set the `lhs_was_false` label to the current offset.
-      && gta_binary_compiler_context_set_label(context, lhs_was_false, v->count);
+      && gta_compiler_context_set_label(context, lhs_was_false, v->count);
   }
 
   // Short-circuiting for OR.
@@ -374,7 +374,7 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bina
     bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
     GTA_Integer lhs_was_true;
     return true
-      && ((lhs_was_true = gta_binary_compiler_context_get_label(context)) >= 0)
+      && ((lhs_was_true = gta_compiler_context_get_label(context)) >= 0)
       && gta_ast_node_compile_to_binary__x86_64(binary_node->lhs, context)
     // The result of the LHS is in rax.  If it is true, then we do not need to
     // evaluate the RHS.
@@ -382,11 +382,11 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bina
     //   jz lhs_was_true
       && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
       && gta_jcc__x86_64(v, GTA_CC_NZ, 0xDEADBEEF)
-      && gta_binary_compiler_context_add_label_jump(context, lhs_was_true, v->count - 4)
+      && gta_compiler_context_add_label_jump(context, lhs_was_true, v->count - 4)
     // Compile the RHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)
     // Set the `lhs_was_true` label to the current offset.
-      && gta_binary_compiler_context_set_label(context, lhs_was_true, v->count);
+      && gta_compiler_context_set_label(context, lhs_was_true, v->count);
   }
 
   if (binary_node->operator_type < GTA_BINARY_TYPE_AND) {

@@ -16,7 +16,7 @@ extern "C" {
 #include "tangParser.h"
 #include <tang/location.h>
 #include <tang/macros.h>
-#include <tang/program/binaryCompilerContext.h>
+#include <tang/program/compilerContext.h>
 #include <tang/program/bytecodeCompilerContext.h>
 #include <tang/unicodeString.h>
 
@@ -79,7 +79,7 @@ typedef struct GTA_Ast_Node_VTable {
    * @param context Contextual information for the compile process.
    * @return True on success, false on failure.
    */
-  bool (*compile_to_binary__x86_64)(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+  bool (*compile_to_binary__x86_64)(GTA_Ast_Node * self, GTA_Compiler_Context * context);
   /**
    * Compiles the node to binary for arm_64.
    *
@@ -87,7 +87,7 @@ typedef struct GTA_Ast_Node_VTable {
    * @param context Contextual information for the compile process.
    * @return True on success, false on failure.
    */
-  bool (*compile_to_binary__arm_64)(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+  bool (*compile_to_binary__arm_64)(GTA_Ast_Node * self, GTA_Compiler_Context * context);
   /**
    * Compiles the node to binary for 0x86_32.
    *
@@ -95,7 +95,7 @@ typedef struct GTA_Ast_Node_VTable {
    * @param context Contextual information for the compile process.
    * @return True on success, false on failure.
    */
-  bool (*compile_to_binary__x86_32)(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+  bool (*compile_to_binary__x86_32)(GTA_Ast_Node * self, GTA_Compiler_Context * context);
   /**
    * Compiles the node to binary for arm_32.
    *
@@ -103,7 +103,7 @@ typedef struct GTA_Ast_Node_VTable {
    * @param context Contextual information for the compile process.
    * @return True on success, false on failure.
    */
-  bool (*compile_to_binary__arm_32)(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+  bool (*compile_to_binary__arm_32)(GTA_Ast_Node * self, GTA_Compiler_Context * context);
   /**
    * Compiles the node to bytecode.
    *
@@ -226,7 +226,7 @@ void GTA_CALL gta_ast_node_destroy(GTA_Ast_Node * self);
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compile the AST node to binary for arm_64.
@@ -240,7 +240,7 @@ bool gta_ast_node_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Comp
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_compile_to_binary__arm_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_compile_to_binary__arm_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compile the AST node to binary for x86_32.
@@ -254,7 +254,7 @@ bool gta_ast_node_compile_to_binary__arm_64(GTA_Ast_Node * self, GTA_Binary_Comp
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_compile_to_binary__x86_32(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_compile_to_binary__x86_32(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compile the AST node to binary for arm_32.
@@ -268,7 +268,7 @@ bool gta_ast_node_compile_to_binary__x86_32(GTA_Ast_Node * self, GTA_Binary_Comp
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_compile_to_binary__arm_32(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_compile_to_binary__arm_32(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compile the AST node to bytecode.
@@ -347,7 +347,7 @@ void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback,
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_null_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_null_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compile a NULL node to bytecode.

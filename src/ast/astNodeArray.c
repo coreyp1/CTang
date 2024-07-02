@@ -114,7 +114,7 @@ bool gta_ast_node_array_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 }
 
 
-bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
   GCU_Vector8 * v = context->binary_vector;
   bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
@@ -129,8 +129,8 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
 
   bool error_free = true
   // Create jump labels.
-    && ((end = gta_binary_compiler_context_get_label(context)) >= 0)
-    && ((return_memory_error = gta_binary_compiler_context_get_label(context)) >= 0)
+    && ((end = gta_compiler_context_get_label(context)) >= 0)
+    && ((return_memory_error = gta_compiler_context_get_label(context)) >= 0)
   // gta_computed_value_array_create(array->elements->count, context)
   //   mov rdi, array->elements->count
   //   mov rsi, r15
@@ -155,7 +155,7 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
   //   jz return_memory_error
     && gta_test_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
     && gta_jcc__x86_64(v, GTA_CC_Z, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, return_memory_error, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, return_memory_error, v->count - 4)
   // No memory error.
   // If we are about to process a bunch of elements, then save the array
   // pointer.  Otherwise, jump to the end.
@@ -163,7 +163,7 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     && array->elements->count
       ? gta_push_reg__x86_64(v, GTA_REG_RAX)
       : (gta_jmp__x86_64(v, 0xDEADBEEF)
-        && gta_binary_compiler_context_add_label_jump(context, end, v->count - 4));
+        && gta_compiler_context_add_label_jump(context, end, v->count - 4));
 
   // Compile the individual array elements.
   for (size_t i = 0; i < array->elements->count; ++i) {
@@ -171,7 +171,7 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     GTA_Integer mark_not_temporary;
     error_free = error_free
     // Create jump label.
-      && ((mark_not_temporary = gta_binary_compiler_context_get_label(context)) >= 0)
+      && ((mark_not_temporary = gta_compiler_context_get_label(context)) >= 0)
     // Compile the expression.
       && gta_ast_node_compile_to_binary__x86_64(element, context)
     // If the element is temporary or is singleton, then set it as not
@@ -180,12 +180,12 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     //   je mark_not_temporary
       && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
       && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
-      && gta_binary_compiler_context_add_label_jump(context, mark_not_temporary, v->count - 4)
+      && gta_compiler_context_add_label_jump(context, mark_not_temporary, v->count - 4)
     //   cmp byte ptr [rax + is_singleton_offset], 0
     //   je mark_not_temporary
       && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_singleton_offset, 0)
       && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
-      && gta_binary_compiler_context_add_label_jump(context, mark_not_temporary, v->count - 4)
+      && gta_compiler_context_add_label_jump(context, mark_not_temporary, v->count - 4)
     // gta_computed_value_deep_copy(element, context)
     //   mov rdi, rax
     //   mov rsi, r15
@@ -210,9 +210,9 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
     //   jz return_memory_error
       && gta_test_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
       && gta_jcc__x86_64(v, GTA_CC_Z, 0xDEADBEEF)
-      && gta_binary_compiler_context_add_label_jump(context, return_memory_error, v->count - 4)
+      && gta_compiler_context_add_label_jump(context, return_memory_error, v->count - 4)
     // mark_not_temporary:
-      && gta_binary_compiler_context_set_label(context, mark_not_temporary, v->count)
+      && gta_compiler_context_set_label(context, mark_not_temporary, v->count)
     //   mov byte ptr [rax + is_temporary_offset], 0
       && gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
     // Append the element to the array.
@@ -242,11 +242,11 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
   //   jmp end
     && gta_pop_reg__x86_64(v, GTA_REG_RAX)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, end, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, end, v->count - 4)
   // return_memory_error:
-    && gta_binary_compiler_context_set_label(context, return_memory_error, v->count)
+    && gta_compiler_context_set_label(context, return_memory_error, v->count)
   // return gta_computed_value_error_out_of_memory
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_computed_value_error_out_of_memory)
   // end:
-    && gta_binary_compiler_context_set_label(context, end, v->count);
+    && gta_compiler_context_set_label(context, end, v->count);
 }

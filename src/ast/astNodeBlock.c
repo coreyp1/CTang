@@ -5,7 +5,7 @@
 #include <tang/ast/astNodeBlock.h>
 #include <tang/ast/astNodeUse.h>
 #include <tang/computedValue/computedValue.h>
-#include <tang/program/binaryCompilerContext.h>
+#include <tang/program/compilerContext.h>
 
 GTA_Ast_Node_VTable gta_ast_node_block_vtable = {
   .name = "Block",
@@ -128,7 +128,7 @@ bool gta_ast_node_block_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 }
 
 
-bool gta_ast_node_block_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_block_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Block * block = (GTA_Ast_Node_Block *) self;
 
   for (size_t i = 0; i < GTA_VECTORX_COUNT(block->statements); ++i) {

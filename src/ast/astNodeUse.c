@@ -8,7 +8,7 @@
 #include <tang/ast/astNodeUse.h>
 #include <tang/computedValue/computedValueError.h>
 #include <tang/program/binary.h>
-#include <tang/program/binaryCompilerContext.h>
+#include <tang/program/compilerContext.h>
 #include <tang/program/variable.h>
 
 GTA_Ast_Node_VTable gta_ast_node_use_vtable = {
@@ -154,7 +154,7 @@ static GTA_Computed_Value * GTA_CALL __load_library(GTA_Execution_Context * cont
 }
 
 
-bool gta_ast_node_use_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_use_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GCU_Vector8 * v = context->binary_vector;
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
 

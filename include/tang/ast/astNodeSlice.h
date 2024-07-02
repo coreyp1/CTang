@@ -127,7 +127,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_slice_analyze(GTA_Ast_Node * self, GT
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_slice_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_slice_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compiles the AST node to bytecode.

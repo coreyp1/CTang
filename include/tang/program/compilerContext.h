@@ -4,8 +4,8 @@
  * Header file for the BinaryCompilerContext class.
  */
 
-#ifndef TANG_BINARY_COMPILER_CONTEXT_H
-#define TANG_BINARY_COMPILER_CONTEXT_H
+#ifndef TANG_COMPILER_CONTEXT_H
+#define TANG_COMPILER_CONTEXT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,43 +14,12 @@ extern "C" {
 #include <cutil/vector.h>
 #include <tang/program/program.h>
 
-#define GTA_BINARY_WRITE1(X,A) \
-  X->data[X->count++] = GCU_TYPE8_UI8(A);
-
-#define GTA_BINARY_WRITE2(X,A,B) \
-  GTA_BINARY_WRITE1(X,A) \
-  GTA_BINARY_WRITE1(X,B)
-
-#define GTA_BINARY_WRITE3(X,A,B,C) \
-  GTA_BINARY_WRITE1(X, A) \
-  GTA_BINARY_WRITE2(X, B, C)
-
-#define GTA_BINARY_WRITE4(X,A,B,C,D) \
-  GTA_BINARY_WRITE2(X, A, B) \
-  GTA_BINARY_WRITE2(X, C, D)
-
-#define GTA_BINARY_WRITE5(X,A,B,C,D,E) \
-  GTA_BINARY_WRITE3(X, A, B, C) \
-  GTA_BINARY_WRITE2(X, D, E)
-
-#define GTA_BINARY_WRITE8(X,A,B,C,D,E,F,G,H) \
-  GTA_BINARY_WRITE4(X, A, B, C, D) \
-  GTA_BINARY_WRITE4(X, E, F, G, H)
-
-#define GTA_BINARY_WRITE9(X,A,B,C,D,E,F,G,H,I) \
-  GTA_BINARY_WRITE5(X, A, B, C, D, E) \
-  GTA_BINARY_WRITE4(X, F, G, H, I)
-
-#define GTA_BINARY_WRITE16(X,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P) \
-  GTA_BINARY_WRITE8(X, A, B, C, D, E, F, G, H) \
-  GTA_BINARY_WRITE8(X, I, J, K, L, M, N, O, P)
-
 /**
- * The context for the binary compiler.
+ * The context for the compiler.
  */
-typedef struct GTA_Binary_Compiler_Context{
+typedef struct GTA_Compiler_Context {
   /**
-   * The program that the binary compiler is compiling.
+   * The program that the compiler is compiling.
    *
    * We need to know the final size of the binary before we can allocate
    * excutable memory for it, so this will serve as a resizable buffer for
@@ -58,11 +27,11 @@ typedef struct GTA_Binary_Compiler_Context{
    */
   GCU_Vector8 * binary_vector;
   /**
-   * The final binary that is produced by the binary compiler.
+   * The final binary that is produced by the compiler.
   */
   void * binary;
   /**
-   * The program that the binary compiler is compiling.
+   * The program that the compiler is compiling.
    */
   GTA_Program * program;
   /**
@@ -100,39 +69,39 @@ typedef struct GTA_Binary_Compiler_Context{
    * A vector to store the position of each label, once it is known.
    */
   GTA_VectorX * labels;
-} GTA_Binary_Compiler_Context;
+} GTA_Compiler_Context;
 
 /**
- * Create a new binary compiler context.
+ * Create a new compiler context.
  *
- * @param program The program that the binary compiler is compiling.
- * @return The new binary compiler context or 0 on failure.
+ * @param program The program that the compiler is compiling.
+ * @return The new compiler context or 0 on failure.
  */
-GTA_NO_DISCARD GTA_Binary_Compiler_Context * gta_binary_compiler_context_create(GTA_Program * program);
+GTA_NO_DISCARD GTA_Compiler_Context * gta_compiler_context_create(GTA_Program * program);
 
 /**
- * Create a new binary compiler context in place using the supplied memory
+ * Create a new compiler context in place using the supplied memory
  * location.
  *
  * @context The context to create.
  * @program The program to compile.
  * @return True on success, false on failure.
  */
-bool gta_binary_compiler_context_create_in_place(GTA_Binary_Compiler_Context * context, GTA_Program * program);
+bool gta_compiler_context_create_in_place(GTA_Compiler_Context * context, GTA_Program * program);
 
 /**
- * Destroy a binary compiler context.
+ * Destroy a compiler context.
  *
- * @param context The binary compiler context to destroy.
+ * @param context The compiler context to destroy.
  */
-void gta_binary_compiler_context_destroy(GTA_Binary_Compiler_Context * context);
+void gta_compiler_context_destroy(GTA_Compiler_Context * context);
 
 /**
- * Destroy a binary compiler context in place.
+ * Destroy a compiler context in place.
  *
- * @param context The binary compiler context to destroy.
+ * @param context The compiler context to destroy.
  */
-void gta_binary_compiler_context_destroy_in_place(GTA_Binary_Compiler_Context * context);
+void gta_compiler_context_destroy_in_place(GTA_Compiler_Context * context);
 
 /**
  * Get a new label identifier.
@@ -143,10 +112,10 @@ void gta_binary_compiler_context_destroy_in_place(GTA_Binary_Compiler_Context * 
  * Note: 0 is a valid label id, so the return value should be checked against
  * -1.
  *
- * @param context The binary compiler context.
+ * @param context The compiler context.
  * @return The new label id, or -1 on failure.
  */
-GTA_NO_DISCARD GTA_Integer gta_binary_compiler_context_get_label(GTA_Binary_Compiler_Context * context);
+GTA_NO_DISCARD GTA_Integer gta_compiler_context_get_label(GTA_Compiler_Context * context);
 
 /**
  * Mark a byte offset as needing to be patched with the label's position, once
@@ -156,12 +125,12 @@ GTA_NO_DISCARD GTA_Integer gta_binary_compiler_context_get_label(GTA_Binary_Comp
  * to be patched.  It is relative to the start of the binary.  This is commonly
  * used for jump instructions.
  *
- * @param context The binary compiler context.
+ * @param context The compiler context.
  * @param label The label id that the jump will go to.
  * @param byte_from_offset The byte offset to patch with the label's position.
  * @return True on success, false on failure.
  */
-bool gta_binary_compiler_context_add_label_jump(GTA_Binary_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_from_offset);
+bool gta_compiler_context_add_label_jump(GTA_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_from_offset);
 
 /**
  * Record the position of a label in the binary.
@@ -170,15 +139,15 @@ bool gta_binary_compiler_context_add_label_jump(GTA_Binary_Compiler_Context * co
  * to calculate the relative offset for jump instructions and will be patched
  * into the binary at the end of compilation.
  *
- * @param context The binary compiler context.
+ * @param context The compiler context.
  * @param label The label id.
  * @param byte_offset The target position of the label in the binary.
  * @return True on success, false on failure.
  */
-bool gta_binary_compiler_context_set_label(GTA_Binary_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_offset);
+bool gta_compiler_context_set_label(GTA_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_offset);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
-#endif // TANG_BINARY_COMPILER_CONTEXT_H
+#endif // TANG_COMPILER_CONTEXT_H

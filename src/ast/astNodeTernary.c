@@ -196,7 +196,7 @@ bool gta_ast_node_ternary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
 }
 
 
-bool gta_ast_node_ternary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_ternary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
   GCU_Vector8 * v = context->binary_vector;
 
@@ -210,8 +210,8 @@ bool gta_ast_node_ternary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bin
   // Compile the expression.
   return true
   // Create jump labels.
-    && ((false_label = gta_binary_compiler_context_get_label(context)) >= 0)
-    && ((end_label = gta_binary_compiler_context_get_label(context)) >= 0)
+    && ((false_label = gta_compiler_context_get_label(context)) >= 0)
+    && ((end_label = gta_compiler_context_get_label(context)) >= 0)
   // Compile the condition.
     && gta_ast_node_compile_to_binary__x86_64(ternary->condition, context)
   // ; The condition result is in RAX.
@@ -219,16 +219,16 @@ bool gta_ast_node_ternary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bin
   //   je false_label
     && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, false_label, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, false_label, v->count - 4)
   // Compile the true branch.
     && gta_ast_node_compile_to_binary__x86_64(ternary->ifTrue, context)
   // jmp end_label
     && gta_jmp__x86_64(v, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, end_label, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, end_label, v->count - 4)
   // false_label:
-    && gta_binary_compiler_context_set_label(context, false_label, v->count)
+    && gta_compiler_context_set_label(context, false_label, v->count)
   // Compile the false branch.
     && gta_ast_node_compile_to_binary__x86_64(ternary->ifFalse, context)
   // end_label:
-    && gta_binary_compiler_context_set_label(context, end_label, v->count);
+    && gta_compiler_context_set_label(context, end_label, v->count);
 }

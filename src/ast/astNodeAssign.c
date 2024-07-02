@@ -8,7 +8,7 @@
 #include <tang/ast/astNodeIndex.h>
 #include <tang/ast/astNodePeriod.h>
 #include <tang/program/binary.h>
-#include <tang/program/binaryCompilerContext.h>
+#include <tang/program/compilerContext.h>
 #include <tang/program/variable.h>
 
 GTA_Ast_Node_VTable gta_ast_node_assign_vtable = {
@@ -165,7 +165,7 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_C
 }
 
 
-static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Compiler_Context * context) {
+static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Compiler_Context * context) {
   // RHS is in RAX.
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) lhs;
   bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
@@ -211,8 +211,8 @@ static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Co
     && gta_mov_reg_ind__x86_64(v, GTA_REG_R9, GTA_REG_RAX, GTA_REG_RDX, 1, 0)
     && gta_or_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_R9)
     && gta_jcc__x86_64(v, GTA_CC_NZ, 0xDEADBEEF)
-    && ((label_done = gta_binary_compiler_context_get_label(context)) >= 0)
-    && gta_binary_compiler_context_add_label_jump(context, label_done, v->count - 4)
+    && ((label_done = gta_compiler_context_get_label(context)) >= 0)
+    && gta_compiler_context_add_label_jump(context, label_done, v->count - 4)
 
   /////////////////////////////////////////////////////////////////////////////
   // Call the deep copy function.
@@ -246,7 +246,7 @@ static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Co
   //   mov rdx, is_temporary_offset  ; Load the byte offset of is_temporary.
   //   xor rcx, rcx                  ; The the value for non-temporary.
   //   mov [rax + rdx], cl           ; Mark the value as non-temporary.
-    && gta_binary_compiler_context_set_label(context, label_done, v->count)
+    && gta_compiler_context_set_label(context, label_done, v->count)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (int64_t)is_temporary_offset)
     && gta_xor_reg_reg__x86_64(v, GTA_REG_RCX, GTA_REG_RCX)
     && gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 0, GTA_REG_CL)
@@ -264,21 +264,21 @@ static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Binary_Co
 }
 
 
-static bool __compile_binary_lhs_is_period(GTA_Ast_Node * lhs, GTA_Binary_Compiler_Context * context) {
+static bool __compile_binary_lhs_is_period(GTA_Ast_Node * lhs, GTA_Compiler_Context * context) {
   (void) lhs;
   (void) context;
   return false;
 }
 
 
-static bool __compile_binary_lhs_is_index(GTA_Ast_Node * lhs, GTA_Binary_Compiler_Context * context) {
+static bool __compile_binary_lhs_is_index(GTA_Ast_Node * lhs, GTA_Compiler_Context * context) {
   (void) lhs;
   (void) context;
   return false;
 }
 
 
-bool gta_ast_node_assign_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_assign_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Assign * assign_node = (GTA_Ast_Node_Assign *) self;
 
   if (!gta_ast_node_compile_to_binary__x86_64(assign_node->rhs, context)) {

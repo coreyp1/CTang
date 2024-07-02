@@ -47,7 +47,7 @@ void GTA_CALL gta_ast_node_destroy(GTA_Ast_Node * self) {
 }
 
 
-bool gta_ast_node_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   return self->vtable->compile_to_binary__x86_64
     ? self->vtable->compile_to_binary__x86_64(self, context)
     : true;
@@ -89,7 +89,7 @@ void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback,
 }
 
 
-bool gta_ast_node_null_compile_to_binary__x86_64(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
+bool gta_ast_node_null_compile_to_binary__x86_64(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_MAYBE_UNUSED(GTA_Compiler_Context * context)) {
   GCU_Vector8 * v = context->binary_vector;
 
   // TODO: Replace with:

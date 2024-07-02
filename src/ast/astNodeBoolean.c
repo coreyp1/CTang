@@ -67,7 +67,7 @@ bool gta_ast_node_boolean_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
 }
 
 
-bool gta_ast_node_boolean_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_boolean_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;
   GCU_Vector8 * v = context->binary_vector;
 

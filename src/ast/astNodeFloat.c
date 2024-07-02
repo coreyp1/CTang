@@ -5,7 +5,7 @@
 #include <tang/ast/astNodeFloat.h>
 #include <tang/computedValue/computedValueFloat.h>
 #include <tang/program/binary.h>
-#include <tang/program/binaryCompilerContext.h>
+#include <tang/program/compilerContext.h>
 #include <tang/program/bytecode.h>
 #include <tang/program/bytecodeCompilerContext.h>
 
@@ -72,7 +72,7 @@ bool gta_ast_node_float_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 }
 
 
-bool gta_ast_node_float_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_float_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;
   GCU_Vector8 * v = context->binary_vector;
 

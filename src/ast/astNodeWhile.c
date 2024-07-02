@@ -206,7 +206,7 @@ bool gta_ast_node_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Co
 }
 
 
-bool gta_ast_node_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_While * while_node = (GTA_Ast_Node_While *) self;
   GCU_Vector8 * v = context->binary_vector;
 
@@ -220,10 +220,10 @@ bool gta_ast_node_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
   // Compile the while loop.
   return true
   // Create jump labels.
-    && ((condition_start = gta_binary_compiler_context_get_label(context)) >= 0)
-    && ((block_end = gta_binary_compiler_context_get_label(context)) >= 0)
+    && ((condition_start = gta_compiler_context_get_label(context)) >= 0)
+    && ((block_end = gta_compiler_context_get_label(context)) >= 0)
   // condition_start:        ; Start of the while loop
-    && gta_binary_compiler_context_set_label(context, condition_start, v->count)
+    && gta_compiler_context_set_label(context, condition_start, v->count)
   // Compile the condition.
     && gta_ast_node_compile_to_binary__x86_64(while_node->condition, context)
   // ; The condition result is in RAX.
@@ -231,12 +231,12 @@ bool gta_ast_node_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binar
   //   je block_end
     && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, block_end, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, block_end, v->count - 4)
   // Compile the code block.
     && gta_ast_node_compile_to_binary__x86_64(while_node->block, context)
   // jmp condition_start
     && gta_jmp__x86_64(v, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, condition_start, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, condition_start, v->count - 4)
   // block_end:
-    && gta_binary_compiler_context_set_label(context, block_end, v->count);
+    && gta_compiler_context_set_label(context, block_end, v->count);
 }

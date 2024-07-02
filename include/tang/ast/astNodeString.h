@@ -105,7 +105,7 @@ bool gta_ast_node_string_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_C
  * @param context The binary compiler context.
  * @return true on success, false on failure.
  */
-bool gta_ast_node_string_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_string_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

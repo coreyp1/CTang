@@ -1,13 +1,13 @@
 
 #include <cutil/memory.h>
-#include <tang/program/binaryCompilerContext.h>
+#include <tang/program/compilerContext.h>
 
-GTA_Binary_Compiler_Context * gta_binary_compiler_context_create(GTA_Program * program) {
-  GTA_Binary_Compiler_Context * context = gcu_malloc(sizeof(GTA_Binary_Compiler_Context));
+GTA_Compiler_Context * gta_compiler_context_create(GTA_Program * program) {
+  GTA_Compiler_Context * context = gcu_malloc(sizeof(GTA_Compiler_Context));
   if (!context) {
     return 0;
   }
-  if (!gta_binary_compiler_context_create_in_place(context, program)) {
+  if (!gta_compiler_context_create_in_place(context, program)) {
     gcu_free(context);
     return 0;
   }
@@ -15,7 +15,7 @@ GTA_Binary_Compiler_Context * gta_binary_compiler_context_create(GTA_Program * p
 }
 
 
-bool gta_binary_compiler_context_create_in_place(GTA_Binary_Compiler_Context * context, GTA_Program * program) {
+bool gta_compiler_context_create_in_place(GTA_Compiler_Context * context, GTA_Program * program) {
   GCU_Vector8 * binary_vector = gcu_vector8_create(1024);
   if (!binary_vector) {
     return false;
@@ -42,7 +42,7 @@ bool gta_binary_compiler_context_create_in_place(GTA_Binary_Compiler_Context * c
     goto LABELS_VECTOR_CREATE_FAILED;
   }
 
-  *context = (GTA_Binary_Compiler_Context) {
+  *context = (GTA_Compiler_Context) {
     .program = program,
     .binary_vector = binary_vector,
     .binary = 0,
@@ -69,13 +69,13 @@ SCOPE_STACK_VECTOR_CREATE_FAILED:
 }
 
 
-void gta_binary_compiler_context_destroy(GTA_Binary_Compiler_Context * context) {
-  gta_binary_compiler_context_destroy_in_place(context);
+void gta_compiler_context_destroy(GTA_Compiler_Context * context) {
+  gta_compiler_context_destroy_in_place(context);
   gcu_free(context);
 }
 
 
-void gta_binary_compiler_context_destroy_in_place(GTA_Binary_Compiler_Context * context) {
+void gta_compiler_context_destroy_in_place(GTA_Compiler_Context * context) {
   gcu_vector8_destroy(context->binary_vector);
   for (size_t i = 0; i < context->scope_stack->count; ++i) {
     GTA_HASHX_DESTROY(GTA_TYPEX_P(context->scope_stack->data[i]));
@@ -90,7 +90,7 @@ void gta_binary_compiler_context_destroy_in_place(GTA_Binary_Compiler_Context * 
 }
 
 
-GTA_NO_DISCARD GTA_Integer gta_binary_compiler_context_get_label(GTA_Binary_Compiler_Context * context) {
+GTA_NO_DISCARD GTA_Integer gta_compiler_context_get_label(GTA_Compiler_Context * context) {
   GTA_VectorX * labels_from_vector = GTA_VECTORX_CREATE(32);
   if (!labels_from_vector) {
     return -1;
@@ -106,7 +106,7 @@ GTA_NO_DISCARD GTA_Integer gta_binary_compiler_context_get_label(GTA_Binary_Comp
 }
 
 
-bool gta_binary_compiler_context_add_label_jump(GTA_Binary_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_offset) {
+bool gta_compiler_context_add_label_jump(GTA_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_offset) {
   GTA_VectorX * labels_from_vector = GTA_TYPEX_P(context->labels_from->data[label]);
   if (!GTA_VECTORX_APPEND(labels_from_vector, GTA_TYPEX_MAKE_UI(byte_offset))) {
     return false;
@@ -115,7 +115,7 @@ bool gta_binary_compiler_context_add_label_jump(GTA_Binary_Compiler_Context * co
 }
 
 
-bool gta_binary_compiler_context_set_label(GTA_Binary_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_offset) {
+bool gta_compiler_context_set_label(GTA_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_offset) {
   if (label < 0 || (GTA_UInteger)label >= context->labels->count) {
     return false;
   }

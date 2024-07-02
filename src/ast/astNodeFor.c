@@ -288,7 +288,7 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_Comp
   ;
 }
 
-bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
   GCU_Vector8 * v = context->binary_vector;
 
@@ -311,14 +311,14 @@ bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_
   // Compile the for() loop.
   return true
   // Create the labels.
-    && ((condition_start = gta_binary_compiler_context_get_label(context)) >= 0)
-    && ((block_end = gta_binary_compiler_context_get_label(context)) >= 0)
+    && ((condition_start = gta_compiler_context_get_label(context)) >= 0)
+    && ((block_end = gta_compiler_context_get_label(context)) >= 0)
   // Compile the init.
     && (has_init
       ? gta_ast_node_compile_to_binary__x86_64(for_node->init, context)
       : true)
   // condition_start:
-    && gta_binary_compiler_context_set_label(context, condition_start, context->binary_vector->count)
+    && gta_compiler_context_set_label(context, condition_start, context->binary_vector->count)
   // Compile the condition.
     && (has_condition
       ? (true
@@ -328,7 +328,7 @@ bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_
       //   je block_end
         && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
         && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
-        && gta_binary_compiler_context_add_label_jump(context, block_end, v->count - 4)
+        && gta_compiler_context_add_label_jump(context, block_end, v->count - 4)
       )
       : true)
     && gta_ast_node_compile_to_binary__x86_64(for_node->condition, context)
@@ -340,7 +340,7 @@ bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_
       : true)
   // JMP condition_start
     && gta_jmp__x86_64(v, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, condition_start, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, condition_start, v->count - 4)
   // block_end:
-    && gta_binary_compiler_context_set_label(context, block_end, v->count);
+    && gta_compiler_context_set_label(context, block_end, v->count);
 }

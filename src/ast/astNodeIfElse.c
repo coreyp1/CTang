@@ -207,7 +207,7 @@ bool gta_ast_node_if_else_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_
 }
 
 
-bool gta_ast_node_if_else_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context) {
+bool gta_ast_node_if_else_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
   GCU_Vector8 * v = context->binary_vector;
 
@@ -221,8 +221,8 @@ bool gta_ast_node_if_else_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bin
   // Compile the if-else statement.
   return true
   // Create jump labels.
-    && ((else_block = gta_binary_compiler_context_get_label(context)) >= 0)
-    && ((end = gta_binary_compiler_context_get_label(context)) >= 0)
+    && ((else_block = gta_compiler_context_get_label(context)) >= 0)
+    && ((end = gta_compiler_context_get_label(context)) >= 0)
   // Compile the condition.
     && gta_ast_node_compile_to_binary__x86_64(if_else->condition, context)
   // ; The condition result is in RAX.
@@ -230,7 +230,7 @@ bool gta_ast_node_if_else_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bin
   //   je else_block (or end, if there is no else block)
     && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
-    && gta_binary_compiler_context_add_label_jump(context, if_else->elseBlock ? else_block : end, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, if_else->elseBlock ? else_block : end, v->count - 4)
   // ; Compile the ifBlock.
     && gta_ast_node_compile_to_binary__x86_64(if_else->ifBlock, context)
   // ; The jump to the end and the else block are only needed if there actually
@@ -238,12 +238,12 @@ bool gta_ast_node_if_else_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Bin
     && ((if_else->elseBlock
       // ; jmp end
         && gta_jmp__x86_64(v, 0xDEADBEEF)
-        && gta_binary_compiler_context_add_label_jump(context, end, v->count - 4)
+        && gta_compiler_context_add_label_jump(context, end, v->count - 4)
       // else_block:
-        && gta_binary_compiler_context_set_label(context, else_block, v->count)
+        && gta_compiler_context_set_label(context, else_block, v->count)
       // ; Compile the elseBlock.
         && (!if_else->elseBlock || gta_ast_node_compile_to_binary__x86_64(if_else->elseBlock, context))
       ) || true)
   // end:
-    && gta_binary_compiler_context_set_label(context, end, v->count);
+    && gta_compiler_context_set_label(context, end, v->count);
 }

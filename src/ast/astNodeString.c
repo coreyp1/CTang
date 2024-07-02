@@ -69,7 +69,7 @@ bool gta_ast_node_string_compile_to_bytecode(GTA_Ast_Node * self, GTA_Bytecode_C
 }
 
 
-bool gta_ast_node_string_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Binary_Compiler_Context * context)) {
+bool gta_ast_node_string_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Compiler_Context * context)) {
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
   GCU_Vector8 * v = context->binary_vector;
 

@@ -97,7 +97,7 @@ void gta_ast_node_boolean_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback c
  * @param context The compilation context to use.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_boolean_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Binary_Compiler_Context * context);
+bool gta_ast_node_boolean_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compiles a GTA_Ast_Node_Boolean object to bytecode.
