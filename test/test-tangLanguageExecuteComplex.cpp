@@ -246,6 +246,18 @@ TEST(ControlFlow, Break) {
     ASSERT_STREQ(context->output->buffer, "start 01 end");
     TEST_PROGRAM_TEARDOWN();
   }
+  {
+    // Break outside of a control flow structure.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      break;
+      print(" end");
+    )");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ(context->output->buffer, "start ");
+    TEST_PROGRAM_TEARDOWN();
+  }
 }
 
 TEST(ControlFlow, Continue) {
@@ -296,6 +308,18 @@ TEST(ControlFlow, Continue) {
       print(" end");
     )");
     ASSERT_STREQ(context->output->buffer, "start 02 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Continue outside of a control flow structure.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      continue;
+      print(" end");
+    )");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ(context->output->buffer, "start ");
     TEST_PROGRAM_TEARDOWN();
   }
 }

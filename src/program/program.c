@@ -92,8 +92,30 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
   // Actually compile the AST to bytecode.
   error_free &= gta_ast_node_compile_to_bytecode(program->ast, &context);
 
+  // At this point, a return value will be on top of the stack from either the
+  // code block being executed, the 'break' statement, or the 'continue'
+  // statement.  'Break' jumps here directly (with the appropriate value on
+  // top of the stack).  'Continue' jumps here after putting the null computed
+  // value on top of the stack.
+  error_free &= gta_compiler_context_set_label(&context, context.break_label, bytecode->count);
+
   // Add the return instruction.
   error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_RETURN));
+
+  // Continue: It is possible that a continue statement was not within a loop.
+  // We will catch this situation here and make sure that a null value is on
+  // top of the stack and jump to the break label.
+  //   NULL
+  //   JMP break
+  error_free &= true
+    && gta_compiler_context_set_label(&context, context.continue_label, bytecode->count)
+    && GTA_BYTECODE_APPEND(context.bytecode_offsets, bytecode->count)
+    && GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))
+    && GTA_BYTECODE_APPEND(context.bytecode_offsets, bytecode->count)
+    && GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMP))
+    && GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(0))
+    && gta_compiler_context_add_label_jump(&context, context.break_label, bytecode->count - 1)
+  ;
 
   // The compilation is finished.  If there were any errors, then the bytecode
   // is not valid.
@@ -463,6 +485,12 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   //   mov rsp, r13
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_R13)
 
+  // At this point, a return value will be in RAX from either the code block
+  // being executed, the 'break' statement, or the 'continue' statement.
+  // 'Break' jumps here directly (with the appropriate value in RAX).
+  // 'Continue' jumps here after setting RAX to the null computed value.
+    && gta_compiler_context_set_label(context, context->break_label, v->count)
+
   // Pop callee-saved registers off the stack.
   //   pop rbx
   //   pop r12
@@ -479,7 +507,18 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   //   leave
   //   ret
     && gta_leave__x86_64(v)
-    && gta_ret__x86_64(v);
+    && gta_ret__x86_64(v)
+
+  // Continue: It is possible that a continue statement was not within a loop.
+  // We will catch this situation here and make sure that a null value is in
+  // RAX and jump to the break label.
+  //   mov rax, gta_computed_value_null
+  //   jmp break
+    && gta_compiler_context_set_label(context, context->continue_label, v->count)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)gta_computed_value_null)
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, context->break_label, v->count - 4);
+  ;
 
   // The compilation is finished (aside from writing the jump targets).  If
   // there were any errors, then the binary is not valid.
