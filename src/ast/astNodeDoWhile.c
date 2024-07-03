@@ -172,11 +172,15 @@ bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
 
   // Jump labels.
   GTA_Integer start_label;
+  GTA_Integer original_break_label = context->break_label;
+  GTA_Integer original_continue_label = context->continue_label;
 
   // Compile the do-while loop.
   return true
   // Create jump labels.
     && ((start_label = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->break_label = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->continue_label = gta_compiler_context_get_label(context)) >= 0)
   // Put something on the stack so that the first instruction of the block has
   // something to pop.  When the condition is true, the condition will still be
   // on the stack and so the first instruction of the block will be to pop it.
@@ -193,6 +197,8 @@ bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
   // POP
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+  // Continue:
+    && gta_compiler_context_set_label(context, context->continue_label, context->program->bytecode->count)
   // Compile the condition.
     && gta_ast_node_compile_to_bytecode(do_while->condition, context)
   // JMPT start_label
@@ -201,6 +207,11 @@ bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
     && gta_compiler_context_add_label_jump(context, start_label, context->program->bytecode->count - 1)
   // The condition is left on the stack.
+  // Break:
+    && gta_compiler_context_set_label(context, context->break_label, context->program->bytecode->count)
+  // Restore the original break and continue labels.
+    && ((context->break_label = original_break_label) >= 0)
+    && ((context->continue_label = original_continue_label) >= 0)
   ;
 }
 
@@ -211,6 +222,8 @@ bool gta_ast_node_do_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
 
   // Jump labels.
   GTA_Integer block_start;
+  GTA_Integer original_break_label = context->break_label;
+  GTA_Integer original_continue_label = context->continue_label;
 
   // Offsets.
   bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
@@ -219,10 +232,14 @@ bool gta_ast_node_do_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   return true
   // Create jump labels.
     && ((block_start = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->break_label = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->continue_label = gta_compiler_context_get_label(context)) >= 0)
   // block_start:            ; Start of the while loop
     && gta_compiler_context_set_label(context, block_start, v->count)
   // Compile the code block.
     && gta_ast_node_compile_to_binary__x86_64(do_while_node->block, context)
+  // Continue:
+    && gta_compiler_context_set_label(context, context->continue_label, v->count)
   // Compile the condition.
     && gta_ast_node_compile_to_binary__x86_64(do_while_node->condition, context)
   // ; The condition result is in RAX.
@@ -230,5 +247,11 @@ bool gta_ast_node_do_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   //   jne block_start
     && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (int64_t)is_true_offset, 0)
     && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
-    && gta_compiler_context_add_label_jump(context, block_start, v->count - 4);
+    && gta_compiler_context_add_label_jump(context, block_start, v->count - 4)
+  // Break:
+    && gta_compiler_context_set_label(context, context->break_label, v->count)
+  // Restore the original break and continue labels.
+    && ((context->break_label = original_break_label) >= 0)
+    && ((context->continue_label = original_continue_label) >= 0)
+  ;
 }

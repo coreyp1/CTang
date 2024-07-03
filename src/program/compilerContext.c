@@ -56,7 +56,15 @@ bool gta_compiler_context_create_in_place(GTA_Compiler_Context * context, GTA_Pr
     .globals = globals,
     .labels_from = labels_from,
     .labels = labels,
+    .break_label = 0,
+    .continue_label = 0,
   };
+
+  // Label creation will not fail because the label vector was created with
+  // a capacity of 32.
+  context->break_label = gta_compiler_context_get_label(context);
+  context->continue_label = gta_compiler_context_get_label(context);
+
   return true;
 
   // Failure conditions.

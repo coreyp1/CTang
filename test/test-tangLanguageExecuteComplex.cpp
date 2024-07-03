@@ -196,6 +196,110 @@ TEST(ControlFlow, For) {
   }
 }
 
+TEST(ControlFlow, Break) {
+  {
+    // Break in a while loop.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      i = 0;
+      while (i < 4) {
+        i = i + 1;
+        if (i == 3) {
+          break;
+        }
+        print(i);
+      }
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 12 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Break in a do..while loop.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      i = 0;
+      do {
+        i = i + 1;
+        if (i == 3) {
+          break;
+        }
+        print(i);
+      } while (i < 4);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 12 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Break in a for loop.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      for (i = 0; i < 4; i = i + 1) {
+        if (i == 2) {
+          break;
+        }
+        print(i);
+      }
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 01 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(ControlFlow, Continue) {
+  {
+    // Continue in a while loop.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      i = 0;
+      while (i < 3) {
+        i = i + 1;
+        if (i == 2) {
+          continue;
+        }
+        print(i);
+      }
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 13 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Continue in a do..while loop.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      i = 0;
+      do {
+        i = i + 1;
+        if (i == 2) {
+          continue;
+        }
+        print(i);
+      } while (i < 3);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 13 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Continue in a for loop.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      for (i = 0; i < 3; i = i + 1) {
+        if (i == 1) {
+          continue;
+        }
+        print(i);
+      }
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 02 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

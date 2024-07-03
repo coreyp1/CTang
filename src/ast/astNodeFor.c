@@ -212,6 +212,8 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Cont
   // Jump labels.
   GTA_Integer condition_start;
   GTA_Integer block_end;
+  GTA_Integer original_break_label = context->break_label;
+  GTA_Integer original_continue_label = context->continue_label;
 
   // The init, condition, and update are all optional, so account for that
   // when compiling.
@@ -232,6 +234,8 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Cont
   // Create the labels.
     && ((condition_start = gta_compiler_context_get_label(context)) >= 0)
     && ((block_end = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->break_label = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->continue_label = gta_compiler_context_get_label(context)) >= 0)
   // Compile the init.
     && (has_init
       ? (true
@@ -259,6 +263,8 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Cont
   // POP
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+  // Continue:
+    && gta_compiler_context_set_label(context, context->continue_label, context->program->bytecode->count)
   // Compile the update.
     && (has_update
       ? (true
@@ -285,6 +291,11 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Cont
         && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))
       )
     )
+  // Break:
+    && gta_compiler_context_set_label(context, context->break_label, context->program->bytecode->count)
+  // Restore the original break and continue labels.
+    && ((context->break_label = original_break_label) >= 0)
+    && ((context->continue_label = original_continue_label) >= 0)
   ;
 }
 
@@ -295,6 +306,8 @@ bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
   // Jump labels.
   GTA_Integer condition_start;
   GTA_Integer block_end;
+  GTA_Integer original_break_label = context->break_label;
+  GTA_Integer original_continue_label = context->continue_label;
 
   // Offsets.
   bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
@@ -313,6 +326,8 @@ bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
   // Create the labels.
     && ((condition_start = gta_compiler_context_get_label(context)) >= 0)
     && ((block_end = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->break_label = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->continue_label = gta_compiler_context_get_label(context)) >= 0)
   // Compile the init.
     && (has_init
       ? gta_ast_node_compile_to_binary__x86_64(for_node->init, context)
@@ -334,6 +349,8 @@ bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
     && gta_ast_node_compile_to_binary__x86_64(for_node->condition, context)
   // Compile the block.
     && gta_ast_node_compile_to_binary__x86_64(for_node->block, context)
+  // Continue:
+    && gta_compiler_context_set_label(context, context->continue_label, v->count)
   // Compile the update.
     && (has_update
       ? gta_ast_node_compile_to_binary__x86_64(for_node->update, context)
@@ -342,5 +359,11 @@ bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, condition_start, v->count - 4)
   // block_end:
-    && gta_compiler_context_set_label(context, block_end, v->count);
+    && gta_compiler_context_set_label(context, block_end, v->count)
+  // Break:
+    && gta_compiler_context_set_label(context, context->break_label, v->count)
+  // Restore the original break and continue labels.
+    && ((context->break_label = original_break_label) >= 0)
+    && ((context->continue_label = original_continue_label) >= 0)
+  ;
 }

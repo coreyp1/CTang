@@ -81,6 +81,14 @@ typedef struct GTA_Compiler_Context {
    * A vector to store the position of each label, once it is known.
    */
   GTA_VectorX * labels;
+  /**
+   * The label to which the execution should jump upon a "break" statement.
+   */
+  GTA_Integer break_label;
+  /**
+   * The label to which the execution should jump upon a "continue" statement.
+   */
+  GTA_Integer continue_label;
 } GTA_Compiler_Context;
 
 /**
