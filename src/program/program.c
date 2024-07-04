@@ -360,7 +360,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   //   3. Call function
   //        push rbp
   //        mov rbp, rsp
-  //        and rsp, 0xFFFFFFFFFFFFFFF0
+  //        and rsp, 0xFFFFFFF0
   //        call function_pointer
   //        mov rsp, rbp
   //        pop rbp
@@ -479,17 +479,17 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   error_free
     &= gta_ast_node_compile_to_binary__x86_64(program->ast, context)
 
-  // Restore the stack pointer to before we added the global and local
-  // variables.  This is faster than popping the locals and globals off the
-  // stack, and the garbage collector will clean up the memory.
-  //   mov rsp, r13
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_R13)
-
   // At this point, a return value will be in RAX from either the code block
   // being executed, the 'break' statement, or the 'continue' statement.
   // 'Break' jumps here directly (with the appropriate value in RAX).
   // 'Continue' jumps here after setting RAX to the null computed value.
     && gta_compiler_context_set_label(context, context->break_label, v->count)
+
+  // Restore the stack pointer to before we added the global and local
+  // variables.  This is faster than popping the locals and globals off the
+  // stack, and the garbage collector will clean up the memory.
+  //   mov rsp, r13
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_R13)
 
   // Pop callee-saved registers off the stack.
   //   pop rbx
