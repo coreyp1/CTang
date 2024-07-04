@@ -73,6 +73,8 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_INDEX,          ///< Pop index, pop collection, push collection[index]
   GTA_BYTECODE_SLICE,          ///< Pop skip, pop end, pop begin, pop collection,
                                ///<   push collection[begin:end:skip]
+  GTA_BYTECODE_ASSIGN_INDEX,   ///< Pop value, pop index, pop collection,
+                               ///<   push (collection[index] = value)
 
 
   GTA_BYTECODE_POKE,           ///< Stack # (from fp): Copy a val, store @ stack #

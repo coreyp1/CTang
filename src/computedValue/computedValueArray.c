@@ -16,7 +16,7 @@ GTA_Computed_Value_VTable gta_computed_value_array_vtable = {
   .deep_copy = gta_computed_value_array_deep_copy,
   .to_string = gta_computed_value_array_to_string,
   .print = gta_computed_value_generic_print_from_to_string,
-  .assign_index = gta_computed_value_assign_index_not_implemented,
+  .assign_index = gta_computed_value_array_index_assign,
   .add = gta_computed_value_array_add,
   .subtract = gta_computed_value_subtract_not_supported,
   .multiply = gta_computed_value_array_multiply,
@@ -172,6 +172,52 @@ char * GTA_CALL gta_computed_value_array_to_string(GTA_Computed_Value * self) {
   output[offset] = '\0';
   gcu_free(strings);
   return output;
+}
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_array_index_assign(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context) {
+  if (!GTA_COMPUTED_VALUE_IS_INTEGER(index)) {
+    return gta_computed_value_error_invalid_index;
+  }
+
+  GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)index;
+  GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self;
+
+  // Normalize the index.
+  GTA_Integer normalized_index = integer->value >= 0
+    ? integer->value
+    : (GTA_Integer)array->elements->count + integer->value;
+
+  // Check if the index is valid.
+  if (normalized_index < 0) {
+    return gta_computed_value_error_invalid_index;
+  }
+
+  // Expand the array if the index is beyond the current bounds.
+  if (normalized_index >= (GTA_Integer)array->elements->count) {
+    size_t new_size = normalized_index + 1;
+    if (!GTA_VECTORX_RESERVE(array->elements, new_size)) {
+      return gta_computed_value_error_out_of_memory;
+    }
+    for (size_t i = array->elements->count; i < new_size - 1; i++) {
+      // Populate the "new" elements with null.
+      array->elements->data[i] = GTA_TYPEX_MAKE_P(gta_computed_value_null);
+    }
+    array->elements->count = new_size;
+  }
+
+  // Either copy or adopt the new value.
+  if (other->is_temporary || other->is_singleton) {
+    other->is_temporary = false;
+    array->elements->data[normalized_index] = GTA_TYPEX_MAKE_P(other);
+    return other;
+  }
+
+  GTA_Computed_Value * element_copy = gta_computed_value_deep_copy(other, context);
+  if (!element_copy) {
+    return gta_computed_value_error_out_of_memory;
+  }
+  array->elements->data[normalized_index] = GTA_TYPEX_MAKE_P(element_copy);
+  return element_copy;
 }
 
 

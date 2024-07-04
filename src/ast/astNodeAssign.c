@@ -8,6 +8,7 @@
 #include <tang/ast/astNodeIndex.h>
 #include <tang/ast/astNodePeriod.h>
 #include <tang/program/binary.h>
+#include <tang/program/bytecode.h>
 #include <tang/program/variable.h>
 
 GTA_Ast_Node_VTable gta_ast_node_assign_vtable = {
@@ -160,11 +161,30 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
     return false;
   }
 
+  if (GTA_AST_IS_PERIOD(assign->lhs)) {
+    return false;
+  }
+
+  if (GTA_AST_IS_INDEX(assign->lhs)) {
+    GTA_Ast_Node_Index * index = (GTA_Ast_Node_Index *) assign->lhs;
+
+    return true
+    // Compile the lhs expression.
+      && gta_ast_node_compile_to_bytecode(index->lhs, context)
+    // Compile the lhs index.
+      && gta_ast_node_compile_to_bytecode(index->rhs, context)
+    // Compile the rhs expression.
+      && gta_ast_node_compile_to_bytecode(assign->rhs, context)
+    // Store the value in the appropriate location.
+      && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ASSIGN_INDEX));
+  }
+
   return false;
 }
 
 
-static bool __compile_binary_lhs_is_identifier(GTA_Ast_Node * lhs, GTA_Compiler_Context * context) {
+static bool __compile_binary_lhs_is_identifier__x86_64(GTA_Ast_Node * lhs, GTA_Compiler_Context * context) {
   // RHS is in RAX.
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) lhs;
   bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
@@ -270,19 +290,9 @@ static bool __compile_binary_lhs_is_period(GTA_Ast_Node * lhs, GTA_Compiler_Cont
 }
 
 
-static bool __compile_binary_lhs_is_index(GTA_Ast_Node * lhs, GTA_Compiler_Context * context) {
-  (void) lhs;
-  (void) context;
-  return false;
-}
-
-
 bool gta_ast_node_assign_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Assign * assign_node = (GTA_Ast_Node_Assign *) self;
-
-  if (!gta_ast_node_compile_to_binary__x86_64(assign_node->rhs, context)) {
-    return false;
-  }
+  GCU_Vector8 * v = context->binary_vector;
 
   // TODO: Optimization: If the RHS is a constant singleton (bool, null), then
   // we can simplify the binary to immediately assign the value to the
@@ -296,10 +306,50 @@ bool gta_ast_node_assign_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
   //   a.b = foo;
   //   a[b] = foo;
   return GTA_AST_IS_IDENTIFIER(assign_node->lhs)
-    ? __compile_binary_lhs_is_identifier(assign_node->lhs, context)
+    ? (true
+    // Compile the rhs expression.
+      && gta_ast_node_compile_to_binary__x86_64(assign_node->rhs, context)
+      && __compile_binary_lhs_is_identifier__x86_64(assign_node->lhs, context)
+    )
     : GTA_AST_IS_PERIOD(assign_node->lhs)
       ? __compile_binary_lhs_is_period(assign_node->lhs, context)
       : GTA_AST_IS_INDEX(assign_node->lhs)
-        ? __compile_binary_lhs_is_index(assign_node->lhs, context)
+        ? (true
+        // Compile the lhs expression.
+        //    push rax
+          && gta_ast_node_compile_to_binary__x86_64(((GTA_Ast_Node_Index *)assign_node->lhs)->lhs, context)
+          && gta_push_reg__x86_64(v, GTA_REG_RAX)
+        // Compile the lhs index.
+        //    push rax
+          && gta_ast_node_compile_to_binary__x86_64(((GTA_Ast_Node_Index *)assign_node->lhs)->rhs, context)
+          && gta_push_reg__x86_64(v, GTA_REG_RAX)
+        // Compile the rhs expression.
+        //    push rax
+          && gta_ast_node_compile_to_binary__x86_64(assign_node->rhs, context)
+          && gta_push_reg__x86_64(v, GTA_REG_RAX)
+        // gta_computed_value_assign_index(expression, index, value, context)
+        //    mov rcx, r15
+        //    pop rdx
+        //    pop rsi
+        //    pop rdi
+        //    push rbp
+        //    mov rbp, rsp
+        //    and rsp, 0xFFFFFFFFFFFFFFF0
+        //    mov rax, gta_computed_value_assign_index
+        //    call rax
+        //    mov rsp, rbp
+        //    pop rbp
+          && gta_mov_reg_reg__x86_64(v, GTA_REG_RCX, GTA_REG_R15)
+          && gta_pop_reg__x86_64(v, GTA_REG_RDX)
+          && gta_pop_reg__x86_64(v, GTA_REG_RSI)
+          && gta_pop_reg__x86_64(v, GTA_REG_RDI)
+          && gta_push_reg__x86_64(v, GTA_REG_RBP)
+          && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+          && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
+          && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)gta_computed_value_assign_index)
+          && gta_call_reg__x86_64(v, GTA_REG_RAX)
+          && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+          && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+        )
         : false;
 }

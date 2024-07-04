@@ -2066,6 +2066,108 @@ TEST(Index, String) {
   }
 }
 
+TEST(Assignment, Index) {
+  {
+    // Assign to an existing index.
+    TEST_PROGRAM_SETUP(R"(a = [3, 4.5, true, "hello"]; a[2] = false; a;)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
+    GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)context->result;
+    ASSERT_EQ(4, result->elements->count);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[0].p));
+    ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)result->elements->data[0].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(result->elements->data[1].p));
+    ASSERT_EQ(4.5, ((GTA_Computed_Value_Float *)result->elements->data[1].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(result->elements->data[2].p));
+    ASSERT_FALSE(((GTA_Computed_Value_Boolean *)result->elements->data[2].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(result->elements->data[3].p));
+    ASSERT_STREQ("hello", ((GTA_Computed_Value_String *)result->elements->data[3].p)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Assign to a new index.
+    TEST_PROGRAM_SETUP(R"(a = [3, 4.5, true, "hello"]; a[4] = 42; a;)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
+    GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)context->result;
+    ASSERT_EQ(5, result->elements->count);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[0].p));
+    ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)result->elements->data[0].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(result->elements->data[1].p));
+    ASSERT_EQ(4.5, ((GTA_Computed_Value_Float *)result->elements->data[1].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(result->elements->data[2].p));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)result->elements->data[2].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(result->elements->data[3].p));
+    ASSERT_STREQ("hello", ((GTA_Computed_Value_String *)result->elements->data[3].p)->value->buffer);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[4].p));
+    ASSERT_EQ(42, ((GTA_Computed_Value_Integer *)result->elements->data[4].p)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Assign to a negative index.
+    TEST_PROGRAM_SETUP(R"(a = [3, 4.5, true, "hello"]; a[-2] = 42; a;)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
+    GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)context->result;
+    ASSERT_EQ(4, result->elements->count);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[0].p));
+    ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)result->elements->data[0].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(result->elements->data[1].p));
+    ASSERT_EQ(4.5, ((GTA_Computed_Value_Float *)result->elements->data[1].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[2].p));
+    ASSERT_EQ(42, ((GTA_Computed_Value_Integer *)result->elements->data[2].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(result->elements->data[3].p));
+    ASSERT_STREQ("hello", ((GTA_Computed_Value_String *)result->elements->data[3].p)->value->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Assign to a non-integer index.
+    TEST_PROGRAM_SETUP(R"(a = [3, 4.5, true, "hello"]; a[3.5] = 42;)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_invalid_index);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Assign to a non-existent index, which results in nulls being added as
+    // placeholders.
+    TEST_PROGRAM_SETUP(R"(a = [3, 4.5, true, "hello"]; a[6] = 42; a;)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
+    GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)context->result;
+    ASSERT_EQ(7, result->elements->count);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[0].p));
+    ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)result->elements->data[0].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(result->elements->data[1].p));
+    ASSERT_EQ(4.5, ((GTA_Computed_Value_Float *)result->elements->data[1].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(result->elements->data[2].p));
+    ASSERT_TRUE(((GTA_Computed_Value_Boolean *)result->elements->data[2].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(result->elements->data[3].p));
+    ASSERT_STREQ("hello", ((GTA_Computed_Value_String *)result->elements->data[3].p)->value->buffer);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(result->elements->data[4].p));
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(result->elements->data[5].p));
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[6].p));
+    ASSERT_EQ(42, ((GTA_Computed_Value_Integer *)result->elements->data[6].p)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Verify that the assignment returns the assigned value.
+    TEST_PROGRAM_SETUP(R"(a = [3, 4.5, true, "hello"]; a[2] = 42;)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    ASSERT_EQ(42, ((GTA_Computed_Value_Integer *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Verify error on invalid (negative, out-of-bounds) index.
+    TEST_PROGRAM_SETUP(R"(a = [3, 4.5, true, "hello"]; a[-10] = 42;)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_invalid_index);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(Slice, Array) {
   {
     // Slice from start, no skip.
