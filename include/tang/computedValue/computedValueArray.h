@@ -193,6 +193,15 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_append(GTA
  */
 GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
 
+/**
+ * Gets an iterator from a computed value.
+ *
+ * @param self The object to get the value from.
+ * @param context The execution context of the program.
+ * @return The value of the iterator or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_array_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

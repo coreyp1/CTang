@@ -104,7 +104,6 @@ TEST(ControlFlow, IF) {
   }
 }
 
-
 TEST(ControlFlow, While) {
   {
     // True condition.
@@ -135,7 +134,6 @@ TEST(ControlFlow, While) {
     TEST_PROGRAM_TEARDOWN();
   }
 }
-
 
 TEST(ControlFlow, DoWhile) {
   {
@@ -168,7 +166,6 @@ TEST(ControlFlow, DoWhile) {
   }
 }
 
-
 TEST(ControlFlow, For) {
   {
     // True condition.
@@ -187,6 +184,33 @@ TEST(ControlFlow, For) {
     TEST_PROGRAM_SETUP(R"(
       print("start ");
       for (i = 3; i < 3; i = i + 1) {
+        print(i);
+      }
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start  end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(ControlFlow, RangedFor) {
+  {
+    // Non-empty container.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      for (i : [0, 1, 2]) {
+        print(i);
+      }
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 012 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Empty container.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      for (i : []) {
         print(i);
       }
       print(" end");

@@ -44,6 +44,10 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%p\tSET_NOT_TEMP\n", (void *)current);
         ++current;
         break;
+      case GTA_BYTECODE_ADOPT:
+        printf("%p\tADOPT\n", (void *)current);
+        ++current;
+        break;
       case GTA_BYTECODE_POP:
         printf("%p\tPOP\n", (void *)current);
         ++current;
@@ -166,6 +170,14 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         break;
       case GTA_BYTECODE_ASSIGN_INDEX:
         printf("%p\tASSIGN_INDEX\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_ITERATOR:
+        printf("%p\tITERATOR\n", (void *)current);
+        ++current;
+        break;
+      case GTA_BYTECODE_ITERATOR_NEXT:
+        printf("%p\tITERATOR_NEXT\n", (void *)current);
         ++current;
         break;
       default:

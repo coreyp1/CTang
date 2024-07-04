@@ -279,6 +279,7 @@ typedef GCU_Hash64_Value GTA_HashX_Value;
 #define GTA_COMPUTED_VALUE_IS_MAP(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_map_vtable)
 #define GTA_COMPUTED_VALUE_IS_FUNCTION(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_function_vtable)
 #define GTA_COMPUTED_VALUE_IS_LIBRARY(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_library_vtable)
+#define GTA_COMPUTED_VALUE_IS_ITERATOR(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_iterator_vtable)
 /**
  * @}
  */
@@ -331,6 +332,7 @@ typedef struct GTA_Computed_Value_Error GTA_Computed_Value_Error;
 typedef struct GTA_Computed_Value_Float GTA_Computed_Value_Float;
 typedef struct GTA_Computed_Value_Function GTA_Computed_Value_Function;
 typedef struct GTA_Computed_Value_Integer GTA_Computed_Value_Integer;
+typedef struct GTA_Computed_Value_Iterator GTA_Computed_Value_Iterator;
 typedef struct GTA_Computed_Value_Library GTA_Computed_Value_Library;
 typedef struct GTA_Computed_Value_Map GTA_Computed_Value_Map;
 typedef struct GTA_Computed_Value_String GTA_Computed_Value_String;

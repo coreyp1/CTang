@@ -6,6 +6,7 @@
 #include <tang/computedValue/computedValueBoolean.h>
 #include <tang/computedValue/computedValueError.h>
 #include <tang/computedValue/computedValueInteger.h>
+#include <tang/computedValue/computedValueIterator.h>
 #include <tang/program/executionContext.h>
 
 
@@ -32,7 +33,7 @@ GTA_Computed_Value_VTable gta_computed_value_array_vtable = {
   .period = gta_computed_value_period_not_implemented,
   .index = gta_computed_value_array_index,
   .slice = gta_computed_value_array_slice,
-  .iterator_get = gta_computed_value_iterator_get_not_implemented,
+  .iterator_get = gta_computed_value_array_iterator_get,
   .iterator_next = gta_computed_value_iterator_next_not_implemented,
   .cast = gta_computed_value_cast,
   .call = gta_computed_value_call_not_supported,
@@ -494,4 +495,28 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value 
   }
 
   return (GTA_Computed_Value *)result;
+}
+
+
+/*
+ * Helper function used as the 'advance' iterator operation.
+ */
+static void __advance(GTA_Computed_Value_Iterator * self) {
+  GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self->collection;
+  self->value = (self->index >= (GTA_Integer)array->elements->count)
+    ? gta_computed_value_error_iterator_end
+    : (GTA_Computed_Value *)GTA_TYPEX_P(array->elements->data[self->index]);
+}
+
+
+GTA_Computed_Value * gta_computed_value_array_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  GTA_Computed_Value * iterator = gta_computed_value_iterator_create(self, context);
+
+  if (!iterator || GTA_COMPUTED_VALUE_IS_ERROR(iterator)) {
+    return iterator ? iterator : gta_computed_value_error_out_of_memory;
+  }
+
+  ((GTA_Computed_Value_Iterator *)iterator)->advance = __advance;
+
+  return iterator;
 }

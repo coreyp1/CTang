@@ -121,6 +121,22 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         value->is_temporary = false;
         break;
       }
+      case GTA_BYTECODE_ADOPT: {
+        // Adopt the top of the stack.
+        GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[*sp-1]);
+        if (value->is_temporary || value->is_singleton) {
+          value->is_temporary = false;
+        }
+        else {
+          GTA_Computed_Value * value_copy = gta_computed_value_deep_copy(value, context);
+          if (!value_copy) {
+            context->result = gta_computed_value_error_out_of_memory;
+            break;
+          }
+          context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(value_copy);
+        }
+        break;
+      }
       case GTA_BYTECODE_POP: {
         // Simply decrease the stack pointer.  The garbage collector will take
         // care of the rest.
@@ -379,6 +395,30 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         GTA_Computed_Value * index = GTA_TYPEX_P(context->stack->data[--*sp]);
         GTA_Computed_Value * collection = GTA_TYPEX_P(context->stack->data[*sp-1]);
         context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_assign_index(collection, index, value, context));
+        break;
+      }
+      case GTA_BYTECODE_ITERATOR: {
+        // Perform an iterator operation.
+        // The value will be left on the stack.
+        GTA_Computed_Value * collection = GTA_TYPEX_P(context->stack->data[*sp-1]);
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_iterator_get(collection, context));
+        if (!GTA_VECTORX_APPEND(context->stack, (GTA_TYPEX_MAKE_P(GTA_COMPUTED_VALUE_IS_ITERATOR(context->stack->data[*sp-1].p)
+          ? gta_computed_value_boolean_true
+          : gta_computed_value_boolean_false)))) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+        break;
+      }
+      case GTA_BYTECODE_ITERATOR_NEXT: {
+        // Perform an iterator next operation.
+        // The value will be left on the stack.
+        GTA_Computed_Value * iterator = GTA_TYPEX_P(context->stack->data[*sp-1]);
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_iterator_next(iterator, context));
+        if (!GTA_VECTORX_APPEND(context->stack, (GTA_TYPEX_MAKE_P(context->stack->data[*sp-1].p != gta_computed_value_error_iterator_end
+          ? gta_computed_value_boolean_true
+          : gta_computed_value_boolean_false)))) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
         break;
       }
       default: {

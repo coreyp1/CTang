@@ -27,11 +27,15 @@ typedef struct GTA_Ast_Node_Ranged_For {
   /**
    * The identifier of the ranged for loop.
    */
-  const char * identifier;
+  GTA_Ast_Node * identifier;
   /**
    * The expression of the ranged for loop.
    */
   GTA_Ast_Node * expression;
+  /**
+   * A shadow variable to hold the iterator.
+   */
+  GTA_Ast_Node * iterator;
   /**
    * The block of the ranged for loop.
    */

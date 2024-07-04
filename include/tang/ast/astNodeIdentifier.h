@@ -89,6 +89,9 @@ typedef struct GTA_Ast_Node_Identifier {
 /**
  * Creates a new GTA_Ast_Node_Identifier object.
  *
+ * The identifier will be adopted by the new object, so the caller should not
+ * free the identifier after calling this function.
+ *
  * @param identifier The identifier.
  * @param location The location of the identifier in the source code.
  * @return The new GTA_Ast_Node_Identifier object or NULL on failure.

@@ -83,10 +83,14 @@ typedef struct GTA_Compiler_Context {
   GTA_VectorX * labels;
   /**
    * The label to which the execution should jump upon a "break" statement.
+   *
+   * The code should ensure that a value is on the stack, ready for a POP.
    */
   GTA_Integer break_label;
   /**
    * The label to which the execution should jump upon a "continue" statement.
+   *
+   * The code should *not* leave a value on the stack.  There will be no POP.
    */
   GTA_Integer continue_label;
 } GTA_Compiler_Context;

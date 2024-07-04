@@ -533,10 +533,10 @@ TEST(Variable, DetectEmbeddedLoopAssignments) {
       y = x + x * x + (w + w) + (i + i);
     )");
     ASSERT_NE(ast, nullptr);
-    ASSERT_EQ(37, gta_tang_node_count(ast));
+    ASSERT_EQ(39, gta_tang_node_count(ast));
     ast = gta_tang_simplify(ast);
     ASSERT_NE(ast, nullptr);
-    ASSERT_EQ(33, gta_tang_node_count(ast));
+    ASSERT_EQ(35, gta_tang_node_count(ast));
     gta_ast_node_destroy(ast);
     ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
   }

@@ -61,6 +61,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/computedValue/computedValueError.o \
 	$(OBJ_DIR)/computedValue/computedValueFloat.o \
 	$(OBJ_DIR)/computedValue/computedValueInteger.o \
+	$(OBJ_DIR)/computedValue/computedValueIterator.o \
 	$(OBJ_DIR)/computedValue/computedValueString.o \
 	$(OBJ_DIR)/program/binary.o \
 	$(OBJ_DIR)/program/bytecode.o \
@@ -207,7 +208,8 @@ DEP_ASTNODERANGEDFOR = \
 	include/tang/ast/astNodeFor.h \
 	$(DEP_ASTNODE) \
 	$(DEP_ASTNODESTRING) \
-	$(DEP_ASTNODEIDENTIFIER)
+	$(DEP_ASTNODEIDENTIFIER) \
+	$(DEP_PROGRAM_VARIABLE)
 DEP_ASTNODERETURN = \
 	include/tang/ast/astNodeReturn.h \
 	$(DEP_ASTNODE) \
@@ -286,6 +288,9 @@ DEP_COMPUTEDVALUEFLOAT = \
 DEP_COMPUTEDVALUEINTEGER = \
 	include/tang/computedValue/computedValueInteger.h \
 	$(DEP_COMPUTEDVALUE)
+DEP_COMPUTEDVALUEITERATOR = \
+	include/tang/computedValue/computedValueIterator.h \
+	$(DEP_COMPUTEDVALUE)
 DEP_COMPUTEDVALUESTRING = \
 	include/tang/computedValue/computedValueString.h \
 	$(DEP_COMPUTEDVALUE) \
@@ -298,6 +303,7 @@ DEP_COMPUTEDVALUEALL = \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
+	$(DEP_COMPUTEDVALUEITERATOR) \
 	$(DEP_COMPUTEDVALUESTRING)
 
 DEP_TANGLANGUAGE = \
@@ -642,6 +648,7 @@ $(OBJ_DIR)/ast/astNodeRangedFor.o: \
 	$(DEP_ASTNODEBINARY) \
 	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_BINARY) \
+	$(DEP_COMPUTEDVALUEITERATOR) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -772,6 +779,12 @@ $(OBJ_DIR)/computedValue/computedValueInteger.o: \
 	$(DEP_COMPUTEDVALUESTRING) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_EXECUTIONCONTEXT)
+
+$(OBJ_DIR)/computedValue/computedValueIterator.o: \
+	src/computedValue/computedValueIterator.c \
+	$(DEP_COMPUTEDVALUEITERATOR) \
+	$(DEP_COMPUTEDVALUEITERATOREND) \
+	$(DEP_COMPUTEDVALUEERROR)
 
 $(OBJ_DIR)/computedValue/computedValueString.o: \
 	src/computedValue/computedValueString.c \

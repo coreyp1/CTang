@@ -13,6 +13,7 @@
 #include <tang/computedValue/computedValueError.h>
 #include <tang/computedValue/computedValueFloat.h>
 #include <tang/computedValue/computedValueInteger.h>
+#include <tang/computedValue/computedValueIterator.h>
 #include <tang/computedValue/computedValueString.h>
 
 
