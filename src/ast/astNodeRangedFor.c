@@ -8,12 +8,14 @@
 #include <tang/ast/astNodeBinary.h>
 #include <tang/ast/astNodeIdentifier.h>
 #include <tang/ast/astNodeRangedFor.h>
+#include <tang/computedValue/computedValueIterator.h>
+#include <tang/program/binary.h>
 #include <tang/program/variable.h>
 
 GTA_Ast_Node_VTable gta_ast_node_ranged_for_vtable = {
   .name = "RangedFor",
   .compile_to_bytecode = gta_ast_node_ranged_for_compile_to_bytecode,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_binary__x86_64 = gta_ast_node_ranged_for_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
@@ -214,7 +216,7 @@ GTA_Ast_Node * gta_ast_node_ranged_for_analyze(GTA_Ast_Node * self, GTA_Program 
 
 
 bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
-  GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *) self;
+  GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *)self;
 
   // Find where the iterator is stored.  It will always be local.
   GTA_Ast_Node_Identifier * iterator = (GTA_Ast_Node_Identifier *)ranged_for->iterator;
@@ -326,6 +328,161 @@ bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
   // context->break_label:
     && gta_compiler_context_set_label(context, context->break_label, context->program->bytecode->count)
+  // Restore the original break and continue labels.
+    && ((context->break_label = original_break_label) >= 0)
+    && ((context->continue_label = original_continue_label) >= 0);
+}
+
+
+bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *)self;
+  GCU_Vector8 * v = context->binary_vector;
+
+  // Offsets.
+  // bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
+  // bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
+  void * vtable_offset = &((GTA_Computed_Value *)0)->vtable;
+
+  // Find where the iterator is stored.  It will always be local.
+  GTA_Ast_Node_Identifier * iterator = (GTA_Ast_Node_Identifier *)ranged_for->iterator;
+  GTA_HashX_Value iterator_stack_location = GTA_HASHX_GET(iterator->scope->local_positions, iterator->mangled_name_hash);
+  if (!iterator_stack_location.exists) {
+    printf("Error: Identifier %s not found in local positions.\n", iterator->mangled_name);
+    return false;
+  }
+  int32_t iterator_stack_location_offset = ((int32_t)GTA_TYPEX_UI(iterator_stack_location.value) + 1) * -8;
+
+  // Find where the ranged-for variable is stored.  It may not be local.
+  GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *)ranged_for->identifier;
+  GTA_HashX_Value identifier_stack_location = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+  bool identifier_is_local = true;
+  if (!identifier_stack_location.exists) {
+    identifier_is_local = false;
+    identifier_stack_location = GTA_HASHX_GET(identifier->scope->global_positions, identifier->mangled_name_hash);
+    if (!identifier_stack_location.exists) {
+      printf("Error: Identifier %s not found in local or global positions.\n", identifier->mangled_name);
+      return false;
+    }
+  }
+  int32_t identifier_stack_location_offset = ((int32_t)GTA_TYPEX_UI(identifier_stack_location.value) + 1) * -8;
+
+  // Jump labels.
+  GTA_Integer top_of_loop;
+  GTA_Integer get_next_iterator_value;
+  GTA_Integer end_of_loop;
+  GTA_Integer original_break_label = context->break_label;
+  GTA_Integer original_continue_label = context->continue_label;
+
+  // This is long and messy.  Example code and psudocode is below.
+  // for (a:<expression>) {<block>}
+  //   1. Evaluate the expression.
+  //   2. Get the iterator.
+  //   3. If the iterator fails, jump to the end of the loop.
+  //   4. Save the iterator.
+  //   5. Call the iterator next.
+  //   6. If the iterator next fails, jump to the end of the loop.
+  //   7. Assign the iterator value to the ranged-for variable.
+  //   8. Execute the block.
+  //   9. Load the iterator.
+  //   10. Jump to 5.
+
+  // Compile the expression.
+  return true
+  // Create jump labels.
+    && ((top_of_loop = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->continue_label = get_next_iterator_value = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->break_label = end_of_loop = gta_compiler_context_get_label(context)) >= 0)
+
+  // 1. Compile the iterator expression.  Result in RAX.
+    && gta_ast_node_compile_to_binary__x86_64(ranged_for->expression, context)
+
+  // 2. gta_computed_value_iterator_get(RAX, context). Result in RAX.
+  //   mov rdi, rax
+  //   mov rsi, context
+  //   mov rax, gta_computed_value_iterator_get
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFF0
+  //   call rax
+  //   mov rsp, rbp
+  //   pop rbp
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)&gta_computed_value_iterator_get)
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
+    && gta_call_reg__x86_64(v, GTA_REG_RAX)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+
+  // 3. If the iterator fails, jump to the end of the loop.
+  //   mov rdi, [rax + vtable_offset]
+  //   mov rsi, &gta_computed_value_iterator_vtable
+  //   cmp rdi, rsi
+  //   jne end_of_loop
+    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)vtable_offset)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, (int64_t)&gta_computed_value_iterator_vtable)
+    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RSI)
+    && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, end_of_loop, v->count - 4)
+
+  // 4. Save the iterator.
+  //   mov [r12 + iterator_stack_location_offset], rax
+    && gta_mov_ind_reg__x86_64(v, GTA_REG_R12, GTA_REG_NONE, 0, iterator_stack_location_offset, GTA_REG_RAX)
+
+  // 5. Call the iterator next.
+  // gta_computed_value_iterator_iterator_next(RAX, context). Result in RAX.
+  //   mov rdi, rax
+  // top_of_loop:
+  //   mov rsi, context
+  //   mov rax, gta_computed_value_iterator_iterator_next
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFF0
+  //   call rax
+  //   mov rsp, rbp
+  //   pop rbp
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
+    && gta_compiler_context_set_label(context, top_of_loop, v->count)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)&gta_computed_value_iterator_iterator_next)
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
+    && gta_call_reg__x86_64(v, GTA_REG_RAX)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+
+  // 6. If the iterator next fails, jump to the end of the loop.
+  //  mov rdi, gta_computed_value_error_iterator_end
+  //  cmp rax, rdi
+  //  je end_of_loop
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, (int64_t)gta_computed_value_error_iterator_end)
+    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDI)
+    && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, end_of_loop, v->count - 4)
+
+  // 7. Assign the iterator value to the ranged-for variable.
+  //   mov [REG(12 or 13) + identifier_stack_location_offset], rax
+    && gta_mov_ind_reg__x86_64(v, identifier_is_local ? GTA_REG_R12 : GTA_REG_R13, GTA_REG_NONE, 0, identifier_stack_location_offset, GTA_REG_RAX)
+
+  // 8. Execute the block.
+    && gta_ast_node_compile_to_binary__x86_64(ranged_for->block, context)
+
+  // 9. Load the iterator.
+  // get_next_iterator_value:
+  //   mov rdi, [r12 + iterator_stack_location_offset]
+    && gta_compiler_context_set_label(context, get_next_iterator_value, v->count)
+    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_R12, GTA_REG_NONE, 0, iterator_stack_location_offset)
+
+  // 10. Jump to 5.
+  //   jmp top_of_loop
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, top_of_loop, v->count - 4)
+
+  // end_of_loop:
+    && gta_compiler_context_set_label(context, end_of_loop, v->count)
   // Restore the original break and continue labels.
     && ((context->break_label = original_break_label) >= 0)
     && ((context->continue_label = original_continue_label) >= 0);
