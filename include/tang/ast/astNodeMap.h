@@ -20,8 +20,8 @@ extern GTA_Ast_Node_VTable gta_ast_node_map_vtable;
  * For "map" expressions, we need to store the key-value pairs in a vector.
  */
 typedef struct GTA_Ast_Node_Map_Pair {
-  const char * str;    ///> The key of the pair.
-  GTA_Ast_Node * node; ///> The value of the pair.
+  GTA_Ast_Node * key;    ///> The key of the pair.
+  GTA_Ast_Node * value;  ///> The value of the pair.
 } GTA_Ast_Node_Map_Pair;
 
 /**

@@ -62,6 +62,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/computedValue/computedValueFloat.o \
 	$(OBJ_DIR)/computedValue/computedValueInteger.o \
 	$(OBJ_DIR)/computedValue/computedValueIterator.o \
+	$(OBJ_DIR)/computedValue/computedValueMap.o \
 	$(OBJ_DIR)/computedValue/computedValueString.o \
 	$(OBJ_DIR)/program/binary.o \
 	$(OBJ_DIR)/program/bytecode.o \
@@ -290,6 +291,9 @@ DEP_COMPUTEDVALUEINTEGER = \
 DEP_COMPUTEDVALUEITERATOR = \
 	include/tang/computedValue/computedValueIterator.h \
 	$(DEP_COMPUTEDVALUE)
+DEP_COMPUTEDVALUEMAP = \
+	include/tang/computedValue/computedValueMap.h \
+	$(DEP_COMPUTEDVALUE)
 DEP_COMPUTEDVALUESTRING = \
 	include/tang/computedValue/computedValueString.h \
 	$(DEP_COMPUTEDVALUE) \
@@ -303,6 +307,7 @@ DEP_COMPUTEDVALUEALL = \
 	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUEITERATOR) \
+	$(DEP_COMPUTEDVALUEMAP) \
 	$(DEP_COMPUTEDVALUESTRING)
 
 DEP_TANGLANGUAGE = \
@@ -785,6 +790,15 @@ $(OBJ_DIR)/computedValue/computedValueIterator.o: \
 	$(DEP_COMPUTEDVALUEITERATOR) \
 	$(DEP_COMPUTEDVALUEITERATOREND) \
 	$(DEP_COMPUTEDVALUEERROR)
+
+$(OBJ_DIR)/computedValue/computedValueMap.o: \
+	src/computedValue/computedValueMap.c \
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_COMPUTEDVALUEBOOLEAN) \
+	$(DEP_COMPUTEDVALUEMAP) \
+	$(DEP_COMPUTEDVALUESTRING) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_UNICODESTRING)
 
 $(OBJ_DIR)/computedValue/computedValueString.o: \
 	src/computedValue/computedValueString.c \

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
+#include <cutil/string.h>
 #include <tang/program/bytecode.h>
 #include <tang/program/virtualMachine.h>
 #include <tang/computedValue/computedValueAll.h>
@@ -106,6 +107,58 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         }
         else {
           if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(array))) {
+            context->result = gta_computed_value_error_out_of_memory;
+          }
+        }
+        break;
+      }
+      case GTA_BYTECODE_MAP: {
+        size_t count = GTA_TYPEX_UI(*next++);
+        GTA_Computed_Value_Map * map = (GTA_Computed_Value_Map *)gta_computed_value_map_create(count, context);
+        // Move the stack pointer back by the count of elements.
+        *sp -= count * 2;
+        if (!map) {
+          context->result = gta_computed_value_error_out_of_memory;
+          break;
+        }
+        if (count) {
+          // Copy the elements from the stack to the map.
+          for (size_t i = 0; i < count; ++i) {
+            GTA_Computed_Value * key = GTA_TYPEX_P(context->stack->data[*sp + (i * 2)]);
+            GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[*sp + (i * 2) + 1]);
+            GTA_Computed_Value_String * key_string = (GTA_Computed_Value_String *)key;
+            GTA_Integer key_hash = gcu_string_hash_64(key_string->value->buffer, key_string->value->byte_length);
+            if (key->is_temporary || key->is_singleton) {
+              key->is_temporary = false;
+              GTA_HASHX_SET(map->key_hash, key_hash, GTA_TYPEX_MAKE_P(value));
+            }
+            else {
+              GTA_Computed_Value * key_copy = gta_computed_value_deep_copy(key, context);
+              if (!key_copy) {
+                context->result = gta_computed_value_error_out_of_memory;
+                break;
+              }
+              GTA_HASHX_SET(map->key_hash, key_hash, GTA_TYPEX_MAKE_P(value));
+            }
+            if (value->is_temporary || value->is_singleton) {
+              value->is_temporary = false;
+              GTA_HASHX_SET(map->value_hash, key_hash, GTA_TYPEX_MAKE_P(value));
+            }
+            else {
+              GTA_Computed_Value * value_copy = gta_computed_value_deep_copy(value, context);
+              if (!value_copy) {
+                context->result = gta_computed_value_error_out_of_memory;
+                break;
+              }
+              GTA_HASHX_SET(map->value_hash, key_hash, GTA_TYPEX_MAKE_P(value_copy));
+            }
+          }
+          // Push the map onto the stack.  We know that there is already room
+          // on the stack because one or more elements were popped off.
+          context->stack->data[(*sp)++] = GTA_TYPEX_MAKE_P(map);
+        }
+        else {
+          if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(map))) {
             context->result = gta_computed_value_error_out_of_memory;
           }
         }

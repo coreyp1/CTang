@@ -35,6 +35,8 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_ARRAY,          ///< Get len, pop `len` items, putting them into
                                ///<   an array, expect the items were pushed in
                                ///<   order.
+  GTA_BYTECODE_MAP,            ///< Get len, pop `len` value then key pairs,
+                               ///<   putting them into a map.
   GTA_BYTECODE_CAST,           ///< Get type, pop val, push type(val)
   GTA_BYTECODE_SET_NOT_TEMP,   ///< Set the top of the stack to not be a temporary value
   GTA_BYTECODE_ADOPT,          ///< Pop val. Val will be adopted by the next
@@ -94,8 +96,6 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_JMPT_S,         ///< PC #: read val, if true, set pc to PC #
   GTA_BYTECODE_JMPT_I,         ///< PC #: read val, if true, set pc to PC #
   GTA_BYTECODE_JMPT_POP,       ///< PC #: pop val, if true, set pc to PC #
-  GTA_BYTECODE_MAP,            ///< Get len, pop `len` value then key pairs, putting them
-                  ///<   into a map
   GTA_BYTECODE_LIBRARY,        ///< Pop name, push Library identified by name
   GTA_BYTECODE_LIBRARYSAVE,    ///< Get index, save top of stack to library[index]
   GTA_BYTECODE_LIBRARYCOPY,    ///< Get index, load from library[index]

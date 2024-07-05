@@ -64,7 +64,8 @@ void gta_ast_node_string_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback ca
 
 bool gta_ast_node_string_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
-  return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count) && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_STRING))
+  return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_STRING))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_P(string->string));
 }
 

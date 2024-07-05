@@ -305,6 +305,33 @@ TEST(Declare, Array) {
   }
 }
 
+TEST(Declare, Map) {
+  {
+    // Empty map.
+    TEST_PROGRAM_SETUP("{:}");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_MAP(context->result));
+    GTA_Computed_Value_Map * map = (GTA_Computed_Value_Map *)context->result;
+    ASSERT_EQ(map->key_hash->entries, 0);
+    ASSERT_EQ(map->value_hash->entries, 0);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Map with multiple key-value pairs.
+    TEST_PROGRAM_SETUP(R"({number: 4.5, greeting: "hello"})");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_MAP(context->result));
+    GTA_Computed_Value_Map * map = (GTA_Computed_Value_Map *)context->result;
+    ASSERT_EQ(map->key_hash->entries, 2);
+    ASSERT_EQ(map->value_hash->entries, 2);
+    GTA_Computed_Value * val1 = gta_computed_value_map_get_from_cstring(map, "number");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(val1));
+    ASSERT_EQ(((GTA_Computed_Value_Float *)val1)->value, 4.5);
+    GTA_Computed_Value * val2 = gta_computed_value_map_get_from_cstring(map, "greeting");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(val2));
+    ASSERT_STREQ(((GTA_Computed_Value_String *)val2)->value->buffer, "hello");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(Identifier, Local) {
   {
     // `a` is not declared global, so should not have a value.

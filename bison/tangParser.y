@@ -247,8 +247,8 @@ static void vector64_ast_node_cleanup(GCU_Vector64 * vector) {
 // Helper cleanup function for vector64 of map pairs.
 static void vector64_map_pair_cleanup(GCU_Vector64 * vector) {
   for (size_t i = 0; i < vector->count; ++i) {
-    gcu_free((void *)((GTA_Ast_Node_Map_Pair *)vector->data[i].p)->str);
-    gta_ast_node_destroy((GTA_Ast_Node *)((GTA_Ast_Node_Map_Pair *)vector->data[i].p)->node);
+    gta_ast_node_destroy((GTA_Ast_Node *)((GTA_Ast_Node_Map_Pair *)vector->data[i].p)->key);
+    gta_ast_node_destroy((GTA_Ast_Node *)((GTA_Ast_Node_Map_Pair *)vector->data[i].p)->value);
     gcu_free((void *)vector->data[i].p);
   }
 }
@@ -450,12 +450,24 @@ mapList
       // Verify that there have been no memory errors.
       VERIFY1($3,$$);
 
-      const char * identifier = $1.str;
+      GTA_Unicode_String * key_unicode_string = gta_unicode_string_create_and_adopt($1.str, $1.len, $1.type);
+      if (!key_unicode_string) {
+        parseError = &ErrorOutOfMemory;
+        gcu_free((void *)$1.str);
+        break;
+      }
+
+      GTA_Ast_Node * key = (GTA_Ast_Node *)gta_ast_node_string_create(key_unicode_string, @1);
+      if (!key) {
+        gta_unicode_string_destroy(key_unicode_string);
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
 
       // Base case.  Create a vector to hold additional entries.
-      $$ = gcu_vector64_create(1);
+      $$ = gcu_vector64_create(32);
       if (!$$) {
-        gcu_free((void *)identifier);
+        gta_ast_node_destroy(key);
         parseError = &ErrorOutOfMemory;
         break;
       }
@@ -464,7 +476,7 @@ mapList
       // Create the pair.
       GTA_Ast_Node_Map_Pair * pair = gcu_malloc(sizeof(GTA_Ast_Node_Map_Pair));
       if (!pair) {
-        gcu_free((void *)identifier);
+        gta_ast_node_destroy(key);
         gcu_vector64_destroy($$);
         parseError = &ErrorOutOfMemory;
         $$ = 0;
@@ -472,11 +484,11 @@ mapList
       }
 
       // Populate all the info for this pair.
-      pair->str = identifier;
-      pair->node = $3;
+      pair->key = key;
+      pair->value = $3;
       if (!gcu_vector64_append($$, GCU_TYPE64_P((void *)pair))) {
         gcu_free(pair);
-        gcu_free((void *)identifier);
+        gta_ast_node_destroy(key);
         gcu_vector64_destroy($$);
         parseError = &ErrorOutOfMemory;
         $$ = 0;
@@ -488,22 +500,34 @@ mapList
       // Verify that there have been no memory errors.
       VERIFY2($1,$5,$$)
 
-      const char * identifier = $3.str;
+      GTA_Unicode_String * key_unicode_string = gta_unicode_string_create_and_adopt($3.str, $3.len, $3.type);
+      if (!key_unicode_string) {
+        parseError = &ErrorOutOfMemory;
+        gcu_free((void *)$3.str);
+        break;
+      }
+
+      GTA_Ast_Node * key = (GTA_Ast_Node *)gta_ast_node_string_create(key_unicode_string, @3);
+      if (!key) {
+        gta_unicode_string_destroy(key_unicode_string);
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
 
       // Create the pair.
       GTA_Ast_Node_Map_Pair * pair = gcu_malloc(sizeof(GTA_Ast_Node_Map_Pair));
       if (!pair) {
-        gcu_free((void *)identifier);
+        gta_ast_node_destroy(key);
         parseError = &ErrorOutOfMemory;
         $$ = 0;
         break;
       }
 
       // Populate all the info for this pair.
-      pair->str = identifier;
-      pair->node = $5;
+      pair->key = key;
+      pair->value = $5;
       if (!gcu_vector64_append($1, GCU_TYPE64_P(pair))) {
-        gcu_free((void *)identifier);
+        gta_ast_node_destroy(key);
         gcu_free(pair);
         parseError = &ErrorOutOfMemory;
         $$ = 0;

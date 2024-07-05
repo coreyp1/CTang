@@ -36,6 +36,10 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf(GTA_64_BIT ? "%p\tARRAY\t%lu\n" : "%s\tARRAY\t%u", (void *)current, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
+      case GTA_BYTECODE_MAP:
+        printf(GTA_64_BIT ? "%p\tMAP\t%lu\n" : "%p\tMAP\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        current += 2;
+        break;
       case GTA_BYTECODE_CAST:
         printf("%p\tCAST\t%p\n", (void *)current, GTA_TYPEX_P(*(current + 1)));
         current += 2;
