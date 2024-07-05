@@ -621,7 +621,8 @@ $(OBJ_DIR)/ast/astNodeMap.o: \
 	$(DEP_COMPUTEDVALUEMAP) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_OPCODE) \
-	$(DEP_PROGRAM_BINARY)
+	$(DEP_PROGRAM_BINARY) \
+	$(DEP_UNICODESTRING)
 
 $(OBJ_DIR)/ast/astNodeParseError.o: \
 	src/ast/astNodeParseError.c \
