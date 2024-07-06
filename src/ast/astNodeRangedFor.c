@@ -399,22 +399,9 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
   // 2. gta_computed_value_iterator_get(RAX, context). Result in RAX.
   //   mov rdi, rax
   //   mov rsi, context
-  //   mov rax, gta_computed_value_iterator_get
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFF0
-  //   call rax
-  //   mov rsp, rbp
-  //   pop rbp
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)&gta_computed_value_iterator_get)
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+    && gta_binary_call__x86_64(v, (uint64_t)&gta_computed_value_iterator_get)
 
   // 3. If the iterator fails, jump to the end of the loop.
   //   mov rdi, [rax + vtable_offset]
@@ -436,23 +423,10 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
   //   mov rdi, rax
   // top_of_loop:
   //   mov rsi, context
-  //   mov rax, gta_computed_value_iterator_iterator_next
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFF0
-  //   call rax
-  //   mov rsp, rbp
-  //   pop rbp
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
     && gta_compiler_context_set_label(context, top_of_loop, v->count)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)&gta_computed_value_iterator_iterator_next)
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+    && gta_binary_call__x86_64(v, (uint64_t)&gta_computed_value_iterator_iterator_next)
 
   // 6. If the iterator next fails, jump to the end of the loop.
   //  mov rdi, gta_computed_value_error_iterator_end

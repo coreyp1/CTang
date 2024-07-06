@@ -124,25 +124,14 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   // ; later (if necessary).
   //   push rax              ; The computed value to be printed.
     && gta_push_reg__x86_64(v, GTA_REG_RAX)
+
   // ; gta_computed_value_print(rax, context)
   //   mov rdi, rax
   //   mov rsi, r15
-  //   mov rax, gta_computed_value_print
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFF0
-  //   call rax
-  //   mov rsp, rbp
-  //   pop rbp
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_computed_value_print)
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_print)
+
   // ; RAX contains a pointer to the unicode string.
   //   xor rbx, rbx
   //   cmp rax, rbx
@@ -151,9 +140,11 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RBX)
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, no_string_created_by_print, v->count - 4)
+
   // ; The computed value is no longer needed for this execution path.
   //   pop rdx               ; Intentionally overwritten in the next instruction.
     && gta_pop_reg__x86_64(v, GTA_REG_RDX)
+
   // ; Check if the existing output string is empty.
   //   mov rdi, [r15 + context_output_offset]
   //   mov rdx, [rdi + context_output_byte_length_offset]
@@ -164,70 +155,42 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RBX)
     && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, output_string_not_empty, v->count - 4)
+
   // ; This is the first string to be printed, so we can just adopt it.
   // ; Set the context output string to the current string.
   //   mov [r15 + context_output_offset], rax
     && gta_mov_ind_reg__x86_64(v, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset, GTA_REG_RAX)
+
+  // ; gta_unicode_string_destroy(RDI)
   // ;   (Note: RDI was already set.)
-  //   mov rax, gta_unicode_string_destroy
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFF0
-  //   call rax
-  //   mov rsp, rbp
-  //   pop rbp
+    && gta_binary_call__x86_64(v, (uint64_t)gta_unicode_string_destroy)
+
   //   jmp success_return_null
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_unicode_string_destroy)
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, success_return_null, v->count - 4)
+
   // output_string_not_empty:
       && gta_compiler_context_set_label(context, output_string_not_empty, v->count)
+
+  //   push rax              ; The unicode "string to be printed".
   // ; Concatenate the string with the output.
-  //   push rax              ; The unicode string to be printed.
+  // ; gta_unicode_string_concat(RDI, RSI)
   //   mov rdi, [r15 + context_output_offset]
   //   mov rsi, rax
-  //   mov rax, gta_unicode_string_concat
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFF0
-  //   call rax
-  //   mov rsp, rbp
-  //   pop rbp
     && gta_push_reg__x86_64(v, GTA_REG_RAX)
     && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_RAX)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_unicode_string_concat)
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
-  // ; Destroy the "string to be printed" since it has been concatenated.
+    && gta_binary_call__x86_64(v, (uint64_t)gta_unicode_string_concat)
+
+  // ; Destroy the "string to be printed" since it has been concatenated,
+  // ; but save the concatenated string to the stack.
+  // ; gta_unicode_string_destroy(RDI)
   //   pop rdi               ; The "string to be printed."
   //   push rax              ; The concatenated string.
-  //   mov rax, gta_unicode_string_destroy
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFF0
-  //   call rax
-  //   mov rsp, rbp
-  //   pop rbp
     && gta_pop_reg__x86_64(v, GTA_REG_RDI)
     && gta_push_reg__x86_64(v, GTA_REG_RAX)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_unicode_string_destroy)
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+    && gta_binary_call__x86_64(v, (uint64_t)gta_unicode_string_destroy)
+
   // ; Verify that the contatenation was successful.
   //   pop rax               ; The concatenated string.
   //   cmp rax, rbx
@@ -236,30 +199,22 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RBX)
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, error_out_of_memory, v->count - 4)
+
   // ; No failure, so adopt the new string.
+  // ; gta_unicode_string_destroy(RDI)
   //   mov rdi, [r15 + context_output_offset]
   //   mov [r15 + context_output_offset], rax
-  //   mov rax, gta_unicode_string_destroy
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFF0
-  //   call rax
-  //   mov rsp, rbp
-  //   pop rbp
-  //   jmp success_return_null
     && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset)
     && gta_mov_ind_reg__x86_64(v, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset, GTA_REG_RAX)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_unicode_string_destroy)
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+    && gta_binary_call__x86_64(v, (uint64_t)gta_unicode_string_destroy)
+
+  //   jmp success_return_null
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, success_return_null, v->count - 4)
+
   // no_string_created_by_print:
     && gta_compiler_context_set_label(context, no_string_created_by_print, v->count)
+
   // ; No string was produced by the print function.  Is this an error?
   //   pop rax               ; The computed value.
   //   mov rbx, [rax + vtable_offset]
@@ -286,6 +241,7 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     && gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_REG_RDI)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, print_return, v->count - 4)
+
   // error_out_of_memory:
   //   mov rax, gta_computed_value_error_out_of_memory
   //   jmp print_return
@@ -293,10 +249,12 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_computed_value_error_out_of_memory)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, print_return, v->count - 4)
+
   // success_return_null:
   //   mov rax, gta_computed_value_null
     && gta_compiler_context_set_label(context, success_return_null, v->count)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_computed_value_null)
+
   // print_return:
     && gta_compiler_context_set_label(context, print_return, v->count);
 }

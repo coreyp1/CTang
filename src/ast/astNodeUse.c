@@ -160,27 +160,12 @@ bool gta_ast_node_use_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
   // Load the library.
   // TODO: JIT the __load_library function to avoid the extra function call.
   return true
-  // Prepare function call.
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFFFFFFFFFF0
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
   // __load_library(boolean->value, use->hash):
   //   mov rdi, r15
   //   mov rsi, use->hash
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_R15)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, use->hash)
-  //   mov rax, __load_library
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)__load_library)
-  //   call rax
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-  // Restore stack.
-  //   mov rsp, rbp
-  //   pop rbp
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP);
+    && gta_binary_call__x86_64(v, (uint64_t)__load_library);
 }
 
 

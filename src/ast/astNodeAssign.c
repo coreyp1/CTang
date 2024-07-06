@@ -236,26 +236,12 @@ static bool __compile_binary_lhs_is_identifier__x86_64(GTA_Ast_Node * lhs, GTA_C
   /////////////////////////////////////////////////////////////////////////////
   // Call the deep copy function.
   /////////////////////////////////////////////////////////////////////////////
-  // Set up for a function call.
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFFFFFFFFFF0
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
   //   mov rdi, rax                  ; Move the value to RDI.
   //   mov rsi, r15                  ; Move the context to RSI.
-  //   mov rax, gta_computed_value_deep_copy ; Make a deep copy of the value.
-  //   call rax
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)gta_computed_value_deep_copy)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-  // Tear down the function call.
-  //   mov rsp, rbp
-  //   pop rbp
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+  // gta_computed_value_deep_copy(RAX, context)
+    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_deep_copy)
 
   /////////////////////////////////////////////////////////////////////////////
   // done:
@@ -332,24 +318,11 @@ bool gta_ast_node_assign_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
         //    pop rdx
         //    pop rsi
         //    pop rdi
-        //    push rbp
-        //    mov rbp, rsp
-        //    and rsp, 0xFFFFFFFFFFFFFFF0
-        //    mov rax, gta_computed_value_assign_index
-        //    call rax
-        //    mov rsp, rbp
-        //    pop rbp
           && gta_mov_reg_reg__x86_64(v, GTA_REG_RCX, GTA_REG_R15)
           && gta_pop_reg__x86_64(v, GTA_REG_RDX)
           && gta_pop_reg__x86_64(v, GTA_REG_RSI)
           && gta_pop_reg__x86_64(v, GTA_REG_RDI)
-          && gta_push_reg__x86_64(v, GTA_REG_RBP)
-          && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-          && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-          && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)gta_computed_value_assign_index)
-          && gta_call_reg__x86_64(v, GTA_REG_RAX)
-          && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-          && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+          && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_assign_index)
         )
         : false;
 }

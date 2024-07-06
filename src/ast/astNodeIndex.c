@@ -121,25 +121,11 @@ bool gta_ast_node_index_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   // Compile the index expression.
     && gta_ast_node_compile_to_binary__x86_64(index->rhs, context)
   // gta_computed_value_index(collection, index, context)
-  //   pop rdi
+  //   pop rdi               ; The collection, pushed earlier.
   //   mov rsi, rax
   //   mov rdx, r15
-  //   mov rcx, gta_computed_value_index
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFF0
-  //   call rcx
-  //   mov rsp, rbp
-  //   pop rbp
     && gta_pop_reg__x86_64(v, GTA_REG_RDI)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_RAX)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_R15)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, (size_t)gta_computed_value_index)
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    && gta_call_reg__x86_64(v, GTA_REG_RCX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP);
-  return false;
+    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_index);
 }

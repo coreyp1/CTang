@@ -163,6 +163,32 @@ bool gta_binary_optimistic_increase(GCU_Vector8 * vector, size_t additional);
 uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg);
 
 /**
+ * Helper function to call a function in the binary.
+ *
+ * This will add the commands to preserve the stack and call the function.
+ * Afterward, the stack will be restored.
+ *
+ * @param vector The vector in which to store the instructions.
+ * @param function The function to call.
+ * @return True on success, false on failure.
+ */
+bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function);
+
+/**
+ * Helper function to call a function in the binary.  This variation requires
+ * that the function address has already been loaded into the specified
+ * register.
+ *
+ * This will add the commands to preserve the stack and call the function.
+ * Afterward, the stack will be restored.
+ *
+ * @param vector The vector in which to store the instructions.
+ * @param reg The register holding the function address.
+ * @return True on success, false on failure.
+ */
+bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
+
+/**
  * x86_64 instruction: AND reg, imm
  *
  * @param vector The vector in which to store the instruction.

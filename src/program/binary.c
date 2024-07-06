@@ -56,6 +56,31 @@ uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg) {
 }
 
 
+bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function) {
+  return true
+    && gta_mov_reg_imm__x86_64(vector, GTA_REG_RAX, function)
+    && gta_binary_call_reg__x86_64(vector, GTA_REG_RAX);
+}
+
+bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
+  return true
+  // Prepare the stack for the function call.
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFFFFFFFFFF0
+    && gta_push_reg__x86_64(vector, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(vector, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(vector, GTA_REG_RSP, 0xFFFFFFF0)
+  //   call REG
+    && gta_call_reg__x86_64(vector, reg)
+  // Restore the stack after the function call.
+  //   mov rsp, rbp
+  //   pop rbp
+    && gta_mov_reg_reg__x86_64(vector, GTA_REG_RSP, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(vector, GTA_REG_RBP);
+}
+
+
 bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t immediate) {
   // https://www.felixcloutier.com/x86/and
   if (!REG_IS_INTEGER(dst) || !gta_binary_optimistic_increase(vector, 7)) {

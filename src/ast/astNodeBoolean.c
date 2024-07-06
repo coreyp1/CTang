@@ -71,32 +71,7 @@ bool gta_ast_node_boolean_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Com
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;
   GCU_Vector8 * v = context->binary_vector;
 
-  // TODO: Replace with a branch-free version using cmov and the singleton
-  //   objects directly (rather than calling a function).
-
-  return true
-    // Set up for a function call.
-    //   push rbp
-    //   mov rbp, rsp
-    //   and rsp, 0xFFFFFFFFFFFFFFF0
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, (int32_t)0xFFFFFFF0)
-    // context is in r15
-    // gta_computed_value_boolean_create(boolean->value, context):
-    //   mov rsi, r15
-    //   mov rdi, boolean->value
-    //   mov rdx, context
-    //   mov rax, gta_computed_value_boolean_create
-    //   call rax
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, boolean->value ? 1 : 0)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_R15)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (GTA_UInteger)gta_computed_value_boolean_create)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-    // Tear down the function call.
-    //   mov rsp, rbp
-    //   pop rbp
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP);
+  return gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, boolean->value
+    ? (uint64_t)gta_computed_value_boolean_true
+    : (uint64_t)gta_computed_value_boolean_false);
 }

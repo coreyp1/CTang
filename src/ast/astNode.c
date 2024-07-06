@@ -91,28 +91,7 @@ void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback,
 bool gta_ast_node_null_compile_to_binary__x86_64(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_MAYBE_UNUSED(GTA_Compiler_Context * context)) {
   GCU_Vector8 * v = context->binary_vector;
 
-  // TODO: Replace with:
-  //   mov rax, gta_computed_value_null
-  return true
-    // Set up for a function call.
-    //   push rbp
-    //   mov rbp, rsp
-    //   and rsp, 0xFFFFFFFFFFFFFFF0
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, (int32_t)0xFFFFFFF0)
-    // Assembly to call gta_computed_value_create(0):
-    //   mov rax, gta_computed_value_create
-    //   mov rdi, 0
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(gta_computed_value_create))
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, 0)
-    //   call rax
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-    // Tear down the function call.
-    //   mov rsp, rbp
-    //   pop rbp
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP);
+  return gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)gta_computed_value_null);
 }
 
 

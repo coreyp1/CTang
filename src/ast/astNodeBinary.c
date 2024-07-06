@@ -438,7 +438,7 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
       && gta_push_reg__x86_64(v, GTA_REG_RAX)
     // Compile the RHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)
-    // Prepare registers for: func(result_from_lhs, result_from_rhs, true, is_assignment)
+    // Prepare registers for: func(result_from_lhs, result_from_rhs, true, is_assignment, context)
     //   pop rdi       ; result_from_lhs
     //   mov rsi, rax  ; result_from_rhs
     //   mov rdx, 1    ; true
@@ -450,21 +450,9 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
       && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, 1)
       && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, 0)
       && gta_mov_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_R15)
-      && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_JIT_FUNCTION_CONVERTER(func))
-    // Set up for a function call.
-    //   push rbp
-    //   mov rbp, rsp
-    //   and rsp, 0xFFFFFFFFFFFFFFF0
-      && gta_push_reg__x86_64(v, GTA_REG_RBP)
-      && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-      && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    //   call func
-      && gta_call_reg__x86_64(v, GTA_REG_RAX)
-    // Tear down the function call.
-    //   mov rsp, rbp
-    //   pop rbp
-      && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-      && gta_pop_reg__x86_64(v, GTA_REG_RBP);
+      && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)func)
+    // Call the function.
+      && gta_binary_call_reg__x86_64(v, GTA_REG_RAX);
   }
   return false;
 }
