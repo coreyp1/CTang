@@ -136,7 +136,7 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   //   mov rsi, r15
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, array->elements->count)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
-    && gta_binary_call__x86_64(v, (size_t)gta_computed_value_array_create)
+    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_array_create)
   // If the array creation failed, return a memory error.
   //   test rax, rax
   //   jz return_memory_error
