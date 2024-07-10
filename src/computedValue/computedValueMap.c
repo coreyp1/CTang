@@ -29,7 +29,7 @@ GTA_Computed_Value_VTable gta_computed_value_map_vtable = {
   .equal = gta_computed_value_equal_not_supported,
   .not_equal = gta_computed_value_not_equal_not_supported,
   .period = gta_computed_value_period_not_supported,
-  .index = gta_computed_value_index_not_supported,
+  .index = gta_computed_value_map_index,
   .slice = gta_computed_value_slice_not_supported,
   .iterator_get = gta_computed_value_iterator_get_not_supported,
   .iterator_next = gta_computed_value_iterator_next_not_supported,
@@ -177,6 +177,21 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_deep_copy(GTA_Computed_Valu
   }
 
   return (GTA_Computed_Value *)map_copy;
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_map_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  GTA_Computed_Value_Map * map = (GTA_Computed_Value_Map *)self;
+  if (!GTA_COMPUTED_VALUE_IS_STRING(index)) {
+    return gta_computed_value_error_map_key_not_string;
+  }
+  GTA_Computed_Value_String * key = (GTA_Computed_Value_String *)index;
+  GTA_Integer key_hash = gcu_string_hash_64(key->value->buffer, key->value->byte_length);
+  GTA_HashX_Value result = GTA_HASHX_GET(map->value_hash, key_hash);
+  if (!result.exists) {
+    return gta_computed_value_null;
+  }
+  return (GTA_Computed_Value *)GTA_TYPEX_P(result.value);
 }
 
 

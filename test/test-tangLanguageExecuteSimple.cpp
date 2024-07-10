@@ -2093,6 +2093,53 @@ TEST(Index, String) {
   }
 }
 
+TEST(Index, Map) {
+  {
+    // Existing key.
+    TEST_PROGRAM_SETUP(R"(
+      a = {
+        foo: 3,
+        bar: 4.5,
+        baz: true,
+        qux: "hello",
+      };
+      a["bar"];)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
+    ASSERT_EQ(4.5, ((GTA_Computed_Value_Float *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Non-existent key.
+    TEST_PROGRAM_SETUP(R"(
+      a = {
+        foo: 3,
+        bar: 4.5,
+        baz: true,
+        qux: "hello",
+      };
+      a["quux"];)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Non-string key.
+    TEST_PROGRAM_SETUP(R"(
+      a = {
+        foo: 3,
+        bar: 4.5,
+        baz: true,
+        qux: "hello",
+      };
+      a[3];)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_map_key_not_string);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(Assignment, Index) {
   {
     // Assign to an existing index.

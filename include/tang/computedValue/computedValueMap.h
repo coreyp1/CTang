@@ -111,6 +111,16 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_deep_copy(GT
 GTA_NO_DISCARD char * GTA_CALL gta_computed_value_map_to_string(GTA_Computed_Value * self);
 
 /**
+ * Gets a value from the object using an index.
+ *
+ * @param self The object to get the value from.
+ * @param index The index to get.
+ * @param context The execution context of the program.
+ * @return The value of the index or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
+
+/**
  * Get the computed value for a key in the map.
  * 
  * @param self The map on which to operate
