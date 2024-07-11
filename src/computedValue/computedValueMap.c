@@ -15,7 +15,7 @@ GTA_Computed_Value_VTable gta_computed_value_map_vtable = {
   .deep_copy = gta_computed_value_map_deep_copy,
   .to_string = gta_computed_value_null_to_string,
   .print = gta_computed_value_generic_print_from_to_string,
-  .assign_index = gta_computed_value_assign_index_not_supported,
+  .assign_index = gta_computed_value_map_assign_index,
   .add = gta_computed_value_add_not_supported,
   .subtract = gta_computed_value_subtract_not_supported,
   .multiply = gta_computed_value_multiply_not_supported,
@@ -177,6 +177,11 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_deep_copy(GTA_Computed_Valu
   }
 
   return (GTA_Computed_Value *)map_copy;
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_map_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  return gta_computed_value_map_set_key_val((GTA_Computed_Value_Map *)self, index, other);
 }
 
 

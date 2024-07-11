@@ -130,7 +130,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
             GTA_Integer key_hash = gcu_string_hash_64(key_string->value->buffer, key_string->value->byte_length);
             if (key->is_temporary || key->is_singleton) {
               key->is_temporary = false;
-              GTA_HASHX_SET(map->key_hash, key_hash, GTA_TYPEX_MAKE_P(value));
+              GTA_HASHX_SET(map->key_hash, key_hash, GTA_TYPEX_MAKE_P(key));
             }
             else {
               GTA_Computed_Value * key_copy = gta_computed_value_deep_copy(key, context);
@@ -138,7 +138,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
                 context->result = gta_computed_value_error_out_of_memory;
                 break;
               }
-              GTA_HASHX_SET(map->key_hash, key_hash, GTA_TYPEX_MAKE_P(value));
+              GTA_HASHX_SET(map->key_hash, key_hash, GTA_TYPEX_MAKE_P(key));
             }
             if (value->is_temporary || value->is_singleton) {
               value->is_temporary = false;

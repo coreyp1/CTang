@@ -2140,7 +2140,7 @@ TEST(Index, Map) {
   }
 }
 
-TEST(Assignment, Index) {
+TEST(Assignment, ArrayIndex) {
   {
     // Assign to an existing index.
     TEST_PROGRAM_SETUP(R"(a = [3, 4.5, true, "hello"]; a[2] = false; a;)");
@@ -2238,6 +2238,123 @@ TEST(Assignment, Index) {
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
     ASSERT_EQ(context->result, gta_computed_value_error_invalid_index);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Assignment, MapIndex) {
+  {
+    // Assign to an existing key.
+    TEST_PROGRAM_SETUP(R"(
+      a = {
+        foo: 3,
+        bar: 4.5,
+        baz: true,
+        qux: "hello",
+      };
+      a["baz"] = false;
+      a;)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_MAP(context->result));
+    GTA_Computed_Value_Map * result = (GTA_Computed_Value_Map *)context->result;
+    ASSERT_EQ(4, result->key_hash->entries);
+    ASSERT_EQ(4, result->value_hash->entries);
+    {
+      // foo
+      const char * key = "foo";
+      GTA_Integer key_hash = gcu_string_hash_64(key, strlen(key));
+      GTA_HashX_Value key_result = GTA_HASHX_GET(result->key_hash, key_hash);
+      ASSERT_TRUE(key_result.exists);
+      char * str = gta_computed_value_to_string((GTA_Computed_Value *)GTA_TYPEX_P(key_result.value));
+      printf("foo_key_result: %s\n", str);
+      gcu_free(str);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(GTA_TYPEX_P(key_result.value)));
+      ASSERT_STREQ(key, ((GTA_Computed_Value_String *)GTA_TYPEX_P(key_result.value))->value->buffer);
+      GTA_HashX_Value value_result = GTA_HASHX_GET(result->value_hash, key_hash);
+      ASSERT_TRUE(value_result.exists);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(GTA_TYPEX_P(value_result.value)));
+      ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)GTA_TYPEX_P(value_result.value))->value);
+    }
+    {
+      // bar
+      const char * key = "bar";
+      GTA_Integer key_hash = gcu_string_hash_64(key, strlen(key));
+      GTA_HashX_Value key_result = GTA_HASHX_GET(result->key_hash, key_hash);
+      ASSERT_TRUE(key_result.exists);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(GTA_TYPEX_P(key_result.value)));
+      ASSERT_STREQ(key, ((GTA_Computed_Value_String *)GTA_TYPEX_P(key_result.value))->value->buffer);
+      GTA_HashX_Value value_result = GTA_HASHX_GET(result->value_hash, key_hash);
+      ASSERT_TRUE(value_result.exists);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(GTA_TYPEX_P(value_result.value)));
+      ASSERT_EQ(4.5, ((GTA_Computed_Value_Float *)GTA_TYPEX_P(value_result.value))->value);
+    }
+    {
+      // baz
+      const char * key = "baz";
+      GTA_Integer key_hash = gcu_string_hash_64(key, strlen(key));
+      GTA_HashX_Value key_result = GTA_HASHX_GET(result->key_hash, key_hash);
+      ASSERT_TRUE(key_result.exists);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(GTA_TYPEX_P(key_result.value)));
+      ASSERT_STREQ(key, ((GTA_Computed_Value_String *)GTA_TYPEX_P(key_result.value))->value->buffer);
+      GTA_HashX_Value value_result = GTA_HASHX_GET(result->value_hash, key_hash);
+      ASSERT_TRUE(value_result.exists);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(GTA_TYPEX_P(value_result.value)));
+      ASSERT_FALSE(((GTA_Computed_Value_Boolean *)GTA_TYPEX_P(value_result.value))->value);
+    }
+    {
+      // qux
+      const char * key = "qux";
+      GTA_Integer key_hash = gcu_string_hash_64(key, strlen(key));
+      GTA_HashX_Value key_result = GTA_HASHX_GET(result->key_hash, key_hash);
+      ASSERT_TRUE(key_result.exists);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(GTA_TYPEX_P(key_result.value)));
+      ASSERT_STREQ(key, ((GTA_Computed_Value_String *)GTA_TYPEX_P(key_result.value))->value->buffer);
+      GTA_HashX_Value value_result = GTA_HASHX_GET(result->value_hash, key_hash);
+      ASSERT_TRUE(value_result.exists);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(GTA_TYPEX_P(value_result.value)));
+      ASSERT_STREQ("hello", ((GTA_Computed_Value_String *)GTA_TYPEX_P(value_result.value))->value->buffer);
+    }
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Assign to a new key.
+    TEST_PROGRAM_SETUP(R"(
+      a = {
+        foo: 3,
+      };
+      a["bar"] = 42;
+      a;)");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_MAP(context->result));
+    GTA_Computed_Value_Map * result = (GTA_Computed_Value_Map *)context->result;
+    ASSERT_EQ(2, result->key_hash->entries);
+    ASSERT_EQ(2, result->value_hash->entries);
+    {
+      // foo
+      const char * key = "foo";
+      GTA_Integer key_hash = gcu_string_hash_64(key, strlen(key));
+      GTA_HashX_Value key_result = GTA_HASHX_GET(result->key_hash, key_hash);
+      ASSERT_TRUE(key_result.exists);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(GTA_TYPEX_P(key_result.value)));
+      ASSERT_STREQ(key, ((GTA_Computed_Value_String *)GTA_TYPEX_P(key_result.value))->value->buffer);
+      GTA_HashX_Value value_result = GTA_HASHX_GET(result->value_hash, key_hash);
+      ASSERT_TRUE(value_result.exists);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(GTA_TYPEX_P(value_result.value)));
+      ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)GTA_TYPEX_P(value_result.value))->value);
+    }
+    {
+      // bar
+      const char * key = "bar";
+      GTA_Integer key_hash = gcu_string_hash_64(key, strlen(key));
+      GTA_HashX_Value key_result = GTA_HASHX_GET(result->key_hash, key_hash);
+      ASSERT_TRUE(key_result.exists);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(GTA_TYPEX_P(key_result.value)));
+      ASSERT_STREQ(key, ((GTA_Computed_Value_String *)GTA_TYPEX_P(key_result.value))->value->buffer);
+      GTA_HashX_Value value_result = GTA_HASHX_GET(result->value_hash, key_hash);
+      ASSERT_TRUE(value_result.exists);
+      ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(GTA_TYPEX_P(value_result.value)));
+      ASSERT_EQ(42, ((GTA_Computed_Value_Integer *)GTA_TYPEX_P(value_result.value))->value);
+    }
     TEST_PROGRAM_TEARDOWN();
   }
 }
