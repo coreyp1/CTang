@@ -2265,9 +2265,6 @@ TEST(Assignment, MapIndex) {
       GTA_Integer key_hash = gcu_string_hash_64(key, strlen(key));
       GTA_HashX_Value key_result = GTA_HASHX_GET(result->key_hash, key_hash);
       ASSERT_TRUE(key_result.exists);
-      char * str = gta_computed_value_to_string((GTA_Computed_Value *)GTA_TYPEX_P(key_result.value));
-      printf("foo_key_result: %s\n", str);
-      gcu_free(str);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(GTA_TYPEX_P(key_result.value)));
       ASSERT_STREQ(key, ((GTA_Computed_Value_String *)GTA_TYPEX_P(key_result.value))->value->buffer);
       GTA_HashX_Value value_result = GTA_HASHX_GET(result->value_hash, key_hash);
