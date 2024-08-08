@@ -24,12 +24,35 @@ static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_out_of_memory_singleton
     .vtable = &gta_ast_node_parse_error_vtable,
     .location = {0, 0, 0},
     .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+    .is_singleton = true,
   },
   .message = "An out of memory error ocurred when attempting to create a parse error.",
 };
-
-
 GTA_Ast_Node * gta_ast_node_parse_error_out_of_memory = (GTA_Ast_Node *) &gta_ast_node_parse_error_out_of_memory_singleton;
+
+
+static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_function_redeclared_singleton = {
+  .base = {
+    .vtable = &gta_ast_node_parse_error_vtable,
+    .location = {0, 0, 0},
+    .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+    .is_singleton = true,
+  },
+  .message = "A function has been redeclared.",
+};
+GTA_Ast_Node * gta_ast_node_parse_error_function_redeclared = (GTA_Ast_Node *) &gta_ast_node_parse_error_function_redeclared_singleton;
+
+
+static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_identifier_redeclared_singleton = {
+  .base = {
+    .vtable = &gta_ast_node_parse_error_vtable,
+    .location = {0, 0, 0},
+    .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+    .is_singleton = true,
+  },
+  .message = "An identifier has been redeclared.",
+};
+GTA_Ast_Node * gta_ast_node_parse_error_identifier_redeclared = (GTA_Ast_Node *) &gta_ast_node_parse_error_identifier_redeclared_singleton;
 
 
 GTA_Ast_Node_Parse_Error * gta_ast_node_parse_error_create(const char * message, GTA_PARSER_LTYPE location) {

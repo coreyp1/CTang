@@ -66,6 +66,19 @@ extern GTA_Computed_Value * gta_computed_value_error_not_supported;
 extern GTA_Computed_Value * gta_computed_value_error_invalid_index;
 
 /**
+ * Indicates that the attempted function call could not be executed, because
+ * the object was not a function.
+ */
+extern GTA_Computed_Value * gta_computed_value_error_invalid_function_call;
+
+/**
+ * Indicates that the attempted function call could not be executed, because
+ * the number of arguments supplied did not match the number of parameters
+ * expected by the function.
+ */
+extern GTA_Computed_Value * gta_computed_value_error_argument_count_mismatch;
+
+/**
  * Represents an error value.
  */
 typedef struct GTA_Computed_Value_Error {

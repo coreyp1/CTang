@@ -44,6 +44,19 @@ typedef enum GTA_Ast_Node_Identifier_Type {
 
 /**
  * The GTA_Ast_Node_Identifier class.
+ *
+ * There are 3 scope types that an identifier can be:
+ * 1. Local variable
+ * 2. Function declaration
+ * 3. Global/Library variable
+ *
+ * Resolution rules are as follows:
+ * 1. If the identifier is a function declaration, then it is resolved to the
+ *   function declaration.
+ * 2. If the identifier is declared Global in the current scope, then it is
+ *   resolved to the global variable.  (The outermost scope is the global scope
+ *   by default.)
+ * 3. Otherwise, the identifier is resolved to the local variable.
  */
 typedef struct GTA_Ast_Node_Identifier {
   /**

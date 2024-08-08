@@ -18,6 +18,16 @@ extern GTA_Ast_Node_VTable gta_ast_node_function_vtable;
 
 /**
  * The GTA_Ast_Node_Function class.
+ *
+ * Functions may be declared in any scope, but they are only callable from the
+ * scope in which they are declared, or from a child scope of that scope.
+ *
+ * A function declaration will cause all identifiers in that scope or child
+ * scopes to be resolved to the function declaration.
+ *
+ * Function identifiers of the same name, but in different scopes are treated
+ * separately and will resolve to the correct function declaration according to
+ * the scope resolution rules.
  */
 typedef struct GTA_Ast_Node_Function {
   /**
@@ -43,13 +53,27 @@ typedef struct GTA_Ast_Node_Function {
   /**
    * The parameters of the function.
    *
-   * This is a vector of char * identifiers.
+   * This is a vector of AST Node Identifiers.
    */
   GTA_VectorX * parameters;
   /**
    * The block of the function.
    */
   GTA_Ast_Node * block;
+  /**
+   * The scope associated with this function declaration.
+   *
+   * This is used to store the local variables of the function.  It is stored
+   * on the AST node so that it can be responsibly destroyed when the node is
+   * destroyed.  It also protects against the edge case of a function of the
+   * same name being declared twice in the same scope.
+   */
+  GTA_Variable_Scope * scope;
+  /**
+   * The Computed Value Function holding the function metadata to be invoked at
+   * runtime.  Obviously, this cannot be created until compile time.
+   */
+  GTA_Computed_Value_Function * runtime_function;
 } GTA_Ast_Node_Function;
 
 /**
@@ -95,6 +119,24 @@ void gta_ast_node_function_print(GTA_Ast_Node * self, const char * indent);
  * @return The simplified GTA_Ast_Node_Function object or NULL on failure.
  */
 GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_function_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+
+/**
+ * Perform pre-compilation analysis on the AST node.
+ *
+ * This step includes allocating constants, identifying libraries and variables
+ * (global and local), and creating namespace scopes for functions.
+ *
+ * This function serves as a general dispatch function, and should be used in
+ * preference to calling the vtable's analyze function directly.
+ *
+ * @see gta_ast_node_analyze()
+ *
+ * @param self The node to analyze.
+ * @param program The program that the node is part of.
+ * @param scope The current variable scope.
+ * @return NULL on success, otherwise return a parse error.
+ */
+GTA_Ast_Node * gta_ast_node_function_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
 
 /**
  * Walks a GTA_Ast_Node_Function object.

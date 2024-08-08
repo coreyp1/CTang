@@ -4,6 +4,7 @@
 #include <cutil/memory.h>
 #include <tang/ast/astNodeBlock.h>
 #include <tang/ast/astNodeUse.h>
+#include <tang/ast/astNodeFunction.h>
 #include <tang/computedValue/computedValue.h>
 
 GTA_Ast_Node_VTable gta_ast_node_block_vtable = {
@@ -102,19 +103,32 @@ void gta_ast_node_block_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
 
 bool gta_ast_node_block_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Block * block = (GTA_Ast_Node_Block *) self;
+
+  // If the block has no statements, then put a NULL on the stack.
   if (!GTA_VECTORX_COUNT(block->statements)) {
     return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
       && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
   }
+
+  // There are multiple statements.
+  // Each statement should leave its result on the stack.  We will POP
+  // everything except the last statement.
+  // Function declarations are not an executed statement, so we don't need to
+  // POP after compiling a function declaration.
   bool statements_compiled = false;
   for (size_t i = 0; i < GTA_VECTORX_COUNT(block->statements); ++i) {
     GTA_Ast_Node * statement = (GTA_Ast_Node *)GTA_TYPEX_P(block->statements->data[i]);
     if (!GTA_AST_IS_USE(statement)) {
-      statements_compiled = true;
-      if (!(gta_ast_node_compile_to_bytecode(statement, context)
-        && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP)))) {
+      if (!gta_ast_node_compile_to_bytecode(statement, context)) {
         return false;
+      }
+      if (!GTA_AST_IS_FUNCTION(statement)) {
+        statements_compiled = true;
+        if (!(true
+          && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+          && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP)))) {
+          return false;
+        }
       }
     }
   }

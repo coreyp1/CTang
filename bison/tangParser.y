@@ -230,13 +230,6 @@ static int GTA_Parser_lex(GTA_PARSER_STYPE * yylval_param, GTA_PARSER_LTYPE * yy
 }
 
 
-// Helper cleanup function for vector64 of pointers.
-static void vector64_pointer_cleanup(GCU_Vector64 * vector) {
-  for (size_t i = 0; i < vector->count; ++i) {
-    gcu_free((void *)vector->data[i].p);
-  }
-}
-
 // Helper cleanup function for vector64 of ast nodes.
 static void vector64_ast_node_cleanup(GCU_Vector64 * vector) {
   for (size_t i = 0; i < vector->count; ++i) {
@@ -363,25 +356,32 @@ functionDeclarationArguments
         parseError = &ErrorOutOfMemory;
         break;
       }
-      $$->cleanup = vector64_pointer_cleanup;
+      $$->cleanup = vector64_ast_node_cleanup;
     }
   | IDENTIFIER
     {
       // Verify that there have been no memory errors.
       VERIFY($$);
 
+      // Create the identifier object.
       const char * identifier = $1.str;
-
-      // Create a vector to hold the identifiers.
-      $$ = gcu_vector64_create(1);
-      if (!$$) {
+      GTA_Ast_Node * parameter = (GTA_Ast_Node *)gta_ast_node_identifier_create(identifier, @1);
+      if (!parameter) {
         gcu_free((void *)identifier);
         parseError = &ErrorOutOfMemory;
         break;
       }
-      $$->cleanup = vector64_pointer_cleanup;
 
-      gcu_vector64_append($$, GCU_TYPE64_P((void *)identifier));
+      // Create a vector to hold the identifiers.
+      $$ = gcu_vector64_create(1);
+      if (!$$) {
+        gta_ast_node_destroy(parameter);
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
+      $$->cleanup = vector64_ast_node_cleanup;
+
+      gcu_vector64_append($$, GCU_TYPE64_P(parameter));
     }
   | functionDeclarationArguments "," IDENTIFIER
     {
@@ -389,9 +389,15 @@ functionDeclarationArguments
       VERIFY1($1,$$);
 
       const char * identifier = $3.str;
-
-      if (!gcu_vector64_append($1, GCU_TYPE64_P((void *)identifier))) {
+      GTA_Ast_Node * parameter = (GTA_Ast_Node *)gta_ast_node_identifier_create(identifier, @3);
+      if (!parameter) {
         gcu_free((void *)identifier);
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
+
+      if (!gcu_vector64_append($1, GCU_TYPE64_P(parameter))) {
+        gta_ast_node_destroy(parameter);
         $$ = 0;
         parseError = &ErrorOutOfMemory;
         break;

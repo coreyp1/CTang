@@ -556,10 +556,10 @@ TEST(Function, NewVariableMap) {
       z = f(3);
     )");
     ASSERT_NE(ast, nullptr);
-    ASSERT_EQ(23, gta_tang_node_count(ast));
+    ASSERT_EQ(24, gta_tang_node_count(ast));
     ast = gta_tang_simplify(ast);
     ASSERT_NE(ast, nullptr);
-    ASSERT_EQ(23, gta_tang_node_count(ast));
+    ASSERT_EQ(24, gta_tang_node_count(ast));
     gta_ast_node_destroy(ast);
     ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
   }

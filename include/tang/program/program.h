@@ -99,8 +99,20 @@ typedef struct GTA_Program {
   GTA_Program_Flags flags;
   /**
    * The variable scope structure for the program.
+   *
+   * This structure is built during the analysis phase of the script
+   * compilation.  It contains information such as which AST defines
+   * a variable name and the scope in which it is defined.
    */
   GTA_Variable_Scope * scope;
+  /**
+   * A container to hold Computed Value singleton objects.
+   *
+   * During the analysis or compilation phase, AST nodes may create singleton
+   * objects that are used at runtime.  This container holds those objects so
+   * that they can be destroyed when the program is destroyed.
+   */
+  GTA_VectorX * singletons;
 } GTA_Program;
 
 /**

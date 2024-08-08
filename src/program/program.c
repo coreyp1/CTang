@@ -60,22 +60,35 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
     if (!value.exists) {
       goto BYTECODE_DESTROY_GLOBALS_ORDER;
     }
-    GTA_Ast_Node_Identifier * identifier = value.value.p;
-    if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
-      // Find the library AST and compile it.
-      GTA_HashX_Value use_node = GTA_HASHX_GET(program->scope->library_declarations, identifier->mangled_name_hash);
-      if (use_node.exists && GTA_AST_IS_USE(use_node.value.p)) {
-        if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)use_node.value.p, &context)) {
+    if (GTA_AST_IS_IDENTIFIER(value.value.p)) {
+      GTA_Ast_Node_Identifier * identifier = value.value.p;
+      if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
+        // Find the library AST and compile it.
+        GTA_HashX_Value use_node = GTA_HASHX_GET(program->scope->library_declarations, identifier->mangled_name_hash);
+        if (use_node.exists && GTA_AST_IS_USE(use_node.value.p)) {
+          if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)use_node.value.p, &context)) {
+            goto BYTECODE_DESTROY_GLOBALS_ORDER;
+          }
+        }
+        else {
+          // Library not found, but it should exist.
           goto BYTECODE_DESTROY_GLOBALS_ORDER;
         }
       }
       else {
-        // Library not found, but it should exist.
+        // We don't know how to handle this type of global.
         goto BYTECODE_DESTROY_GLOBALS_ORDER;
       }
     }
+    else if (GTA_AST_IS_FUNCTION(value.value.p)) {
+      GTA_Ast_Node_Function * function = value.value.p;
+      error_free &= true
+        && GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_LOAD))
+        && GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_P(function->runtime_function));
+    }
     else {
       // We don't know how to handle this type of global.
+      printf("Unknown global type.\n");
       goto BYTECODE_DESTROY_GLOBALS_ORDER;
     }
     error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SET_NOT_TEMP));
@@ -211,7 +224,14 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * 
     .binary = 0,
     .flags = flags,
     .scope = 0,
+    .singletons = 0,
   };
+
+  // Allocate the singleton vector.
+  program->singletons = GTA_VECTORX_CREATE(32);
+  if (!program->singletons) {
+    goto SINGLETON_VECTOR_CREATE_FAILURE;
+  }
 
   // Either parse the code into an AST or create a null AST.
   program->ast = gta_tang_parse(code);
@@ -225,30 +245,28 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * 
   }
   else if (GTA_AST_IS_PARSE_ERROR(program->ast)) {
     // If the AST is a parse error, then the program is not valid.
-    gta_ast_node_destroy(program->ast);
-    program->ast = 0;
-    return false;
+    goto PARSE_FAILURE;
   }
   if (!program->ast) {
     // If there is no AST, then there is no program.
-    return false;
+    goto COMPLETE_FAILURE;
   }
 
   // Create the scope structure.
   char * name = gcu_calloc(1, 1);
   if (!name) {
-    gta_ast_node_destroy(program->ast);
-    return false;
+    goto SCOPE_NAME_CREATION_FAILURE;
   }
-  program->scope = gta_variable_scope_create(name, program->ast, 0);
+  if (!(program->scope = gta_variable_scope_create(name, program->ast, 0))) {
+    gcu_free(name);
+    goto SCOPE_CREATION_FAILURE;
+  }
 
   // Analyze the AST to collect constants and build scopes.
-  GTA_Ast_Node * error = gta_ast_node_analyze(program->ast, program, program->scope);
-  if (error) {
+  GTA_Ast_Node * error;
+  if ((error = gta_ast_node_analyze(program->ast, program, program->scope))) {
     gta_ast_node_destroy(error);
-    gta_ast_node_destroy(program->ast);
-    gta_variable_scope_destroy(program->scope);
-    return false;
+    goto ANALYZE_FAILURE;
   }
 
   // If the program can compile to binary, then there is no need to compile to
@@ -261,12 +279,26 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * 
   }
 
   if (!program->bytecode && !program->binary) {
-    gta_ast_node_destroy(program->ast);
-    gta_variable_scope_destroy(program->scope);
-    return false;
+    goto COMPILE_FAILURE;
   }
 
   return true;
+
+  // Cleanup on failure.
+COMPILE_FAILURE:
+ANALYZE_FAILURE:
+  gta_variable_scope_destroy(program->scope);
+  program->scope = 0;
+SCOPE_CREATION_FAILURE:
+SCOPE_NAME_CREATION_FAILURE:
+PARSE_FAILURE:
+  gta_ast_node_destroy(program->ast);
+  program->ast = 0;
+COMPLETE_FAILURE:
+  GTA_VECTORX_DESTROY(program->singletons);
+  program->singletons = 0;
+SINGLETON_VECTOR_CREATE_FAILURE:
+  return false;
 }
 
 
@@ -277,12 +309,31 @@ void gta_program_destroy(GTA_Program * self) {
 
 
 void gta_program_destroy_in_place(GTA_Program * self) {
+  // Destroy the AST.
   if (self->ast) {
     gta_ast_node_destroy(self->ast);
   }
+  self->ast = 0;
+
+  // Destroy the scope.
+  gta_variable_scope_destroy(self->scope);
+  self->scope = 0;
+
+  // Destroy the singletons.
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(self->singletons); ++i) {
+    gta_computed_value_destroy(GTA_TYPEX_P(self->singletons->data[i]));
+    self->singletons->data[i] = GTA_TYPEX_MAKE_P(0);
+  }
+  GTA_VECTORX_DESTROY(self->singletons);
+  self->singletons = 0;
+
+  // Destroy the bytecode.
   if (self->bytecode) {
     GTA_VECTORX_DESTROY(self->bytecode);
   }
+  self->bytecode = 0;
+
+  // Destroy the binary.
   if (self->binary) {
 #ifdef _WIN32
     VirtualFree(self->binary, 0, MEM_RELEASE);
@@ -291,7 +342,7 @@ void gta_program_destroy_in_place(GTA_Program * self) {
     munmap(self->binary, length);
 #endif // _WIN32
   }
-  gta_variable_scope_destroy(self->scope);
+  self->binary = 0;
 }
 
 

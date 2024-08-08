@@ -60,6 +60,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/computedValue/computedValueBoolean.o \
 	$(OBJ_DIR)/computedValue/computedValueError.o \
 	$(OBJ_DIR)/computedValue/computedValueFloat.o \
+	$(OBJ_DIR)/computedValue/computedValueFunction.o \
 	$(OBJ_DIR)/computedValue/computedValueInteger.o \
 	$(OBJ_DIR)/computedValue/computedValueIterator.o \
 	$(OBJ_DIR)/computedValue/computedValueMap.o \
@@ -305,6 +306,7 @@ DEP_COMPUTEDVALUEALL = \
 	$(DEP_COMPUTEDVALUEBOOLEAN) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEFLOAT) \
+	$(DEP_COMPUTEDVALUEFUNCTION) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUEITERATOR) \
 	$(DEP_COMPUTEDVALUEMAP) \
@@ -535,10 +537,14 @@ $(OBJ_DIR)/ast/astNodeFloat.o: \
 $(OBJ_DIR)/ast/astNodeFunction.o: \
 	src/ast/astNodeFunction.c \
 	$(DEP_ASTNODEFUNCTIONDECLARATION) \
+	$(DEP_ASTNODEPARSEERROR) \
+	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_ASTNODESTRING) \
+	$(DEP_COMPUTEDVALUEFUNCTION) \
 	$(DEP_MACROS) \
 	$(DEP_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
+	$(DEP_PROGRAM_VARIABLE) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
 
@@ -773,6 +779,13 @@ $(OBJ_DIR)/computedValue/computedValueFloat.o: \
 	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUESTRING) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_EXECUTIONCONTEXT)
+
+$(OBJ_DIR)/computedValue/computedValueFunction.o: \
+	src/computedValue/computedValueFunction.c \
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_COMPUTEDVALUEBOOLEAN) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_EXECUTIONCONTEXT)
 

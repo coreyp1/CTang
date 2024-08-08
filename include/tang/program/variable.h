@@ -98,8 +98,16 @@ typedef struct GTA_Variable_Scope {
     /**
      * The functions in this scope.
      *
-     * The key is the identifier hash, and the value is the GTA_Variable_Scope
-     * object that represents the function.
+     * The key is the mangled identifier hash, and the value is the
+     * GTA_Variable_Scope object that represents the function.
+     *
+     * A function's mangled name is created by concatenating the parent scope's
+     * name with the function's identifier, separated by a "/" character.
+     *
+     * Only the outermost scope will contain the function declarations,
+     * regardless of where the function is declared in the program.
+     *
+     * This must be empty for scopes that are not the outermost scope.
      */
     GTA_HashX * function_scopes;
     /**
@@ -122,7 +130,6 @@ GTA_NO_DISCARD GTA_Variable_Scope * gta_variable_scope_create(char * name, GTA_A
  * Destroy a variable scope.
  *
  * @param scope The scope to destroy.
- * @return True if the scope was destroyed, false otherwise.
  */
 void gta_variable_scope_destroy(GTA_Variable_Scope * scope);
 

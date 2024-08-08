@@ -15,7 +15,7 @@ extern "C" {
 #include <tang/unicodeString.h>
 
 /**
- * The vtable for the GTA_Ast_Node_String class.
+ * The vtable for the GTA_Computed_Value_String class.
  */
 extern GTA_Computed_Value_VTable gta_computed_value_string_vtable;
 

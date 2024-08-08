@@ -6,7 +6,7 @@
 
 GTA_Ast_Node_VTable gta_ast_node_function_call_vtable = {
   .name = "FunctionCall",
-  .compile_to_bytecode = 0,
+  .compile_to_bytecode = gta_ast_node_function_call_compile_to_bytecode,
   .compile_to_binary__x86_64 = 0,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
@@ -14,7 +14,7 @@ GTA_Ast_Node_VTable gta_ast_node_function_call_vtable = {
   .destroy = gta_ast_node_function_call_destroy,
   .print = gta_ast_node_function_call_print,
   .simplify = gta_ast_node_function_call_simplify,
-  .analyze = 0,
+  .analyze = gta_ast_node_function_call_analyze,
   .walk = gta_ast_node_function_call_walk,
 };
 
@@ -94,4 +94,43 @@ void gta_ast_node_function_call_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Call
     GTA_Ast_Node * argument = (GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]);
     gta_ast_node_walk(argument, callback, data, return_value);
   }
+}
+
+
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_function_call_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
+  GTA_Ast_Node * error = gta_ast_node_analyze(function_call->lhs, program, scope);
+  if (error) {
+    return error;
+  }
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(function_call->arguments); ++i) {
+    GTA_Ast_Node * argument = (GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]);
+    error = gta_ast_node_analyze(argument, program, scope);
+    if (error) {
+      return error;
+    }
+  }
+  return 0;
+}
+
+
+bool gta_ast_node_function_call_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
+  GTA_VectorX * b = context->program->bytecode;
+  GTA_VectorX * o = context->bytecode_offsets;
+
+  // Compile the arguments.
+  for (size_t i = 0; i < GTA_VECTORX_COUNT(function_call->arguments); ++i) {
+    if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]), context)) {
+      return false;
+    }
+  }
+
+  return true
+  // Compile the LHS.
+    && gta_ast_node_compile_to_bytecode(function_call->lhs, context)
+  // Call the function
+    && GTA_BYTECODE_APPEND(o, b->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_CALL))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_VECTORX_COUNT(function_call->arguments)));
 }

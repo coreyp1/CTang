@@ -11,8 +11,8 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
   if (!context || !context->program || !context->program->bytecode) {
     return false;
   }
-  // Only the bytecode interpreter uses the bp_stack and pc_stack, so
-  // initialize them here.
+  // Only the bytecode interpreter uses the pc_stack, so
+  // initialize it here.
   if (!(context->pc_stack = GTA_VECTORX_CREATE(32))) {
     return false;
   }
@@ -29,11 +29,18 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
     current = next++;
     switch (GTA_TYPEX_UI(*current)) {
       case GTA_BYTECODE_RETURN: {
-        context->result = GTA_TYPEX_P(context->stack->data[--*sp]);
-        // Pop the return address.
+        context->result = GTA_TYPEX_P(context->stack->data[*sp]);
+        // Pop the frame pointer from the pc_stack.
+        context->fp = context->pc_stack->count > 0
+          ? GTA_TYPEX_UI(context->pc_stack->data[--context->pc_stack->count])
+          : 0;
+        // Pop the return address from the pc_stack.
         next = context->pc_stack->count > 0
           ? GTA_TYPEX_P(context->pc_stack->data[--context->pc_stack->count])
           : 0;
+        break;
+      }
+      case GTA_BYTECODE_NOP: {
         break;
       }
       case GTA_BYTECODE_BOOLEAN: {
@@ -241,6 +248,14 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       case GTA_BYTECODE_POP_FP: {
         // Pop the frame pointer from the stack.
         context->fp = GTA_TYPEX_UI(context->stack->data[--*sp]);
+        break;
+      }
+      case GTA_BYTECODE_LOAD: {
+        // Load a value.
+        // The value will be left on the stack.
+        if (!GTA_VECTORX_APPEND(context->stack, *next++)) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
         break;
       }
       case GTA_BYTECODE_LOAD_LIBRARY: {
@@ -474,12 +489,59 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         }
         break;
       }
+      case GTA_BYTECODE_CALL: {
+        size_t num_arguments = GTA_TYPEX_UI(*next++);
+
+        // Pop the function off the stack.
+        GTA_Computed_Value * potential_function = GTA_TYPEX_P(context->stack->data[--*sp]);
+
+        // Verify that it is a valid function.
+        if (!GTA_COMPUTED_VALUE_IS_FUNCTION(potential_function)) {
+          context->result = gta_computed_value_error_invalid_function_call;
+          // Pop the arguments off the stack.
+          *sp -= num_arguments;
+          break;
+        }
+        GTA_Computed_Value_Function * function = (GTA_Computed_Value_Function *)potential_function;
+
+        // Verify that the number of arguments is correct.
+        if (num_arguments != function->num_arguments) {
+          context->result = gta_computed_value_error_argument_count_mismatch;
+          // Pop the arguments off the stack.
+          *sp -= num_arguments;
+          break;
+        }
+
+        // Prepare to call the function.
+        // Push the return address onto the pc stack.
+        if (!GTA_VECTORX_APPEND(context->pc_stack, GTA_TYPEX_MAKE_P(next))) {
+          context->result = gta_computed_value_error_out_of_memory;
+          break;
+        }
+        if (!GTA_VECTORX_APPEND(context->pc_stack, GTA_TYPEX_MAKE_UI(context->fp))) {
+          // Undo the pc stack push.
+          --context->pc_stack->count;
+          context->result = gta_computed_value_error_out_of_memory;
+          break;
+        }
+        // Set the frame pointer to the stack pointer minus the number of arguments.
+        context->fp = *sp - num_arguments;
+        // Set the pc to the function's address.
+        next = &context->program->bytecode->data[function->pointer];
+
+        break;
+      }
       default: {
         context->result = gta_computed_value_error_invalid_bytecode;
         break;
       }
     }
   }
+
+  // The top of the stack is the result.
+  context->result = context->stack->count > 0
+    ? GTA_TYPEX_P(context->stack->data[context->stack->count - 1])
+    : 0;
   GTA_VECTORX_DESTROY(context->pc_stack);
   context->pc_stack = 0;
 

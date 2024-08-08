@@ -12,6 +12,10 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%p\tRETURN\n", (void *)current);
         ++current;
         break;
+      case GTA_BYTECODE_NOP:
+        printf("%p\tNOP\n", (void *)current);
+        ++current;
+        break;
       case GTA_BYTECODE_NULL:
         printf("%p\tNULL\n", (void *)current);
         ++current;
@@ -84,8 +88,12 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%p\tPOP_FP\n", (void *)current);
         ++current;
         break;
+      case GTA_BYTECODE_LOAD:
+        printf(GTA_64_BIT ? "%p\tLOAD\t%lu\n" : "%p\tLOAD\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        current += 2;
+        break;
       case GTA_BYTECODE_LOAD_LIBRARY:
-        printf("%p\tLOAD_LIBRARY\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%p\tLOAD_LIBRARY\t%lu\n" : "%p\tLOAD_LIBRARY\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_NEGATIVE:
@@ -183,6 +191,10 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
       case GTA_BYTECODE_ITERATOR_NEXT:
         printf("%p\tITERATOR_NEXT\n", (void *)current);
         ++current;
+        break;
+      case GTA_BYTECODE_CALL:
+        printf(GTA_64_BIT ? "%p\tCALL\t%lu\n" : "%p\tCALL\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        current += 2;
         break;
       default:
         printf("%p\tUnknown\n", (void *)current);

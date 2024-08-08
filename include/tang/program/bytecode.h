@@ -25,8 +25,8 @@ extern "C" {
  * will have been pushed onto the stack first, followed by the rhs.
  */
 typedef enum GTA_Bytecode {
-  GTA_BYTECODE_RETURN,         ///< Get stack #, pop return val, pop (stack #) times,
-                               ///<   push val, restore fp, restore pc
+  GTA_BYTECODE_RETURN,         ///< Restore fp, restore pc. Does not pop.
+  GTA_BYTECODE_NOP,            ///< Do nothing.  For debugging.
   GTA_BYTECODE_BOOLEAN,        ///< Push a boolean onto the stack
   GTA_BYTECODE_FLOAT,          ///< Push a floating point number onto the stack
   GTA_BYTECODE_INTEGER,        ///< Push an integer onto the stack
@@ -55,6 +55,7 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_MARK_FP,        ///< Mark the current stack pointer as the frame pointer
   GTA_BYTECODE_PUSH_FP,        ///< Push the frame pointer onto the stack
   GTA_BYTECODE_POP_FP,         ///< Pop the frame pointer from the stack
+  GTA_BYTECODE_LOAD,           ///< Get pointer, push on stack
   GTA_BYTECODE_LOAD_LIBRARY,   ///< Get identifier hash and load a library value
   GTA_BYTECODE_NEGATIVE,       ///< Perform a negation
   GTA_BYTECODE_NOT,            ///< Perform a logical not
@@ -84,6 +85,7 @@ typedef enum GTA_Bytecode {
                                ///<   if the iterator is valid, false otherwise
   GTA_BYTECODE_ITERATOR_NEXT,  ///< Pop an iterator, push the next value, push true
                                ///<   if there is a next value, false otherwise
+  GTA_BYTECODE_CALL,           ///< argc: pop a function, prepare and call function
 
 
   GTA_BYTECODE_POKE,           ///< Stack # (from fp): Copy a val, store @ stack #

@@ -348,6 +348,36 @@ TEST(ControlFlow, Continue) {
   }
 }
 
+TEST(Function, Simple) {
+  {
+    // Function with no arguments.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      function foo() {
+        print("foo");
+      }
+      foo();
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start foo end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Function with arguments.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      function foo(a, b) {
+        print(a + b);
+      }
+      foo(1, 2);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 3 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

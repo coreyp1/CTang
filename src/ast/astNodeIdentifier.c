@@ -105,11 +105,20 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UN
   // the type and mangled name.
   GTA_HashX_Value val = GTA_HASHX_GET(scope->identified_variables, identifier->hash);
   if (val.exists) {
-    GTA_Ast_Node_Identifier * existing_identifier = (GTA_Ast_Node_Identifier *)val.value.p;
-    identifier->mangled_name = existing_identifier->mangled_name;
-    identifier->mangled_name_hash = existing_identifier->mangled_name_hash;
-    identifier->type = existing_identifier->type;
-    return 0;
+    if (GTA_AST_IS_IDENTIFIER(val.value.p)) {
+      GTA_Ast_Node_Identifier * existing_identifier = (GTA_Ast_Node_Identifier *)val.value.p;
+      identifier->mangled_name = existing_identifier->mangled_name;
+      identifier->mangled_name_hash = existing_identifier->mangled_name_hash;
+      identifier->type = existing_identifier->type;
+      return 0;
+    }
+    if (GTA_AST_IS_FUNCTION(val.value.p)) {
+      GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *)val.value.p;
+      identifier->mangled_name = function->mangled_name;
+      identifier->mangled_name_hash = function->mangled_name_hash;
+      identifier->type = GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION;
+      return 0;
+    }
   }
 
   // Is the identifier a library variable?
@@ -250,7 +259,9 @@ bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
 
 bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
-  if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL) {
+  if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY
+    || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL
+    || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION) {
     GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
     if (!val.exists) {
       printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
