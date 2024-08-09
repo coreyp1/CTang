@@ -271,6 +271,17 @@ bool gta_jcc__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, int32_t
 bool gta_jmp__x86_64(GCU_Vector8 * vector, int32_t offset);
 
 /**
+ * x86_64 instruction: JMP reg
+ *
+ * The instruction jumps to the address stored in the register.
+ *
+ * @param vector The vector in which to store the instruction.
+ * @param reg The register to jump to.
+ * @return True on success, false on failure.
+ */
+bool gta_jmp_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
+
+/**
  * x86_64 instruction: LEA reg, [base + index*scale + offset]
  *
  * @param vector The vector in which to store the instruction.

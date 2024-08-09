@@ -462,6 +462,24 @@ bool gta_jmp__x86_64(GCU_Vector8 * vector, int32_t offset) {
 }
 
 
+bool gta_jmp_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
+  // https://www.felixcloutier.com/x86/jmp
+  if (!REG_IS_INTEGER(reg)
+    || !REG_IS_64BIT(reg)
+    || !gta_binary_optimistic_increase(vector, 3)) {
+    return false;
+  }
+  uint8_t code = gta_binary_get_register_code__x86_64(reg);
+  if (code & 0x08) {
+    // REX prefix
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x41);
+  }
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0xFF);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0xE0 + (code & 0x07));
+  return true;
+}
+
+
 bool gta_jcc__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, int32_t offset) {
   // https://www.felixcloutier.com/x86/jcc
   if (!gta_binary_optimistic_increase(vector, 6)) {

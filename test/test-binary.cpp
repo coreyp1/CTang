@@ -207,6 +207,20 @@ TEST(x86_64, jmp) {
 }
 
 
+TEST(x86_64, jmp_reg) {
+  // General case.
+  JIT(gta_jmp_reg__x86_64(v, GTA_REG_RAX), "\xFF\xE0");
+  JIT(gta_jmp_reg__x86_64(v, GTA_REG_RCX), "\xFF\xE1");
+  JIT(gta_jmp_reg__x86_64(v, GTA_REG_R10), "\x41\xFF\xE2");
+  JIT(gta_jmp_reg__x86_64(v, GTA_REG_R13), "\x41\xFF\xE5");
+  // Invalid cases.
+  JIT_FAIL(gta_jmp_reg__x86_64(v, GTA_REG_EAX));
+  JIT_FAIL(gta_jmp_reg__x86_64(v, GTA_REG_BX));
+  JIT_FAIL(gta_jmp_reg__x86_64(v, GTA_REG_CL));
+  JIT_FAIL(gta_jmp_reg__x86_64(v, GTA_REG_DH));
+}
+
+
 TEST(x86_64, lea_reg_ind) {
   // General case. r16, m16
   JIT(gta_lea_reg_ind__x86_64(v, GTA_REG_CX, GTA_REG_RBX, GTA_REG_RDX, 4, 42), "\x66\x8D\x4C\x93\x2A");
