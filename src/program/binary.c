@@ -62,6 +62,7 @@ bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function) {
     && gta_binary_call_reg__x86_64(vector, GTA_REG_RAX);
 }
 
+
 bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   return true
   // Prepare the stack for the function call.
@@ -78,6 +79,103 @@ bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   //   pop rbp
     && gta_mov_reg_reg__x86_64(vector, GTA_REG_RSP, GTA_REG_RBP)
     && gta_pop_reg__x86_64(vector, GTA_REG_RBP);
+}
+
+
+bool gta_add_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t immediate) {
+  // https://www.felixcloutier.com/x86/add
+  if (!REG_IS_INTEGER(dst) || !gta_binary_optimistic_increase(vector, 7)) {
+    return false;
+  }
+  uint8_t dst_code = gta_binary_get_register_code__x86_64(dst);
+  if (dst == GTA_REG_AL && immediate <= 0x7F && immediate >= -0x80) {
+    // AL is a special case.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x04);
+    vector->data[vector->count++] = GCU_TYPE8_UI8((uint8_t)immediate);
+    return true;
+  }
+  if (dst == GTA_REG_AX && immediate <= 0x7FFF && immediate >= -0x8000) {
+    // AX is a special case.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x05);
+    uint16_t downsized_src = (uint16_t)immediate;
+    memcpy(&vector->data[vector->count], &downsized_src, 2);
+    vector->count += 2;
+    return true;
+  }
+  if (dst == GTA_REG_EAX) {
+    // EAX is a special case.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x05);
+    uint32_t downsized_src = (uint32_t)immediate;
+    memcpy(&vector->data[vector->count], &downsized_src, 4);
+    vector->count += 4;
+    return true;
+  }
+  if (dst == GTA_REG_RAX) {
+    // RAX is a special case.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x05);
+    memcpy(&vector->data[vector->count], &immediate, 4);
+    vector->count += 4;
+    return true;
+  }
+  if (immediate <= 0x7F && immediate >= -0x80) {
+    // 8-bit immediate.
+    if (REG_IS_8BIT(dst)) {
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x80);
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + (dst_code & 0x07));
+      vector->data[vector->count++] = GCU_TYPE8_UI8((uint8_t)immediate);
+      return true;
+    }
+    if (REG_IS_16BIT(dst)) {
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x83);
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + (dst_code & 0x07));
+      vector->data[vector->count++] = GCU_TYPE8_UI8((uint8_t)immediate);
+      return true;
+    }
+    if (REG_IS_32BIT(dst)) {
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0x83);
+      vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + (dst_code & 0x07));
+      vector->data[vector->count++] = GCU_TYPE8_UI8((uint8_t)immediate);
+      return true;
+    }
+    // 64-bit register.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((dst_code & 0x08) >> 3));
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x83);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + (dst_code & 0x07));
+    vector->data[vector->count++] = GCU_TYPE8_UI8((uint8_t)immediate);
+    return true;
+  }
+  if (REG_IS_16BIT(dst) && immediate <= 0x7FFF && immediate >= -0x8000) {
+    // 16-bit register, 16-bit immediate.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x66);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x81);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + (dst_code & 0x07));
+    uint16_t downsized_src = (uint16_t)immediate;
+    memcpy(&vector->data[vector->count], &downsized_src, 2);
+    vector->count += 2;
+    return true;
+  }
+  if (REG_IS_8BIT(dst) || REG_IS_16BIT(dst)){
+    // No valid encodings left for 8-bit or 16-bit registers.
+    return false;
+  }
+  if (REG_IS_32BIT(dst)) {
+    // 32-bit register, 32-bit immediate.
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0x81);
+    vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + (dst_code & 0x07));
+    memcpy(&vector->data[vector->count], &immediate, 4);
+    vector->count += 4;
+    return true;
+  }
+  // 64-bit register, 32-bit immediate.
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x48 | ((dst_code & 0x08) >> 3));
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x81);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0xC0 + (dst_code & 0x07));
+  memcpy(&vector->data[vector->count], &immediate, 4);
+  vector->count += 4;
+  return true;
 }
 
 

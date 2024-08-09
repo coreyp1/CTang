@@ -189,6 +189,16 @@ bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function);
 bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 
 /**
+ * x86_64 instruction: ADD reg, imm
+ *
+ * @param vector The vector in which to store the instruction.
+ * @param dst The destination register.
+ * @param immediate The immediate value.
+ * @return True on success, false on failure.
+ */
+bool gta_add_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t immediate);
+
+/**
  * x86_64 instruction: AND reg, imm
  *
  * @param vector The vector in which to store the instruction.

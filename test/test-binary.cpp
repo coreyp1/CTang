@@ -32,6 +32,43 @@ using namespace std;
   }
 
 // x86_64 Assembly code checked at: https://defuse.ca/online-x86-assembler.htm
+
+
+TEST(x86_64, add_reg_imm) {
+  // Special cases for forms of the AX register.
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_AL, (int8_t)0xDE), "\x04\xDE");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_AX, (int16_t)0xDEAD), "\x66\x05\xAD\xDE");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_EAX, (int32_t)0xDEADBEEF), "\x05\xEF\xBE\xAD\xDE");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_RAX, (int32_t)0xDEADBEEF), "\x48\x05\xEF\xBE\xAD\xDE");
+  // General case. r8, imm8
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_BL, (int8_t)0x7F), "\x80\xC3\x7F");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_BH, (int8_t)0xBE), "\x80\xC7\xBE");
+  // General case. r16, imm16
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_CX, (int16_t)0x1EAD), "\x66\x81\xC1\xAD\x1E");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_DX, (int16_t)-0x1EAD), "\x66\x81\xC2\x53\xE1");
+  // General case. r32, imm32
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_ESP, (int32_t)0x1EADBEEF), "\x81\xC4\xEF\xBE\xAD\x1E");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_EBP, (int32_t)-0x1EADBEEF), "\x81\xC5\x11\x41\x52\xE1");
+  // General case. r64, imm32
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_R8, (int32_t)0x1EADBEEF), "\x49\x81\xC0\xEF\xBE\xAD\x1E");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_R9, (int32_t)-0x1EADBEEF), "\x49\x81\xC1\x11\x41\x52\xE1");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_RBX, (int32_t)0x1EADBEEF), "\x48\x81\xC3\xEF\xBE\xAD\x1E");
+  // Sign extension. r16, imm8
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_BX, (int8_t)0x7F), "\x66\x83\xC3\x7F");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_BP, (int8_t)-0x7F), "\x66\x83\xC5\x81");
+  // Sign extension. r32, imm8
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_ESI, (int8_t)0x7F), "\x83\xC6\x7F");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_EDI, (int8_t)-0x7F), "\x83\xC7\x81");
+  // Sign extension. r64, imm8
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_R10, (int8_t)0x7F), "\x49\x83\xC2\x7F");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_R11, (int8_t)-0x7F), "\x49\x83\xC3\x81");
+  JIT(gta_add_reg_imm__x86_64(v, GTA_REG_RBX, (int8_t)0x7F), "\x48\x83\xC3\x7F");
+  // Failures. The immediate value is too large for the register.
+  JIT_FAIL(gta_add_reg_imm__x86_64(v, GTA_REG_AL, (int16_t)0xDEAD));
+  JIT_FAIL(gta_add_reg_imm__x86_64(v, GTA_REG_AX, (int32_t)0xDEADBEEF));
+}
+
+
 TEST(x86_64, and_reg_imm) {
   // Special cases for forms of the AX register.
   JIT(gta_and_reg_imm__x86_64(v, GTA_REG_AL, (int8_t)0xDE), "\x24\xDE");
