@@ -542,6 +542,12 @@ TEST(x86_64, movq_reg_reg) {
 }
 
 
+TEST(x86_64, nop) {
+  // General case.
+  JIT(gta_nop__x86_64(v), "\x90");
+}
+
+
 TEST(x86_64, or_reg_reg) {
   // General case. r8, r8
   JIT(gta_or_reg_reg__x86_64(v, GTA_REG_AL, GTA_REG_BL), "\x08\xD8");

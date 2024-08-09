@@ -387,6 +387,16 @@ bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
 bool gta_movq_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
 
 /**
+ * x86_64 instruction: NOP
+ *
+ * For debugging purposes.  This instruction does nothing.
+ *
+ * @param vector The vector in which to store the instruction.
+ * @return True on success, false on failure.
+ */
+bool gta_nop__x86_64(GCU_Vector8 * vector);
+
+/**
  * x86_64 instruction: OR reg, reg
  *
  * @param vector The vector in which to store the instruction.
