@@ -17,6 +17,7 @@
 #include <cutil/memory.h>
 #include <tang/ast/astNodeAll.h>
 #include <tang/computedValue/computedValue.h>
+#include <tang/computedValue/computedValueFunction.h>
 #include <tang/program/compilerContext.h>
 #include <tang/program/executionContext.h>
 #include <tang/program/binary.h>
@@ -54,7 +55,6 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
   // Now, loop through the globals in the correct order.  If it is a
   // library, then load the library.  Otherwise, push a NULL onto the
   // stack.
-  // TODO: Handle Functions definitions.
   for (size_t i = 0; i < globals_order->count; ++i) {
     GTA_HashX_Value value = GTA_HASHX_GET(program->scope->identified_variables, GTA_TYPEX_UI(globals_order->data[i]));
     if (!value.exists) {
@@ -88,7 +88,7 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
     }
     else {
       // We don't know how to handle this type of global.
-      printf("Unknown global type.\n");
+      fprintf(stderr, "Unknown global type.\n");
       goto BYTECODE_DESTROY_GLOBALS_ORDER;
     }
     error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SET_NOT_TEMP));
@@ -382,6 +382,24 @@ void gta_program_bytecode_print(GTA_Program * self) {
 }
 
 
+/**
+ * Helper function used to update function pointers in the AST to point to the
+ * actual address in the binary.  This function is called after the binary has
+ * been compiled and the function pointers are still byte offsets into the
+ * binary.
+ *
+ * @param self The AST node to update.
+ * @param data In this case, the pointer to the binary block.
+ * @param error Unused.
+ */
+static void update_function_pointers(GTA_Ast_Node * self, void * data, GTA_MAYBE_UNUSED(void * error)) {
+  if (GTA_AST_IS_FUNCTION(self)) {
+    GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *)self;
+    function->runtime_function->pointer += (size_t)data;
+  }
+}
+
+
 void gta_program_compile_binary__x86_64(GTA_Program * program) {
   // https://defuse.ca/online-x86-assembler.htm
   // Callee-saved registers: rbp, rbx, r12, r13, r14, r15
@@ -475,34 +493,49 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   // Now, loop through the globals in the correct order.  If it is a
   // library, then load the library.  Otherwise, push a NULL onto the
   // stack.
-  // TODO: Handle Functions definitions.
-  for (size_t i = 0; i < global_orders_count; ++i) {
+  for (size_t i = 0; error_free && (i < global_orders_count); ++i) {
     GTA_HashX_Value value = GTA_HASHX_GET(program->scope->identified_variables, globals_order[i]);
     if (!value.exists) {
       goto GLOBALS_ORDER_CLEANUP;
     }
 
-    GTA_Ast_Node_Identifier * identifier = value.value.p;
-    if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
-      // Find the library AST and compile it.
-      GTA_HashX_Value use_node = GTA_HASHX_GET(program->scope->library_declarations, identifier->mangled_name_hash);
-      error_free
-        &= use_node.exists
-        && GTA_AST_IS_USE(use_node.value.p)
-        // Compile the expression.  The result will be in RAX.
-        && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)use_node.value.p, context)
-        // Push the result onto the stack.
-        //   push rax
+    if (GTA_AST_IS_IDENTIFIER(value.value.p)) {
+      GTA_Ast_Node_Identifier * identifier = value.value.p;
+      if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
+        // Find the library AST and compile it.
+        GTA_HashX_Value use_node = GTA_HASHX_GET(program->scope->library_declarations, identifier->mangled_name_hash);
+        error_free
+          &= use_node.exists
+          && GTA_AST_IS_USE(use_node.value.p)
+          // Compile the expression.  The result will be in RAX.
+          && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)use_node.value.p, context)
+          // Push the result onto the stack.
+          //   push rax
+          && gta_push_reg__x86_64(v, GTA_REG_RAX);
+      }
+      else {
+        // We don't know how to handle this type of global.
+        // Put the memory location of the null value into rdx.
+        //   mov rdx, gta_computed_value_null
+        //   push rdx
+        error_free
+          &= gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (uint64_t)gta_computed_value_null)
+          && gta_push_reg__x86_64(v, GTA_REG_RDX);
+      }
+    }
+    else if (GTA_AST_IS_FUNCTION(value.value.p)) {
+      GTA_Ast_Node_Function * function = value.value.p;
+      error_free &= true
+      // Push the function onto the stack.
+      //   mov rax, function->runtime_function
+      //   push rax
+        && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)function->runtime_function)
         && gta_push_reg__x86_64(v, GTA_REG_RAX);
     }
     else {
       // We don't know how to handle this type of global.
-      // Put the memory location of the null value into rdx.
-      //   mov rdx, gta_computed_value_null
-      //   push rdx
-      error_free
-        &= gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (uint64_t)gta_computed_value_null)
-        && gta_push_reg__x86_64(v, GTA_REG_RDX);
+      fprintf(stderr, "Unknown global type.\n");
+      error_free = false;
     }
   }
   gcu_free(globals_order);
@@ -521,7 +554,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (uint64_t)gta_computed_value_null);
 
   // Initialize all locals to null.
-  for (size_t i = 0; i < local_orders_count; ++i) {
+  for (size_t i = 0; error_free && (i < local_orders_count); ++i) {
     //  push rdx
     error_free &= gta_push_reg__x86_64(v, GTA_REG_RDX);
   }
@@ -630,6 +663,12 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     }
   }
 #endif
+
+  // At this point, we must update any function pointers to point to the acutal
+  // address in the binary.  They currently represent the byte offset into the
+  // code block.  We will do this by iterating through the AST and updating the
+  // function pointers.
+  gta_ast_node_walk(program->ast, update_function_pointers, program->binary, 0);
 
   goto CONTEXT_CLEANUP;
 

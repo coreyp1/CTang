@@ -34,6 +34,32 @@ extern GTA_Computed_Value_VTable gta_computed_value_function_vtable;
  * 3. If the object is not a function, then return an error.
  * 4. If the number of arguments does not match, then return an error.
  * 5. Call the function, passing the number of arguments and the argument list.
+ *
+ * In the bytecode interpreter, these functions are "called" by simply jumping
+ * to the address of the function and then returning when the function is done.
+ * The return address (pc) and frame pointer (fp) is pushed onto the virtual
+ * machine's pc/fp stack, and restored when the function returns.  Arguments are
+ * passed on the stack.  The function is responsible for cleaning up the stack
+ * before returning.  The return value is placed on the stack by the function.
+ *
+ * In the binary JIT, the function is called by CALLing the address of the
+ * function and then RETing back to the return address.  Because the JIT uses
+ * the actual processor stack, arguments must still be pushed onto the stack.
+ * The calling convention, however, necessitates that the return address is
+ * pushed onto the stack *after* the arguments.  The functionality is then as
+ * follows:
+ *   1. The caller saves the frame pointer (r12).
+ *   2. The caller aligns the stack so that, after the arguments are pushed,
+ *     the stack is 16-byte aligned.
+ *   3. The caller pushes the arguments onto the stack.
+ *   4. The caller CALLs the function.
+ *   5. Upon return, the caller pops the arguments off the stack.
+ *   6. The caller restores the frame pointer (r12).
+ * The function (the callee) is not responsible for cleaning the arguments off
+ * the stack.  The return value is placed in RAX, like normal.  The function
+ * should reference local variables using the frame pointer (r12).  As such,
+ * the function must reserve an empty "slot" for the frame pointer when it is
+ * analyzing the function, before the compilation step.
  */
 typedef struct GTA_Computed_Value_Function {
   /**

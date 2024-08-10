@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -7,12 +8,13 @@
 #include <tang/ast/astNodeIdentifier.h>
 #include <tang/ast/astNodeParseError.h>
 #include <tang/computedValue/computedValueFunction.h>
+#include <tang/program/binary.h>
 #include <tang/program/variable.h>
 
 GTA_Ast_Node_VTable gta_ast_node_function_vtable = {
   .name = "Function",
   .compile_to_bytecode = gta_ast_node_function_compile_to_bytecode,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_binary__x86_64 = gta_ast_node_function_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
@@ -199,6 +201,13 @@ GTA_Ast_Node * gta_ast_node_function_analyze(GTA_Ast_Node * self, GTA_Program * 
   }
 
   // Step 6: Add the parameters to the function scope.
+  // The parameters are always identifiers, so we know that they will only
+  // occupy a single slot in the local_positions map.
+  // This is important because of the way that we handle the function call,
+  // which pushes the return address on the stack.  This is accounted for in
+  // the next step.
+  // There should not be any locals in the function scope yet.
+  assert(GTA_HASHX_COUNT(function->scope->local_positions) == 0);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function->parameters); ++i) {
     GTA_Ast_Node_Identifier * parameter = (GTA_Ast_Node_Identifier *)GTA_TYPEX_P(function->parameters->data[i]);
     if ((error = gta_ast_node_analyze((GTA_Ast_Node *)parameter, program, function->scope))) {
@@ -206,7 +215,23 @@ GTA_Ast_Node * gta_ast_node_function_analyze(GTA_Ast_Node * self, GTA_Program * 
     }
   }
 
-  // Step 7: Reserve a slot in the global_positions map.
+  // Step 7: Reserve a slot in the local_positions map for the return address.
+  // The caller will store the old frame pointer, and set a new one to the
+  // current SP.  It then pushes the arguments onto the stack, so the calling
+  // function will index all local variables from this new frame pointer.  The
+  // problem, then, is that the caller must actally CALL the function, which
+  // will push the return address onto the stack.  This means that the return
+  // address will be at the top of the stack, in the middle of the function's
+  // local variables.  To avoid this, we reserve a slot for the return address
+  // in the local_positions map, knowing that it will be supplied by the CALL
+  // instruction.
+  if (!GTA_HASHX_SET(function->scope->local_positions, GTA_STRING_HASH("", 0), GTA_TYPEX_MAKE_UI(function->scope->local_positions->entries))) {
+    error = gta_ast_node_parse_error_out_of_memory;
+    goto GLOBAL_REGISTRATION_ERROR;
+  }
+  assert(GTA_HASHX_COUNT(function->scope->local_positions) == function->parameters->count + 1);
+
+  // Step 8: Reserve a slot in the global_positions map.
   if (!GTA_HASHX_SET(outermost_scope->global_positions, function->mangled_name_hash, GTA_TYPEX_MAKE_UI(outermost_scope->global_positions->entries))) {
     error = gta_ast_node_parse_error_out_of_memory;
     goto GLOBAL_REGISTRATION_ERROR;
@@ -240,20 +265,18 @@ bool gta_ast_node_function_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
   GTA_VectorX * b = context->program->bytecode;
   GTA_VectorX * o = context->bytecode_offsets;
 
-  bool error_free = true;
-
   // Jump labels.
-  GTA_Integer function_end;
+  GTA_Integer after_function;
 
-  return error_free
+  return true
   // Create jump labels.
-    && ((function_end = gta_compiler_context_get_label(context)) >= 0)
+    && ((after_function = gta_compiler_context_get_label(context)) >= 0)
   // Jump over the function body.
-  //   JMP function_end
+  //   JMP after_function
     && GTA_BYTECODE_APPEND(o, b->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMP))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-    && gta_compiler_context_add_label_jump(context, function_end, b->count - 1)
+    && gta_compiler_context_add_label_jump(context, after_function, b->count - 1)
   // Record the function's bytecode offset.
     && (function->runtime_function->pointer = GTA_VECTORX_COUNT(b))
   // Compile the function body.
@@ -262,7 +285,57 @@ bool gta_ast_node_function_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
     && GTA_BYTECODE_APPEND(o, b->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_RETURN))
   // End of function.
-  //   function_end:
-    && gta_compiler_context_set_label(context, function_end, context->program->bytecode->count)
+  //   after_function:
+    && gta_compiler_context_set_label(context, after_function, context->program->bytecode->count)
+  ;
+}
+
+bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
+  GCU_Vector8 * v = context->binary_vector;
+
+  // Jump labels.
+  GTA_Integer after_function;
+
+  bool error_free = true
+  // Create jump labels.
+    && ((after_function = gta_compiler_context_get_label(context)) >= 0)
+
+  // Jump over the function body.
+  //   JMP after_function
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, after_function, v->count - 4)
+  // Record the function's binary offset.
+  // This will be translated into an actual pointer after the program is fully
+  // compiled.
+    && (function->runtime_function->pointer = v->count)
+  ;
+
+  // The caller will push the arguments onto the stack, as well as the return
+  // address.  Reserve additional space on the stack for the remaining local
+  // variables.
+  size_t additional_locals_needed = function->scope->local_positions->entries - function->parameters->count - 1;
+  if (additional_locals_needed) {
+    // We'll just put a NULL in those slots for now.
+    //   mov RAX, gta_computed_value_null
+    error_free &= gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)gta_computed_value_null);
+    for (size_t i = function->parameters->count + 1; error_free && (i < function->scope->local_positions->entries); ++i) {
+      // push rax
+      error_free &= gta_push_reg__x86_64(v, GTA_REG_RAX);
+    }
+  }
+
+  return error_free
+  // Compile the function body.
+    && gta_ast_node_compile_to_binary__x86_64(function->block, context)
+  // Clean up the stack by removing the function's arguments and return.
+  //   add RSP, 8 * additional_locals_needed
+  //   ret
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8 * additional_locals_needed)
+    && gta_ret__x86_64(v)
+
+  // End of function.
+  //   after_function:
+    && gta_compiler_context_set_label(context, after_function, v->count)
   ;
 }

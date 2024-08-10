@@ -3,11 +3,14 @@
 #include <string.h>
 #include <cutil/memory.h>
 #include <tang/ast/astNodeFunctionCall.h>
+#include <tang/computedValue/computedValueError.h>
+#include <tang/computedValue/computedValueFunction.h>
+#include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_function_call_vtable = {
   .name = "FunctionCall",
   .compile_to_bytecode = gta_ast_node_function_call_compile_to_bytecode,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_binary__x86_64 = gta_ast_node_function_call_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
@@ -133,4 +136,126 @@ bool gta_ast_node_function_call_compile_to_bytecode(GTA_Ast_Node * self, GTA_Com
     && GTA_BYTECODE_APPEND(o, b->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_CALL))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_VECTORX_COUNT(function_call->arguments)));
+}
+
+
+bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
+  GCU_Vector8 * v = context->binary_vector;
+
+  // Offsets
+  int32_t vtable_offset = (int32_t)(size_t)(&((GTA_Computed_Value *)0)->vtable);
+  int32_t num_arguments_offset = (int32_t)(size_t)(&((GTA_Computed_Value_Function *)0)->num_arguments);
+  int32_t pointer_offset = (int32_t)(size_t)(&((GTA_Computed_Value_Function *)0)->pointer);
+
+  // Jump Labels
+  GTA_Integer not_a_function;
+  GTA_Integer argument_count_mismatch;
+  GTA_Integer cleanup;
+  GTA_Integer restore_frame_pointer;
+
+  bool stack_padding_needed = GTA_VECTORX_COUNT(function_call->arguments) % 2;
+
+  bool error_free = true
+  // Create jump labels.
+    && ((not_a_function = gta_compiler_context_get_label(context)) >= 0)
+    && ((argument_count_mismatch = gta_compiler_context_get_label(context)) >= 0)
+    && ((cleanup = gta_compiler_context_get_label(context)) >= 0)
+    && ((restore_frame_pointer = gta_compiler_context_get_label(context)) >= 0)
+
+  // Push the frame pointer (r12) onto the stack.
+    && gta_push_reg__x86_64(v, GTA_REG_R12)
+
+  // Prepare for stack alignment of the function call (much later).
+  // We don't know the current alignment, so we will align to 16 bytes and then
+  // pad it according to the number of arguments (8 bytes each).  Even though
+  // it's early, doing this now will make it so that the arguments are pushed
+  // onto the stack in the correct alignment.
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFF0
+  //   add rsp, stack_padding_needed ? -8 : 0
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, stack_padding_needed ? -8 : 0)
+  // Set the new frame pointer (r12) to the current stack pointer (rsp).
+  //   mov r12, rsp
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_R12, GTA_REG_RSP)
+  ;
+
+  // Compile and push the arguments.
+  for (size_t i = 0; error_free && (i < GTA_VECTORX_COUNT(function_call->arguments)); ++i) {
+    // TODO: Does these values need to be marked as not temporary?
+    error_free &= true
+      && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]), context)
+      && gta_push_reg__x86_64(v, GTA_REG_RAX);
+  }
+
+  // Try to call the function.  If the function is not found, then clean up the
+  // stack and return an error.
+  return error_free
+  // Load the lhs into rax.
+    && gta_ast_node_compile_to_binary__x86_64(function_call->lhs, context)
+
+  // If the lhs is not a function, then bail.
+  //   mov rdx, [rax + vtable_offset]
+  //   mov rcx, gta_computed_value_function_vtable
+  //   cmp rdx, rcx
+  //   jne not_a_function
+    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDX, GTA_REG_RAX, GTA_REG_NONE, 0, vtable_offset)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, (int64_t)&gta_computed_value_function_vtable)
+    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RCX)
+    && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, not_a_function, v->count - 4)
+
+  // RAX is a function.  If the number of arguments does not match, then bail.
+  //   mov rdx, [rax + num_arguments_offset]
+  //   mov rcx, function_call->arguments->count
+  //   cmp rdx, rcx
+  //   jne argument_count_mismatch
+    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDX, GTA_REG_RAX, GTA_REG_NONE, 0, num_arguments_offset)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, GTA_VECTORX_COUNT(function_call->arguments))
+    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RCX)
+    && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, argument_count_mismatch, v->count - 4)
+
+  // Load the function pointer, call it, then clean up.
+  // Note: The stack is already aligned.
+  //   mov rax, [rax + pointer_offset]
+  //   call rax
+  //   jmp cleanup
+    && gta_mov_reg_ind__x86_64(v, GTA_REG_RAX, GTA_REG_RAX, GTA_REG_NONE, 0, pointer_offset)
+    && gta_call_reg__x86_64(v, GTA_REG_RAX)
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, cleanup, v->count - 4)
+
+  // not_a_function:
+  //   mov rax, gta_computed_value_error_invalid_function_call
+  //   jmp cleanup
+    && gta_compiler_context_set_label(context, not_a_function, v->count)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (GTA_Integer)gta_computed_value_error_invalid_function_call)
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, cleanup, v->count - 4)
+
+  // argument_count_mismatch:
+  //   mov rax, gta_computed_value_error_argument_count_mismatch
+    && gta_compiler_context_set_label(context, argument_count_mismatch, v->count)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (GTA_Integer)gta_computed_value_error_argument_count_mismatch)
+  // Fall-through to cleanup.
+
+  // The cleanup assumes that either the result of the function call or an
+  // error is in RAX.  Either way, we need to clean up the stack and restore
+  // the frame pointer (r12).
+  // cleanup:
+  //   add rsp, 8 * (function_call->arguments->count + (stack_padding_needed ? 1 : 0))
+  //   mov rsp, rbp
+  //   pop rbp
+  //   pop r12
+    && gta_compiler_context_set_label(context, cleanup, v->count)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8 * (function_call->arguments->count + (stack_padding_needed ? 1 : 0)))
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(v, GTA_REG_R12)
+  ;
 }

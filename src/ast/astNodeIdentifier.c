@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -94,6 +95,9 @@ GTA_Ast_Node * gta_ast_node_identifier_simplify(GTA_Ast_Node * self, GTA_Ast_Sim
 
 
 GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Program * program), GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(scope);
+
   GTA_Variable_Scope * outermost_scope = scope;
   while (outermost_scope->parent_scope) {
     outermost_scope = outermost_scope->parent_scope;
@@ -216,7 +220,9 @@ void gta_ast_node_identifier_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callbac
 
 bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
-  if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
+  if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY
+    || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL
+    || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION) {
     // Find the identifier's position in the global positions.
     GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
     if (!val.exists) {
@@ -253,6 +259,10 @@ bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
     return true
       && gta_mov_reg_ind__x86_64(context->binary_vector, GTA_REG_RAX, GTA_REG_R12, GTA_REG_NONE, 0, index);
   }
+
+  // We should never get here.
+  assert(false);
+  fprintf(stderr, "Error: Identifier type not recognized.\n");
   return false;
 }
 
@@ -282,5 +292,8 @@ bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
       && GTA_VECTORX_APPEND(context->program->bytecode, val.value);
   }
 
+  // We should never get here.
+  assert(false);
+  fprintf(stderr, "Error: Identifier type not recognized.\n");
   return false;
 }
