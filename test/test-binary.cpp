@@ -113,6 +113,13 @@ TEST(x86_64, call_reg) {
 }
 
 
+TEST(x86_64, call_rel) {
+  // General case. rel32
+  JIT(gta_call_rel__x86_64(v, 0x7FFFFFFF), "\xE8\xFF\xFF\xFF\x7F");
+  JIT(gta_call_rel__x86_64(v, -0x7FFFFFFF), string("\xE8\x01\x00\x00\x80", 5));
+}
+
+
 TEST(x86_64, cmovcc_reg_imm) {
   // Testing register encodings.
   JIT(gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_REG_RBX), "\x48\x0F\x44\xC3");

@@ -218,6 +218,15 @@ bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t imm
 bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 
 /**
+ * x86_64 instruction: CALL rel32
+ *
+ * @param vector The vector in which to store the instruction.
+ * @param offset The offset to call.
+ * @return True on success, false on failure.
+ */
+bool gta_call_rel__x86_64(GCU_Vector8 * vector, int32_t offset);
+
+/**
  * x86_64 instruction: CMOVcc reg, reg
  *
  * The two registers must be the same size.

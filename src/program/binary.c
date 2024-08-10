@@ -296,6 +296,18 @@ bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
 }
 
 
+bool gta_call_rel__x86_64(GCU_Vector8 * vector, int32_t offset) {
+  // https://www.felixcloutier.com/x86/call
+  if (!gta_binary_optimistic_increase(vector, 5)) {
+    return false;
+  }
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0xE8);
+  memcpy(&vector->data[vector->count], &offset, 4);
+  vector->count += 4;
+  return true;
+}
+
+
 bool gta_cmovcc_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, GTA_Register dst, GTA_Register src) {
   // https://www.felixcloutier.com/x86/cmovcc
   if (!(REG_IS_INTEGER(dst) && REG_IS_INTEGER(src)
