@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -16,6 +17,10 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
   if (!(context->pc_stack = GTA_VECTORX_CREATE(32))) {
     return false;
   }
+
+  assert(context->program->bytecode);
+  assert(context->program->bytecode->count ? (bool)context->program->bytecode->data : true);
+  assert(context->stack);
   GTA_TypeX_Union * current = context->program->bytecode->data;
   GTA_TypeX_Union * next = current;
   // Note that the stack pointer is the count of the stack, not the index of
