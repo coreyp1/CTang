@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -80,6 +81,7 @@ GTA_Computed_Value_Boolean * gta_computed_value_boolean_create(bool value, GTA_M
 
 
 bool gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * self, bool value, GTA_Execution_Context * context) {
+  assert(self);
   *self = (GTA_Computed_Value_Boolean) {
     .base = {
       .vtable = &gta_computed_value_boolean_vtable,
@@ -98,6 +100,7 @@ bool gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * sel
 
 
 void gta_computed_value_boolean_destroy(GTA_Computed_Value * self) {
+  assert(self);
   if (!self->is_singleton) {
     gcu_free(self);
   }
@@ -113,6 +116,7 @@ GTA_Computed_Value * gta_computed_value_boolean_deep_copy(GTA_Computed_Value * v
 
 
 char * gta_computed_value_boolean_to_string(GTA_Computed_Value * self) {
+  assert(self);
   char * str = (char *)gcu_malloc(6);
   if (!str) {
     return 0;
@@ -121,7 +125,9 @@ char * gta_computed_value_boolean_to_string(GTA_Computed_Value * self) {
   return str;
 }
 
+
 GTA_Computed_Value * gta_computed_value_boolean_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+  assert(self);
   if (type == &gta_computed_value_boolean_vtable) {
     return self;
   }
