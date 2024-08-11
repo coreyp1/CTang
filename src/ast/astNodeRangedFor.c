@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -28,6 +29,10 @@ GTA_Ast_Node_VTable gta_ast_node_ranged_for_vtable = {
 
 
 GTA_Ast_Node_Ranged_For * gta_ast_node_ranged_for_create(const char * identifier, GTA_Ast_Node * expression, GTA_Ast_Node * block, GTA_PARSER_LTYPE location) {
+  assert(identifier);
+  assert(expression);
+  assert(block);
+
   // Perform all of the necessary allocations or fail.
   // Allocate space for the ranged-for node.
   GTA_Ast_Node_Ranged_For * self = gcu_malloc(sizeof(GTA_Ast_Node_Ranged_For));
@@ -79,7 +84,10 @@ SELF_CREATE_FAILED:
 
 
 void gta_ast_node_ranged_for_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_RANGED_FOR(self));
   GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *) self;
+
   gta_ast_node_destroy(ranged_for->identifier);
   gta_ast_node_destroy(ranged_for->expression);
   gta_ast_node_destroy(ranged_for->iterator);
@@ -89,6 +97,11 @@ void gta_ast_node_ranged_for_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_ranged_for_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_RANGED_FOR(self));
+  GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *) self;
+
+  assert(indent);
   size_t indent_len = strlen(indent);
   char * new_indent = gcu_malloc(indent_len + 5);
   if (!new_indent) {
@@ -96,10 +109,12 @@ void gta_ast_node_ranged_for_print(GTA_Ast_Node * self, const char * indent) {
   }
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "    ", 5);
-  GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *) self;
+
   gta_ast_node_print(ranged_for->identifier, indent);
+
   printf("%s  Expression:\n", indent);
   gta_ast_node_print(ranged_for->expression, new_indent);
+
   printf("%s  Block:\n", indent);
   gta_ast_node_print(ranged_for->block, new_indent);
   gcu_free(new_indent);
@@ -110,6 +125,9 @@ void gta_ast_node_ranged_for_print(GTA_Ast_Node * self, const char * indent) {
  * This function is used to find all the assignments in the while loop.
  */
 static void findAssignments(GTA_Ast_Node * self, void * data, void * error) {
+  assert(self);
+  assert(data);
+  assert(error);
   GCU_Hash64 * assignments = (GCU_Hash64 *)data;
   if (GTA_AST_IS_ASSIGN(self)) {
     GTA_Ast_Node_Assign * assignment = (GTA_Ast_Node_Assign *)self;
@@ -124,6 +142,8 @@ static void findAssignments(GTA_Ast_Node * self, void * data, void * error) {
 
 
 GTA_Ast_Node * gta_ast_node_ranged_for_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_RANGED_FOR(self));
   GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *) self;
 
   // The expression is always executed once, so we can simplify it.
@@ -193,8 +213,12 @@ GTA_Ast_Node * gta_ast_node_ranged_for_simplify(GTA_Ast_Node * self, GTA_Ast_Sim
 
 
 void gta_ast_node_ranged_for_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_RANGED_FOR(self));
   GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *) self;
+
+  callback(self, data, return_value);
+
   gta_ast_node_walk(ranged_for->identifier, callback, data, return_value);
   gta_ast_node_walk(ranged_for->expression, callback, data, return_value);
   gta_ast_node_walk(ranged_for->iterator, callback, data, return_value);
@@ -203,7 +227,10 @@ void gta_ast_node_ranged_for_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callbac
 
 
 GTA_Ast_Node * gta_ast_node_ranged_for_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_RANGED_FOR(self));
   GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *) self;
+
   GTA_Ast_Node * items[] = {ranged_for->identifier, ranged_for->expression, ranged_for->iterator, ranged_for->block};
   for (size_t i = 0; i < 4; ++i) {
     GTA_Ast_Node * error = gta_ast_node_analyze(items[i], program, scope);
@@ -216,7 +243,14 @@ GTA_Ast_Node * gta_ast_node_ranged_for_analyze(GTA_Ast_Node * self, GTA_Program 
 
 
 bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_RANGED_FOR(self));
   GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *)self;
+
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
 
   // Find where the iterator is stored.  It will always be local.
   GTA_Ast_Node_Identifier * iterator = (GTA_Ast_Node_Identifier *)ranged_for->iterator;
@@ -335,7 +369,12 @@ bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
 
 
 bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_RANGED_FOR(self));
   GTA_Ast_Node_Ranged_For * ranged_for = (GTA_Ast_Node_Ranged_For *)self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   // Offsets.
