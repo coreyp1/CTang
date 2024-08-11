@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -20,10 +21,14 @@ GTA_Ast_Node_VTable gta_ast_node_period_vtable = {
 
 
 GTA_Ast_Node_Period * gta_ast_node_period_create(GTA_Ast_Node * lhs, const char * rhs, GTA_PARSER_LTYPE location) {
+  assert(lhs);
+  assert(rhs);
+
   GTA_Ast_Node_Period * self = gcu_malloc(sizeof(GTA_Ast_Node_Period));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_Period) {
     .base = {
       .vtable = &gta_ast_node_period_vtable,
@@ -39,7 +44,10 @@ GTA_Ast_Node_Period * gta_ast_node_period_create(GTA_Ast_Node * lhs, const char 
 
 
 void gta_ast_node_period_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_PERIOD(self));
   GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) self;
+
   gta_ast_node_destroy(period->lhs);
   gcu_free((void *)period->rhs);
   gcu_free(self);
@@ -47,7 +55,11 @@ void gta_ast_node_period_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_period_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_PERIOD(self));
   GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) self;
+
+  assert(indent);
   char * new_indent = gcu_malloc(strlen(indent) + 5);
   if (!new_indent) {
     return;
@@ -55,16 +67,24 @@ void gta_ast_node_period_print(GTA_Ast_Node * self, const char * indent) {
   size_t indent_len = strlen(indent);
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "    ", 5);
+
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s\n", indent, self->vtable->name);
+
   printf("%s  LHS:\n", indent);
   gta_ast_node_print(period->lhs, new_indent);
+
   printf("%s  RHS: %s\n", indent, period->rhs);
   gcu_free(new_indent);
 }
 
 
 GTA_Ast_Node * gta_ast_node_period_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_PERIOD(self));
   GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) self;
+
   GTA_Ast_Node * simplified_lhs = gta_ast_node_simplify(period->lhs, variable_map);
   if (simplified_lhs) {
     gta_ast_node_destroy(period->lhs);
@@ -75,7 +95,10 @@ GTA_Ast_Node * gta_ast_node_period_simplify(GTA_Ast_Node * self, GTA_Ast_Simplif
 
 
 void gta_ast_node_period_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_PERIOD(self));
   GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) self;
+
+  callback(self, data, return_value);
   gta_ast_node_walk(period->lhs, callback, data, return_value);
 }
