@@ -1,3 +1,5 @@
+
+#include <assert.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -19,6 +21,7 @@
 
 
 bool gta_binary_optimistic_increase(GCU_Vector8 * vector, size_t additional) {
+  assert(vector);
   return gcu_vector8_reserve(vector, vector->count + additional > vector->capacity
     ? vector->capacity * VECTOR_GROWTH_FACTOR > vector->count + additional
       ? vector->capacity * VECTOR_GROWTH_FACTOR
@@ -57,6 +60,8 @@ uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg) {
 
 
 bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function) {
+  assert(vector);
+
   return true
     && gta_mov_reg_imm__x86_64(vector, GTA_REG_RAX, function)
     && gta_binary_call_reg__x86_64(vector, GTA_REG_RAX);
@@ -64,6 +69,8 @@ bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function) {
 
 
 bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
+  assert(vector);
+
   return true
   // Prepare the stack for the function call.
   //   push rbp
@@ -84,6 +91,8 @@ bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
 
 bool gta_add_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t immediate) {
   // https://www.felixcloutier.com/x86/add
+  assert(vector);
+
   if (!REG_IS_INTEGER(dst) || !gta_binary_optimistic_increase(vector, 7)) {
     return false;
   }
@@ -181,6 +190,8 @@ bool gta_add_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t imm
 
 bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t immediate) {
   // https://www.felixcloutier.com/x86/and
+  assert(vector);
+
   if (!REG_IS_INTEGER(dst) || !gta_binary_optimistic_increase(vector, 7)) {
     return false;
   }
@@ -278,6 +289,8 @@ bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t imm
 
 bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   // https://www.felixcloutier.com/x86/call
+  assert(vector);
+
   if (!REG_IS_INTEGER(reg) || !gta_binary_optimistic_increase(vector, 3)) {
     return false;
   }
@@ -298,6 +311,8 @@ bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
 
 bool gta_call_rel__x86_64(GCU_Vector8 * vector, int32_t offset) {
   // https://www.felixcloutier.com/x86/call
+  assert(vector);
+
   if (!gta_binary_optimistic_increase(vector, 5)) {
     return false;
   }
@@ -310,6 +325,8 @@ bool gta_call_rel__x86_64(GCU_Vector8 * vector, int32_t offset) {
 
 bool gta_cmovcc_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, GTA_Register dst, GTA_Register src) {
   // https://www.felixcloutier.com/x86/cmovcc
+  assert(vector);
+
   if (!(REG_IS_INTEGER(dst) && REG_IS_INTEGER(src)
     && ((REG_IS_64BIT(dst) && REG_IS_64BIT(src))
       || (REG_IS_32BIT(dst) && REG_IS_32BIT(src))
@@ -433,6 +450,8 @@ bool gta_cmovcc_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Condition_Code conditi
 
 bool gta_cmp_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, int8_t immediate) {
   // https://www.felixcloutier.com/x86/cmp
+  assert(vector);
+
   if (!(REG_IS_INTEGER(base) && REG_IS_64BIT(base)
       && ((REG_IS_INTEGER(index) && REG_IS_64BIT(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
         || (REG_IS_NONE(index) && (scale == 0))))
@@ -521,6 +540,8 @@ bool gta_cmp_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regi
 
 bool gta_cmp_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Register op2) {
   // https://www.felixcloutier.com/x86/cmp
+  assert(vector);
+
   if (!(REG_IS_INTEGER(op1) && REG_IS_INTEGER(op2)
       // The registers must be the same size.
       && ((REG_IS_64BIT(op1) && REG_IS_64BIT(op2))
@@ -562,6 +583,8 @@ bool gta_cmp_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Registe
 
 bool gta_jmp__x86_64(GCU_Vector8 * vector, int32_t offset) {
   // https://www.felixcloutier.com/x86/jmp
+  assert(vector);
+
   if (!gta_binary_optimistic_increase(vector, 5)) {
     return false;
   }
@@ -574,6 +597,8 @@ bool gta_jmp__x86_64(GCU_Vector8 * vector, int32_t offset) {
 
 bool gta_jmp_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   // https://www.felixcloutier.com/x86/jmp
+  assert(vector);
+
   if (!REG_IS_INTEGER(reg)
     || !REG_IS_64BIT(reg)
     || !gta_binary_optimistic_increase(vector, 3)) {
@@ -592,6 +617,8 @@ bool gta_jmp_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
 
 bool gta_jcc__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, int32_t offset) {
   // https://www.felixcloutier.com/x86/jcc
+  assert(vector);
+
   if (!gta_binary_optimistic_increase(vector, 6)) {
     return false;
   }
@@ -699,6 +726,8 @@ bool gta_jcc__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, int32_t
 
 bool gta_lea_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset) {
   // https://www.felixcloutier.com/x86/lea
+  assert(vector);
+
   if (!(REG_IS_INTEGER(dst)
       && ((REG_IS_INTEGER(base) && REG_IS_64BIT(base)) || REG_IS_NONE(base))
       && ((REG_IS_INTEGER(index) && REG_IS_64BIT(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
@@ -790,6 +819,8 @@ bool gta_lea_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
 
 bool gta_leave__x86_64(GCU_Vector8 * vector) {
   // https://www.felixcloutier.com/x86/leave
+  assert(vector);
+
   if (!gta_binary_optimistic_increase(vector, 1)) {
     return false;
   }
@@ -800,6 +831,8 @@ bool gta_leave__x86_64(GCU_Vector8 * vector) {
 
 bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, GTA_Register src) {
   // https://www.felixcloutier.com/x86/mov
+  assert(vector);
+
   if (!(REG_IS_INTEGER(src)
       && ((REG_IS_INTEGER(base) && REG_IS_64BIT(base)) || REG_IS_NONE(base))
       && ((REG_IS_INTEGER(index) && REG_IS_64BIT(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
@@ -898,6 +931,8 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
 
 bool gta_mov_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, int8_t immediate) {
   // https://www.felixcloutier.com/x86/mov
+  assert(vector);
+
   if (!(REG_IS_INTEGER(base) && REG_IS_64BIT(base)
       && ((REG_IS_INTEGER(index) && REG_IS_64BIT(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
         || (REG_IS_NONE(index) && (scale == 0))))
@@ -984,6 +1019,8 @@ bool gta_mov_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regi
 
 bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t value) {
   // https://www.felixcloutier.com/x86/mov
+  assert(vector);
+
   if (!REG_IS_INTEGER(dst) || !gta_binary_optimistic_increase(vector, 10)) {
     return false;
   }
@@ -1036,6 +1073,8 @@ bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t val
 
 bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src) {
   // https://www.felixcloutier.com/x86/mov
+  assert(vector);
+
   if (!REG_IS_INTEGER(dst) || !REG_IS_INTEGER(src) || !gta_binary_optimistic_increase(vector, 3)) {
     return false;
   }
@@ -1074,6 +1113,8 @@ bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
 
 bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset) {
   // https://www.felixcloutier.com/x86/mov
+  assert(vector);
+
   if (!(REG_IS_INTEGER(dst)
       && ((REG_IS_INTEGER(base) && REG_IS_64BIT(base)) || REG_IS_NONE(base))
       && ((REG_IS_INTEGER(index) && REG_IS_64BIT(index) && (scale == 1 || scale == 2 || scale == 4 || scale == 8))
@@ -1171,6 +1212,8 @@ bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
 
 bool gta_movq_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src) {
   // https://www.felixcloutier.com/x86/movq
+  assert(vector);
+
   if (!gta_binary_optimistic_increase(vector, 5)) {
     return false;
   }
@@ -1200,6 +1243,8 @@ bool gta_movq_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Regist
 
 bool gta_nop__x86_64(GCU_Vector8 * vector) {
   // https://www.felixcloutier.com/x86/nop
+  assert(vector);
+
   if (!gta_binary_optimistic_increase(vector, 1)) {
     return false;
   }
@@ -1210,6 +1255,8 @@ bool gta_nop__x86_64(GCU_Vector8 * vector) {
 
 bool gta_or_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src) {
   // https://www.felixcloutier.com/x86/or
+  assert(vector);
+
   if (!REG_IS_INTEGER(dst) || !REG_IS_INTEGER(src) || !gta_binary_optimistic_increase(vector, 3)) {
     return false;
   }
@@ -1247,6 +1294,8 @@ bool gta_or_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register
 
 bool gta_pop_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   // https://www.felixcloutier.com/x86/pop
+  assert(vector);
+
   if (!REG_IS_INTEGER(reg) || !gta_binary_optimistic_increase(vector, 2)
     || !REG_IS_64BIT(reg)) {
     return false;
@@ -1263,6 +1312,8 @@ bool gta_pop_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
 
 bool gta_push_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   // https://www.felixcloutier.com/x86/push
+  assert(vector);
+
   if (!REG_IS_INTEGER(reg) || !REG_IS_64BIT(reg) || !gta_binary_optimistic_increase(vector, 2)) {
     return false;
   }
@@ -1278,6 +1329,8 @@ bool gta_push_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
 
 bool gta_ret__x86_64(GCU_Vector8 * vector) {
   // https://www.felixcloutier.com/x86/ret
+  assert(vector);
+
   if (!gta_binary_optimistic_increase(vector, 1)) {
     return false;
   }
@@ -1288,6 +1341,8 @@ bool gta_ret__x86_64(GCU_Vector8 * vector) {
 
 bool gta_test_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Register op2) {
   // https://www.felixcloutier.com/x86/test
+  assert(vector);
+
   if (!REG_IS_INTEGER(op1) || !REG_IS_INTEGER(op2) || !gta_binary_optimistic_increase(vector, 3)) {
     return false;
   }
@@ -1325,6 +1380,8 @@ bool gta_test_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Regist
 
 bool gta_xor_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src) {
   // https://www.felixcloutier.com/x86/xor
+  assert(vector);
+
   if (!REG_IS_INTEGER(dst) || !REG_IS_INTEGER(src) || !gta_binary_optimistic_increase(vector, 3)) {
     return false;
   }
