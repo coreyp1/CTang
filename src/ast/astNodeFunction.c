@@ -33,11 +33,13 @@ GTA_Ast_Node_Function * gta_ast_node_function_create(const char * identifier, GT
   }
 
   // Create a runtime function object.
+  assert(parameters);
   GTA_Computed_Value_Function * runtime_function = gta_computed_value_function_create(parameters->count, 0, 0);
   if (!runtime_function) {
     goto RUNTIME_FUNCTION_CREATION_FAILURE;
   }
 
+  assert(identifier);
   *self = (GTA_Ast_Node_Function) {
     .base = {
       .vtable = &gta_ast_node_function_vtable,
@@ -64,7 +66,10 @@ SELF_CREATION_FAILURE:
 
 
 void gta_ast_node_function_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION(self));
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
+
   GTA_VECTORX_DESTROY(function->parameters);
   gta_ast_node_destroy(function->block);
   if (function->mangled_name && (function->mangled_name != function->identifier)) {
@@ -77,7 +82,11 @@ void gta_ast_node_function_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_function_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION(self));
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
+
+  assert(indent);
   char * new_indent = gcu_malloc(strlen(indent) + 5);
   if (!new_indent) {
     return;
@@ -99,14 +108,22 @@ void gta_ast_node_function_print(GTA_Ast_Node * self, const char * indent) {
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function->parameters); i++) {
     printf("%s%s\n", new_indent, ((GTA_Ast_Node_Identifier *)GTA_TYPEX_P(function->parameters->data[i]))->identifier);
   }
+
+  assert(function->block);
+  assert(function->block->vtable);
+  assert(function->block->vtable->print);
   function->block->vtable->print(function->block, small_indent);
+
   gcu_free(new_indent);
   gcu_free(small_indent);
 }
 
 
 GTA_Ast_Node * gta_ast_node_function_simplify(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Ast_Simplify_Variable_Map * variable_map)) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION(self));
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
+
   // A function is a top-level node, so we need to pass it a new variable map.
   GTA_Ast_Simplify_Variable_Map * new_variable_map = gcu_hash64_create(0);
   if (!new_variable_map) {
@@ -128,12 +145,16 @@ GTA_Ast_Node * gta_ast_node_function_simplify(GTA_Ast_Node * self, GTA_MAYBE_UNU
 
 
 GTA_Ast_Node * gta_ast_node_function_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * parent_scope) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION(self));
+  GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
+  GTA_Ast_Node * error = 0;
+
+  assert(parent_scope);
   GTA_Variable_Scope * outermost_scope = parent_scope;
   while (outermost_scope->parent_scope) {
     outermost_scope = outermost_scope->parent_scope;
   }
-  GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
-  GTA_Ast_Node * error = 0;
 
   // Step 1: Compute a mangled name and mangled hash for the function.
   // To avoid name collisions with functions in other scopes, we must mangle
@@ -249,9 +270,14 @@ MANGLED_NAME_CREATION_FAILURE:
 
 
 void gta_ast_node_function_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION(self));
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
 
+  callback(self, data, return_value);
+
+  assert(function->parameters);
+  assert(function->parameters->count ? (bool)function->parameters->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function->parameters); ++i) {
     gta_ast_node_walk((GTA_Ast_Node *)GTA_TYPEX_P(function->parameters->data[i]), callback, data, return_value);
   }
@@ -261,7 +287,12 @@ void gta_ast_node_function_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback 
 
 
 bool gta_ast_node_function_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION(self));
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
+
+  assert(context);
+  assert(context->program);
   GTA_VectorX * b = context->program->bytecode;
   GTA_VectorX * o = context->bytecode_offsets;
 
@@ -324,7 +355,11 @@ bool gta_ast_node_function_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
 }
 
 bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION(self));
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
+
+  assert(context);
   GCU_Vector8 * v = context->binary_vector;
 
   // Jump labels.
@@ -333,6 +368,7 @@ bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   GTA_Integer old_break_label = context->break_label;
   GTA_Integer old_return_label = context->return_label;
 
+  assert(function->runtime_function);
   bool error_free = true
   // Create jump labels.
     && ((after_function = gta_compiler_context_get_label(context)) >= 0)
@@ -353,6 +389,9 @@ bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   // The caller will push the arguments onto the stack, as well as the return
   // address.  Reserve additional space on the stack for the remaining local
   // variables.
+  assert(function->scope);
+  assert(function->scope->local_positions);
+  assert(function->parameters);
   size_t additional_locals_needed = function->scope->local_positions->entries - function->parameters->count - 1;
   if (additional_locals_needed) {
     // We'll just put a NULL in those slots for now.
