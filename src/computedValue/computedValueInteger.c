@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -59,6 +60,7 @@ GTA_Computed_Value_Integer * GTA_CALL gta_computed_value_integer_create(GTA_Inte
 
 
 bool GTA_CALL gta_computed_value_integer_create_in_place(GTA_Computed_Value_Integer * self, GTA_Integer value, GTA_Execution_Context * context) {
+  assert(self);
   *self = (GTA_Computed_Value_Integer) {
     .base = {
       .vtable = &gta_computed_value_integer_vtable,
@@ -77,6 +79,7 @@ bool GTA_CALL gta_computed_value_integer_create_in_place(GTA_Computed_Value_Inte
 
 
 void GTA_CALL gta_computed_value_integer_destroy(GTA_Computed_Value * computed_value) {
+  assert(computed_value);
   gcu_free(computed_value);
 }
 
@@ -85,13 +88,18 @@ void GTA_CALL gta_computed_value_integer_destroy_in_place(GTA_MAYBE_UNUSED(GTA_C
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_integer_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context) {
+  assert(value);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(value));
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)value;
   return (GTA_Computed_Value *)gta_computed_value_integer_create(integer->value, context);
 }
 
 
 GTA_Computed_Value * gta_computed_value_integer_negative(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)self;
+
   if (integer->base.is_temporary) {
     integer->value = -integer->value;
     return self;
@@ -101,7 +109,10 @@ GTA_Computed_Value * gta_computed_value_integer_negative(GTA_Computed_Value * se
 
 
 GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
     if (number->base.is_temporary) {
@@ -130,7 +141,10 @@ GTA_Computed_Value * gta_computed_value_integer_add(GTA_Computed_Value * self, G
 
 
 GTA_Computed_Value * gta_computed_value_integer_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
     GTA_Integer result = self_is_lhs
@@ -165,7 +179,10 @@ GTA_Computed_Value * gta_computed_value_integer_subtract(GTA_Computed_Value * se
 
 
 GTA_Computed_Value * gta_computed_value_integer_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
     if (number->base.is_temporary) {
@@ -194,7 +211,10 @@ GTA_Computed_Value * gta_computed_value_integer_multiply(GTA_Computed_Value * se
 
 
 GTA_Computed_Value * gta_computed_value_integer_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
     if ((self_is_lhs && other_number_integer->value == 0)
@@ -237,7 +257,10 @@ GTA_Computed_Value * gta_computed_value_integer_divide(GTA_Computed_Value * self
 
 
 GTA_Computed_Value * gta_computed_value_integer_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
     if ((self_is_lhs && other_number_integer->value == 0)
@@ -264,7 +287,10 @@ GTA_Computed_Value * gta_computed_value_integer_modulo(GTA_Computed_Value * self
 
 
 char * GTA_CALL gta_computed_value_integer_to_string(GTA_Computed_Value * self) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)self;
+
   char * str = (char *)gcu_malloc(32);
   if (!str) {
     return 0;
@@ -275,7 +301,10 @@ char * GTA_CALL gta_computed_value_integer_to_string(GTA_Computed_Value * self) 
 
 
 GTA_Computed_Value * gta_computed_value_integer_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
     return (GTA_Computed_Value *)((self_is_lhs
@@ -292,7 +321,10 @@ GTA_Computed_Value * gta_computed_value_integer_less_than(GTA_Computed_Value * s
 }
 
 GTA_Computed_Value * gta_computed_value_integer_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
     return (GTA_Computed_Value *)((self_is_lhs
@@ -310,7 +342,10 @@ GTA_Computed_Value * gta_computed_value_integer_less_than_equal(GTA_Computed_Val
 
 
 GTA_Computed_Value * gta_computed_value_integer_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
     return (GTA_Computed_Value *)((self_is_lhs
@@ -328,7 +363,10 @@ GTA_Computed_Value * gta_computed_value_integer_greater_than(GTA_Computed_Value 
 
 
 GTA_Computed_Value * gta_computed_value_integer_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
     return (GTA_Computed_Value *)((self_is_lhs
@@ -346,7 +384,10 @@ GTA_Computed_Value * gta_computed_value_integer_greater_than_equal(GTA_Computed_
 
 
 GTA_Computed_Value * gta_computed_value_integer_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
     return (GTA_Computed_Value *)(number->value == other_number_integer->value ? gta_computed_value_boolean_true : gta_computed_value_boolean_false);
@@ -360,7 +401,10 @@ GTA_Computed_Value * gta_computed_value_integer_equal(GTA_Computed_Value * self,
 
 
 GTA_Computed_Value * gta_computed_value_integer_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
     return (GTA_Computed_Value *)(number->value != other_number_integer->value ? gta_computed_value_boolean_true : gta_computed_value_boolean_false);
@@ -374,7 +418,10 @@ GTA_Computed_Value * gta_computed_value_integer_not_equal(GTA_Computed_Value * s
 
 
 GTA_Computed_Value * gta_computed_value_integer_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * number = (GTA_Computed_Value_Integer *)self;
+
   if (type == &gta_computed_value_integer_vtable) {
     return self;
   }
