@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -40,12 +41,19 @@ GTA_Ast_Node_Integer * gta_ast_node_integer_create(int64_t integer, GTA_PARSER_L
 
 
 void gta_ast_node_integer_destroy(GTA_Ast_Node * self) {
+  assert(self);
   gcu_free(self);
 }
 
 
 void gta_ast_node_integer_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_INTEGER(self));
   GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) self;
+
+  assert(indent);
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s: %ld\n", indent, self->vtable->name, integer->value);
 }
 
@@ -56,12 +64,20 @@ GTA_Ast_Node * gta_ast_node_integer_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node * sel
 
 
 void gta_ast_node_integer_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
+  assert(self);
   callback(self, data, return_value);
 }
 
 
 bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_INTEGER(self));
   GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) self;
+
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_INTEGER))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_I(integer->value));
@@ -69,7 +85,12 @@ bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_
 
 
 bool gta_ast_node_integer_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Compiler_Context * context)) {
+  assert(self);
+  assert(GTA_AST_IS_INTEGER(self));
   GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   return true
