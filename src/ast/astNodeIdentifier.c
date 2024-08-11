@@ -32,10 +32,13 @@ GTA_Ast_Node_VTable gta_ast_node_identifier_vtable = {
 
 
 GTA_Ast_Node_Identifier * gta_ast_node_identifier_create(const char * identifier, GTA_PARSER_LTYPE location) {
+  assert(identifier);
+
   GTA_Ast_Node_Identifier * self = gcu_malloc(sizeof(GTA_Ast_Node_Identifier));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_Identifier) {
     .base = {
       .vtable = &gta_ast_node_identifier_vtable,
@@ -55,13 +58,19 @@ GTA_Ast_Node_Identifier * gta_ast_node_identifier_create(const char * identifier
 
 
 void gta_ast_node_identifier_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_IDENTIFIER(self));
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
+
+  assert(identifier->identifier);
   gcu_free((void *)identifier->identifier);
   gcu_free(self);
 }
 
 
 void gta_ast_node_identifier_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_IDENTIFIER(self));
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
   printf("%s%s: %s\n", indent, self->vtable->name, identifier->identifier);
 }
@@ -70,7 +79,10 @@ void gta_ast_node_identifier_print(GTA_Ast_Node * self, const char * indent) {
 GTA_Ast_Node * gta_ast_node_identifier_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
   // If the identifier is in the variable map, and the value is a primitive,
   // return the primitive value.
+  assert(self);
+  assert(GTA_AST_IS_IDENTIFIER(self));
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
+
   GCU_Hash64_Value val = gcu_hash64_get(variable_map, identifier->hash);
   if (val.exists) {
     GTA_Ast_Node * node = (GTA_Ast_Node *)val.value.p;
@@ -96,13 +108,14 @@ GTA_Ast_Node * gta_ast_node_identifier_simplify(GTA_Ast_Node * self, GTA_Ast_Sim
 
 GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Program * program), GTA_Variable_Scope * scope) {
   assert(self);
-  assert(scope);
+  assert(GTA_AST_IS_IDENTIFIER(self));
+  GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
 
+  assert(scope);
   GTA_Variable_Scope * outermost_scope = scope;
   while (outermost_scope->parent_scope) {
     outermost_scope = outermost_scope->parent_scope;
   }
-  GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
   identifier->scope = scope;
 
   // If an identifier in this scope has already been recognized, then propagate
@@ -165,9 +178,11 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UN
 
   // Look for a function name in each scope, from current to outermost.
   GTA_Variable_Scope * current_scope = scope;
+  assert(identifier->identifier);
   size_t identifier_length = strlen(identifier->identifier);
   while (current_scope) {
     // Compute the possible mangled name based on the current_scope.
+    assert(current_scope->name);
     size_t namespace_length = strlen(current_scope->name);
     size_t mangled_length = identifier_length + namespace_length + 2;
     char * mangled_name = gcu_calloc(1, mangled_length);
@@ -224,11 +239,17 @@ void gta_ast_node_identifier_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callbac
 
 
 bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_IDENTIFIER(self));
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
+
+  assert(context);
   if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY
     || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL
     || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION) {
     // Find the identifier's position in the global positions.
+    assert(context->program);
+    assert(context->program->scope);
     GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
     if (!val.exists) {
       printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
@@ -273,10 +294,16 @@ bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
 
 
 bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_IDENTIFIER(self));
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
+
+  assert(context);
   if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY
     || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL
     || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION) {
+    assert(context->program);
+    assert(context->program->scope);
     GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
     if (!val.exists) {
       printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
@@ -292,6 +319,7 @@ bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
       printf("Error: Identifier %s not found in local positions.\n", identifier->mangled_name);
       return false;
     }
+    assert(context->program->bytecode);
     return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
       && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_PEEK_LOCAL))
       && GTA_VECTORX_APPEND(context->program->bytecode, val.value);
