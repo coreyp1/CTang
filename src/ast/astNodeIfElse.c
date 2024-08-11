@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -21,10 +22,15 @@ GTA_Ast_Node_VTable gta_ast_node_if_else_vtable = {
 
 
 GTA_Ast_Node_If_Else * gta_ast_node_if_else_create(GTA_Ast_Node * condition, GTA_Ast_Node * ifBlock, GTA_Ast_Node * elseBlock, GTA_PARSER_LTYPE location) {
+  assert(condition);
+  assert(ifBlock);
+  // NOTE: elseBlock can be NULL.
+
   GTA_Ast_Node_If_Else * self = gcu_malloc(sizeof(GTA_Ast_Node_If_Else));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_If_Else) {
     .base = {
       .vtable = &gta_ast_node_if_else_vtable,
@@ -41,7 +47,10 @@ GTA_Ast_Node_If_Else * gta_ast_node_if_else_create(GTA_Ast_Node * condition, GTA
 
 
 void gta_ast_node_if_else_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_IF_ELSE(self));
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
+
   gta_ast_node_destroy(if_else->condition);
   gta_ast_node_destroy(if_else->ifBlock);
   if (if_else->elseBlock) {
@@ -52,7 +61,11 @@ void gta_ast_node_if_else_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_if_else_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_IF_ELSE(self));
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
+
+  assert(indent);
   char * new_indent = gcu_malloc(strlen(indent) + 5);
   if (!new_indent) {
     return;
@@ -60,11 +73,17 @@ void gta_ast_node_if_else_print(GTA_Ast_Node * self, const char * indent) {
   size_t indent_len = strlen(indent);
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "    ", 5);
+
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s\n", indent, self->vtable->name);
+
   printf("%s  Condition:\n", indent);
   gta_ast_node_print(if_else->condition, new_indent);
+
   printf("%s  If Block:\n", indent);
   gta_ast_node_print(if_else->ifBlock, new_indent);
+
   if (if_else->elseBlock) {
     printf("%s  Else Block:\n", indent);
     gta_ast_node_print(if_else->elseBlock, new_indent);
@@ -74,7 +93,11 @@ void gta_ast_node_if_else_print(GTA_Ast_Node * self, const char * indent) {
 
 
 GTA_Ast_Node * gta_ast_node_if_else_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_IF_ELSE(self));
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
+
+  assert(variable_map);
   GTA_Ast_Node * simplified_condition = gta_ast_node_simplify(if_else->condition, variable_map);
   if (simplified_condition) {
     gta_ast_node_destroy(if_else->condition);
@@ -130,15 +153,20 @@ GTA_Ast_Node * gta_ast_node_if_else_simplify(GTA_Ast_Node * self, GTA_Ast_Simpli
 
 
 GTA_Ast_Node * gta_ast_node_if_else_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_IF_ELSE(self));
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
+
   GTA_Ast_Node * error = gta_ast_node_analyze(if_else->condition, program, scope);
   if (error) {
     return error;
   }
+
   error = gta_ast_node_analyze(if_else->ifBlock, program, scope);
   if (error) {
     return error;
   }
+
   if (if_else->elseBlock) {
     error = gta_ast_node_analyze(if_else->elseBlock, program, scope);
     if (error) {
@@ -150,8 +178,12 @@ GTA_Ast_Node * gta_ast_node_if_else_analyze(GTA_Ast_Node * self, GTA_Program * p
 
 
 void gta_ast_node_if_else_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_IF_ELSE(self));
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
+
+  callback(self, data, return_value);
+
   gta_ast_node_walk(if_else->condition, callback, data, return_value);
   gta_ast_node_walk(if_else->ifBlock, callback, data, return_value);
   if (if_else->elseBlock) {
@@ -160,6 +192,8 @@ void gta_ast_node_if_else_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback c
 }
 
 bool gta_ast_node_if_else_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_IF_ELSE(self));
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
 
   // Jump labels.
@@ -167,6 +201,10 @@ bool gta_ast_node_if_else_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_
   GTA_Integer end;
 
   // Compile the if-else statement.
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return true
   // Create jump labels.
     && ((else_block = gta_compiler_context_get_label(context)) >= 0)
@@ -208,7 +246,12 @@ bool gta_ast_node_if_else_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_
 
 
 bool gta_ast_node_if_else_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_IF_ELSE(self));
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   // Jump labels.
