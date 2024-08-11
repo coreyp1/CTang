@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <cutil/memory.h>
 #include <tang/program/compilerContext.h>
 
@@ -34,6 +35,7 @@ bool gta_compiler_context_create_in_place(GTA_Compiler_Context * context, GTA_Pr
   }
   GTA_VECTORX_APPEND(scope_stack, GTA_TYPEX_MAKE_P(scope));
   GTA_HashX * globals = GTA_HASHX_CREATE(32);
+  assert(globals->entries == 0);
   if (!globals) {
     goto GLOBALS_HASH_CREATE_FAILED;
   }
@@ -41,10 +43,14 @@ bool gta_compiler_context_create_in_place(GTA_Compiler_Context * context, GTA_Pr
   if (!labels_from) {
     goto LABELS_FROM_VECTOR_CREATE_FAILED;
   }
+  assert(labels_from->count == 0);
+  assert(labels_from->capacity == 32);
   GTA_VectorX * labels = GTA_VECTORX_CREATE(32);
   if (!labels) {
     goto LABELS_VECTOR_CREATE_FAILED;
   }
+  assert(labels->count == 0);
+  assert(labels->capacity == 32);
 
   *context = (GTA_Compiler_Context) {
     .program = program,
@@ -58,12 +64,16 @@ bool gta_compiler_context_create_in_place(GTA_Compiler_Context * context, GTA_Pr
     .labels = labels,
     .break_label = 0,
     .continue_label = 0,
+    .return_label = 0,
   };
 
   // Label creation will not fail because the label vector was created with
   // a capacity of 32.
+  // NOTE: These cannot be put into the declaration above because the context
+  // is not fully initialized until this point.
   context->break_label = gta_compiler_context_get_label(context);
   context->continue_label = gta_compiler_context_get_label(context);
+  context->return_label = gta_compiler_context_get_label(context);
 
   return true;
 

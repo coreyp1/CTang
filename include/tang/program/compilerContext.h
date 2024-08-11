@@ -93,6 +93,12 @@ typedef struct GTA_Compiler_Context {
    * The code should *not* leave a value on the stack.  There will be no POP.
    */
   GTA_Integer continue_label;
+  /**
+   * The label to which the execution should jump upon a "return" statement.
+   *
+   * The code should ensure that a value is on the stack, ready for a POP.
+   */
+  GTA_Integer return_label;
 } GTA_Compiler_Context;
 
 /**

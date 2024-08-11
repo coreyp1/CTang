@@ -375,6 +375,19 @@ TEST(Function, Simple) {
     ASSERT_STREQ(context->output->buffer, "start 3 end");
     TEST_PROGRAM_TEARDOWN();
   }
+  {
+    // Function with return value.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      function foo(a, b) {
+        return a + b;
+      }
+      print(foo(1, 2));
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 3 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
 }
 
 

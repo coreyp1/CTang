@@ -267,26 +267,59 @@ bool gta_ast_node_function_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
 
   // Jump labels.
   GTA_Integer after_function;
+  GTA_Integer old_continue_label = context->continue_label;
+  GTA_Integer old_break_label = context->break_label;
+  GTA_Integer old_return_label = context->return_label;
 
   return true
   // Create jump labels.
     && ((after_function = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->continue_label = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->break_label = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->return_label = gta_compiler_context_get_label(context)) >= 0)
+
   // Jump over the function body.
   //   JMP after_function
     && GTA_BYTECODE_APPEND(o, b->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMP))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
     && gta_compiler_context_add_label_jump(context, after_function, b->count - 1)
+
   // Record the function's bytecode offset.
     && (function->runtime_function->pointer = GTA_VECTORX_COUNT(b))
+
   // Compile the function body.
     && gta_ast_node_compile_to_bytecode(function->block, context)
+
+  // "break" and "return" statements jump here, since something is on the stack.
+    && gta_compiler_context_set_label(context, context->break_label, context->program->bytecode->count)
+    && gta_compiler_context_set_label(context, context->return_label, context->program->bytecode->count)
+
   // Implicit return.
     && GTA_BYTECODE_APPEND(o, b->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_RETURN))
+
+  // "continue" statements that were not within a loop will jump here.
+  // Nothing will be on the stack, so push a null and then jump back to the
+  // "break", which will exit safely.
+  //   NULL
+  //   JMP break
+    && gta_compiler_context_set_label(context, context->continue_label, context->program->bytecode->count)
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMP))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
+    && gta_compiler_context_add_label_jump(context, context->break_label, context->program->bytecode->count - 1)
+
   // End of function.
   //   after_function:
     && gta_compiler_context_set_label(context, after_function, context->program->bytecode->count)
+
+  // Restore the old jump labels.
+    && ((context->continue_label = old_continue_label) >= 0)
+    && ((context->break_label = old_break_label) >= 0)
+    && ((context->return_label = old_return_label) >= 0)
   ;
 }
 
@@ -296,10 +329,16 @@ bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
 
   // Jump labels.
   GTA_Integer after_function;
+  GTA_Integer old_continue_label = context->continue_label;
+  GTA_Integer old_break_label = context->break_label;
+  GTA_Integer old_return_label = context->return_label;
 
   bool error_free = true
   // Create jump labels.
     && ((after_function = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->continue_label = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->break_label = gta_compiler_context_get_label(context)) >= 0)
+    && ((context->return_label = gta_compiler_context_get_label(context)) >= 0)
 
   // Jump over the function body.
   //   JMP after_function
@@ -328,14 +367,38 @@ bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   return error_free
   // Compile the function body.
     && gta_ast_node_compile_to_binary__x86_64(function->block, context)
+
+  // At this point, a return value will be in RAX from either the code block
+  // being executed, the 'break' statement, or the 'continue' statement.
+  // 'Break' jumps here directly (with the appropriate value in RAX).
+  // 'Continue' jumps here after setting RAX to the null computed value.
+  // 'Return' jumps here after setting RAX to the return value.
+    && gta_compiler_context_set_label(context, context->break_label, v->count)
+    && gta_compiler_context_set_label(context, context->return_label, v->count)
+
   // Clean up the stack by removing the function's arguments and return.
   //   add RSP, 8 * additional_locals_needed
   //   ret
     && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8 * additional_locals_needed)
     && gta_ret__x86_64(v)
 
+  // Continue: It is possible that a continue statement was not within a loop.
+  // We will catch this situation here and make sure that a null value is in
+  // RAX and jump to the break label.
+  //   mov rax, gta_computed_value_null
+  //   jmp break
+    && gta_compiler_context_set_label(context, context->continue_label, v->count)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)gta_computed_value_null)
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, context->break_label, v->count - 4)
+
   // End of function.
   //   after_function:
     && gta_compiler_context_set_label(context, after_function, v->count)
+
+  // Restore the old jump labels.
+    && ((context->continue_label = old_continue_label) >= 0)
+    && ((context->break_label = old_break_label) >= 0)
+    && ((context->return_label = old_return_label) >= 0)
   ;
 }

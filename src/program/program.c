@@ -103,24 +103,26 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
   }
 
   // Actually compile the AST to bytecode.
-  error_free &= gta_ast_node_compile_to_bytecode(program->ast, &context);
+  error_free &= true
+    && gta_ast_node_compile_to_bytecode(program->ast, &context)
 
   // At this point, a return value will be on top of the stack from either the
   // code block being executed, the 'break' statement, or the 'continue'
   // statement.  'Break' jumps here directly (with the appropriate value on
   // top of the stack).  'Continue' jumps here after putting the null computed
   // value on top of the stack.
-  error_free &= gta_compiler_context_set_label(&context, context.break_label, bytecode->count);
+    && gta_compiler_context_set_label(&context, context.break_label, bytecode->count)
+    && gta_compiler_context_set_label(&context, context.return_label, bytecode->count)
 
   // Add the return instruction.
-  error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_RETURN));
+    && GTA_BYTECODE_APPEND(context.bytecode_offsets, bytecode->count)
+    && GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_RETURN))
 
   // Continue: It is possible that a continue statement was not within a loop.
   // We will catch this situation here and make sure that a null value is on
   // top of the stack and jump to the break label.
   //   NULL
   //   JMP break
-  error_free &= true
     && gta_compiler_context_set_label(&context, context.continue_label, bytecode->count)
     && GTA_BYTECODE_APPEND(context.bytecode_offsets, bytecode->count)
     && GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))
@@ -130,16 +132,10 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
     && gta_compiler_context_add_label_jump(&context, context.break_label, bytecode->count - 1)
   ;
 
-  // The compilation is finished.  If there were any errors, then the bytecode
-  // is not valid.
-  if (!error_free) {
-    goto BYTECODE_DESTROY_GLOBALS_ORDER;
-  }
-
   // Correct the JUMP instructions to point to the correct location in the
   // bytecode.  The jump targets are relative to the instruction after the
   // jump (because the PC will have already been incremented).
-  for (size_t i = 0; i < context.labels->count; ++i) {
+  for (size_t i = 0; error_free && (i < context.labels->count); ++i) {
     GTA_Integer label = GTA_TYPEX_UI(context.labels->data[i]);
     GTA_VectorX * jumps = GTA_TYPEX_P(context.labels_from->data[i]);
     for (size_t j = 0; j < jumps->count; ++j) {
@@ -567,7 +563,9 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   // being executed, the 'break' statement, or the 'continue' statement.
   // 'Break' jumps here directly (with the appropriate value in RAX).
   // 'Continue' jumps here after setting RAX to the null computed value.
+  // 'Return' jumps here after setting RAX to the return value.
     && gta_compiler_context_set_label(context, context->break_label, v->count)
+    && gta_compiler_context_set_label(context, context->return_label, v->count)
 
   // Restore the stack pointer to before we added the global and local
   // variables.  This is faster than popping the locals and globals off the
