@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdbool.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -83,126 +84,201 @@ bool gta_computed_value_create_in_place(GTA_Computed_Value * self, GTA_Execution
 
 
 void gta_computed_value_destroy(GTA_Computed_Value * self) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->destroy);
   self->vtable->destroy(self);
 }
 
 
-void gta_computed_value_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+void gta_computed_value_destroy_in_place(GTA_Computed_Value * self) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->destroy_in_place);
   self->vtable->destroy_in_place(self);
 }
 
 
 GTA_Computed_Value * gta_computed_value_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->deep_copy);
   return self->vtable->deep_copy(self, context);
 }
 
 
 char * gta_computed_value_to_string(GTA_Computed_Value * self) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->to_string);
   return self->vtable->to_string(self);
 }
 
 
 GTA_Unicode_String * gta_computed_value_print(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->print);
   return self->vtable->print(self, context);
 }
 
 
 GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->assign_index);
   return self->vtable->assign_index(self, index, other, context);
 }
 
 
 GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->add);
   BINARY_OPERATION_TRY_OR_REVERSE(add)
 }
 
 
 GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->subtract);
   BINARY_OPERATION_TRY_OR_REVERSE(subtract)
 }
 
 
 GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->multiply);
   BINARY_OPERATION_TRY_OR_REVERSE(multiply)
 }
 
 
 GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->divide);
   BINARY_OPERATION_TRY_OR_REVERSE(divide)
 }
 
 
 GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->modulo);
   BINARY_OPERATION_TRY_OR_REVERSE(modulo)
 }
 
 
 GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->negative);
   return self->vtable->negative(self, is_assignment, context);
 }
 
 
 GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->less_than);
   BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(less_than)
 }
 
 
 GTA_Computed_Value * gta_computed_value_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->less_than_equal);
   BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(less_than_equal)
 }
 
 
 GTA_Computed_Value * gta_computed_value_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->greater_than);
   BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(greater_than)
 }
 
 
 GTA_Computed_Value * gta_computed_value_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->greater_than_equal);
   BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(greater_than_equal)
 }
 
 
 GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->equal);
   BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(equal)
 }
 
 
 GTA_Computed_Value * gta_computed_value_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->not_equal);
   BINARY_OPERATION_TRY_OR_REVERSE_COMPARISON(not_equal)
 }
 
 
 GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value * self, const char * identifier, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->period);
   return self->vtable->period(self, identifier, context);
 }
 
 
 GTA_Computed_Value * gta_computed_value_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->index);
   return self->vtable->index(self,  index, context);
 }
 
 
 GTA_Computed_Value * gta_computed_value_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->slice);
   return self->vtable->slice(self, start, end, step, context);
 }
 
 
 GTA_Computed_Value * gta_computed_value_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->iterator_get);
   return self->vtable->iterator_get(self, context);
 }
 
 
 GTA_Computed_Value * gta_computed_value_iterator_next(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->iterator_next);
   return self->vtable->iterator_next(self, context);
 }
 
 
 GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->cast);
   return self->vtable->cast(self, type, context);
 }
 
 
 GTA_Computed_Value * gta_computed_value_call(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(self->vtable->call);
   return self->vtable->call(self, arguments, context);
 }
 
