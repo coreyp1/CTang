@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -27,6 +28,9 @@ GTA_Ast_Node_VTable gta_ast_node_assign_vtable = {
 
 
 GTA_Ast_Node_Assign * gta_ast_node_assign_create(GTA_Ast_Node * lhs, GTA_Ast_Node * rhs, GTA_PARSER_LTYPE location) {
+  assert(lhs);
+  assert(rhs);
+
   GTA_Ast_Node_Assign * self = gcu_malloc(sizeof(GTA_Ast_Node_Assign));
   if (!self) {
     return 0;
@@ -46,7 +50,10 @@ GTA_Ast_Node_Assign * gta_ast_node_assign_create(GTA_Ast_Node * lhs, GTA_Ast_Nod
 
 
 void gta_ast_node_assign_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_ASSIGN(self));
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
+
   gta_ast_node_destroy(assign->lhs);
   gta_ast_node_destroy(assign->rhs);
   gcu_free(self);
@@ -54,24 +61,36 @@ void gta_ast_node_assign_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_assign_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_ASSIGN(self));
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
+
+  assert(indent);
   char * new_indent = gcu_malloc(strlen(indent) + 5);
   if (!new_indent) {
     return;
   }
+
   size_t indent_len = strlen(indent);
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "    ", 5);
+
+  assert(self->vtable->name);
   printf("%s%s\n", indent, self->vtable->name);
+
   printf("%s  LHS:\n", indent);
   gta_ast_node_print(assign->lhs, new_indent);
+
   printf("%s  RHS:\n", indent);
   gta_ast_node_print(assign->rhs, new_indent);
+
   gcu_free(new_indent);
 }
 
 
 GTA_Ast_Node * gta_ast_node_assign_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_ASSIGN(self));
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
 
   // TODO: Simplify the LHS.
@@ -105,7 +124,10 @@ GTA_Ast_Node * gta_ast_node_assign_simplify(GTA_Ast_Node * self, GTA_Ast_Simplif
 
 
 GTA_Ast_Node * gta_ast_node_assign_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_ASSIGN(self));
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
+
   GTA_Ast_Node * result = 0;
   result = gta_ast_node_analyze(assign->lhs, program, scope);
   if (!result) {
@@ -116,14 +138,20 @@ GTA_Ast_Node * gta_ast_node_assign_analyze(GTA_Ast_Node * self, GTA_Program * pr
 
 
 void gta_ast_node_assign_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_ASSIGN(self));
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
+
+  callback(self, data, return_value);
+
   gta_ast_node_walk(assign->lhs, callback, data, return_value);
   gta_ast_node_walk(assign->rhs, callback, data, return_value);
 }
 
 
 bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_ASSIGN(self));
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
 
   if (!gta_ast_node_compile_to_bytecode(assign->rhs, context)) {
@@ -134,6 +162,7 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
   //   a = foo;
   //   a.b = foo;
   //   a[b] = foo;
+  assert(assign->lhs);
   if (GTA_AST_IS_IDENTIFIER(assign->lhs)) {
     GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) assign->lhs;
 
@@ -186,10 +215,17 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
 
 static bool __compile_binary_lhs_is_identifier__x86_64(GTA_Ast_Node * lhs, GTA_Compiler_Context * context) {
   // RHS is in RAX.
+  assert(lhs);
+  assert(GTA_AST_IS_IDENTIFIER(lhs));
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) lhs;
+
+  assert(context);
+  assert(context->binary_vector);
+  GCU_Vector8 * v = context->binary_vector;
+
   bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
   bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
-  GCU_Vector8 * v = context->binary_vector;
+
   GTA_Integer label_done;
   GTA_HashX_Value val;
 
@@ -277,7 +313,12 @@ static bool __compile_binary_lhs_is_period(GTA_Ast_Node * lhs, GTA_Compiler_Cont
 
 
 bool gta_ast_node_assign_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_ASSIGN(self));
   GTA_Ast_Node_Assign * assign_node = (GTA_Ast_Node_Assign *) self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   // TODO: Optimization: If the RHS is a constant singleton (bool, null), then
