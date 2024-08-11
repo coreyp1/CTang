@@ -1,3 +1,5 @@
+
+#include <assert.h>
 #include <stdio.h>
 #include <cutil/memory.h>
 #include <tang/computedValue/computedValueBoolean.h>
@@ -56,6 +58,7 @@ GTA_Computed_Value_Function * GTA_CALL gta_computed_value_function_create(size_t
 
 
 bool gta_computed_value_function_create_in_place(GTA_Computed_Value_Function * self, size_t num_arguments, size_t pointer, GTA_Execution_Context * context) {
+  assert(self);
   *self = (GTA_Computed_Value_Function) {
     .base = {
       .vtable = &gta_computed_value_function_vtable,
@@ -75,6 +78,7 @@ bool gta_computed_value_function_create_in_place(GTA_Computed_Value_Function * s
 
 
 void gta_computed_value_function_destroy(GTA_Computed_Value * self) {
+  assert(self);
   gcu_free(self);
 }
 
@@ -88,7 +92,10 @@ GTA_Computed_Value * gta_computed_value_function_deep_copy(GTA_Computed_Value * 
 }
 
 char * GTA_CALL gta_computed_value_function_to_string(GTA_Computed_Value * self) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FUNCTION(self));
   GTA_Computed_Value_Function * function = (GTA_Computed_Value_Function *)self;
+
   char * string = gcu_malloc(64);
   if (!string) {
     return NULL;
