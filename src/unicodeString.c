@@ -1,3 +1,5 @@
+
+#include <assert.h>
 #include <string.h>
 #include <cutil/memory.h>
 #include <unicode/uconfig.h>
@@ -17,6 +19,9 @@ struct {
 
 
 bool gcu_unicode_string_get_grapheme_offsets(GCU_Vector32 * grapheme_offsets, const char * buffer, size_t length) {
+  assert(grapheme_offsets);
+  assert(buffer);
+
   // Worst case: string is standard ASCII.
   if (!gcu_vector32_reserve(grapheme_offsets, length + 1)) {
     return false;
@@ -129,6 +134,8 @@ bool gcu_unicode_string_get_grapheme_offsets(GCU_Vector32 * grapheme_offsets, co
 
 
 GTA_Unicode_String * gta_unicode_string_create(const char * source, size_t length, GTA_String_Type type) {
+  assert(source);
+
   char * buffer = gcu_malloc(length + 1);
   if (!buffer) {
     return NULL;
@@ -146,6 +153,8 @@ GTA_Unicode_String * gta_unicode_string_create(const char * source, size_t lengt
 
 
 GTA_Unicode_String * gta_unicode_string_create_and_adopt(const char * source, size_t length, GTA_String_Type type) {
+  assert(source);
+
   // Allocate space for the string.
   GTA_Unicode_String * string = gcu_calloc(sizeof(GTA_Unicode_String), 1);
   if (string == NULL) {
@@ -193,16 +202,19 @@ GTA_Unicode_String * gta_unicode_string_create_and_adopt(const char * source, si
 
 
 void gta_unicode_string_destroy(GTA_Unicode_String * string) {
-  if (string != NULL) {
-    gcu_vector32_destroy(string->grapheme_offsets);
-    gcu_vector64_destroy(string->string_type);
-    gcu_free((void *)string->buffer);
-    gcu_free(string);
-  }
+  assert(string);
+
+  gcu_vector32_destroy(string->grapheme_offsets);
+  gcu_vector64_destroy(string->string_type);
+  gcu_free((void *)string->buffer);
+  gcu_free(string);
 }
 
 
 GTA_Unicode_String * gta_unicode_string_concat(const GTA_Unicode_String * string1, const GTA_Unicode_String * string2) {
+  assert(string1);
+  assert(string2);
+
   // Allocate space for the new string.
   GTA_Unicode_String * newString = gcu_calloc(sizeof(GTA_Unicode_String), 1);
   if (newString == NULL) {
@@ -308,6 +320,8 @@ GTA_Unicode_String * gta_unicode_string_concat(const GTA_Unicode_String * string
 
 
 GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * string, size_t grapheme_start, size_t grapheme_count) {
+  assert(string);
+
   // If grapheme start is beyond the end of the string, then return an empty
   // string.
   if ((grapheme_start >= string->grapheme_length) || (grapheme_count == 0)) {
