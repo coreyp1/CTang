@@ -24,10 +24,14 @@ GTA_Ast_Node_VTable gta_ast_node_function_call_vtable = {
 
 
 GTA_Ast_Node_Function_Call * gta_ast_node_function_call_create(GTA_Ast_Node * lhs, GTA_VectorX * arguments, GTA_PARSER_LTYPE location) {
+  assert(lhs);
+  assert(arguments);
+
   GTA_Ast_Node_Function_Call * self = gcu_malloc(sizeof(GTA_Ast_Node_Function_Call));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_Function_Call) {
     .base = {
       .vtable = &gta_ast_node_function_call_vtable,
@@ -46,6 +50,7 @@ void gta_ast_node_function_call_destroy(GTA_Ast_Node * self) {
   assert(self);
   assert(GTA_AST_IS_FUNCTION_CALL(self));
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
+
   gta_ast_node_destroy(function_call->lhs);
 
   assert(function_call->arguments);
@@ -69,12 +74,13 @@ void gta_ast_node_function_call_print(GTA_Ast_Node * self, const char * indent) 
   memcpy(new_indent + indent_len, "    ", 5);
 
   assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s\n", indent, self->vtable->name);
   printf("%s  LHS:\n", indent);
   gta_ast_node_print(function_call->lhs, new_indent);
 
   assert(function_call->arguments);
-  assert(function_call->arguments->data);
+  assert(function_call->arguments->count ? (bool)function_call->arguments->data : true);
   printf("%s  Arguments:\n", indent);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function_call->arguments); i++) {
     printf("%s  %zu:\n", indent, i);
@@ -156,6 +162,8 @@ bool gta_ast_node_function_call_compile_to_bytecode(GTA_Ast_Node * self, GTA_Com
 
   assert(context);
   assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   GTA_VectorX * b = context->program->bytecode;
   GTA_VectorX * o = context->bytecode_offsets;
 
@@ -184,6 +192,7 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
 
   assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   // Offsets
