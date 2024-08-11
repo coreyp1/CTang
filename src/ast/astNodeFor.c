@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -32,10 +33,16 @@ GTA_Ast_Node_VTable gta_ast_node_for_vtable = {
 
 
 GTA_Ast_Node_For * gta_ast_node_for_create(GTA_Ast_Node * init, GTA_Ast_Node * condition, GTA_Ast_Node * update, GTA_Ast_Node * block, GTA_PARSER_LTYPE location) {
+  assert(init);
+  assert(condition);
+  assert(update);
+  assert(block);
+
   GTA_Ast_Node_For * self = gcu_malloc(sizeof(GTA_Ast_Node_For));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_For) {
     .base = {
       .vtable = &gta_ast_node_for_vtable,
@@ -53,7 +60,10 @@ GTA_Ast_Node_For * gta_ast_node_for_create(GTA_Ast_Node * init, GTA_Ast_Node * c
 
 
 void gta_ast_node_for_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_FOR(self));
   GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
+
   gta_ast_node_destroy(for_node->init);
   gta_ast_node_destroy(for_node->condition);
   gta_ast_node_destroy(for_node->update);
@@ -63,7 +73,11 @@ void gta_ast_node_for_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_for_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_FOR(self));
   GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
+
+  assert(indent);
   char * new_indent = gcu_malloc(strlen(indent) + 5);
   if (!new_indent) {
     return;
@@ -71,13 +85,20 @@ void gta_ast_node_for_print(GTA_Ast_Node * self, const char * indent) {
   size_t indent_len = strlen(indent);
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "    ", 5);
+
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s\n", indent, self->vtable->name);
+
   printf("%s  Init:\n", indent);
   gta_ast_node_print(for_node->init, new_indent);
+
   printf("%s  Condition:\n", indent);
   gta_ast_node_print(for_node->condition, new_indent);
+
   printf("%s  Update:\n", indent);
   gta_ast_node_print(for_node->update, new_indent);
+
   printf("%s  Block:\n", indent);
   gta_ast_node_print(for_node->block, new_indent);
   gcu_free(new_indent);
@@ -88,6 +109,7 @@ void gta_ast_node_for_print(GTA_Ast_Node * self, const char * indent) {
  * This function is used to find all the assignments in the for() statement.
  */
 static void findAssignments(GTA_Ast_Node * self, void * data, void * error) {
+  assert(self);
   GCU_Hash64 * assignments = (GCU_Hash64 *)data;
   if (GTA_AST_IS_ASSIGN(self)) {
     GTA_Ast_Node_Assign * assignment = (GTA_Ast_Node_Assign *)self;
@@ -102,6 +124,8 @@ static void findAssignments(GTA_Ast_Node * self, void * data, void * error) {
 
 
 GTA_Ast_Node * gta_ast_node_for_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_FOR(self));
   GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
 
   // The init will definitely only be executed once, so we can simplify it.
@@ -185,8 +209,12 @@ GTA_Ast_Node * gta_ast_node_for_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_V
 
 
 void gta_ast_node_for_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_FOR(self));
   GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
+
+  callback(self, data, return_value);
+
   gta_ast_node_walk(for_node->init, callback, data, return_value);
   gta_ast_node_walk(for_node->condition, callback, data, return_value);
   gta_ast_node_walk(for_node->update, callback, data, return_value);
@@ -195,7 +223,10 @@ void gta_ast_node_for_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callb
 
 
 GTA_Ast_Node * gta_ast_node_for_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_FOR(self));
   GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
+
   GTA_Ast_Node * error;
   bool has_error = false
     || (error = gta_ast_node_analyze(for_node->init, program, scope))
@@ -207,6 +238,8 @@ GTA_Ast_Node * gta_ast_node_for_analyze(GTA_Ast_Node * self, GTA_Program * progr
 
 
 bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_FOR(self));
   GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
 
   // Jump labels.
@@ -230,6 +263,10 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Cont
   // ensure that the stack is always left in a valid state.
 
   // Compile the for loop.
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return true
   // Create the labels.
     && ((condition_start = gta_compiler_context_get_label(context)) >= 0)
@@ -300,7 +337,12 @@ bool gta_ast_node_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Cont
 }
 
 bool gta_ast_node_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_FOR(self));
   GTA_Ast_Node_For * for_node = (GTA_Ast_Node_For *) self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   // Jump labels.
