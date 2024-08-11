@@ -1,11 +1,15 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <cutil/vector.h>
 #include <tang/program/bytecode.h>
 
 void gta_bytecode_print(GTA_VectorX * bytecode) {
+  assert(bytecode);
   GTA_TypeX_Union * current = &bytecode->data[0];
   GTA_TypeX_Union * end = &bytecode->data[bytecode->count];
+  assert(current);
+  assert(end);
   while (current < end) {
     switch (GTA_TYPEX_UI(*current)) {
       case GTA_BYTECODE_RETURN:
@@ -61,19 +65,19 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         ++current;
         break;
       case GTA_BYTECODE_PEEK_GLOBAL:
-        printf("%p\tPEEK_GLOBAL\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%p\tPEEK_GLOBAL\t%lu\n" : "%p\tPEEK_GLOBAL\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_POKE_GLOBAL:
-        printf("%p\tPOKE_GLOBAL\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%p\tPOKE_GLOBAL\t%lu\n" : "%p\tPOKE_GLOBAL\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_PEEK_LOCAL:
-        printf("%p\tPEEK_LOCAL\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%p\tPEEK_LOCAL\t%lu\n" : "%p\tPEEK_LOCAL\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_POKE_LOCAL:
-        printf("%p\tPOKE_LOCAL\t%lu\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%p\tPOKE_LOCAL\t%lu\n" : "%p\tPOKE_LOCAL\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_MARK_FP:
