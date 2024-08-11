@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -30,6 +31,8 @@ GTA_Ast_Node_VTable gta_ast_node_cast_vtable = {
 
 
 GTA_Ast_Node_Cast * gta_ast_node_cast_create(GTA_Ast_Node * expression, GTA_Cast_Type type, GTA_PARSER_LTYPE location) {
+  assert(expression);
+
   GTA_Ast_Node_Cast * self = gcu_malloc(sizeof(GTA_Ast_Node_Cast));
   if (!self) {
     return 0;
@@ -49,7 +52,10 @@ GTA_Ast_Node_Cast * gta_ast_node_cast_create(GTA_Ast_Node * expression, GTA_Cast
 
 
 void gta_ast_node_cast_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_CAST(self));
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
+
   if (cast->expression) {
     gta_ast_node_destroy(cast->expression);
   }
@@ -58,7 +64,13 @@ void gta_ast_node_cast_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_cast_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_CAST(self));
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
+
+  assert(indent);
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s as %s:\n", indent, self->vtable->name,
     cast->type == GTA_CAST_TYPE_INTEGER
       ? "integer"
@@ -90,6 +102,7 @@ void gta_ast_node_cast_print(GTA_Ast_Node * self, const char * indent) {
  * @param buffer The buffer to remove trailing zeroes from.
  */
 static void remove_trailing_zeroes(char * buffer) {
+  assert(buffer);
   size_t length = strlen(buffer);
   // Don't do anything if there isn't a decimal point.
   if (!strchr(buffer, '.')) {
@@ -106,7 +119,10 @@ static void remove_trailing_zeroes(char * buffer) {
 
 
 GTA_Ast_Node * gta_ast_node_cast_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_CAST(self));
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *)self;
+
   GTA_Ast_Node * simplified_expression = gta_ast_node_simplify(cast->expression, variable_map);
   if (simplified_expression) {
     gta_ast_node_destroy(cast->expression);
@@ -239,15 +255,24 @@ GTA_Ast_Node * gta_ast_node_cast_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_
 
 
 void gta_ast_node_cast_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_CAST(self));
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
+
+  callback(self, data, return_value);
   callback(cast->expression, data, return_value);
 }
 
 
 bool gta_ast_node_cast_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_CAST(self));
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
+
   return true
     && gta_ast_node_compile_to_binary__x86_64(cast->expression, context)
   // gta_computed_value_cast(rax, cast->type, context)
@@ -272,7 +297,14 @@ bool gta_ast_node_cast_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compil
 
 
 bool gta_ast_node_cast_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_CAST(self));
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
+
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return true
     && gta_ast_node_compile_to_bytecode(cast->expression, context)
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
@@ -291,6 +323,9 @@ bool gta_ast_node_cast_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Con
 
 
 GTA_Ast_Node * gta_ast_node_cast_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_CAST(self));
   GTA_Ast_Node_Cast * cast = (GTA_Ast_Node_Cast *) self;
+
   return gta_ast_node_analyze(cast->expression, program, scope);
 }
