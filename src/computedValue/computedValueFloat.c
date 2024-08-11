@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -46,6 +47,7 @@ GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value, GTA_
     return NULL;
   }
   // Attempt to add the pointer to the context's garbage collection list.
+  assert(context);
   if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
     gcu_free(self);
     return NULL;
@@ -56,6 +58,7 @@ GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value, GTA_
 
 
 bool gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, GTA_Float value, GTA_Execution_Context * context) {
+  assert(self);
   *self = (GTA_Computed_Value_Float) {
     .base = {
       .vtable = &gta_computed_value_float_vtable,
@@ -74,6 +77,7 @@ bool gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, G
 
 
 void gta_computed_value_float_destroy(GTA_Computed_Value * self) {
+  assert(self);
   gcu_free(self);
 }
 
@@ -82,13 +86,18 @@ void gta_computed_value_float_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Val
 
 
 GTA_Computed_Value * gta_computed_value_float_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context) {
+  assert(value);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(value));
   GTA_Computed_Value_Float * float_value = (GTA_Computed_Value_Float *)value;
   return (GTA_Computed_Value *)gta_computed_value_float_create(float_value->value, context);
 }
 
 
 char * gta_computed_value_float_to_string(GTA_Computed_Value * self) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * float_value = (GTA_Computed_Value_Float *)self;
+
   char * str = (char *)gcu_malloc(32);
   if (!str) {
     return 0;
@@ -102,7 +111,10 @@ char * gta_computed_value_float_to_string(GTA_Computed_Value * self) {
 
 
 GTA_Computed_Value * gta_computed_value_float_negative(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (number->base.is_temporary) {
     number->value = -number->value;
     return self;
@@ -112,7 +124,10 @@ GTA_Computed_Value * gta_computed_value_float_negative(GTA_Computed_Value * self
 
 
 GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
     if (number->base.is_temporary) {
@@ -141,7 +156,10 @@ GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Value * self, GTA
 
 
 GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
     GTA_Float result = self_is_lhs
@@ -176,7 +194,10 @@ GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Computed_Value * self
 
 
 GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
     if (number->base.is_temporary) {
@@ -205,7 +226,10 @@ GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Computed_Value * self
 
 
 GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
     if ((self_is_lhs && other_number_float->value == 0)
@@ -253,7 +277,10 @@ GTA_Computed_Value * gta_computed_value_float_modulo(GTA_MAYBE_UNUSED(GTA_Comput
 
 
 GTA_Computed_Value * gta_computed_value_float_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
     return (GTA_Computed_Value *)((self_is_lhs
@@ -271,7 +298,10 @@ GTA_Computed_Value * gta_computed_value_float_less_than(GTA_Computed_Value * sel
 
 
 GTA_Computed_Value * gta_computed_value_float_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
     return (GTA_Computed_Value *)((self_is_lhs
@@ -289,7 +319,10 @@ GTA_Computed_Value * gta_computed_value_float_less_than_equal(GTA_Computed_Value
 
 
 GTA_Computed_Value * gta_computed_value_float_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
     return (GTA_Computed_Value *)((self_is_lhs
@@ -307,7 +340,10 @@ GTA_Computed_Value * gta_computed_value_float_greater_than(GTA_Computed_Value * 
 
 
 GTA_Computed_Value * gta_computed_value_float_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
     return (GTA_Computed_Value *)((self_is_lhs
@@ -325,7 +361,10 @@ GTA_Computed_Value * gta_computed_value_float_greater_than_equal(GTA_Computed_Va
 
 
 GTA_Computed_Value * gta_computed_value_float_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
     return (GTA_Computed_Value *)(number->value == other_number_float->value ? gta_computed_value_boolean_true : gta_computed_value_boolean_false);
@@ -339,7 +378,10 @@ GTA_Computed_Value * gta_computed_value_float_equal(GTA_Computed_Value * self, G
 
 
 GTA_Computed_Value * gta_computed_value_float_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
     return (GTA_Computed_Value *)(number->value != other_number_float->value ? gta_computed_value_boolean_true : gta_computed_value_boolean_false);
@@ -353,7 +395,10 @@ GTA_Computed_Value * gta_computed_value_float_not_equal(GTA_Computed_Value * sel
 
 
 GTA_Computed_Value * gta_computed_value_float_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
+
   if (type == &gta_computed_value_float_vtable) {
     return self;
   }
