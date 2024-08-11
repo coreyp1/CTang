@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -21,10 +22,15 @@ GTA_Ast_Node_VTable gta_ast_node_ternary_vtable = {
 
 
 GTA_Ast_Node_Ternary * gta_ast_node_ternary_create(GTA_Ast_Node * condition, GTA_Ast_Node * ifTrue, GTA_Ast_Node * ifFalse, GTA_PARSER_LTYPE location) {
+  assert(condition);
+  assert(ifTrue);
+  assert(ifFalse);
+
   GTA_Ast_Node_Ternary * self = gcu_malloc(sizeof(GTA_Ast_Node_Ternary));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_Ternary) {
     .base = {
       .vtable = &gta_ast_node_ternary_vtable,
@@ -41,7 +47,10 @@ GTA_Ast_Node_Ternary * gta_ast_node_ternary_create(GTA_Ast_Node * condition, GTA
 
 
 void gta_ast_node_ternary_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_TERNARY(self));
   GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
+
   gta_ast_node_destroy(ternary->condition);
   gta_ast_node_destroy(ternary->ifTrue);
   gta_ast_node_destroy(ternary->ifFalse);
@@ -50,6 +59,11 @@ void gta_ast_node_ternary_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_ternary_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_TERNARY(self));
+  GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
+
+  assert(indent);
   size_t indent_len = strlen(indent);
   char * new_indent = gcu_malloc(indent_len + 5);
   if (!new_indent) {
@@ -57,12 +71,17 @@ void gta_ast_node_ternary_print(GTA_Ast_Node * self, const char * indent) {
   }
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "    ", 5);
-  GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
+
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s:\n", indent, self->vtable->name);
+
   printf("%s  Condition:\n", indent);
   gta_ast_node_print(ternary->condition, new_indent);
+
   printf("%s  If True:\n", indent);
   gta_ast_node_print(ternary->ifTrue, new_indent);
+
   printf("%s  If False:\n", indent);
   gta_ast_node_print(ternary->ifFalse, new_indent);
   gcu_free(new_indent);
@@ -74,7 +93,10 @@ GTA_Ast_Node * gta_ast_node_ternary_simplify(GTA_Ast_Node * self, GTA_Ast_Simpli
   // nodes. Because the true and false branches can be any expression, and thus
   // could possibly contain assignments which may or may not be executed, the
   // assignments should cause the variable to be removed from the variable map.
+  assert(self);
+  assert(GTA_AST_IS_TERNARY(self));
   GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
+
   // The condition is always executed, so we don't need to worry about
   // detecting assignments in it.
   GTA_Ast_Node * simplified_condition = gta_ast_node_simplify(ternary->condition, variable_map);
@@ -84,6 +106,7 @@ GTA_Ast_Node * gta_ast_node_ternary_simplify(GTA_Ast_Node * self, GTA_Ast_Simpli
   }
 
   // Create copies of the variable map to pass to the true branch.
+  assert(variable_map);
   GTA_Ast_Simplify_Variable_Map * true_variable_map = gcu_hash64_clone(variable_map);
   GTA_Ast_Simplify_Variable_Map * false_variable_map = gcu_hash64_clone(variable_map);
 
@@ -133,8 +156,12 @@ GTA_Ast_Node * gta_ast_node_ternary_simplify(GTA_Ast_Node * self, GTA_Ast_Simpli
 
 
 void gta_ast_node_ternary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_TERNARY(self));
   GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
+
+  callback(self, data, return_value);
+
   gta_ast_node_walk(ternary->condition, callback, data, return_value);
   gta_ast_node_walk(ternary->ifTrue, callback, data, return_value);
   gta_ast_node_walk(ternary->ifFalse, callback, data, return_value);
@@ -142,7 +169,10 @@ void gta_ast_node_ternary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback c
 
 
 GTA_Ast_Node * gta_ast_node_ternary_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_TERNARY(self));
   GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
+
   GTA_Ast_Node * parts[] = {ternary->condition, ternary->ifTrue, ternary->ifFalse};
   for (size_t i = 0; i < 3; ++i) {
     GTA_Ast_Node * part = parts[i];
@@ -156,6 +186,8 @@ GTA_Ast_Node * gta_ast_node_ternary_analyze(GTA_Ast_Node * self, GTA_Program * p
 
 
 bool gta_ast_node_ternary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_TERNARY(self));
   GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
 
   // Jump labels.
@@ -163,6 +195,10 @@ bool gta_ast_node_ternary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_
   GTA_Integer end_label;
 
   // Compile the expression.
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return true
   // Create jump labels.
     && ((false_label = gta_compiler_context_get_label(context)) >= 0)
@@ -197,7 +233,12 @@ bool gta_ast_node_ternary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_
 
 
 bool gta_ast_node_ternary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_TERNARY(self));
   GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   // Offsets.
