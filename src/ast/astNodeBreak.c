@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -39,11 +40,17 @@ GTA_Ast_Node_Break * gta_ast_node_break_create(GTA_PARSER_LTYPE location) {
 
 
 void gta_ast_node_break_destroy(GTA_Ast_Node * self) {
+  assert(self);
   gcu_free(self);
 }
 
 
 void gta_ast_node_break_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_BREAK(self));
+  assert(indent);
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s\n", indent, self->vtable->name);
 }
 
@@ -54,11 +61,16 @@ GTA_Ast_Node * gta_ast_node_break_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node * self)
 
 
 void gta_ast_node_break_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
+  assert(self);
   callback(self, data, return_value);
 }
 
 
 bool gta_ast_node_break_compile_to_bytecode(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_Compiler_Context * context) {
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return true
   // NULL ; Something must be on the stack.
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
@@ -72,7 +84,10 @@ bool gta_ast_node_break_compile_to_bytecode(GTA_MAYBE_UNUSED(GTA_Ast_Node * self
 
 
 bool gta_ast_node_break_compile_to_binary__x86_64(GTA_MAYBE_UNUSED(GTA_Ast_Node * self), GTA_Compiler_Context * context) {
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
+
   return true
   // Something valid must be in RAX.  Use Null.
   //   mov rax, gta_computed_value_null
