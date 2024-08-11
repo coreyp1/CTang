@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -22,10 +23,13 @@ GTA_Ast_Node_VTable gta_ast_node_string_vtable = {
 
 
 GTA_Ast_Node_String * gta_ast_node_string_create(GTA_Unicode_String * string, GTA_PARSER_LTYPE location) {
+  assert(string);
+
   GTA_Ast_Node_String * self = gcu_malloc(sizeof(GTA_Ast_Node_String));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_String) {
     .base = {
       .vtable = &gta_ast_node_string_vtable,
@@ -40,14 +44,25 @@ GTA_Ast_Node_String * gta_ast_node_string_create(GTA_Unicode_String * string, GT
 
 
 void gta_ast_node_string_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_STRING(self));
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
+
   gta_unicode_string_destroy(string->string);
   gcu_free(self);
 }
 
 
 void gta_ast_node_string_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_STRING(self));
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
+
+  assert(indent);
+  assert(self->vtable);
+  assert(self->vtable->name);
+  assert(string->string);
+  assert(string->string->buffer);
   printf("%s%s: \"%s\"\n", indent, self->vtable->name, string->string->buffer);
 }
 
@@ -58,12 +73,20 @@ GTA_Ast_Node * gta_ast_node_string_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node * self
 
 
 void gta_ast_node_string_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
+  assert(self);
   callback(self, data, return_value);
 }
 
 
 bool gta_ast_node_string_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_STRING(self));
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
+
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_STRING))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_P(string->string));
@@ -71,7 +94,12 @@ bool gta_ast_node_string_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
 
 
 bool gta_ast_node_string_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Compiler_Context * context)) {
+  assert(self);
+  assert(GTA_AST_IS_STRING(self));
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   return true
