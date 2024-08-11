@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -56,6 +57,8 @@ GTA_Ast_Node * gta_ast_node_parse_error_identifier_redeclared = (GTA_Ast_Node *)
 
 
 GTA_Ast_Node_Parse_Error * gta_ast_node_parse_error_create(const char * message, GTA_PARSER_LTYPE location) {
+  assert(message);
+
   GTA_Ast_Node_Parse_Error * self = gcu_malloc(sizeof(GTA_Ast_Node_Parse_Error));
   if (!self) {
     return 0;
@@ -84,14 +87,23 @@ GTA_Ast_Node_Parse_Error * gta_ast_node_parse_error_create(const char * message,
 
 
 void gta_ast_node_parse_error_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_PARSE_ERROR(self));
   GTA_Ast_Node_Parse_Error * parseError = (GTA_Ast_Node_Parse_Error *) self;
+
   gcu_free(parseError->message);
   gcu_free(parseError);
 }
 
 
 void gta_ast_node_parse_error_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_PARSE_ERROR(self));
   GTA_Ast_Node_Parse_Error * parseError = (GTA_Ast_Node_Parse_Error *) self;
+
+  assert(indent);
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%sParse Error: %s\n", indent, parseError->message);
 }
 
@@ -102,5 +114,6 @@ GTA_Ast_Node * gta_ast_node_parse_error_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node *
 
 
 void gta_ast_node_parse_error_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
+  assert(self);
   callback(self, data, return_value);
 }
