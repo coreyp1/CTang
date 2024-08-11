@@ -1,3 +1,5 @@
+
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <cutil/memory.h>
@@ -62,6 +64,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_create(GTA_Computed_Va
     return NULL;
   }
   // Attempt to add the pointer to the context's garbage collection list.
+  assert(context);
   if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
     gta_computed_value_iterator_destroy_in_place(&self->base);
     return gta_computed_value_error_out_of_memory;
@@ -71,6 +74,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_create(GTA_Computed_Va
 
 
 bool GTA_CALL gta_computed_value_iterator_create_in_place(GTA_Computed_Value_Iterator * self, GTA_Computed_Value * collection, GTA_Execution_Context * context) {
+  assert(self);
   *self = (GTA_Computed_Value_Iterator){
     .base = {
       .vtable = &gta_computed_value_iterator_vtable,
@@ -94,12 +98,15 @@ bool GTA_CALL gta_computed_value_iterator_create_in_place(GTA_Computed_Value_Ite
 
 
 void GTA_CALL gta_computed_value_iterator_destroy(GTA_Computed_Value * self) {
+  assert(self);
   gta_computed_value_destroy_in_place(self);
   gcu_free(self);
 }
 
 
 void GTA_CALL gta_computed_value_iterator_destroy_in_place(GTA_Computed_Value * self) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ITERATOR(self));
   GTA_Computed_Value_Iterator * iterator = (GTA_Computed_Value_Iterator *)self;
   if (iterator->destroy) {
     iterator->destroy(iterator);
@@ -108,6 +115,8 @@ void GTA_CALL gta_computed_value_iterator_destroy_in_place(GTA_Computed_Value * 
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_iterator_next(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ITERATOR(self));
   GTA_Computed_Value_Iterator * iterator = (GTA_Computed_Value_Iterator *)self;
   if (iterator->advance) {
     iterator->advance(iterator);
