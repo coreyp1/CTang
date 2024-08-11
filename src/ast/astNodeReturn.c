@@ -26,6 +26,7 @@ GTA_Ast_Node_Return * gta_ast_node_return_create(GTA_Ast_Node * expression, GTA_
   if (!self) {
     return 0;
   }
+
   if (!expression) {
     // No expression was supplied.  Default to NULL.
     expression = gta_ast_node_create(location);
@@ -34,6 +35,7 @@ GTA_Ast_Node_Return * gta_ast_node_return_create(GTA_Ast_Node * expression, GTA_
       return 0;
     }
   }
+
   *self = (GTA_Ast_Node_Return) {
     .base = {
       .vtable = &gta_ast_node_return_vtable,
@@ -73,11 +75,13 @@ void gta_ast_node_return_print(GTA_Ast_Node * self, const char * indent) {
   memcpy(new_indent + indent_len, "  ", 3);
 
   assert(return_node->expression);
-  assert(return_node->expression->vtable);
+  assert(self->vtable);
+  assert(self->vtable->name);
   if (return_node->expression) {
     printf("%s%s:\n", indent, self->vtable->name);
     gta_ast_node_print(return_node->expression, new_indent);
-  } else {
+  }
+  else {
     printf("%s%s\n", indent, self->vtable->name);
   }
   gcu_free(new_indent);
@@ -128,6 +132,8 @@ bool gta_ast_node_return_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
 
   assert(context);
   assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   GTA_VectorX * b = context->program->bytecode;
   GTA_VectorX * o = context->bytecode_offsets;
 
@@ -152,6 +158,7 @@ bool gta_ast_node_return_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
   GTA_Ast_Node_Return * return_node = (GTA_Ast_Node_Return *)self;
 
   assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   return true
