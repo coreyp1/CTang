@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -101,6 +102,7 @@ GTA_Computed_Value_String * gta_computed_value_string_create(GTA_Unicode_String 
     return 0;
   }
   // Attempt to add the pointer to the context's garbage collection list.
+  assert(context);
   if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
     gcu_free(self);
     return NULL;
@@ -111,6 +113,8 @@ GTA_Computed_Value_String * gta_computed_value_string_create(GTA_Unicode_String 
 
 
 bool gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self, GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context) {
+  assert(self);
+  assert(value);
   *self = (GTA_Computed_Value_String) {
     .base = {
       .vtable = &gta_computed_value_string_vtable,
@@ -142,6 +146,7 @@ void gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self) {
   if (!self || self->is_singleton) {
     return;
   }
+  assert(GTA_COMPUTED_VALUE_IS_STRING(self));
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;
   if (string->is_owned) {
     gta_unicode_string_destroy(string->value);
@@ -150,7 +155,11 @@ void gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self) {
 
 
 GTA_Computed_Value * gta_computed_value_string_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context) {
+  assert(value);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(value));
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) value;
+
+  assert(string->value);
   GTA_Unicode_String * unicodeString = gta_unicode_string_substring(string->value, 0, string->value->grapheme_length);
   if (!unicodeString) {
     return 0;
@@ -160,25 +169,40 @@ GTA_Computed_Value * gta_computed_value_string_deep_copy(GTA_Computed_Value * va
 
 
 char * gta_computed_value_string_to_string(GTA_Computed_Value * value) {
+  assert(value);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(value));
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) value;
+
+  assert(string->value);
   GTA_Unicode_String * source = string->value;
   char * str = gcu_malloc(source->byte_length + 1);
   if (!str) {
     return 0;
   }
+  assert(source->buffer);
   memcpy(str, source->buffer, source->byte_length + 1);
   return str;
 }
 
 
 GTA_Unicode_String * gta_computed_value_string_print(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(self));
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *)self;
+
+  assert(string->value);
   return gta_unicode_string_substring(string->value, 0, string->value->grapheme_length);
 }
 
 
 GTA_Computed_Value * gta_computed_value_string_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(self));
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;
+
+  assert(type);
+  assert(string->value);
+  assert(string->value->buffer);
   if (type == &gta_computed_value_string_vtable) {
     return self;
   }
@@ -196,13 +220,16 @@ GTA_Computed_Value * gta_computed_value_string_cast(GTA_Computed_Value * self, G
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_string_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(self));
+  GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;
+
   if (!GTA_COMPUTED_VALUE_IS_INTEGER(index)) {
     return gta_computed_value_error_invalid_index;
   }
-
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)index;
-  GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;
 
+  assert(string->value);
   GTA_Integer normalized_index = integer->value >= 0
     ? integer->value
     : (GTA_Integer)string->value->grapheme_length + integer->value;
@@ -235,7 +262,11 @@ static GTA_Integer correct_bounds(GTA_Integer value, GTA_Integer boundary, GTA_I
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_string_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(self));
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;
+
+  assert(string->value);
   GTA_Integer grapheme_length = (GTA_Integer)string->value->grapheme_length;
 
   // First, validate the step value.  If null, it will default to 1.
