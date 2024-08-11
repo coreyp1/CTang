@@ -72,6 +72,11 @@ void gta_ast_node_identifier_print(GTA_Ast_Node * self, const char * indent) {
   assert(self);
   assert(GTA_AST_IS_IDENTIFIER(self));
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
+
+  assert(indent);
+  assert(self->vtable);
+  assert(self->vtable->name);
+  assert(identifier->identifier);
   printf("%s%s: %s\n", indent, self->vtable->name, identifier->identifier);
 }
 
