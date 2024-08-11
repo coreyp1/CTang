@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -40,12 +41,19 @@ GTA_Ast_Node_Boolean * gta_ast_node_boolean_create(bool value, GTA_PARSER_LTYPE 
 
 
 void gta_ast_node_boolean_destroy(GTA_Ast_Node * self) {
+  assert(self);
   gcu_free(self);
 }
 
 
 void gta_ast_node_boolean_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_BOOLEAN(self));
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;
+
+  assert(indent);
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s: %s\n", indent, self->vtable->name, boolean->value ? "true" : "false");
 }
 
@@ -56,19 +64,31 @@ GTA_Ast_Node * gta_ast_node_boolean_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node * sel
 
 
 void gta_ast_node_boolean_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
+  assert(self);
   callback(self, data, return_value);
 }
 
 
 bool gta_ast_node_boolean_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_BOOLEAN(self));
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;
+
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
   return GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_BOOLEAN))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_B(boolean->value));
 }
 
 
 bool gta_ast_node_boolean_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_BOOLEAN(self));
   GTA_Ast_Node_Boolean * boolean = (GTA_Ast_Node_Boolean *) self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   return gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, boolean->value
