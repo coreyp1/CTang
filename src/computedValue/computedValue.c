@@ -78,6 +78,7 @@ GTA_Computed_Value * gta_computed_value_create(GTA_MAYBE_UNUSED(GTA_Execution_Co
 
 
 bool gta_computed_value_create_in_place(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  assert(self);
   self->context = context;
   return true;
 }
@@ -309,6 +310,7 @@ char * gta_computed_value_null_to_string(GTA_MAYBE_UNUSED(GTA_Computed_Value * s
 
 
 GTA_Computed_Value * gta_computed_value_null_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+  assert(self);
   if (type == &gta_computed_value_boolean_vtable) {
     return gta_computed_value_boolean_false;
   }
@@ -549,6 +551,7 @@ GTA_Computed_Value * gta_computed_value_call_not_supported(GTA_MAYBE_UNUSED(GTA_
 }
 
 GTA_Unicode_String * gta_computed_value_generic_print_from_to_string(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
   char * str = gta_computed_value_to_string(self);
   if (!str) {
     return NULL;
