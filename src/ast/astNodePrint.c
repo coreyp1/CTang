@@ -24,6 +24,7 @@ GTA_Ast_Node_VTable gta_ast_node_print_vtable = {
 
 GTA_Ast_Node_Print * gta_ast_node_print_create(GTA_Ast_Node * expression, GTA_PARSER_LTYPE location) {
   assert(expression);
+
   GTA_Ast_Node_Print * self = gcu_malloc(sizeof(GTA_Ast_Node_Print));
   if (!self) {
     return 0;
@@ -46,6 +47,7 @@ void gta_ast_node_print_destroy(GTA_Ast_Node * self) {
   assert(self);
   assert(GTA_AST_IS_PRINT(self));
   GTA_Ast_Node_Print * print = (GTA_Ast_Node_Print *)self;
+
   gta_ast_node_destroy(print->expression);
   gcu_free(self);
 }
@@ -64,7 +66,11 @@ void gta_ast_node_print_print(GTA_Ast_Node * self, const char * indent) {
   }
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "  ", 3);
+
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s():\n", indent, self->vtable->name);
+
   gta_ast_node_print(print->expression, new_indent);
   gcu_free(new_indent);
 }
@@ -74,6 +80,7 @@ GTA_Ast_Node * gta_ast_node_print_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
   assert(self);
   assert(GTA_AST_IS_PRINT(self));
   GTA_Ast_Node_Print * print = (GTA_Ast_Node_Print *)self;
+
   GTA_Ast_Node * simplified_expression = gta_ast_node_simplify(print->expression, variable_map);
   if (simplified_expression) {
     gta_ast_node_destroy(print->expression);
@@ -87,6 +94,7 @@ GTA_Ast_Node * gta_ast_node_print_analyze(GTA_Ast_Node * self, GTA_Program * pro
   assert(self);
   assert(GTA_AST_IS_PRINT(self));
   GTA_Ast_Node_Print * print = (GTA_Ast_Node_Print *)self;
+
   return gta_ast_node_analyze(print->expression, program, scope);
 }
 
@@ -107,6 +115,9 @@ bool gta_ast_node_print_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Co
   GTA_Ast_Node_Print * print = (GTA_Ast_Node_Print *)self;
 
   assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return gta_ast_node_compile_to_bytecode(print->expression, context)
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_PRINT));
@@ -119,8 +130,8 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   GTA_Ast_Node_Print * print = (GTA_Ast_Node_Print *)self;
 
   assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
-  assert(v);
 
   // Memory offsets (for use by the generated assembly code).
   GTA_Unicode_String * * context_output_offset = &((GTA_Execution_Context *)0)->output;
