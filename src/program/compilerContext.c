@@ -52,6 +52,7 @@ bool gta_compiler_context_create_in_place(GTA_Compiler_Context * context, GTA_Pr
   assert(labels->count == 0);
   assert(labels->capacity == 32);
 
+  assert(context);
   *context = (GTA_Compiler_Context) {
     .program = program,
     .binary_vector = binary_vector,
@@ -95,19 +96,25 @@ BINARY_VECTOR_CREATE_FAILED:
 
 
 void gta_compiler_context_destroy(GTA_Compiler_Context * context) {
+  assert(context);
   gta_compiler_context_destroy_in_place(context);
   gcu_free(context);
 }
 
 
 void gta_compiler_context_destroy_in_place(GTA_Compiler_Context * context) {
+  assert(context);
   GTA_VECTORX_DESTROY(context->bytecode_offsets);
   gcu_vector8_destroy(context->binary_vector);
+
+  assert(context->scope_stack);
   for (size_t i = 0; i < context->scope_stack->count; ++i) {
     GTA_HASHX_DESTROY(GTA_TYPEX_P(context->scope_stack->data[i]));
   }
   GTA_VECTORX_DESTROY(context->scope_stack);
   GTA_HASHX_DESTROY(context->globals);
+
+  assert(context->labels_from);
   for (size_t i = 0; i < context->labels_from->count; ++i) {
     GTA_VECTORX_DESTROY(GTA_TYPEX_P(context->labels_from->data[i]));
   }
@@ -117,6 +124,7 @@ void gta_compiler_context_destroy_in_place(GTA_Compiler_Context * context) {
 
 
 GTA_NO_DISCARD GTA_Integer gta_compiler_context_get_label(GTA_Compiler_Context * context) {
+  assert(context);
   GTA_VectorX * labels_from_vector = GTA_VECTORX_CREATE(32);
   if (!labels_from_vector) {
     return -1;
@@ -133,6 +141,10 @@ GTA_NO_DISCARD GTA_Integer gta_compiler_context_get_label(GTA_Compiler_Context *
 
 
 bool gta_compiler_context_add_label_jump(GTA_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_offset) {
+  assert(context);
+  assert(context->labels_from);
+  assert((label >= 0) && ((GTA_UInteger)label < context->labels_from->count));
+  assert(context->labels_from->data);
   GTA_VectorX * labels_from_vector = GTA_TYPEX_P(context->labels_from->data[label]);
   if (!GTA_VECTORX_APPEND(labels_from_vector, GTA_TYPEX_MAKE_UI(byte_offset))) {
     return false;
@@ -142,9 +154,12 @@ bool gta_compiler_context_add_label_jump(GTA_Compiler_Context * context, GTA_Int
 
 
 bool gta_compiler_context_set_label(GTA_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_offset) {
+  assert(context);
+  assert(context->labels);
   if (label < 0 || (GTA_UInteger)label >= context->labels->count) {
     return false;
   }
+  assert(context->labels->data);
   context->labels->data[label] = GTA_TYPEX_MAKE_UI(byte_offset);
   return true;
 }
