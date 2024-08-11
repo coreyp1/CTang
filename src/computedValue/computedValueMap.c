@@ -1,3 +1,5 @@
+
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <cutil/hash.h>
@@ -90,6 +92,8 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_create(size_t size, GTA_Exe
 
 
 bool GTA_CALL gta_computed_value_map_create_in_place(GTA_Computed_Value_Map * self, size_t size, GTA_Execution_Context * context) {
+  assert (self);
+
   GTA_HashX * key_hash = GTA_HASHX_CREATE(size);
   if (!key_hash) {
     goto KEY_HASH_CREATE_FAILED;
@@ -123,13 +127,17 @@ KEY_HASH_CREATE_FAILED:
 
 
 void GTA_CALL gta_computed_value_map_destroy(GTA_Computed_Value * self) {
+  assert(self);
   gta_computed_value_map_destroy_in_place(self);
   gcu_free(self);
 }
 
 
 void GTA_CALL gta_computed_value_map_destroy_in_place(GTA_Computed_Value * self) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_MAP(self));
   GTA_Computed_Value_Map * map = (GTA_Computed_Value_Map *)self;
+
   GTA_HASHX_DESTROY(map->key_hash);
   GTA_HASHX_DESTROY(map->value_hash);
 }
@@ -181,16 +189,22 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_deep_copy(GTA_Computed_Valu
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_map_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_MAP(self));
   return gta_computed_value_map_set_key_val((GTA_Computed_Value_Map *)self, index, other);
 }
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_map_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_MAP(self));
   GTA_Computed_Value_Map * map = (GTA_Computed_Value_Map *)self;
+
   if (!GTA_COMPUTED_VALUE_IS_STRING(index)) {
     return gta_computed_value_error_map_key_not_string;
   }
   GTA_Computed_Value_String * key = (GTA_Computed_Value_String *)index;
+
   GTA_Integer key_hash = gcu_string_hash_64(key->value->buffer, key->value->byte_length);
   GTA_HashX_Value result = GTA_HASHX_GET(map->value_hash, key_hash);
   if (!result.exists) {
@@ -204,6 +218,10 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_index(GTA_Computed_Value * 
  * Helper function to expand and add to the provided string.
  */
 static bool expand_and_concat(char * * buffer, size_t * len, const char * string) {
+  assert(buffer);
+  assert(len);
+  assert(string);
+
   size_t string_length = strlen(string);
   char * new_buffer = gcu_realloc(*buffer, *len + string_length + 1);
   if (!new_buffer) {
@@ -215,7 +233,10 @@ static bool expand_and_concat(char * * buffer, size_t * len, const char * string
 
 
 char * GTA_CALL gta_computed_value_map_to_string(GTA_Computed_Value * self) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_MAP(self));
   GTA_Computed_Value_Map * map = (GTA_Computed_Value_Map *)self;
+
   char * buffer = gcu_malloc(3);
   if (!buffer) {
     return NULL;
@@ -237,12 +258,14 @@ char * GTA_CALL gta_computed_value_map_to_string(GTA_Computed_Value * self) {
       gcu_free(buffer);
       return NULL;
     }
+
     char * value_str = gta_computed_value_to_string((GTA_Computed_Value *)GTA_TYPEX_P(value_iterator.value));
     if (!value_str) {
       gcu_free(key_str);
       gcu_free(buffer);
       return NULL;
     }
+
     if (!expand_and_concat(&buffer, &len, "  \"")
       || !expand_and_concat(&buffer, &len, key_str)
       || !expand_and_concat(&buffer, &len, "\": ")
@@ -253,11 +276,13 @@ char * GTA_CALL gta_computed_value_map_to_string(GTA_Computed_Value * self) {
       gcu_free(buffer);
       return NULL;
     }
+
     gcu_free(key_str);
     gcu_free(value_str);
     key_iterator = GTA_HASHX_ITERATOR_NEXT(key_iterator);
     value_iterator = GTA_HASHX_ITERATOR_NEXT(value_iterator);
   }
+
   if (!expand_and_concat(&buffer, &len, "}")) {
     gcu_free(buffer);
     return NULL;
@@ -267,10 +292,14 @@ char * GTA_CALL gta_computed_value_map_to_string(GTA_Computed_Value * self) {
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_map_get_from_cstring(GTA_Computed_Value_Map * self, const char * key) {
+  assert(self);
+  assert(key);
+
   GTA_HashX_Value result = GTA_HASHX_GET(self->value_hash, gcu_string_hash_64(key, strlen(key)));
   if (!result.exists) {
     return gta_computed_value_error_map_key_not_found;
   }
+
   return (GTA_Computed_Value *)GTA_TYPEX_P(result.value);
 }
 
