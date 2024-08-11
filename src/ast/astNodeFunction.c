@@ -27,19 +27,21 @@ GTA_Ast_Node_VTable gta_ast_node_function_vtable = {
 
 
 GTA_Ast_Node_Function * gta_ast_node_function_create(const char * identifier, GTA_VectorX * parameters, GTA_Ast_Node * block, GTA_PARSER_LTYPE location) {
+  assert(identifier);
+  assert(parameters);
+  assert(block);
+
   GTA_Ast_Node_Function * self = gcu_malloc(sizeof(GTA_Ast_Node_Function));
   if (!self) {
     goto SELF_CREATION_FAILURE;
   }
 
   // Create a runtime function object.
-  assert(parameters);
   GTA_Computed_Value_Function * runtime_function = gta_computed_value_function_create(parameters->count, 0, 0);
   if (!runtime_function) {
     goto RUNTIME_FUNCTION_CREATION_FAILURE;
   }
 
-  assert(identifier);
   *self = (GTA_Ast_Node_Function) {
     .base = {
       .vtable = &gta_ast_node_function_vtable,
@@ -103,8 +105,13 @@ void gta_ast_node_function_print(GTA_Ast_Node * self, const char * indent) {
   memcpy(small_indent, indent, indent_len + 1);
   memcpy(small_indent + indent_len, "  ", 3);
 
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s: %s\n", indent, self->vtable->name, function->identifier);
   printf("%s  Parameters:\n", indent);
+
+  assert(function->parameters);
+  assert(function->parameters->count ? (bool)function->parameters->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function->parameters); i++) {
     printf("%s%s\n", new_indent, ((GTA_Ast_Node_Identifier *)GTA_TYPEX_P(function->parameters->data[i]))->identifier);
   }
@@ -293,6 +300,8 @@ bool gta_ast_node_function_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
 
   assert(context);
   assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   GTA_VectorX * b = context->program->bytecode;
   GTA_VectorX * o = context->bytecode_offsets;
 
@@ -360,6 +369,7 @@ bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *) self;
 
   assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   // Jump labels.
