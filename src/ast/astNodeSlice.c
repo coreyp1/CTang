@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -21,10 +22,16 @@ GTA_Ast_Node_VTable gta_ast_node_slice_vtable = {
 
 
 GTA_Ast_Node_Slice * gta_ast_node_slice_create(GTA_Ast_Node * lhs, GTA_Ast_Node * start, GTA_Ast_Node * end, GTA_Ast_Node * skip, GTA_PARSER_LTYPE location) {
+  assert(lhs);
+  assert(start);
+  assert(end);
+  // Note: skip is optional.
+
   GTA_Ast_Node_Slice * self = gcu_malloc(sizeof(GTA_Ast_Node_Slice));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_Slice) {
     .base = {
       .vtable = &gta_ast_node_slice_vtable,
@@ -42,7 +49,10 @@ GTA_Ast_Node_Slice * gta_ast_node_slice_create(GTA_Ast_Node * lhs, GTA_Ast_Node 
 
 
 void gta_ast_node_slice_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_SLICE(self));
   GTA_Ast_Node_Slice * slice = (GTA_Ast_Node_Slice *)self;
+
   GTA_Ast_Node * parts[] = {slice->lhs, slice->start, slice->end, slice->skip};
   for (size_t i = 0; i < 4; ++i) {
     if (parts[i]) {
@@ -54,6 +64,11 @@ void gta_ast_node_slice_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_slice_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_SLICE(self));
+  GTA_Ast_Node_Slice * slice = (GTA_Ast_Node_Slice *)self;
+
+  assert(indent);
   size_t indent_len = strlen(indent);
   char * new_indent = gcu_malloc(indent_len + 5);
   if (!new_indent) {
@@ -61,14 +76,20 @@ void gta_ast_node_slice_print(GTA_Ast_Node * self, const char * indent) {
   }
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "    ", 5);
-  GTA_Ast_Node_Slice * slice = (GTA_Ast_Node_Slice *)self;
+
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s:\n", indent, self->vtable->name);
+
   printf("%s  LHS:\n", indent);
   gta_ast_node_print(slice->lhs, new_indent);
+
   printf("%s  Start:\n", indent);
   gta_ast_node_print(slice->start, new_indent);
+
   printf("%s  End:\n", indent);
   gta_ast_node_print(slice->end, new_indent);
+
   printf("%s  Skip:\n", indent);
   if (slice->skip) {
     gta_ast_node_print(slice->skip, new_indent);
@@ -78,22 +99,28 @@ void gta_ast_node_slice_print(GTA_Ast_Node * self, const char * indent) {
 
 
 GTA_Ast_Node * gta_ast_node_slice_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_SLICE(self));
   GTA_Ast_Node_Slice * slice = (GTA_Ast_Node_Slice *)self;
+
   GTA_Ast_Node * simplified_lhs = gta_ast_node_simplify(slice->lhs, variable_map);
   if (simplified_lhs) {
     gta_ast_node_destroy(slice->lhs);
     slice->lhs = simplified_lhs;
   }
+
   GTA_Ast_Node * simplified_start = gta_ast_node_simplify(slice->start, variable_map);
   if (simplified_start) {
     gta_ast_node_destroy(slice->start);
     slice->start = simplified_start;
   }
+
   GTA_Ast_Node * simplified_end = gta_ast_node_simplify(slice->end, variable_map);
   if (simplified_end) {
     gta_ast_node_destroy(slice->end);
     slice->end = simplified_end;
   }
+
   GTA_Ast_Node * simplified_skip = slice->skip
     ? gta_ast_node_simplify(slice->skip, variable_map)
     : NULL;
@@ -106,8 +133,12 @@ GTA_Ast_Node * gta_ast_node_slice_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
 
 
 void gta_ast_node_slice_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_SLICE(self));
   GTA_Ast_Node_Slice * slice = (GTA_Ast_Node_Slice *)self;
+
+  callback(self, data, return_value);
+
   GTA_Ast_Node * parts[] = {slice->lhs, slice->start, slice->end, slice->skip};
   for (size_t i = 0; i < 4; ++i) {
     if (parts[i]) {
@@ -118,7 +149,10 @@ void gta_ast_node_slice_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
 
 
 GTA_Ast_Node * gta_ast_node_slice_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_SLICE(self));
   GTA_Ast_Node_Slice * slice = (GTA_Ast_Node_Slice *)self;
+
   GTA_Ast_Node * parts[] = {slice->lhs, slice->start, slice->end, slice->skip};
   for (size_t i = 0; i < 4; ++i) {
     GTA_Ast_Node * error = parts[i]
@@ -133,7 +167,14 @@ GTA_Ast_Node * gta_ast_node_slice_analyze(GTA_Ast_Node * self, GTA_Program * pro
 
 
 bool gta_ast_node_slice_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_SLICE(self));
   GTA_Ast_Node_Slice * slice = (GTA_Ast_Node_Slice *)self;
+
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return true
     && gta_ast_node_compile_to_bytecode(slice->lhs, context)
     && gta_ast_node_compile_to_bytecode(slice->start, context)
@@ -147,7 +188,12 @@ bool gta_ast_node_slice_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Co
 
 
 bool gta_ast_node_slice_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_SLICE(self));
   GTA_Ast_Node_Slice * slice = (GTA_Ast_Node_Slice *)self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   // Compile the entire slice expression.
