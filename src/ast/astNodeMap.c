@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -25,10 +26,13 @@ GTA_Ast_Node_VTable gta_ast_node_map_vtable = {
 
 
 GTA_Ast_Node_Map * gta_ast_node_map_create(GTA_VectorX * pairs, GTA_PARSER_LTYPE location) {
+  assert(pairs);
+
   GTA_Ast_Node_Map * self = gcu_malloc(sizeof(GTA_Ast_Node_Map));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_Map) {
     .base = {
       .vtable = &gta_ast_node_map_vtable,
@@ -43,13 +47,21 @@ GTA_Ast_Node_Map * gta_ast_node_map_create(GTA_VectorX * pairs, GTA_PARSER_LTYPE
 
 
 void gta_ast_node_map_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_MAP(self));
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *)self;
+
   GTA_VECTORX_DESTROY(map->pairs);
   gcu_free(self);
 }
 
 
 void gta_ast_node_map_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_MAP(self));
+  GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *)self;
+
+  assert(indent);
   size_t indent_len = strlen(indent);
   char * new_indent = gcu_malloc(indent_len + 5);
   if (!new_indent) {
@@ -57,8 +69,13 @@ void gta_ast_node_map_print(GTA_Ast_Node * self, const char * indent) {
   }
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "    ", 5);
-  GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *)self;
+
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s\n", indent, self->vtable->name);
+
+  assert(map->pairs);
+  assert(map->pairs->count ? (bool)map->pairs->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(map->pairs); ++i) {
     GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)GTA_TYPEX_P(map->pairs->data[i]);
     printf("%s  Key:\n", indent);
@@ -71,7 +88,12 @@ void gta_ast_node_map_print(GTA_Ast_Node * self, const char * indent) {
 
 
 GTA_Ast_Node * gta_ast_node_map_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_MAP(self));
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *)self;
+
+  assert(map->pairs);
+  assert(map->pairs->count ? (bool)map->pairs->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(map->pairs); ++i) {
     GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)GTA_TYPEX_P(map->pairs->data[i]);
     GTA_Ast_Node * simplified = gta_ast_node_simplify(pair->value, variable_map);
@@ -85,8 +107,14 @@ GTA_Ast_Node * gta_ast_node_map_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_V
 
 
 void gta_ast_node_map_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_MAP(self));
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *)self;
+
+  callback(self, data, return_value);
+
+  assert(map->pairs);
+  assert(map->pairs->count ? (bool)map->pairs->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(map->pairs); ++i) {
     GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)GTA_TYPEX_P(map->pairs->data[i]);
     callback(pair->key, data, return_value);
@@ -96,7 +124,12 @@ void gta_ast_node_map_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callb
 
 
 GTA_Ast_Node * gta_ast_node_map_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_MAP(self));
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *)self;
+
+  assert(map->pairs);
+  assert(map->pairs->count ? (bool)map->pairs->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(map->pairs); ++i) {
     GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)GTA_TYPEX_P(map->pairs->data[i]);
     GTA_Ast_Node * error = gta_ast_node_analyze(pair->key, program, scope);
@@ -113,14 +146,25 @@ GTA_Ast_Node * gta_ast_node_map_analyze(GTA_Ast_Node * self, GTA_Program * progr
 
 
 bool gta_ast_node_map_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_MAP(self));
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *)self;
+
   bool error_free = true;
+
+  assert(map->pairs);
+  assert(map->pairs->count ? (bool)map->pairs->data : true);
   for (size_t i = 0; error_free && (i < map->pairs->count); ++i) {
     GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)GTA_TYPEX_P(map->pairs->data[i]);
     error_free &= true
       && gta_ast_node_compile_to_bytecode(pair->key, context)
       && gta_ast_node_compile_to_bytecode(pair->value, context);
   }
+
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return error_free
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_MAP))
@@ -129,8 +173,14 @@ bool gta_ast_node_map_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Cont
 
 
 bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_MAP(self));
   GTA_Ast_Node_Map * map = (GTA_Ast_Node_Map *)self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
+
   bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
   bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
 
@@ -168,6 +218,8 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
         && gta_compiler_context_add_label_jump(context, end, v->count - 4));
 
   // Compile the individual key/value pairs.
+  assert(map->pairs);
+  assert(map->pairs->count ? (bool)map->pairs->data : true);
   for (size_t i = 0; i < map->pairs->count; ++i) {
     GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)GTA_TYPEX_P(map->pairs->data[i]);
 
