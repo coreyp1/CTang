@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -26,10 +27,14 @@ GTA_Ast_Node_VTable gta_ast_node_use_vtable = {
 
 
 GTA_Ast_Node_Use * gta_ast_node_use_create(const char * identifier, GTA_Ast_Node * expression, GTA_PARSER_LTYPE location) {
+  assert(identifier);
+  // Note: expression can be NULL.
+
   GTA_Ast_Node_Use * self = gcu_malloc(sizeof(GTA_Ast_Node_Use));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_Use) {
     .base = {
       .vtable = &gta_ast_node_use_vtable,
@@ -46,7 +51,10 @@ GTA_Ast_Node_Use * gta_ast_node_use_create(const char * identifier, GTA_Ast_Node
 
 
 void gta_ast_node_use_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_USE(self));
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
+
   gcu_free((void *)use->identifier);
   if (use->expression) {
     gta_ast_node_destroy(use->expression);
@@ -56,6 +64,11 @@ void gta_ast_node_use_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_use_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_USE(self));
+  GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
+
+  assert(indent);
   size_t indent_len = strlen(indent);
   char * new_indent = gcu_malloc(indent_len + 3);
   if (!new_indent) {
@@ -63,7 +76,9 @@ void gta_ast_node_use_print(GTA_Ast_Node * self, const char * indent) {
   }
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "  ", 3);
-  GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
+
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s(%s):\n", indent, self->vtable->name, use->identifier);
   if (use->expression) {
     gta_ast_node_print(use->expression, new_indent);
@@ -73,7 +88,11 @@ void gta_ast_node_use_print(GTA_Ast_Node * self, const char * indent) {
 
 
 GTA_Ast_Node * gta_ast_node_use_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_USE(self));
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
+
+  assert(variable_map);
   GTA_Ast_Node * simplified_expression = gta_ast_node_simplify(use->expression, variable_map);
   if (simplified_expression) {
     gta_ast_node_destroy(use->expression);
@@ -88,7 +107,11 @@ GTA_Ast_Node * gta_ast_node_use_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_V
 
 
 GTA_Ast_Node * gta_ast_node_use_analyze(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Program * program), GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_USE(self));
+  assert(scope);
   GTA_Variable_Scope * outermost_scope = scope;
+
   while (outermost_scope->parent_scope) {
     outermost_scope = outermost_scope->parent_scope;
   }
@@ -130,13 +153,19 @@ GTA_Ast_Node * gta_ast_node_use_analyze(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GT
 
 
 void gta_ast_node_use_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_USE(self));
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
+
+  callback(self, data, return_value);
   gta_ast_node_walk(use->expression, callback, data, return_value);
 }
 
 
 static GTA_Computed_Value * GTA_CALL __load_library(GTA_Execution_Context * context, GTA_UInteger hash) {
+  assert(context);
+  assert(context->globals);
+
   GTA_HashX_Value func = GTA_HASHX_GET(context->globals, hash);
   if (!func.exists) {
     return gta_computed_value_null;
@@ -154,8 +183,13 @@ static GTA_Computed_Value * GTA_CALL __load_library(GTA_Execution_Context * cont
 
 
 bool gta_ast_node_use_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
-  GCU_Vector8 * v = context->binary_vector;
+  assert(self);
+  assert(GTA_AST_IS_USE(self));
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
+
+  assert(context);
+  assert(context->binary_vector);
+  GCU_Vector8 * v = context->binary_vector;
 
   // Load the library.
   // TODO: JIT the __load_library function to avoid the extra function call.
@@ -170,7 +204,14 @@ bool gta_ast_node_use_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
 
 
 bool gta_ast_node_use_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_USE(self));
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
+
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_LOAD_LIBRARY))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(use->hash));
