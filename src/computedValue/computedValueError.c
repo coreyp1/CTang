@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <string.h>
 #include <cutil/memory.h>
 #include <tang/computedValue/computedValueError.h>
@@ -180,7 +181,11 @@ GTA_Computed_Value * gta_computed_value_error_argument_count_mismatch = (GTA_Com
 
 
 char * gta_computed_value_error_to_string(GTA_Computed_Value * self) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ERROR(self));
   GTA_Computed_Value_Error * error = (GTA_Computed_Value_Error *)self;
+
+  assert(error->message);
   size_t length = strlen(error->message);
   char * string = gcu_malloc(length + 1 + 7);
   if (!string) {
