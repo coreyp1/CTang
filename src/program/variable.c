@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/hash.h>
@@ -12,6 +13,7 @@
  * @param hash The hash to clean up.
  */
 static void __gta_variable_scope_function_cleanup(GTA_HashX * hash) {
+  assert(hash);
   GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(hash);
   while (iterator.exists) {
     GTA_Variable_Scope * scope = (GTA_Variable_Scope *)GTA_TYPEX_P(iterator.value);
@@ -26,6 +28,8 @@ static void __gta_variable_scope_function_cleanup(GTA_HashX * hash) {
  * @param vector The vector to clean up.
  */
 static void __gta_variable_scope_name_hashes_cleanup(GTA_VectorX * vector) {
+  assert(vector);
+  assert(vector->count ? (bool)vector->data : true);
   for (size_t i = 0; i < vector->count; i++) {
     gcu_free(GTA_TYPEX_P(vector->data[i]));
   }
@@ -37,6 +41,9 @@ GTA_Variable_Scope * gta_variable_scope_create(char * name, GTA_Ast_Node * ast_n
   if (!scope) {
     return NULL;
   }
+
+  assert(name);
+  assert(ast_node);
   *scope = (GTA_Variable_Scope) {
     .name = name,
     .name_hash = GTA_STRING_HASH(name, strlen(name)),
@@ -98,6 +105,8 @@ void gta_variable_scope_print(GTA_Variable_Scope * scope, const char * indent) {
   if (!scope) {
     return;
   }
+
+  assert(indent);
   size_t indent_length = strlen(indent);
   char * new_indent = gcu_calloc(indent_length + 7, 1);
   if (!new_indent) {
