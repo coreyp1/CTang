@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -23,6 +24,7 @@ GTA_Ast_Node_VTable gta_ast_node_array_vtable = {
 
 
 GTA_Ast_Node_Array * gta_ast_node_array_create(GTA_VectorX * elements, GTA_PARSER_LTYPE location) {
+  assert(elements);
   GTA_Ast_Node_Array * self = gcu_malloc(sizeof(GTA_Ast_Node_Array));
   if (!self) {
     return 0;
@@ -41,6 +43,8 @@ GTA_Ast_Node_Array * gta_ast_node_array_create(GTA_VectorX * elements, GTA_PARSE
 
 
 void gta_ast_node_array_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_ARRAY(self));
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
   GTA_VECTORX_DESTROY(array->elements);
   gcu_free(self);
@@ -48,7 +52,11 @@ void gta_ast_node_array_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_array_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_ARRAY(self));
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
+
+  assert(indent);
   char * new_indent = gcu_malloc(strlen(indent) + 3);
   if (!new_indent) {
     return;
@@ -57,6 +65,9 @@ void gta_ast_node_array_print(GTA_Ast_Node * self, const char * indent) {
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "  ", 3);
   printf("%s%s\n", indent, self->vtable->name);
+
+  assert(array->elements);
+  assert(array->elements->count ? (bool)array->elements->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(array->elements); i++) {
     gta_ast_node_print((GTA_Ast_Node *) array->elements->data[i].p, new_indent);
   }
@@ -65,7 +76,12 @@ void gta_ast_node_array_print(GTA_Ast_Node * self, const char * indent) {
 
 
 GTA_Ast_Node * gta_ast_node_array_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_ARRAY(self));
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
+
+  assert(array->elements);
+  assert(array->elements->count ? (bool)array->elements->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(array->elements); ++i) {
     GTA_Ast_Node * element = (GTA_Ast_Node *) array->elements->data[i].p;
     GTA_Ast_Node * simplified = gta_ast_node_simplify(element, variable_map);
@@ -79,8 +95,14 @@ GTA_Ast_Node * gta_ast_node_array_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
 
 
 void gta_ast_node_array_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_ARRAY(self));
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
+
+  callback(self, data, return_value);
+
+  assert(array->elements);
+  assert(array->elements->count ? (bool)array->elements->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(array->elements); ++i) {
     GTA_Ast_Node * element = (GTA_Ast_Node *) array->elements->data[i].p;
     gta_ast_node_walk(element, callback, data, return_value);
@@ -89,7 +111,12 @@ void gta_ast_node_array_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
 
 
 GTA_Ast_Node * gta_ast_node_array_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_ARRAY(self));
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
+
+  assert(array->elements);
+  assert(array->elements->count ? (bool)array->elements->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(array->elements); ++i) {
     GTA_Ast_Node * result = gta_ast_node_analyze((GTA_Ast_Node *)GTA_TYPEX_P(array->elements->data[i]), program, scope);
     if (result) {
@@ -101,12 +128,21 @@ GTA_Ast_Node * gta_ast_node_array_analyze(GTA_Ast_Node * self, GTA_Program * pro
 
 
 bool gta_ast_node_array_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_ARRAY(self));
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
+
+  assert(array->elements);
+  assert(array->elements->count ? (bool)array->elements->data : true);
   for (size_t i = 0; i < array->elements->count; ++i) {
     if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)GTA_TYPEX_P(array->elements->data[i]), context)) {
       return false;
     }
   }
+
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
   return true
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ARRAY))
@@ -115,8 +151,14 @@ bool gta_ast_node_array_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Co
 
 
 bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_ARRAY(self));
   GTA_Ast_Node_Array * array = (GTA_Ast_Node_Array *) self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
+
   bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
   bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
   GTA_VectorX * * elements_offset = &((GTA_Computed_Value_Array *)0)->elements;
@@ -127,6 +169,8 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   GTA_Integer end;
   GTA_Integer return_memory_error;
 
+  assert(array->elements);
+  assert(array->elements->count ? (bool)array->elements->data : true);
   bool error_free = true
   // Create jump labels.
     && ((end = gta_compiler_context_get_label(context)) >= 0)
