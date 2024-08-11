@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <string.h>
 #include <cutil/memory.h>
 #include <tang/computedValue/computedValue.h>
@@ -37,6 +38,7 @@ bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_
     goto OUTPUT_STRING_CREATE_FAILED;
   }
 
+  assert(context);
   *context = (GTA_Execution_Context) {
     .program = program,
     .output = output,
@@ -62,16 +64,20 @@ GARBAGE_COLLECTION_VECTOR_CREATE_FAILED:
 
 
 void gta_execution_context_destroy(GTA_Execution_Context * self) {
+  assert(self);
   gta_execution_context_destroy_in_place(self);
   gcu_free(self);
 }
 
 
 void gta_execution_context_destroy_in_place(GTA_Execution_Context * self) {
+  assert(self);
   GTA_VECTORX_DESTROY(self->stack);
   if (self->pc_stack) {
     GTA_VECTORX_DESTROY(self->pc_stack);
   }
+  assert(self->garbage_collection);
+  assert(self->garbage_collection->count ? (bool)self->garbage_collection->data : true);
   for (size_t i = 0; i < self->garbage_collection->count; ++i) {
     gta_computed_value_destroy(GTA_TYPEX_P(self->garbage_collection->data[i]));
   }
@@ -92,5 +98,7 @@ typedef union Function_Converter {
 
 
 bool gta_execution_context_add_library(GTA_Execution_Context * context, const char * identifier, GTA_Execution_Context_Global_Create func) {
+  assert(context);
+  assert(identifier);
   return GTA_HASHX_SET(context->globals, GTA_STRING_HASH(identifier, strlen(identifier)), GTA_TYPEX_MAKE_P((Function_Converter){.f = func}.b));
 }
