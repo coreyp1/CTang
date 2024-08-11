@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -20,10 +21,13 @@ GTA_Ast_Node_VTable gta_ast_node_library_vtable = {
 
 
 GTA_Ast_Node_Library * gta_ast_node_library_create(const char * identifier, GTA_PARSER_LTYPE location) {
+  assert(identifier);
+
   GTA_Ast_Node_Library * self = gcu_malloc(sizeof(GTA_Ast_Node_Library));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_Library) {
     .base = {
       .vtable = &gta_ast_node_library_vtable,
@@ -39,14 +43,23 @@ GTA_Ast_Node_Library * gta_ast_node_library_create(const char * identifier, GTA_
 
 
 void gta_ast_node_library_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_LIBRARY(self));
   GTA_Ast_Node_Library * library = (GTA_Ast_Node_Library *) self;
+
   gcu_free((void *)library->identifier);
   gcu_free(self);
 }
 
 
 void gta_ast_node_library_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_LIBRARY(self));
   GTA_Ast_Node_Library * library = (GTA_Ast_Node_Library *) self;
+
+  assert(indent);
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s: %s\n", indent, self->vtable->name, library->identifier);
 }
 
@@ -57,5 +70,6 @@ GTA_Ast_Node * gta_ast_node_library_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node * sel
 
 
 void gta_ast_node_library_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
+  assert(self);
   callback(self, data, return_value);
 }
