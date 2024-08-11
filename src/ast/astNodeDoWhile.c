@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -25,10 +26,14 @@ GTA_Ast_Node_VTable gta_ast_node_do_while_vtable = {
 
 
 GTA_Ast_Node_Do_While * gta_ast_node_do_while_create(GTA_Ast_Node * condition, GTA_Ast_Node * block, GTA_PARSER_LTYPE location) {
+  assert(condition);
+  assert(block);
+
   GTA_Ast_Node_Do_While * self = gcu_malloc(sizeof(GTA_Ast_Node_Do_While));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_Do_While) {
     .base = {
       .vtable = &gta_ast_node_do_while_vtable,
@@ -44,7 +49,10 @@ GTA_Ast_Node_Do_While * gta_ast_node_do_while_create(GTA_Ast_Node * condition, G
 
 
 void gta_ast_node_do_while_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_DO_WHILE(self));
   GTA_Ast_Node_Do_While * do_while = (GTA_Ast_Node_Do_While *) self;
+
   gta_ast_node_destroy(do_while->condition);
   gta_ast_node_destroy(do_while->block);
   gcu_free(self);
@@ -52,7 +60,11 @@ void gta_ast_node_do_while_destroy(GTA_Ast_Node * self) {
 
 
 void gta_ast_node_do_while_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_DO_WHILE(self));
   GTA_Ast_Node_Do_While * do_while = (GTA_Ast_Node_Do_While *) self;
+
+  assert(indent);
   char * new_indent = gcu_malloc(strlen(indent) + 5);
   if (!new_indent) {
     return;
@@ -60,9 +72,14 @@ void gta_ast_node_do_while_print(GTA_Ast_Node * self, const char * indent) {
   size_t indent_len = strlen(indent);
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "    ", 5);
+
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s\n", indent, self->vtable->name);
+
   printf("%s  Condition:\n", indent);
   gta_ast_node_print(do_while->condition, new_indent);
+
   printf("%s  Block:\n", indent);
   gta_ast_node_print(do_while->block, new_indent);
   gcu_free(new_indent);
@@ -73,6 +90,8 @@ void gta_ast_node_do_while_print(GTA_Ast_Node * self, const char * indent) {
  * This function is used to find all the assignments in the while loop.
  */
 static void findAssignments(GTA_Ast_Node * self, void * data, void * error) {
+  assert(self);
+  assert(data);
   GCU_Hash64 * assignments = (GCU_Hash64 *)data;
   if (GTA_AST_IS_ASSIGN(self)) {
     GTA_Ast_Node_Assign * assignment = (GTA_Ast_Node_Assign *)self;
@@ -87,6 +106,8 @@ static void findAssignments(GTA_Ast_Node * self, void * data, void * error) {
 
 
 GTA_Ast_Node * gta_ast_node_do_while_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_DO_WHILE(self));
   GTA_Ast_Node_Do_While * do_while = (GTA_Ast_Node_Do_While *) self;
 
   // Both the condition and the block may be executed multiple times, so we
@@ -153,21 +174,30 @@ GTA_Ast_Node * gta_ast_node_do_while_simplify(GTA_Ast_Node * self, GTA_Ast_Simpl
 
 
 void gta_ast_node_do_while_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_DO_WHILE(self));
   GTA_Ast_Node_Do_While * do_while = (GTA_Ast_Node_Do_While *) self;
+
+  callback(self, data, return_value);
+
   gta_ast_node_walk(do_while->condition, callback, data, return_value);
   gta_ast_node_walk(do_while->block, callback, data, return_value);
 }
 
 
 GTA_Ast_Node * gta_ast_node_do_while_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_DO_WHILE(self));
   GTA_Ast_Node_Do_While * do_while = (GTA_Ast_Node_Do_While *) self;
+
   GTA_Ast_Node * error = gta_ast_node_analyze(do_while->condition, program, scope);
   return error ? error : gta_ast_node_analyze(do_while->block, program, scope);
 }
 
 
 bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_DO_WHILE(self));
   GTA_Ast_Node_Do_While * do_while = (GTA_Ast_Node_Do_While *) self;
 
   // Jump labels.
@@ -176,6 +206,10 @@ bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
   GTA_Integer original_continue_label = context->continue_label;
 
   // Compile the do-while loop.
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return true
   // Create jump labels.
     && ((start_label = gta_compiler_context_get_label(context)) >= 0)
@@ -217,7 +251,12 @@ bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
 
 
 bool gta_ast_node_do_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_DO_WHILE(self));
   GTA_Ast_Node_Do_While * do_while_node = (GTA_Ast_Node_Do_While *) self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   // Jump labels.
