@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -41,12 +42,19 @@ GTA_Ast_Node_Float * gta_ast_node_float_create(GCU_float64_t value, GTA_PARSER_L
 
 
 void gta_ast_node_float_destroy(GTA_Ast_Node * self) {
+  assert(self);
   gcu_free(self);
 }
 
 
 void gta_ast_node_float_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_FLOAT(self));
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;
+
+  assert(indent);
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s: %f\n", indent, self->vtable->name, float_node->value);
 }
 
@@ -57,21 +65,35 @@ GTA_Ast_Node * gta_ast_node_float_simplify(GTA_MAYBE_UNUSED(GTA_Ast_Node * self)
 
 
 void gta_ast_node_float_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
+  assert(self);
   callback(self, data, return_value);
 }
 
 
 bool gta_ast_node_float_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_FLOAT(self));
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;
-  return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count) && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_FLOAT))
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_F(float_node->value));
 
-  return false;
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
+  return true
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_FLOAT))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_F(float_node->value))
+  ;
 }
 
 
 bool gta_ast_node_float_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_FLOAT(self));
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   return true
@@ -82,5 +104,6 @@ bool gta_ast_node_float_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, GTA_TYPEX_MAKE_F(float_node->value).i64)
   //   movq xmm0, rax
     && gta_movq_reg_reg__x86_64(v, GTA_REG_XMM0, GTA_REG_RAX)
-    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_float_create);
+    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_float_create)
+  ;
 }
