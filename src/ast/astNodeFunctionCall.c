@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -42,15 +43,23 @@ GTA_Ast_Node_Function_Call * gta_ast_node_function_call_create(GTA_Ast_Node * lh
 
 
 void gta_ast_node_function_call_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION_CALL(self));
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
   gta_ast_node_destroy(function_call->lhs);
+
+  assert(function_call->arguments);
   GTA_VECTORX_DESTROY(function_call->arguments);
   gcu_free(self);
 }
 
 
 void gta_ast_node_function_call_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION_CALL(self));
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
+
+  assert(indent);
   char * new_indent = gcu_malloc(strlen(indent) + 5);
   if (!new_indent) {
     return;
@@ -58,9 +67,14 @@ void gta_ast_node_function_call_print(GTA_Ast_Node * self, const char * indent) 
   size_t indent_len = strlen(indent);
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "    ", 5);
+
+  assert(self->vtable);
   printf("%s%s\n", indent, self->vtable->name);
   printf("%s  LHS:\n", indent);
   gta_ast_node_print(function_call->lhs, new_indent);
+
+  assert(function_call->arguments);
+  assert(function_call->arguments->data);
   printf("%s  Arguments:\n", indent);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function_call->arguments); i++) {
     printf("%s  %zu:\n", indent, i);
@@ -71,12 +85,18 @@ void gta_ast_node_function_call_print(GTA_Ast_Node * self, const char * indent) 
 
 
 GTA_Ast_Node * gta_ast_node_function_call_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION_CALL(self));
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
+
   GTA_Ast_Node * simplified_lhs = gta_ast_node_simplify(function_call->lhs, variable_map);
   if (simplified_lhs) {
     gta_ast_node_destroy(function_call->lhs);
     function_call->lhs = simplified_lhs;
   }
+
+  assert(function_call->arguments);
+  assert(function_call->arguments->count ? (bool)function_call->arguments->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function_call->arguments); ++i) {
     GTA_Ast_Node * argument = (GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]);
     GTA_Ast_Node * simplified = gta_ast_node_simplify(argument, variable_map);
@@ -90,9 +110,15 @@ GTA_Ast_Node * gta_ast_node_function_call_simplify(GTA_Ast_Node * self, GTA_Ast_
 
 
 void gta_ast_node_function_call_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION_CALL(self));
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
+
+  callback(self, data, return_value);
   gta_ast_node_walk(function_call->lhs, callback, data, return_value);
+
+  assert(function_call->arguments);
+  assert(function_call->arguments->count ? (bool)function_call->arguments->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function_call->arguments); ++i) {
     GTA_Ast_Node * argument = (GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]);
     gta_ast_node_walk(argument, callback, data, return_value);
@@ -101,11 +127,17 @@ void gta_ast_node_function_call_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Call
 
 
 GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_function_call_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION_CALL(self));
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
+
   GTA_Ast_Node * error = gta_ast_node_analyze(function_call->lhs, program, scope);
   if (error) {
     return error;
   }
+
+  assert(function_call->arguments);
+  assert(function_call->arguments->count ? (bool)function_call->arguments->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function_call->arguments); ++i) {
     GTA_Ast_Node * argument = (GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]);
     error = gta_ast_node_analyze(argument, program, scope);
@@ -118,11 +150,18 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_function_call_analyze(GTA_Ast_Node * 
 
 
 bool gta_ast_node_function_call_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION_CALL(self));
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
+
+  assert(context);
+  assert(context->program);
   GTA_VectorX * b = context->program->bytecode;
   GTA_VectorX * o = context->bytecode_offsets;
 
   // Compile the arguments.
+  assert(function_call->arguments);
+  assert(function_call->arguments->count ? (bool)function_call->arguments->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function_call->arguments); ++i) {
     if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]), context)) {
       return false;
@@ -140,7 +179,11 @@ bool gta_ast_node_function_call_compile_to_bytecode(GTA_Ast_Node * self, GTA_Com
 
 
 bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_FUNCTION_CALL(self));
   GTA_Ast_Node_Function_Call * function_call = (GTA_Ast_Node_Function_Call *)self;
+
+  assert(context);
   GCU_Vector8 * v = context->binary_vector;
 
   // Offsets
@@ -154,6 +197,7 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   GTA_Integer cleanup;
   GTA_Integer restore_frame_pointer;
 
+  assert(function_call->arguments);
   bool stack_padding_needed = GTA_VECTORX_COUNT(function_call->arguments) % 2;
 
   bool error_free = true
@@ -185,6 +229,7 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   ;
 
   // Compile and push the arguments.
+  assert(function_call->arguments->count ? (bool)function_call->arguments->data : true);
   for (size_t i = 0; error_free && (i < GTA_VECTORX_COUNT(function_call->arguments)); ++i) {
     // TODO: Does these values need to be marked as not temporary?
     error_free &= true
