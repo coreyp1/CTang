@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -26,10 +27,14 @@ GTA_Ast_Node_VTable gta_ast_node_binary_vtable = {
 
 
 GTA_Ast_Node_Binary * gta_ast_node_binary_create(GTA_Ast_Node * lhs, GTA_Ast_Node * rhs, GTA_Binary_Type operator_type, GTA_PARSER_LTYPE location) {
+  assert(lhs);
+  assert(rhs);
+
   GTA_Ast_Node_Binary * self = gcu_malloc(sizeof(GTA_Ast_Node_Binary));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_Binary) {
     .base = {
       .vtable = &gta_ast_node_binary_vtable,
@@ -46,22 +51,32 @@ GTA_Ast_Node_Binary * gta_ast_node_binary_create(GTA_Ast_Node * lhs, GTA_Ast_Nod
 
 
 void gta_ast_node_binary_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_BINARY(self));
   GTA_Ast_Node_Binary * binary = (GTA_Ast_Node_Binary *) self;
+
   gta_ast_node_destroy(binary->lhs);
   gta_ast_node_destroy(binary->rhs);
+
   gcu_free(self);
 }
 
 
 void gta_ast_node_binary_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_BINARY(self));
   GTA_Ast_Node_Binary * binary = (GTA_Ast_Node_Binary *) self;
+
+  assert(indent);
   char * new_indent = gcu_malloc(strlen(indent) + 5);
   if (!new_indent) {
     return;
   }
+
   size_t indent_len = strlen(indent);
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "    ", 5);
+
   const char * operator_str = 0;
   switch(binary->operator_type) {
     case GTA_BINARY_TYPE_ADD:
@@ -104,27 +119,38 @@ void gta_ast_node_binary_print(GTA_Ast_Node * self, const char * indent) {
       operator_str = "||";
       break;
   }
+
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s (%s):\n", indent, self->vtable->name, operator_str);
+
   printf("%s  LHS:\n", indent);
   gta_ast_node_print(binary->lhs, new_indent);
+
   printf("%s  RHS:\n", indent);
   gta_ast_node_print(binary->rhs, new_indent);
+
   gcu_free(new_indent);
 }
 
 
 GTA_Ast_Node * gta_ast_node_binary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_BINARY(self));
   GTA_Ast_Node_Binary * binary = (GTA_Ast_Node_Binary *) self;
+
   GTA_Ast_Node * simplified_lhs = gta_ast_node_simplify(binary->lhs, variable_map);
   if (simplified_lhs) {
     gta_ast_node_destroy(binary->lhs);
     binary->lhs = simplified_lhs;
   }
+
   GTA_Ast_Node * simplified_rhs = gta_ast_node_simplify(binary->rhs, variable_map);
   if (simplified_rhs) {
     gta_ast_node_destroy(binary->rhs);
     binary->rhs = simplified_rhs;
   }
+
   if (GTA_AST_IS_INTEGER(binary->lhs) && GTA_AST_IS_INTEGER(binary->rhs)) {
     GTA_Ast_Node_Integer * lhs = (GTA_Ast_Node_Integer *) binary->lhs;
     GTA_Ast_Node_Integer * rhs = (GTA_Ast_Node_Integer *) binary->rhs;
@@ -255,22 +281,35 @@ GTA_Ast_Node * gta_ast_node_binary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplif
 
 
 void gta_ast_node_binary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_BINARY(self));
   GTA_Ast_Node_Binary * binary = (GTA_Ast_Node_Binary *) self;
+
+  callback(self, data, return_value);
+
   gta_ast_node_walk(binary->lhs, callback, data, return_value);
   gta_ast_node_walk(binary->rhs, callback, data, return_value);
 }
 
 
 GTA_Ast_Node * gta_ast_node_binary_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_BINARY(self));
   GTA_Ast_Node_Binary * binary = (GTA_Ast_Node_Binary *) self;
+
   GTA_Ast_Node * result = gta_ast_node_analyze(binary->lhs, program, scope);
   return !result ? gta_ast_node_analyze(binary->rhs, program, scope) : result;
 }
 
 
 bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_BINARY(self));
   GTA_Ast_Node_Binary * binary_node = (GTA_Ast_Node_Binary *) self;
+
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
 
   // Short-circuiting for AND.
   if (binary_node->operator_type == GTA_BINARY_TYPE_AND) {
@@ -346,7 +385,12 @@ bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
 
 
 bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_BINARY(self));
   GTA_Ast_Node_Binary * binary_node = (GTA_Ast_Node_Binary *) self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   // Short-circuiting for AND.
