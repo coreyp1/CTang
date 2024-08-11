@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
@@ -26,10 +27,13 @@ GTA_Ast_Node_VTable gta_ast_node_unary_vtable = {
 
 
 GTA_Ast_Node_Unary * gta_ast_node_unary_create(GTA_Ast_Node * expression, GTA_Unary_Type operator_type, GTA_PARSER_LTYPE location) {
+  assert(expression);
+
   GTA_Ast_Node_Unary * self = gcu_malloc(sizeof(GTA_Ast_Node_Unary));
   if (!self) {
     return 0;
   }
+
   *self = (GTA_Ast_Node_Unary) {
     .base = {
       .vtable = &gta_ast_node_unary_vtable,
@@ -45,14 +49,21 @@ GTA_Ast_Node_Unary * gta_ast_node_unary_create(GTA_Ast_Node * expression, GTA_Un
 
 
 void gta_ast_node_unary_destroy(GTA_Ast_Node * self) {
+  assert(self);
+  assert(GTA_AST_IS_UNARY(self));
   GTA_Ast_Node_Unary * unary = (GTA_Ast_Node_Unary *) self;
+
   gta_ast_node_destroy(unary->expression);
   gcu_free(self);
 }
 
 
 void gta_ast_node_unary_print(GTA_Ast_Node * self, const char * indent) {
+  assert(self);
+  assert(GTA_AST_IS_UNARY(self));
   GTA_Ast_Node_Unary * unary = (GTA_Ast_Node_Unary *) self;
+
+  assert(indent);
   char * new_indent = gcu_malloc(strlen(indent) + 3);
   if (!new_indent) {
     return;
@@ -60,6 +71,9 @@ void gta_ast_node_unary_print(GTA_Ast_Node * self, const char * indent) {
   size_t indent_len = strlen(indent);
   memcpy(new_indent, indent, indent_len + 1);
   memcpy(new_indent + indent_len, "  ", 3);
+
+  assert(self->vtable);
+  assert(self->vtable->name);
   printf("%s%s(%s):\n", indent, self->vtable->name,
     unary->operator_type == GTA_UNARY_TYPE_NEGATIVE
       ? "-"
@@ -72,12 +86,17 @@ void gta_ast_node_unary_print(GTA_Ast_Node * self, const char * indent) {
 
 
 GTA_Ast_Node * gta_ast_node_unary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map) {
+  assert(self);
+  assert(GTA_AST_IS_UNARY(self));
   GTA_Ast_Node_Unary * unary = (GTA_Ast_Node_Unary *) self;
+
+  assert(variable_map);
   GTA_Ast_Node * simplified_expression = gta_ast_node_simplify(unary->expression, variable_map);
   if (simplified_expression) {
     gta_ast_node_destroy(unary->expression);
     unary->expression = simplified_expression;
   }
+
   if (GTA_AST_IS_INTEGER(unary->expression)) {
     GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) unary->expression;
     if (unary->operator_type == GTA_UNARY_TYPE_NEGATIVE) {
@@ -109,26 +128,45 @@ GTA_Ast_Node * gta_ast_node_unary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
 
 
 void gta_ast_node_unary_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
-  callback(self, data, return_value);
+  assert(self);
+  assert(GTA_AST_IS_UNARY(self));
   GTA_Ast_Node_Unary * unary = (GTA_Ast_Node_Unary *) self;
+
+  callback(self, data, return_value);
+
   gta_ast_node_walk(unary->expression, callback, data, return_value);
 }
 
 GTA_Ast_Node * gta_ast_node_unary_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_UNARY(self));
   GTA_Ast_Node_Unary * unary = (GTA_Ast_Node_Unary *) self;
+
   return gta_ast_node_analyze(unary->expression, program, scope);
 }
 
 
 bool gta_ast_node_unary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_UNARY(self));
   GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;
+
+  assert(context);
+  assert(context->program);
+  assert(context->program->bytecode);
+  assert(context->bytecode_offsets);
   return gta_ast_node_compile_to_bytecode(unary_node->expression, context)
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(unary_node->operator_type == GTA_UNARY_TYPE_NEGATIVE ? GTA_BYTECODE_NEGATIVE : GTA_BYTECODE_NOT));
 }
 
 bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_UNARY(self));
   GTA_Ast_Node_Unary * unary_node = (GTA_Ast_Node_Unary *) self;
+
+  assert(context);
+  assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
   if (unary_node->operator_type == GTA_UNARY_TYPE_NEGATIVE) {
