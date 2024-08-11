@@ -1,3 +1,5 @@
+
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,6 +43,8 @@ GTA_Computed_Value_VTable gta_computed_value_array_vtable = {
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_array_create(size_t size, GTA_Execution_Context * context) {
+  assert(context);
+
   GTA_Computed_Value_Array * self = gcu_malloc(sizeof(GTA_Computed_Value_Array));
   if (self == NULL) {
     return gta_computed_value_error_out_of_memory;
@@ -77,17 +81,22 @@ bool GTA_CALL gta_computed_value_array_create_in_place(GTA_Computed_Value_Array 
 
 
 void GTA_CALL gta_computed_value_array_destroy(GTA_Computed_Value * self) {
+  assert(self);
   gta_computed_value_array_destroy_in_place(self);
   gcu_free(self);
 }
 
 
 void GTA_CALL gta_computed_value_array_destroy_in_place(GTA_Computed_Value * self) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
   GTA_VECTORX_DESTROY(((GTA_Computed_Value_Array *) self)->elements);
 }
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_array_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context) {
+  assert(value);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(value));
   GTA_Computed_Value_Array * self = (GTA_Computed_Value_Array *)value;
   GTA_Computed_Value_Array * copy = (GTA_Computed_Value_Array *)gta_computed_value_array_create(self->elements->count, context);
   if (!copy) {
@@ -100,6 +109,8 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_deep_copy(GTA_Computed_Va
   // for the `element_copy` object.  We will not explicitly delete anything
   // in this function if an error occurs.
 
+  assert(self->elements);
+  assert(self->elements->count ? (bool)self->elements->data : true);
   for (size_t i = 0; i < self->elements->count; i++) {
     GTA_Computed_Value * element = GTA_TYPEX_P(self->elements->data[i]);
     GTA_Computed_Value * element_copy = gta_computed_value_deep_copy(element, context);
@@ -113,7 +124,12 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_deep_copy(GTA_Computed_Va
 }
 
 char * GTA_CALL gta_computed_value_array_to_string(GTA_Computed_Value * self) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
   GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self;
+
+  assert(array->elements);
+  assert(array->elements->count ? (bool)array->elements->data : true);
 
   // If the array is empty, return "[]".
   if (!array->elements->count) {
@@ -176,12 +192,17 @@ char * GTA_CALL gta_computed_value_array_to_string(GTA_Computed_Value * self) {
 }
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_array_index_assign(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
+  GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self;
+
+  assert(array->elements);
+  assert(array->elements->count ? (bool)array->elements->data : true);
+
   if (!GTA_COMPUTED_VALUE_IS_INTEGER(index)) {
     return gta_computed_value_error_invalid_index;
   }
-
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)index;
-  GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self;
 
   // Normalize the index.
   GTA_Integer normalized_index = integer->value >= 0
@@ -223,12 +244,19 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_index_assign(GTA_Computed
 
 
 GTA_Computed_Value * gta_computed_value_array_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
+  GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
+
   if (!self_is_lhs || !GTA_COMPUTED_VALUE_IS_ARRAY(other)) {
     return gta_computed_value_error_not_supported;
   }
-
-  GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
   GTA_Computed_Value_Array * rhs = (GTA_Computed_Value_Array *)other;
+
+  assert(lhs->elements);
+  assert(lhs->elements->count ? (bool)lhs->elements->data : true);
+  assert(rhs->elements);
+  assert(rhs->elements->count ? (bool)rhs->elements->data : true);
 
   // Create a new array that is the concatenation of the two arrays.
   GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)gta_computed_value_array_create(lhs->elements->count + rhs->elements->count, context);
@@ -248,11 +276,13 @@ GTA_Computed_Value * gta_computed_value_array_add(GTA_Computed_Value * self, GTA
 
 
 GTA_Computed_Value * gta_computed_value_array_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
+  GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
+
   if (!self_is_lhs || !GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     return gta_computed_value_error_not_supported;
   }
-
-  GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
   GTA_Computed_Value_Integer * rhs = (GTA_Computed_Value_Integer *)other;
 
   if (rhs->value == 0) {
@@ -269,6 +299,8 @@ GTA_Computed_Value * gta_computed_value_array_multiply(GTA_Computed_Value * self
   }
 
   // Create a new array that will be a repeated concatenation of the source array.
+  assert(lhs->elements);
+  assert(lhs->elements->count ? (bool)lhs->elements->data : true);
   GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)gta_computed_value_array_create(lhs->elements->count * rhs->value, context);
   if (!result) {
     return gta_computed_value_error_out_of_memory;
@@ -294,16 +326,23 @@ GTA_Computed_Value * gta_computed_value_array_multiply(GTA_Computed_Value * self
 
 
 GTA_Computed_Value * gta_computed_value_array_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
+  GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
+
   if (!self_is_lhs || !GTA_COMPUTED_VALUE_IS_ARRAY(other)) {
     return gta_computed_value_error_not_supported;
   }
-
-  GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
   GTA_Computed_Value_Array * rhs = (GTA_Computed_Value_Array *)other;
 
   if (lhs->elements->count != rhs->elements->count) {
     return (GTA_Computed_Value *)gta_computed_value_boolean_false;
   }
+
+  assert(lhs->elements);
+  assert(lhs->elements->count ? (bool)lhs->elements->data : true);
+  assert(rhs->elements);
+  assert(rhs->elements->count ? (bool)rhs->elements->data : true);
 
   for (size_t i = 0; i < lhs->elements->count; i++) {
     GTA_Computed_Value * lhs_element = GTA_TYPEX_P(lhs->elements->data[i]);
@@ -322,12 +361,19 @@ GTA_Computed_Value * gta_computed_value_array_equal(GTA_Computed_Value * self, G
 
 
 GTA_Computed_Value * gta_computed_value_array_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
+  GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
+
   if (!self_is_lhs || !GTA_COMPUTED_VALUE_IS_ARRAY(other)) {
     return gta_computed_value_error_not_supported;
   }
-
-  GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
   GTA_Computed_Value_Array * rhs = (GTA_Computed_Value_Array *)other;
+
+  assert(lhs->elements);
+  assert(lhs->elements->count ? (bool)lhs->elements->data : true);
+  assert(rhs->elements);
+  assert(rhs->elements->count ? (bool)rhs->elements->data : true);
 
   if (lhs->elements->count != rhs->elements->count) {
     return (GTA_Computed_Value *)gta_computed_value_boolean_false;
@@ -350,6 +396,7 @@ GTA_Computed_Value * gta_computed_value_array_not_equal(GTA_Computed_Value * sel
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_array_append(GTA_Computed_Value_Array * self, GTA_Computed_Value * value, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
   if (!GTA_VECTORX_APPEND(self->elements, GTA_TYPEX_MAKE_P(value))) {
     return gta_computed_value_error_out_of_memory;
   }
@@ -359,12 +406,17 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_append(GTA_Computed_Value
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
+  GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)index;
+
   if (!GTA_COMPUTED_VALUE_IS_INTEGER(index)) {
     return gta_computed_value_error_invalid_index;
   }
-
-  GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)index;
   GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self;
+
+  assert(array->elements);
+  assert(array->elements->count ? (bool)array->elements->data : true);
 
   GTA_Integer normalized_index = integer->value >= 0
     ? integer->value
@@ -387,7 +439,12 @@ static GTA_Integer correct_bounds(GTA_Integer value, GTA_Integer boundary, GTA_I
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
   GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self;
+
+  assert(array->elements);
+  assert(array->elements->count ? (bool)array->elements->data : true);
 
   // First, validate the step value.  If null, it will default to 1.
   if (!(GTA_COMPUTED_VALUE_IS_INTEGER(step) || GTA_COMPUTED_VALUE_IS_NULL(step))) {
@@ -502,7 +559,13 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value 
  * Helper function used as the 'advance' iterator operation.
  */
 static void __advance(GTA_Computed_Value_Iterator * self) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ITERATOR(self));
   GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self->collection;
+
+  assert(array->elements);
+  assert(array->elements->count ? (bool)array->elements->data : true);
+
   self->value = (self->index >= (GTA_Integer)array->elements->count)
     ? gta_computed_value_error_iterator_end
     : (GTA_Computed_Value *)GTA_TYPEX_P(array->elements->data[self->index]);
@@ -510,6 +573,8 @@ static void __advance(GTA_Computed_Value_Iterator * self) {
 
 
 GTA_Computed_Value * gta_computed_value_array_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
   GTA_Computed_Value * iterator = gta_computed_value_iterator_create(self, context);
 
   if (!iterator || GTA_COMPUTED_VALUE_IS_ERROR(iterator)) {
