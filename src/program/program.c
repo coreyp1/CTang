@@ -6,6 +6,7 @@
 #include <sys/mman.h>
 #endif
 
+#include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -27,6 +28,8 @@
 #include <tang/tangLanguage.h>
 
 static void gta_program_compile_bytecode(GTA_Program * program) {
+  assert(program);
+
   GTA_VectorX * bytecode = GTA_VECTORX_CREATE(0);
   if (!bytecode) {
     goto BYTECODE_SET_NULL;
@@ -168,6 +171,8 @@ BYTECODE_SET_NULL:
 
 
 GTA_Program * gta_program_create(const char * code) {
+  assert(code);
+
   GTA_Program * program = gcu_malloc(sizeof(GTA_Program));
   if (!program) {
     return 0;
@@ -212,6 +217,8 @@ GTA_Program * gta_program_create_with_flags(const char * code, GTA_Program_Flags
 
 
 bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * code, GTA_Program_Flags flags) {
+  assert(program);
+
   // Initialize the program data structure.
   *program = (GTA_Program) {
     .code = code,
@@ -299,12 +306,15 @@ SINGLETON_VECTOR_CREATE_FAILURE:
 
 
 void gta_program_destroy(GTA_Program * self) {
+  assert(self);
   gta_program_destroy_in_place(self);
   gcu_free(self);
 }
 
 
 void gta_program_destroy_in_place(GTA_Program * self) {
+  assert(self);
+
   // Destroy the AST.
   if (self->ast) {
     gta_ast_node_destroy(self->ast);
@@ -316,6 +326,8 @@ void gta_program_destroy_in_place(GTA_Program * self) {
   self->scope = 0;
 
   // Destroy the singletons.
+  assert(self->singletons);
+  assert(self->singletons->count ? (bool)self->singletons->data : true);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(self->singletons); ++i) {
     gta_computed_value_destroy(GTA_TYPEX_P(self->singletons->data[i]));
     self->singletons->data[i] = GTA_TYPEX_MAKE_P(0);
@@ -343,6 +355,9 @@ void gta_program_destroy_in_place(GTA_Program * self) {
 
 
 bool gta_program_execute(GTA_Execution_Context * context) {
+  assert(context);
+  assert(context->program);
+
   if (context->program->binary) {
     return gta_program_execute_binary(context);
   } else if (context->program->bytecode) {
@@ -365,6 +380,8 @@ typedef union Function_Converter {
 
 
 bool gta_program_execute_binary(GTA_Execution_Context * context) {
+  assert(context);
+  assert(context->program);
   if (context->program->binary) {
     context->result = (Function_Converter){.b = context->program->binary}.f(context);
     return true;
@@ -374,6 +391,7 @@ bool gta_program_execute_binary(GTA_Execution_Context * context) {
 
 
 void gta_program_bytecode_print(GTA_Program * self) {
+  assert(self);
   gta_bytecode_print(self->bytecode);
 }
 
@@ -389,14 +407,18 @@ void gta_program_bytecode_print(GTA_Program * self) {
  * @param error Unused.
  */
 static void update_function_pointers(GTA_Ast_Node * self, void * data, GTA_MAYBE_UNUSED(void * error)) {
+  assert(self);
   if (GTA_AST_IS_FUNCTION(self)) {
     GTA_Ast_Node_Function * function = (GTA_Ast_Node_Function *)self;
+    assert(function->runtime_function);
     function->runtime_function->pointer += (size_t)data;
   }
 }
 
 
 void gta_program_compile_binary__x86_64(GTA_Program * program) {
+  assert(program);
+
   // https://defuse.ca/online-x86-assembler.htm
   // Callee-saved registers: rbp, rbx, r12, r13, r14, r15
   // Caller-saved registers: rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11
@@ -441,6 +463,8 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   }
 
   GCU_Vector8 * v = context->binary_vector;
+
+  assert(program->scope);
   size_t global_orders_count = GTA_HASHX_COUNT(program->scope->global_positions);
   size_t local_orders_count = GTA_HASHX_COUNT(program->scope->local_positions);
   bool error_free = true;
@@ -497,6 +521,8 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
 
     if (GTA_AST_IS_IDENTIFIER(value.value.p)) {
       GTA_Ast_Node_Identifier * identifier = value.value.p;
+      assert(identifier);
+
       if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
         // Find the library AST and compile it.
         GTA_HashX_Value use_node = GTA_HASHX_GET(program->scope->library_declarations, identifier->mangled_name_hash);
@@ -521,6 +547,8 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     }
     else if (GTA_AST_IS_FUNCTION(value.value.p)) {
       GTA_Ast_Node_Function * function = value.value.p;
+      assert(function);
+
       error_free &= true
       // Push the function onto the stack.
       //   mov rax, function->runtime_function
@@ -599,7 +627,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     && gta_compiler_context_set_label(context, context->continue_label, v->count)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)gta_computed_value_null)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
-    && gta_compiler_context_add_label_jump(context, context->break_label, v->count - 4);
+    && gta_compiler_context_add_label_jump(context, context->break_label, v->count - 4)
   ;
 
   // The compilation is finished (aside from writing the jump targets).  If
