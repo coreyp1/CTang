@@ -391,6 +391,116 @@ TEST(Function, Simple) {
 }
 
 
+TEST(ControlFlowEdgeCases, Break) {
+  {
+    // Break in global context.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      break;
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start ");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Break in function.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      function foo() {
+        print("foo");
+        break;
+        print("bar");
+      }
+      foo();
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start foo end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Multiple breaks.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      i = 0;
+      while (i < 3) {
+        if (i == 2) {
+          break;
+        }
+        print(i);
+        i = i + 1;
+      }
+      i = 0;
+      while (i < 3) {
+        if (i == 2) {
+          break;
+        }
+        print("a");
+        i = i + 1;
+        break;
+      }
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 01a end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
+TEST(ControlFlowEdgeCases, Continue) {
+  {
+    // Continue in global context.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      continue;
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start ");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Continue in function.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      function foo() {
+        print("foo");
+        continue;
+        print("bar");
+      }
+      foo();
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start foo end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Multiple continues.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      i = 0;
+      while (i < 3) {
+        i = i + 1;
+        if (i == 2) {
+          continue;
+        }
+        print(i);
+      }
+      i = 0;
+      while (i < 3) {
+        i = i + 1;
+        if (i == 2) {
+          continue;
+        }
+        print("a");
+        continue;
+      }
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 13aa end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
