@@ -167,7 +167,7 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
     GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) assign->lhs;
 
     if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
-      GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
+      GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->variable_positions, identifier->mangled_name_hash);
       if (!val.exists) {
         printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
         return false;
@@ -177,7 +177,7 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
         && GTA_VECTORX_APPEND(context->program->bytecode, val.value);
     }
     else if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
-      GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+      GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->variable_positions, identifier->mangled_name_hash);
       if (!val.exists) {
         printf("Error: Identifier %s not found in local positions.\n", identifier->mangled_name);
         return false;
@@ -239,8 +239,8 @@ static bool __compile_binary_lhs_is_identifier__x86_64(GTA_Ast_Node * lhs, GTA_C
   bool look_in_global = (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY)
     || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL);
   val = look_in_global
-    ? GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash)
-    : GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+    ? GTA_HASHX_GET(context->program->scope->variable_positions, identifier->mangled_name_hash)
+    : GTA_HASHX_GET(identifier->scope->variable_positions, identifier->mangled_name_hash);
   if (!val.exists) {
     printf("Error: Identifier %s not found in %s positions.\n", identifier->mangled_name, look_in_global ? "global" : "local");
     return false;

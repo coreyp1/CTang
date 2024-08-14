@@ -235,7 +235,7 @@ GTA_Ast_Node * gta_ast_node_function_analyze(GTA_Ast_Node * self, GTA_Program * 
   // which pushes the return address on the stack.  This is accounted for in
   // the next step.
   // There should not be any locals in the function scope yet.
-  assert(GTA_HASHX_COUNT(function->scope->local_positions) == 0);
+  assert(GTA_HASHX_COUNT(function->scope->variable_positions) == 0);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function->parameters); ++i) {
     GTA_Ast_Node_Identifier * parameter = (GTA_Ast_Node_Identifier *)GTA_TYPEX_P(function->parameters->data[i]);
     if ((error = gta_ast_node_analyze((GTA_Ast_Node *)parameter, program, function->scope))) {
@@ -253,14 +253,14 @@ GTA_Ast_Node * gta_ast_node_function_analyze(GTA_Ast_Node * self, GTA_Program * 
   // local variables.  To avoid this, we reserve a slot for the return address
   // in the local_positions map, knowing that it will be supplied by the CALL
   // instruction.
-  if (!GTA_HASHX_SET(function->scope->local_positions, GTA_STRING_HASH("", 0), GTA_TYPEX_MAKE_UI(function->scope->local_positions->entries))) {
+  if (!GTA_HASHX_SET(function->scope->variable_positions, GTA_STRING_HASH("", 0), GTA_TYPEX_MAKE_UI(function->scope->variable_positions->entries))) {
     error = gta_ast_node_parse_error_out_of_memory;
     goto GLOBAL_REGISTRATION_ERROR;
   }
-  assert(GTA_HASHX_COUNT(function->scope->local_positions) == function->parameters->count + 1);
+  assert(GTA_HASHX_COUNT(function->scope->variable_positions) == function->parameters->count + 1);
 
   // Step 8: Reserve a slot in the global_positions map.
-  if (!GTA_HASHX_SET(outermost_scope->global_positions, function->mangled_name_hash, GTA_TYPEX_MAKE_UI(outermost_scope->global_positions->entries))) {
+  if (!GTA_HASHX_SET(outermost_scope->variable_positions, function->mangled_name_hash, GTA_TYPEX_MAKE_UI(outermost_scope->variable_positions->entries))) {
     error = gta_ast_node_parse_error_out_of_memory;
     goto GLOBAL_REGISTRATION_ERROR;
   }
@@ -400,14 +400,14 @@ bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   // address.  Reserve additional space on the stack for the remaining local
   // variables.
   assert(function->scope);
-  assert(function->scope->local_positions);
+  assert(function->scope->variable_positions);
   assert(function->parameters);
-  size_t additional_locals_needed = function->scope->local_positions->entries - function->parameters->count - 1;
+  size_t additional_locals_needed = function->scope->variable_positions->entries - function->parameters->count - 1;
   if (additional_locals_needed) {
     // We'll just put a NULL in those slots for now.
     //   mov RAX, gta_computed_value_null
     error_free &= gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)gta_computed_value_null);
-    for (size_t i = function->parameters->count + 1; error_free && (i < function->scope->local_positions->entries); ++i) {
+    for (size_t i = function->parameters->count + 1; error_free && (i < function->scope->variable_positions->entries); ++i) {
       // push rax
       error_free &= gta_push_reg__x86_64(v, GTA_REG_RAX);
     }

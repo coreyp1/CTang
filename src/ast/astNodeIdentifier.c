@@ -170,7 +170,7 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UN
       identifier->mangled_name_hash = identifier->hash;
       identifier->type = GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY;
       if (!GTA_HASHX_SET(outermost_scope->identified_variables, identifier->hash, GTA_TYPEX_MAKE_P(identifier))
-        || !GTA_HASHX_SET(outermost_scope->global_positions, identifier->hash, GTA_TYPEX_MAKE_UI(outermost_scope->global_positions->entries))) {
+        || !GTA_HASHX_SET(outermost_scope->variable_positions, identifier->hash, GTA_TYPEX_MAKE_UI(outermost_scope->variable_positions->entries))) {
         return gta_ast_node_parse_error_out_of_memory;
       }
     }
@@ -231,7 +231,7 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UN
     return gta_ast_node_parse_error_out_of_memory;
   }
   // Add the position of the identifier to the list of local variables.
-  if (!GTA_HASHX_SET(scope->local_positions, identifier->hash, GTA_TYPEX_MAKE_UI(scope->local_positions->entries))) {
+  if (!GTA_HASHX_SET(scope->variable_positions, identifier->hash, GTA_TYPEX_MAKE_UI(scope->variable_positions->entries))) {
     return gta_ast_node_parse_error_out_of_memory;
   }
   return 0;
@@ -255,7 +255,7 @@ bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
     // Find the identifier's position in the global positions.
     assert(context->program);
     assert(context->program->scope);
-    GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
+    GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->variable_positions, identifier->mangled_name_hash);
     if (!val.exists) {
       printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
       return false;
@@ -274,7 +274,7 @@ bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
 
   if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
     // Find the identifier's position in the local positions.
-    GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+    GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->variable_positions, identifier->mangled_name_hash);
     if (!val.exists) {
       printf("Error: Identifier %s not found in local positions.\n", identifier->mangled_name);
       return false;
@@ -309,7 +309,7 @@ bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
     || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION) {
     assert(context->program);
     assert(context->program->scope);
-    GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->global_positions, identifier->mangled_name_hash);
+    GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->variable_positions, identifier->mangled_name_hash);
     if (!val.exists) {
       printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
       return false;
@@ -319,7 +319,7 @@ bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
       && GTA_VECTORX_APPEND(context->program->bytecode, val.value);
   }
   if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL) {
-    GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+    GTA_HashX_Value val = GTA_HASHX_GET(identifier->scope->variable_positions, identifier->mangled_name_hash);
     if (!val.exists) {
       printf("Error: Identifier %s not found in local positions.\n", identifier->mangled_name);
       return false;
@@ -335,7 +335,7 @@ bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
     printf("Error: Identifier %s has not been resolved.\n", identifier->identifier);
     assert(false);
   }
-  assert(false);
   fprintf(stderr, "Error: Identifier type not recognized.\n");
+  assert(false);
   return false;
 }

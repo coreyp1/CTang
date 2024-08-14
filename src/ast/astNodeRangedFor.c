@@ -254,7 +254,7 @@ bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
 
   // Find where the iterator is stored.  It will always be local.
   GTA_Ast_Node_Identifier * iterator = (GTA_Ast_Node_Identifier *)ranged_for->iterator;
-  GTA_HashX_Value iterator_stack_location = GTA_HASHX_GET(iterator->scope->local_positions, iterator->mangled_name_hash);
+  GTA_HashX_Value iterator_stack_location = GTA_HASHX_GET(iterator->scope->variable_positions, iterator->mangled_name_hash);
   if (!iterator_stack_location.exists) {
     printf("Error: Identifier %s not found in local positions.\n", iterator->mangled_name);
     return false;
@@ -262,11 +262,11 @@ bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
 
   // Find where the ranged-for variable is stored.  It may not be local.
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *)ranged_for->identifier;
-  GTA_HashX_Value identifier_stack_location = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+  GTA_HashX_Value identifier_stack_location = GTA_HASHX_GET(identifier->scope->variable_positions, identifier->mangled_name_hash);
   bool identifier_is_local = true;
   if (!identifier_stack_location.exists) {
     identifier_is_local = false;
-    identifier_stack_location = GTA_HASHX_GET(identifier->scope->global_positions, identifier->mangled_name_hash);
+    identifier_stack_location = GTA_HASHX_GET(identifier->scope->variable_positions, identifier->mangled_name_hash);
     if (!identifier_stack_location.exists) {
       printf("Error: Identifier %s not found in local or global positions.\n", identifier->mangled_name);
       return false;
@@ -384,7 +384,7 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
 
   // Find where the iterator is stored.  It will always be local.
   GTA_Ast_Node_Identifier * iterator = (GTA_Ast_Node_Identifier *)ranged_for->iterator;
-  GTA_HashX_Value iterator_stack_location = GTA_HASHX_GET(iterator->scope->local_positions, iterator->mangled_name_hash);
+  GTA_HashX_Value iterator_stack_location = GTA_HASHX_GET(iterator->scope->variable_positions, iterator->mangled_name_hash);
   if (!iterator_stack_location.exists) {
     printf("Error: Identifier %s not found in local positions.\n", iterator->mangled_name);
     return false;
@@ -393,11 +393,11 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
 
   // Find where the ranged-for variable is stored.  It may not be local.
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *)ranged_for->identifier;
-  GTA_HashX_Value identifier_stack_location = GTA_HASHX_GET(identifier->scope->local_positions, identifier->mangled_name_hash);
+  GTA_HashX_Value identifier_stack_location = GTA_HASHX_GET(identifier->scope->variable_positions, identifier->mangled_name_hash);
   bool identifier_is_local = true;
   if (!identifier_stack_location.exists) {
     identifier_is_local = false;
-    identifier_stack_location = GTA_HASHX_GET(identifier->scope->global_positions, identifier->mangled_name_hash);
+    identifier_stack_location = GTA_HASHX_GET(identifier->scope->variable_positions, identifier->mangled_name_hash);
     if (!identifier_stack_location.exists) {
       printf("Error: Identifier %s not found in local or global positions.\n", identifier->mangled_name);
       return false;

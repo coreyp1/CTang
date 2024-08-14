@@ -42,24 +42,22 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
   }
   program->bytecode = bytecode;
 
-  // Push the globals onto the stack in the correct order.
-  // First, we must determine the order that globals should be pushed onto
-  // the stack.
-  GTA_VectorX * globals_order = GTA_VECTORX_CREATE(program->scope->global_positions->entries);
-  if (!globals_order) {
+  // Push the variables onto the stack in the correct order.
+  GTA_VectorX * variables_order = GTA_VECTORX_CREATE(program->scope->variable_positions->entries);
+  if (!variables_order) {
     goto BYTECODE_COMPILER_CONTEXT_CLEANUP;
   }
-  globals_order->count = program->scope->global_positions->entries;
-  GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(program->scope->global_positions);
+  variables_order->count = program->scope->variable_positions->entries;
+  GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(program->scope->variable_positions);
   while (iterator.exists) {
-    globals_order->data[GTA_TYPEX_UI(iterator.value)] = GTA_TYPEX_MAKE_UI(iterator.hash);
+    variables_order->data[GTA_TYPEX_UI(iterator.value)] = GTA_TYPEX_MAKE_UI(iterator.hash);
     iterator = GTA_HASHX_ITERATOR_NEXT(iterator);
   }
   // Now, loop through the globals in the correct order.  If it is a
   // library, then load the library.  Otherwise, push a NULL onto the
   // stack.
-  for (size_t i = 0; i < globals_order->count; ++i) {
-    GTA_HashX_Value value = GTA_HASHX_GET(program->scope->identified_variables, GTA_TYPEX_UI(globals_order->data[i]));
+  for (size_t i = 0; i < variables_order->count; ++i) {
+    GTA_HashX_Value value = GTA_HASHX_GET(program->scope->identified_variables, GTA_TYPEX_UI(variables_order->data[i]));
     if (!value.exists) {
       goto BYTECODE_DESTROY_GLOBALS_ORDER;
     }
@@ -78,6 +76,10 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
           goto BYTECODE_DESTROY_GLOBALS_ORDER;
         }
       }
+      else if ((identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL) || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL)) {
+        // Put the memory location of the null value onto the stack.
+        error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
+      }
       else {
         // We don't know how to handle this type of global.
         goto BYTECODE_DESTROY_GLOBALS_ORDER;
@@ -95,14 +97,6 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
       goto BYTECODE_DESTROY_GLOBALS_ORDER;
     }
     error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SET_NOT_TEMP));
-  }
-
-  // Update the frame pointer to the current stack pointer.
-  error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_MARK_FP));
-
-  // Initialize all locals to null.
-  for (size_t i = 0; i < program->scope->local_positions->entries; ++i) {
-    error_free &= GTA_VECTORX_APPEND(bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
   }
 
   // Actually compile the AST to bytecode.
@@ -153,13 +147,13 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
   }
 
   // Cleanup and exit.
-  GTA_VECTORX_DESTROY(globals_order);
+  GTA_VECTORX_DESTROY(variables_order);
   gta_compiler_context_destroy_in_place(&context);
   return;
 
   // Failure conditions.  Cleanup and exit.
 BYTECODE_DESTROY_GLOBALS_ORDER:
-  GTA_VECTORX_DESTROY(globals_order);
+  GTA_VECTORX_DESTROY(variables_order);
 BYTECODE_COMPILER_CONTEXT_CLEANUP:
   gta_compiler_context_destroy_in_place(&context);
 BYTECODE_VECTOR_CLEANUP:
@@ -465,8 +459,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   GCU_Vector8 * v = context->binary_vector;
 
   assert(program->scope);
-  size_t global_orders_count = GTA_HASHX_COUNT(program->scope->global_positions);
-  size_t local_orders_count = GTA_HASHX_COUNT(program->scope->local_positions);
+  size_t variable_positions_count = GTA_HASHX_COUNT(program->scope->variable_positions);
   bool error_free = true;
 
   error_free
@@ -495,26 +488,29 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     && gta_lea_reg_ind__x86_64(v, GTA_REG_R14, GTA_REG_R15, GTA_REG_NONE, 0, (int32_t)(size_t)(&((GTA_Execution_Context *)0)->result))
 
   //   mov r13, rsp          ; Store the global stack pointer in r13.
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_R13, GTA_REG_RSP);
+  //   mov r12, rsp          ; Store the frame (local variable) stack pointer in r12.
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_R13, GTA_REG_RSP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_R12, GTA_REG_RSP)
+  ;
 
   /////////////////////////////////////////////////////////////////////////////
   // Push the globals onto the stack in the correct order.
   // First, we must determine the order that globals should be pushed onto
   // the stack.
-  GTA_UInteger * globals_order = gcu_calloc(sizeof(GTA_UInteger), global_orders_count);
-  if (!globals_order) {
+  GTA_UInteger * variables_order = gcu_calloc(sizeof(GTA_UInteger), variable_positions_count);
+  if (!variables_order) {
     goto CONTEXT_CLEANUP;
   }
-  GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(program->scope->global_positions);
+  GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(program->scope->variable_positions);
   while (iterator.exists) {
-    globals_order[GTA_TYPEX_UI(iterator.value)] = iterator.hash;
+    variables_order[GTA_TYPEX_UI(iterator.value)] = iterator.hash;
     iterator = GTA_HASHX_ITERATOR_NEXT(iterator);
   }
   // Now, loop through the globals in the correct order.  If it is a
   // library, then load the library.  Otherwise, push a NULL onto the
   // stack.
-  for (size_t i = 0; error_free && (i < global_orders_count); ++i) {
-    GTA_HashX_Value value = GTA_HASHX_GET(program->scope->identified_variables, globals_order[i]);
+  for (size_t i = 0; error_free && (i < variable_positions_count); ++i) {
+    GTA_HashX_Value value = GTA_HASHX_GET(program->scope->identified_variables, variables_order[i]);
     if (!value.exists) {
       goto GLOBALS_ORDER_CLEANUP;
     }
@@ -533,6 +529,14 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
           && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)use_node.value.p, context)
           // Push the result onto the stack.
           //   push rax
+          && gta_push_reg__x86_64(v, GTA_REG_RAX);
+      }
+      else if ((identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL) || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL)) {
+        // Put the memory location of the null value onto the stack.
+        //   mov rax, gta_computed_value_null
+        //   push rax
+        error_free
+          &= gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)gta_computed_value_null)
           && gta_push_reg__x86_64(v, GTA_REG_RAX);
       }
       else {
@@ -562,30 +566,14 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
       error_free = false;
     }
   }
-  gcu_free(globals_order);
+  gcu_free(variables_order);
   // Done with globals.
   /////////////////////////////////////////////////////////////////////////////
 
-  // Store the frame (local variable) stack pointer into R12.
-  //   mov r12, rsp
-  error_free
-    &= gta_mov_reg_reg__x86_64(v, GTA_REG_R12, GTA_REG_RSP)
-
-  // Put the memory location of the null value into rdx.
-  // (RDX may have been overwritten by a function call in the global
-  // initializations.)
-  //   mov rdx, gta_computed_value_null
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (uint64_t)gta_computed_value_null);
-
-  // Initialize all locals to null.
-  for (size_t i = 0; error_free && (i < local_orders_count); ++i) {
-    //  push rdx
-    error_free &= gta_push_reg__x86_64(v, GTA_REG_RDX);
-  }
 
   // Actually compile the AST to binary.
-  error_free
-    &= gta_ast_node_compile_to_binary__x86_64(program->ast, context)
+  error_free &= true
+    && gta_ast_node_compile_to_binary__x86_64(program->ast, context)
 
   // At this point, a return value will be in RAX from either the code block
   // being executed, the 'break' statement, or the 'continue' statement.
@@ -699,7 +687,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   goto CONTEXT_CLEANUP;
 
 GLOBALS_ORDER_CLEANUP:
-  gcu_free(globals_order);
+  gcu_free(variables_order);
 
 CONTEXT_CLEANUP:
   gta_compiler_context_destroy(context);

@@ -76,17 +76,6 @@ typedef struct GTA_Variable_Scope {
      */
     GTA_HashX * identified_variables;
     /**
-     * This records the position of the global variable within the stack.
-     *
-     * The key is the identifier hash, and the value is the position in the
-     * stack (not accounting for any offsets from the base pointer).
-     *
-     * An identifier may not be declared as global more than once.  It is an
-     * error to attempt to declare an identifier as global that has already
-     * been referenced as a local variable.
-     */
-    GTA_HashX * global_positions;
-    /**
      * This records the position of the local variable within the stack.
      *
      * The key is the identifier hash, and the value is the position in the
@@ -94,7 +83,7 @@ typedef struct GTA_Variable_Scope {
      *
      * Function arguments are automatically considered to be local variables.
      */
-    GTA_HashX * local_positions;
+    GTA_HashX * variable_positions;
     /**
      * The functions in this scope.
      *
