@@ -56,6 +56,18 @@ static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_identifier_redeclared_s
 GTA_Ast_Node * gta_ast_node_parse_error_identifier_redeclared = (GTA_Ast_Node *) &gta_ast_node_parse_error_identifier_redeclared_singleton;
 
 
+static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_global_identifier_redeclared_singleton = {
+  .base = {
+    .vtable = &gta_ast_node_parse_error_vtable,
+    .location = {0, 0, 0},
+    .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
+    .is_singleton = true,
+  },
+  .message = "A global identifier has been redeclared.",
+};
+GTA_Ast_Node * gta_ast_node_parse_error_global_identifier_redeclared = (GTA_Ast_Node *) &gta_ast_node_parse_error_global_identifier_redeclared_singleton;
+
+
 GTA_Ast_Node_Parse_Error * gta_ast_node_parse_error_create(const char * message, GTA_PARSER_LTYPE location) {
   assert(message);
 

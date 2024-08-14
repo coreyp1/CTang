@@ -78,6 +78,21 @@ void gta_ast_node_global_print(GTA_Ast_Node * self, const char * indent);
 GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_global_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
+ * Perform pre-compilation analysis on the AST node.
+ *
+ * This step includes allocating constants, identifying libraries and variables
+ * (global and local), and creating namespace scopes for functions.
+ *
+ * This function should not be called directly. Use gta_ast_node_analyze()
+ * instead.
+ *
+ * @param self The node to analyze.
+ * @param program The program that the node is part of.
+ * @return NULL on success, otherwise return a parse error.
+ */
+GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_global_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+
+/**
  * Walks a GTA_Ast_Node_Global object.
  *
  * This function should not be called directly. Use gta_ast_node_walk()
@@ -89,6 +104,33 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_global_simplify(GTA_Ast_Node * self, 
  * @param return_value The return value of the walk, populated by the callback.
  */
 void gta_ast_node_global_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+
+/**
+ * Compiles a GTA_Ast_Node_Global object to binary for x86_64.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_binary()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_binary__x86_64
+ *
+ * @param self The node to compile.
+ * @param context Contextual information for the compile process.
+ * @return True on success, false on failure.
+ */
+bool gta_ast_node_global_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+
+/**
+ * Compiles a GTA_Ast_Node_Global object to bytecode.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_bytecode()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_bytecode
+ *
+ * @param self The GTA_Ast_Node_Global object.
+ * @param context The compiler state to use for compilation.
+ */
+bool gta_ast_node_global_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

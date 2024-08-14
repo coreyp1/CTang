@@ -6,6 +6,7 @@
 #include <tang/ast/astNodeBlock.h>
 #include <tang/ast/astNodeUse.h>
 #include <tang/ast/astNodeFunction.h>
+#include <tang/ast/astNodeGlobal.h>
 #include <tang/computedValue/computedValue.h>
 
 GTA_Ast_Node_VTable gta_ast_node_block_vtable = {
@@ -159,7 +160,9 @@ bool gta_ast_node_block_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Co
       if (!gta_ast_node_compile_to_bytecode(statement, context)) {
         return false;
       }
-      if (!GTA_AST_IS_FUNCTION(statement)) {
+      // If the statement will leave something on the stack, then add a POP.
+      if (!(GTA_AST_IS_FUNCTION(statement)
+        || (GTA_AST_IS_GLOBAL(statement) && !((GTA_Ast_Node_Global *)statement)->assignment))) {
         statements_compiled = true;
         if (!(true
           && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)

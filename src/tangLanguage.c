@@ -9,9 +9,10 @@
 
 GTA_Ast_Node * gta_tang_parse(const char * source) {
   GTA_Ast_Node * primary = gta_tang_primary_parse(source);
-  return primary
-    ? gta_tang_simplify(primary)
-    : 0;
+  return primary;
+    // NOTE: temporarily diabled because it does not pick up on global variable changes.
+    // ? gta_tang_simplify(primary)
+    // : 0;
 }
 
 

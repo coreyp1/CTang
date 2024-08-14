@@ -42,6 +42,12 @@ extern GTA_Ast_Node * gta_ast_node_parse_error_identifier_redeclared;
 
 
 /**
+ * An error representing the fact that a global identifier has been redeclared.
+ */
+extern GTA_Ast_Node * gta_ast_node_parse_error_global_identifier_redeclared;
+
+
+/**
  * The GTA_Ast_Node_Parse_Error class.
  */
 typedef struct GTA_Ast_Node_Parse_Error {

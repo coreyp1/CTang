@@ -501,6 +501,46 @@ TEST(ControlFlowEdgeCases, Continue) {
 }
 
 
+TEST(VariableScope, Global) {
+  {
+    // Local variable in a function.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      a = 1;
+      function foo() {
+        a = 2;
+        print(a);
+      }
+      print(a);
+      foo();
+      print(a);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 121 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Global variable in a function, assignment separate.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      a = 1;
+      function foo() {
+        global a;
+        print(a);
+        a = 2;
+        print(a);
+      }
+      print(a);
+      foo();
+      print(a);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 1122 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -10,6 +10,7 @@
 #include <tang/ast/astNodeInteger.h>
 #include <tang/ast/astNodeFloat.h>
 #include <tang/ast/astNodeFunction.h>
+#include <tang/ast/astNodeGlobal.h>
 #include <tang/ast/astNodeParseError.h>
 #include <tang/ast/astNodeString.h>
 #include <tang/ast/astNodeUse.h>
@@ -143,6 +144,13 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_MAYBE_UN
       identifier->type = GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION;
       return 0;
     }
+    if (GTA_AST_IS_GLOBAL(val.value.p)) {
+      GTA_Ast_Node_Global * global = (GTA_Ast_Node_Global *)val.value.p;
+      identifier->type = GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL;
+      identifier->mangled_name = ((GTA_Ast_Node_Identifier *)global->identifier)->mangled_name;
+      identifier->mangled_name_hash = ((GTA_Ast_Node_Identifier *)global->identifier)->mangled_name_hash;
+      return 0;
+    }
     // We should never get here.
     fprintf(stderr, "Error: Identifier type not recognized.\n");
     assert(false);
@@ -249,15 +257,21 @@ bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
 
   assert(context);
-  if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY
-    || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL
-    || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION) {
+  if ((identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY)
+    || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL)
+    || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION)) {
     // Find the identifier's position in the global positions.
     assert(context->program);
     assert(context->program->scope);
-    GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->variable_positions, identifier->mangled_name_hash);
+    const char * name = (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION)
+      ? identifier->mangled_name
+      : identifier->identifier;
+    GTA_Integer name_hash = (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION)
+      ? identifier->mangled_name_hash
+      : identifier->hash;
+    GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->variable_positions, name_hash);
     if (!val.exists) {
-      printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
+      printf("Error: Identifier %s not found in global positions.\n", name);
       return false;
     }
 
@@ -304,14 +318,20 @@ bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
   GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) self;
 
   assert(context);
-  if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY
-    || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL
-    || identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION) {
+  if ((identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY)
+    || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL)
+    || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION)) {
     assert(context->program);
     assert(context->program->scope);
-    GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->variable_positions, identifier->mangled_name_hash);
+    const char * name = (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION)
+      ? identifier->mangled_name
+      : identifier->identifier;
+    GTA_Integer name_hash = (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_FUNCTION)
+      ? identifier->mangled_name_hash
+      : identifier->hash;
+    GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->variable_positions, name_hash);
     if (!val.exists) {
-      printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
+      printf("Error: Identifier %s not found in global positions.\n", name);
       return false;
     }
     return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)

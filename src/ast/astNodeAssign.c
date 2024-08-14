@@ -166,10 +166,17 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
   if (GTA_AST_IS_IDENTIFIER(assign->lhs)) {
     GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) assign->lhs;
 
-    if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
-      GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->variable_positions, identifier->mangled_name_hash);
+    if ((identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY)
+      || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL)) {
+      const char *  name= identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY
+        ? identifier->mangled_name
+        : identifier->identifier;
+      GTA_Integer name_hash = identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY
+        ? identifier->mangled_name_hash
+        : identifier->hash;
+      GTA_HashX_Value val = GTA_HASHX_GET(context->program->scope->variable_positions, name_hash);
       if (!val.exists) {
-        printf("Error: Identifier %s not found in global positions.\n", identifier->mangled_name);
+        printf("Error: Identifier %s not found in global positions.\n", name);
         return false;
       }
       return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
