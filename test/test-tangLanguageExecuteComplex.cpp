@@ -538,6 +538,23 @@ TEST(VariableScope, Global) {
     ASSERT_STREQ(context->output->buffer, "start 1122 end");
     TEST_PROGRAM_TEARDOWN();
   }
+  {
+    // Global variable in a function, assignment combined.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      a = 1;
+      function foo() {
+        global a = 2;
+        print(a);
+      }
+      print(a);
+      foo();
+      print(a);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 122 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
 }
 
 

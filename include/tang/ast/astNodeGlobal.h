@@ -26,6 +26,9 @@ typedef struct GTA_Ast_Node_Global {
   GTA_Ast_Node base;
   /**
    * The identifier.
+   *
+   * If there is an assignment, then the identifier will be cleaned up by the
+   * assignment node.
    */
   GTA_Ast_Node * identifier;
   /**

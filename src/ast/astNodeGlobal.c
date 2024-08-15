@@ -27,9 +27,19 @@ GTA_Ast_Node_VTable gta_ast_node_global_vtable = {
 GTA_Ast_Node_Global * gta_ast_node_global_create(GTA_Ast_Node * identifier, GTA_Ast_Node * assignment, GTA_PARSER_LTYPE location) {
   assert(identifier);
   // NOTE: assignment can be NULL.
+  GTA_Ast_Node * full_assignment = 0;
+  if (assignment) {
+    full_assignment = (GTA_Ast_Node *)gta_ast_node_assign_create(identifier, assignment, location);
+    if (!full_assignment) {
+      return 0;
+    }
+  }
 
   GTA_Ast_Node_Global * self = gcu_malloc(sizeof(GTA_Ast_Node_Global));
   if (!self) {
+    if (full_assignment) {
+      gta_ast_node_destroy(full_assignment);
+    }
     return 0;
   }
 
@@ -41,7 +51,7 @@ GTA_Ast_Node_Global * gta_ast_node_global_create(GTA_Ast_Node * identifier, GTA_
       .is_singleton = false,
     },
     .identifier = identifier,
-    .assignment = assignment,
+    .assignment = full_assignment,
   };
   return self;
 }
@@ -52,9 +62,11 @@ void gta_ast_node_global_destroy(GTA_Ast_Node * self) {
   assert(GTA_AST_IS_GLOBAL(self));
   GTA_Ast_Node_Global * global = (GTA_Ast_Node_Global *) self;
 
-  gta_ast_node_destroy(global->identifier);
   if (global->assignment) {
     gta_ast_node_destroy(global->assignment);
+  }
+  else {
+    gta_ast_node_destroy(global->identifier);
   }
   gcu_free(self);
 }
