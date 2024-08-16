@@ -500,6 +500,19 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         // Pop the function off the stack.
         GTA_Computed_Value * potential_function = GTA_TYPEX_P(context->stack->data[--*sp]);
 
+        if (GTA_COMPUTED_VALUE_IS_FUNCTION_NATIVE(potential_function)) {
+          GTA_Computed_Value_Function_Native * function = (GTA_Computed_Value_Function_Native *)potential_function;
+          // Call the function.
+          GTA_Computed_Value * result = function->callback(function->bound_object, num_arguments, (GTA_Computed_Value *)&context->stack->data[*sp - num_arguments], context);
+          // Pop the arguments off the stack.
+          *sp -= num_arguments;
+          // Push the result onto the stack.
+          if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(result))) {
+            context->result = gta_computed_value_error_out_of_memory;
+          }
+          break;
+        }
+
         // Verify that it is a valid function.
         if (!GTA_COMPUTED_VALUE_IS_FUNCTION(potential_function)) {
           context->result = gta_computed_value_error_invalid_function_call;

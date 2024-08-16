@@ -558,6 +558,35 @@ TEST(VariableScope, Global) {
 }
 
 
+GTA_Computed_Value * make_a_int_3_func(GTA_MAYBE_UNUSED(GTA_Computed_Value * bound_object), GTA_MAYBE_UNUSED(GTA_UInteger argc), GTA_MAYBE_UNUSED(GTA_Computed_Value argv[]), GTA_Execution_Context *context) {
+  assert(!bound_object);
+  assert(argv);
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(3, context);
+}
+
+GTA_Computed_Value * GTA_CALL make_a_int_3(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_function_native_create(make_a_int_3_func, NULL, context);
+}
+
+
+TEST(NativeFunction, Library) {
+  {
+    // length
+    TEST_PROGRAM_SETUP_NO_RUN(R"(
+      use a;
+      print("start ");
+      print(a());
+      print(" end");
+    )");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_a_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_STREQ(context->output->buffer, "start 3 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

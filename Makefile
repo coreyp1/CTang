@@ -61,6 +61,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/computedValue/computedValueError.o \
 	$(OBJ_DIR)/computedValue/computedValueFloat.o \
 	$(OBJ_DIR)/computedValue/computedValueFunction.o \
+	$(OBJ_DIR)/computedValue/computedValueFunctionNative.o \
 	$(OBJ_DIR)/computedValue/computedValueInteger.o \
 	$(OBJ_DIR)/computedValue/computedValueIterator.o \
 	$(OBJ_DIR)/computedValue/computedValueMap.o \
@@ -286,6 +287,12 @@ DEP_COMPUTEDVALUEERROR = \
 DEP_COMPUTEDVALUEFLOAT = \
 	include/tang/computedValue/computedValueFloat.h \
 	$(DEP_COMPUTEDVALUE)
+DEP_COMPUTEDVALUEFUNCTION = \
+    include/tang/computedValue/computedValueFunction.h \
+	$(DEP_COMPUTEDVALUE)
+DEP_COMPUTEDVALUEFUNCTIONNAIVE = \
+	include/tang/computedValue/computedValueFunctionNative.h \
+	$(DEP_COMPUTEDVALUE)
 DEP_COMPUTEDVALUEINTEGER = \
 	include/tang/computedValue/computedValueInteger.h \
 	$(DEP_COMPUTEDVALUE)
@@ -307,6 +314,7 @@ DEP_COMPUTEDVALUEALL = \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_COMPUTEDVALUEFUNCTION) \
+	$(DEP_COMPUTEDVALUEFUNCTIONNAIVE) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUEITERATOR) \
 	$(DEP_COMPUTEDVALUEMAP) \
@@ -789,6 +797,12 @@ $(OBJ_DIR)/computedValue/computedValueFunction.o: \
 	src/computedValue/computedValueFunction.c \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_COMPUTEDVALUEBOOLEAN) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_EXECUTIONCONTEXT)
+
+$(OBJ_DIR)/computedValue/computedValueFunctionNative.o: \
+	src/computedValue/computedValueFunctionNative.c \
+	$(DEP_COMPUTEDVALUEFUNCTIONNAIVE) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_EXECUTIONCONTEXT)
 
