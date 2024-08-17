@@ -1040,43 +1040,43 @@ test: \
 #				$(APP_DIR)/libtestLibrary.so \
 #				$(APP_DIR)/test \
 #				$(APP_DIR)/tang
-	@echo "\033[0;32m"
+	@echo "\033[0;30;43m"
 	@echo "############################"
 	@echo "### Running string tests ###"
 	@echo "############################"
 	@echo "\033[0m"
 	$(APP_DIR)/testUnicodeString --gtest_brief=1
-	@echo "\033[0;32m"
+	@echo "\033[0;30;43m"
 	@echo "####################################"
 	@echo "### Running Language Parse tests ###"
 	@echo "####################################"
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1 --gtest_fail_fast
-	@echo "\033[0;32m"
+	@echo "\033[0;30;43m"
 	@echo "################################"
 	@echo "### Running Binary JIT tests ###"
 	@echo "################################"
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testBinary --gtest_brief=1
-	@echo "\033[0;32m"
+	@echo "\033[0;30;104m"
 	@echo "########################################################"
 	@echo "### Running Bytecode Language Execution Simple tests ###"
 	@echo "########################################################"
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
-	@echo "\033[0;32m"
+	@echo "\033[0;30;104m"
 	@echo "#########################################################"
 	@echo "### Running Bytecode Language Execution Complex tests ###"
 	@echo "#########################################################"
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
-	@echo "\033[0;32m"
+	@echo "\033[0;30;45m"
 	@echo "########################################################"
 	@echo "### Running Binary Language Execution Simple tests   ###"
 	@echo "########################################################"
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
-	@echo "\033[0;32m"
+	@echo "\033[0;30;45m"
 	@echo "########################################################"
 	@echo "### Running Binary Language Execution Complex tests  ###"
 	@echo "########################################################"
