@@ -503,7 +503,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         if (GTA_COMPUTED_VALUE_IS_FUNCTION_NATIVE(potential_function)) {
           GTA_Computed_Value_Function_Native * function = (GTA_Computed_Value_Function_Native *)potential_function;
           // Call the function.
-          GTA_Computed_Value * result = function->callback(function->bound_object, num_arguments, (GTA_Computed_Value *)&context->stack->data[*sp - num_arguments], context);
+          GTA_Computed_Value * result = function->callback(function->bound_object, num_arguments, (GTA_Computed_Value * *)&context->stack->data[*sp - num_arguments], context);
           // Pop the arguments off the stack.
           *sp -= num_arguments;
           // Push the result onto the stack.

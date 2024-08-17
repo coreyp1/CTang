@@ -558,27 +558,60 @@ TEST(VariableScope, Global) {
 }
 
 
-GTA_Computed_Value * make_a_int_3_func(GTA_MAYBE_UNUSED(GTA_Computed_Value * bound_object), GTA_MAYBE_UNUSED(GTA_UInteger argc), GTA_MAYBE_UNUSED(GTA_Computed_Value argv[]), GTA_Execution_Context *context) {
+static GTA_Computed_Value * int_3_callback(GTA_MAYBE_UNUSED(GTA_Computed_Value * bound_object), GTA_MAYBE_UNUSED(GTA_UInteger argc), GTA_MAYBE_UNUSED(GTA_Computed_Value * argv[]), GTA_Execution_Context * context) {
   assert(!bound_object);
   assert(argv);
   return (GTA_Computed_Value *)gta_computed_value_integer_create(3, context);
 }
 
-GTA_Computed_Value * GTA_CALL make_a_int_3(GTA_Execution_Context * context) {
-  return (GTA_Computed_Value *)gta_computed_value_function_native_create(make_a_int_3_func, NULL, context);
+static GTA_Computed_Value * GTA_CALL make_int_3(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_function_native_create(int_3_callback, NULL, context);
+}
+
+static GTA_Computed_Value * add_callback(GTA_MAYBE_UNUSED(GTA_Computed_Value * bound_object), GTA_UInteger argc, GTA_Computed_Value * argv[], GTA_Execution_Context * context) {
+  assert(!bound_object);
+  assert(argc == 2);
+  assert(argv);
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(argv[0]));
+  assert(GTA_COMPUTED_VALUE_IS_INTEGER(argv[1]));
+  GTA_Computed_Value_Integer * a = (GTA_Computed_Value_Integer *)argv[0];
+  GTA_Computed_Value_Integer * b = (GTA_Computed_Value_Integer *)argv[1];
+  // Verify that they are given in the expected order.
+  // This was a bug in the past, so don't remove this check.
+  assert(a->value == 1);
+  assert(b->value == 2);
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(a->value + b->value, context);
+}
+
+static GTA_Computed_Value * GTA_CALL make_add(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_function_native_create(add_callback, NULL, context);
 }
 
 
 TEST(NativeFunction, Library) {
   {
-    // length
+    // Simple function, no arguments
     TEST_PROGRAM_SETUP_NO_RUN(R"(
       use a;
       print("start ");
       print(a());
       print(" end");
     )");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_a_int_3));
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_STREQ(context->output->buffer, "start 3 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Simple function, with arguments
+    TEST_PROGRAM_SETUP_NO_RUN(R"(
+      use a;
+      print("start ");
+      print(a(1, 2));
+      print(" end");
+    )");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_add));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_STREQ(context->output->buffer, "start 3 end");

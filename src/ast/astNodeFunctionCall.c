@@ -6,6 +6,7 @@
 #include <tang/ast/astNodeFunctionCall.h>
 #include <tang/computedValue/computedValueError.h>
 #include <tang/computedValue/computedValueFunction.h>
+#include <tang/computedValue/computedValueFunctionNative.h>
 #include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_function_call_vtable = {
@@ -199,8 +200,11 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   int32_t vtable_offset = (int32_t)(size_t)(&((GTA_Computed_Value *)0)->vtable);
   int32_t num_arguments_offset = (int32_t)(size_t)(&((GTA_Computed_Value_Function *)0)->num_arguments);
   int32_t pointer_offset = (int32_t)(size_t)(&((GTA_Computed_Value_Function *)0)->pointer);
+  int32_t bound_object = (int32_t)(size_t)(&((GTA_Computed_Value_Function_Native *)0)->bound_object);
+  int32_t callback = (int32_t)(size_t)(&((GTA_Computed_Value_Function_Native *)0)->callback);
 
   // Jump Labels
+  GTA_Integer not_a_native_function;
   GTA_Integer not_a_function;
   GTA_Integer argument_count_mismatch;
   GTA_Integer cleanup;
@@ -211,6 +215,7 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
 
   bool error_free = true
   // Create jump labels.
+    && ((not_a_native_function = gta_compiler_context_get_label(context)) >= 0)
     && ((not_a_function = gta_compiler_context_get_label(context)) >= 0)
     && ((argument_count_mismatch = gta_compiler_context_get_label(context)) >= 0)
     && ((cleanup = gta_compiler_context_get_label(context)) >= 0)
@@ -239,10 +244,12 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
 
   // Compile and push the arguments.
   assert(function_call->arguments->count ? (bool)function_call->arguments->data : true);
-  for (size_t i = 0; error_free && (i < GTA_VECTORX_COUNT(function_call->arguments)); ++i) {
+  size_t num_arguments = function_call->arguments->count;
+  for (size_t i = 0; error_free && (i < num_arguments); ++i) {
+    // Note: The arguments are pushed in reverse order.
     // TODO: Does these values need to be marked as not temporary?
     error_free &= true
-      && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]), context)
+      && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[num_arguments - i - 1]), context)
       && gta_push_reg__x86_64(v, GTA_REG_RAX);
   }
 
@@ -252,12 +259,40 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   // Load the lhs into rax.
     && gta_ast_node_compile_to_binary__x86_64(function_call->lhs, context)
 
-  // If the lhs is not a function, then bail.
+  // If the lhs is not a native function, then see if it is a normal function.
   //   mov rdx, [rax + vtable_offset]
+  //   mov rcx, gta_computed_value_function_native_vtable
+  //   cmp rdx, rcx
+  //   jne not_a_native_function
+    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDX, GTA_REG_RAX, GTA_REG_NONE, 0, vtable_offset)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, (int64_t)&gta_computed_value_function_native_vtable)
+    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RCX)
+    && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, not_a_native_function, v->count - 4)
+
+  // Call the native function.
+  //   mov rdi, [rax + bound_object]
+  //   mov rsi, GTA_VECTORX_COUNT(function_call->arguments)
+  //   mov rdx, rsp
+  //   mov rcx, r15
+  //   mov rax, [rax + callback]
+  //   call rax
+  //   jmp cleanup
+    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_RAX, GTA_REG_NONE, 0, bound_object)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, GTA_VECTORX_COUNT(function_call->arguments))
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RSP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RCX, GTA_REG_R15)
+    && gta_mov_reg_ind__x86_64(v, GTA_REG_RAX, GTA_REG_RAX, GTA_REG_NONE, 0, callback)
+    && gta_call_reg__x86_64(v, GTA_REG_RAX)
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, cleanup, v->count - 4)
+
+  // If the lhs is not a function, then bail.
+  // not_a_native_function:
   //   mov rcx, gta_computed_value_function_vtable
   //   cmp rdx, rcx
   //   jne not_a_function
-    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDX, GTA_REG_RAX, GTA_REG_NONE, 0, vtable_offset)
+    && gta_compiler_context_set_label(context, not_a_native_function, v->count)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, (int64_t)&gta_computed_value_function_vtable)
     && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RCX)
     && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)

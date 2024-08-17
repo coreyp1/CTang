@@ -24,11 +24,11 @@ extern GTA_Computed_Value_VTable gta_computed_value_function_native_vtable;
  * @param bound_object The object to which the function is bound, or NULL if the
  *   function is not bound to an object.
  * @param argc The number of arguments passed to the function.
- * @param argv The arguments passed to the function.
+ * @param argv The array of computed value pointer arguments passed to the function.
  * @param context The execution context in which the function is being called.
  * @return The computed value resulting from the function call.
  */
-typedef GTA_Computed_Value * GTA_Computed_Value_Function_Native_Callback(GTA_Computed_Value *bound_object, GTA_UInteger argc, GTA_Computed_Value argv[], GTA_Execution_Context *context);
+typedef GTA_Computed_Value * GTA_Computed_Value_Function_Native_Callback(GTA_Computed_Value *bound_object, GTA_UInteger argc, GTA_Computed_Value * argv[], GTA_Execution_Context *context);
 
 /**
  * The computed value representing a natively-compiled function that may or may
