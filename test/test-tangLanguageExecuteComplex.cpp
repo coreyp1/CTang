@@ -587,6 +587,20 @@ static GTA_Computed_Value * GTA_CALL make_add(GTA_Execution_Context * context) {
   return (GTA_Computed_Value *)gta_computed_value_function_native_create(add_callback, NULL, context);
 }
 
+static GTA_Computed_Value * GTA_CALL str_len(GTA_Computed_Value * bound_object, GTA_MAYBE_UNUSED(GTA_UInteger argc), GTA_MAYBE_UNUSED(GTA_Computed_Value * argv[]), GTA_Execution_Context * context) {
+  assert(bound_object);
+  assert(argc == 0);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(bound_object));
+  GTA_Computed_Value_String * str = (GTA_Computed_Value_String *)bound_object;
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(str->value->byte_length, context);
+}
+
+static GTA_Computed_Value * GTA_CALL make_str_len(GTA_Execution_Context * context) {
+  GTA_Unicode_String * abc = gta_unicode_string_create("abc", 3, GTA_UNICODE_STRING_TYPE_TRUSTED);
+  GTA_Computed_Value * str = (GTA_Computed_Value *)gta_computed_value_string_create(abc, true, context);
+  return (GTA_Computed_Value *)gta_computed_value_function_native_create(str_len, str, context);
+}
+
 
 TEST(NativeFunction, Library) {
   {
@@ -615,6 +629,33 @@ TEST(NativeFunction, Library) {
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_STREQ(context->output->buffer, "start 3 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Function with bound object
+    TEST_PROGRAM_SETUP_NO_RUN(R"(
+      use a;
+      print("start ");
+      print(a());
+      print(" end");
+    )");
+    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_str_len));
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_STREQ(context->output->buffer, "start 3 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Function not found. Does not crash.
+    TEST_PROGRAM_SETUP_NO_RUN(R"(
+      use a;
+      print("start ");
+      print(a());
+      print(" end");
+    )");
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_STREQ(context->output->buffer, "start  end");
     TEST_PROGRAM_TEARDOWN();
   }
 }

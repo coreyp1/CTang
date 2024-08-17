@@ -198,6 +198,7 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
   }
 
   if (GTA_AST_IS_PERIOD(assign->lhs)) {
+    // This is explicitly not supported.
     return false;
   }
 
