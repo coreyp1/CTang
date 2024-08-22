@@ -2,7 +2,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include <cutil/vector.h>
+#include <cutil/memory.h>
 #include <tang/program/bytecode.h>
+#include <tang/computedValue/computedValue.h>
 
 void gta_bytecode_print(GTA_VectorX * bytecode) {
   assert(bytecode);
@@ -92,10 +94,14 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%p\tPOP_FP\n", (void *)current);
         ++current;
         break;
-      case GTA_BYTECODE_LOAD:
-        printf(GTA_64_BIT ? "%p\tLOAD\t%lu\n" : "%p\tLOAD\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+      case GTA_BYTECODE_LOAD: {
+        GTA_Computed_Value * value = GTA_TYPEX_P(*(current + 1));
+        char * output = gta_computed_value_to_string(value);
+        printf(GTA_64_BIT ? "%p\tLOAD\t%lu\t%s\n" : "%p\tLOAD\t%u\t%s\n", (void *)current, GTA_TYPEX_UI(*(current + 1)), output);
+        gcu_free(output);
         current += 2;
         break;
+      }
       case GTA_BYTECODE_LOAD_LIBRARY:
         printf(GTA_64_BIT ? "%p\tLOAD_LIBRARY\t%lu\n" : "%p\tLOAD_LIBRARY\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
         current += 2;

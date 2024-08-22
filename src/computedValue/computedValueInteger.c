@@ -51,10 +51,12 @@ GTA_Computed_Value_Integer * GTA_CALL gta_computed_value_integer_create(GTA_Inte
   if (!self) {
     return 0;
   }
-  // Attempt to add the pointer to the context's garbage collection list.
-  if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
-    gcu_free(self);
-    return NULL;
+  if (context) {
+    // Attempt to add the pointer to the context's garbage collection list.
+    if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
+      gcu_free(self);
+      return NULL;
+    }
   }
   gta_computed_value_integer_create_in_place(self, value, context);
   return self;

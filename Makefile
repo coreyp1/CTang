@@ -853,7 +853,8 @@ $(OBJ_DIR)/program/binary.o: \
 
 $(OBJ_DIR)/program/bytecode.o: \
 	src/program/bytecode.c \
-	$(DEP_BYTECODE)
+	$(DEP_BYTECODE) \
+	$(DEP_COMPUTEDVALUE)
 
 $(OBJ_DIR)/program/compilerContext.o: \
 	src/program/compilerContext.c \

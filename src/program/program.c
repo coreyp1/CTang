@@ -35,6 +35,26 @@
 static void computed_value_attribute_hash_cleanup(GTA_HashX * hash);
 
 
+/**
+ * Helper function to clean up the type/value_hash -> singleton hash.
+ *
+ * This is for the first dimension of the hash.
+ *
+ * @param hash The hash to clean up.
+ */
+static void computed_value_singleton_hash_cleanup_1(GTA_HashX * hash);
+
+
+/**
+ * Helper function to clean up the type/value_hash -> singleton hash.
+ *
+ * This is for the second dimension of the hash.
+ *
+ * @param hash The hash to clean up.
+ */
+static void computed_value_singleton_hash_cleanup_2(GTA_HashX * hash);
+
+
 static void gta_program_compile_bytecode(GTA_Program * program) {
   assert(program);
 
@@ -265,10 +285,11 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * 
   }
 
   // Allocate the singleton vector.
-  program->singletons = GTA_VECTORX_CREATE(32);
+  program->singletons = GTA_HASHX_CREATE(32);
   if (!program->singletons) {
-    goto SINGLETON_VECTOR_CREATE_FAILURE;
+    goto SINGLETON_HASH_CREATE_FAILURE;
   }
+  program->singletons->cleanup = computed_value_singleton_hash_cleanup_1;
 
   // Either parse the code into an AST or create a null AST.
   program->ast = gta_tang_parse(code);
@@ -332,9 +353,9 @@ PARSE_FAILURE:
   gta_ast_node_destroy(program->ast);
   program->ast = 0;
 COMPLETE_FAILURE:
-  GTA_VECTORX_DESTROY(program->singletons);
+  GTA_HASHX_DESTROY(program->singletons);
   program->singletons = 0;
-SINGLETON_VECTOR_CREATE_FAILURE:
+SINGLETON_HASH_CREATE_FAILURE:
 ATTRIBUTE_HASH_POPULATE_FAILURE:
   GTA_HASHX_DESTROY(program->attributes);
 ATTRIBUTE_HASH_CREATE_FAILURE:
@@ -368,12 +389,7 @@ void gta_program_destroy_in_place(GTA_Program * self) {
 
   // Destroy the singletons.
   assert(self->singletons);
-  assert(self->singletons->count ? (bool)self->singletons->data : true);
-  for (size_t i = 0; i < GTA_VECTORX_COUNT(self->singletons); ++i) {
-    gta_computed_value_destroy(GTA_TYPEX_P(self->singletons->data[i]));
-    self->singletons->data[i] = GTA_TYPEX_MAKE_P(0);
-  }
-  GTA_VECTORX_DESTROY(self->singletons);
+  GTA_HASHX_DESTROY(self->singletons);
   self->singletons = 0;
 
   // Destroy the bytecode.
@@ -439,6 +455,66 @@ bool gta_program_set_type_attribute(GTA_Program * program, GTA_Computed_Value_VT
     attribute_hash = GTA_TYPEX_P(type_value.value);
   }
   return GTA_HASHX_SET(attribute_hash, identifier_hash, GTA_TYPEX_MAKE_UI(GTA_JIT_FUNCTION_CONVERTER(callback)));
+}
+
+
+static void computed_value_singleton_hash_cleanup_1(GTA_HashX * hash) {
+  assert(hash);
+  GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(hash);
+  while (iterator.exists) {
+    GTA_HASHX_DESTROY(GTA_TYPEX_P(iterator.value));
+    iterator = GTA_HASHX_ITERATOR_NEXT(iterator);
+  }
+}
+
+
+static void computed_value_singleton_hash_cleanup_2(GTA_HashX * hash) {
+  assert(hash);
+  GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(hash);
+  while (iterator.exists) {
+    gta_computed_value_destroy((GTA_Computed_Value *)GTA_TYPEX_P(iterator.value));
+    iterator = GTA_HASHX_ITERATOR_NEXT(iterator);
+  }
+}
+
+
+GTA_Computed_Value * gta_program_get_singleton(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger value_hash) {
+  assert(program);
+  assert(program->singletons);
+  GTA_HashX_Value value = GTA_HASHX_GET(program->singletons, (GTA_UInteger)type_vtable);
+  if (value.exists) {
+    GTA_HashX * type_hash = GTA_TYPEX_P(value.value);
+    value = GTA_HASHX_GET(type_hash, value_hash);
+    if (value.exists) {
+      return (GTA_Computed_Value *)GTA_TYPEX_P(value.value);
+    }
+  }
+  return NULL;
+}
+
+
+bool gta_program_set_singleton(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger value_hash, GTA_Computed_Value * singleton) {
+  assert(program);
+  assert(program->singletons);
+  GTA_HashX_Value type_value = GTA_HASHX_GET(program->singletons, (GTA_UInteger)type_vtable);
+  GTA_HashX * values;
+  if (!type_value.exists) {
+    values = GTA_HASHX_CREATE(32);
+    if (!values) {
+      return false;
+    }
+    values->cleanup = computed_value_singleton_hash_cleanup_2;
+    if (!GTA_HASHX_SET(program->singletons, (GTA_UInteger)type_vtable, GTA_TYPEX_MAKE_P(values))) {
+      GTA_HASHX_DESTROY(values);
+      return false;
+    }
+  }
+  else {
+    values = GTA_TYPEX_P(type_value.value);
+  }
+  singleton->is_singleton = true;
+  singleton->is_temporary = false;
+  return GTA_HASHX_SET(values, value_hash, GTA_TYPEX_MAKE_P(singleton));
 }
 
 

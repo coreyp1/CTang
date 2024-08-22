@@ -111,8 +111,12 @@ typedef struct GTA_Program {
    * During the analysis or compilation phase, AST nodes may create singleton
    * objects that are used at runtime.  This container holds those objects so
    * that they can be destroyed when the program is destroyed.
+   *
+   * This is a 2-dimensional hash, in which the first dimension key is the
+   * memory address of the VTable and the second dimension is a hash of the
+   * computed value's value.  The value is the singleton object.
    */
-  GTA_VectorX * singletons;
+  GTA_HashX * singletons;
   /**
    * A hash table that maps object types to the attributes that they have.
    *
@@ -303,6 +307,27 @@ GTA_Computed_Value_Attribute_Callback gta_program_get_type_attribute(GTA_Program
  *   otherwise.
  */
 bool gta_program_set_type_attribute(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger identifier_hash, GTA_Computed_Value_Attribute_Callback callback);
+
+/**
+ * Get a singleton for a given type and value hash, if it exists.
+ *
+ * @param program The program to get the singleton from.
+ * @param type_vtable The vtable of the type.
+ * @param value_hash The hash of the value.
+ * @return The singleton object or null if it does not exist.
+ */
+GTA_Computed_Value * gta_program_get_singleton(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger value_hash);
+
+/**
+ * Set a singleton for a given type and value hash.
+ *
+ * @param program The program to set the singleton for.
+ * @param type_vtable The vtable of the type.
+ * @param value_hash The hash of the value.
+ * @param singleton The singleton object to set.
+ * @return True if the singleton was set successfully, false otherwise.
+ */
+bool gta_program_set_singleton(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger value_hash, GTA_Computed_Value * singleton);
 
 #ifdef __cplusplus
 }

@@ -74,13 +74,25 @@ bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_
   assert(GTA_AST_IS_INTEGER(self));
   GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) self;
 
+  GTA_Computed_Value * singleton = gta_program_get_singleton(context->program, &gta_computed_value_integer_vtable, integer->value);
+  if (!singleton) {
+    singleton = (GTA_Computed_Value *)gta_computed_value_integer_create(integer->value, NULL);
+    if (!singleton) {
+      return false;
+    }
+    if (!gta_program_set_singleton(context->program, &gta_computed_value_integer_vtable, integer->value, singleton)) {
+      gta_computed_value_destroy(singleton);
+      return false;
+    }
+  }
+
   assert(context);
   assert(context->program);
   assert(context->program->bytecode);
   assert(context->bytecode_offsets);
   return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_INTEGER))
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_I(integer->value));
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_LOAD))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_P(singleton));
 }
 
 
@@ -93,11 +105,20 @@ bool gta_ast_node_integer_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_MAY
   assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
+  GTA_Computed_Value * singleton = gta_program_get_singleton(context->program, &gta_computed_value_integer_vtable, integer->value);
+  if (!singleton) {
+    singleton = (GTA_Computed_Value *)gta_computed_value_integer_create(integer->value, NULL);
+    if (!singleton) {
+      return false;
+    }
+    if (!gta_program_set_singleton(context->program, &gta_computed_value_integer_vtable, integer->value, singleton)) {
+      gta_computed_value_destroy(singleton);
+      return false;
+    }
+  }
+
   return true
-    // gta_computed_value_integer_create(integer->value, context):
-    //   mov rdi, integer->value
-    //   mov rsi, r15
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, integer->value)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
-    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_integer_create);
+  // mov rax, singleton
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)singleton)
+  ;
 }
