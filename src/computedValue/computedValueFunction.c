@@ -48,8 +48,8 @@ GTA_Computed_Value_Function * GTA_CALL gta_computed_value_function_create(size_t
     gcu_free(self);
     return NULL;
   }
-  // Attempt to add the pointer to the context's garbage collection list.
   if (context) {
+    // Attempt to add the pointer to the context's garbage collection list.
     if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
       gta_computed_value_function_destroy((GTA_Computed_Value *)self);
       return NULL;

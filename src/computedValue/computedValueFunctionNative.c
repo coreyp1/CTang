@@ -51,8 +51,8 @@ GTA_Computed_Value_Function_Native * GTA_CALL gta_computed_value_function_native
     gcu_free(self);
     return NULL;
   }
-  // Attempt to add the pointer to the context's garbage collection list.
   if (context) {
+    // Attempt to add the pointer to the context's garbage collection list.
     if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
       gta_computed_value_function_native_destroy((GTA_Computed_Value *)self);
       return (GTA_Computed_Value_Function_Native *)gta_computed_value_error_out_of_memory;
