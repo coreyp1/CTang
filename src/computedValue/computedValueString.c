@@ -69,8 +69,16 @@ GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .cast = gta_computed_value_string_cast,
   .call = gta_computed_value_call_not_supported,
   .attributes = attributes,
-  .attributes_count = 2,
+  .attributes_count = 0,
 };
+
+
+/*
+ * Setup the proper attribute count, which cannot be done at compile time.
+ */
+GTA_INIT_FUNCTION(setup) {
+  gta_computed_value_string_vtable.attributes_count = sizeof(attributes) / sizeof(GTA_Computed_Value_Attribute_Pair);
+}
 
 
 /*
