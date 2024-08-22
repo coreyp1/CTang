@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 #include <cutil/memory.h>
+#include <unicode/uclean.h>
 #include <iostream>
 #include <tang/unicodeString.h>
 
@@ -566,7 +567,9 @@ TEST(UnicodeString, Concat) {
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  int result = RUN_ALL_TESTS();
+  u_cleanup();
+  return result;
 }
 
 

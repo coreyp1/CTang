@@ -22,16 +22,33 @@ bool gcu_unicode_string_get_grapheme_offsets(GCU_Vector32 * grapheme_offsets, co
   assert(grapheme_offsets);
   assert(buffer);
 
+  bool success = false;
+
+  // Early exit for empty strings.
+  if (!length) {
+    if (!gcu_vector32_append(grapheme_offsets, GCU_TYPE32_UI32(0))) {
+      goto EARLY_ERROR;
+    }
+    success = true;
+    goto EARLY_SUCCESS;
+  }
+
   // Worst case: string is standard ASCII.
   if (!gcu_vector32_reserve(grapheme_offsets, length + 1)) {
-    return false;
+    goto EARLY_ERROR;
   }
 
   // Create an ICU Character Break Iterator to identify the graphemes.
   UErrorCode err = U_ZERO_ERROR;
   UBreakIterator * iter = ubrk_open(UBRK_CHARACTER, NULL, NULL, 0, &err);
   if (!U_SUCCESS(err)) {
-    return false;
+    goto EARLY_ERROR;
+  }
+
+  // Add the first offset.
+  // This is always 0, even for an empty string.
+  if (!gcu_vector32_append(grapheme_offsets, GCU_TYPE32_UI32(0))) {
+    goto OFFSET_ADD_FAILED;
   }
 
   // Set the text to iterate through.
@@ -46,42 +63,23 @@ bool gcu_unicode_string_get_grapheme_offsets(GCU_Vector32 * grapheme_offsets, co
     err = U_ZERO_ERROR;
     uBuffer = gcu_malloc(sizeof(UChar) * (uLength + 1));
     if (uBuffer == NULL) {
-      ubrk_close(iter);
-      return false;
+      goto UBUFFER_CREATE_FAILED;
     }
     u_strFromUTF8(uBuffer, uLength + 1, NULL, buffer, length, &err);
   }
   if (!U_SUCCESS(err)) {
-    ubrk_close(iter);
-    if (uBuffer) {
-      gcu_free(uBuffer);
-    }
-    return false;
+    goto STRFROMUTF8_FAILED;
   }
 
   ubrk_setText(iter, uBuffer, uLength, &err);
   if (!U_SUCCESS(err)) {
-    ubrk_close(iter);
-    if (uBuffer) {
-      gcu_free(uBuffer);
-    }
-    return false;
+    goto STRFROMUTF8_FAILED;
   }
 
   // Print out each uBuffer character.
   // for (int32_t i = 0; i < uLength; ++i) {
   //   printf("%d: %d\n", i, uBuffer[i]);
   // }
-
-  // Add the first offset.
-  // This is always 0, even for an empty string.
-  if (!gcu_vector32_append(grapheme_offsets, GCU_TYPE32_UI32(0))) {
-    ubrk_close(iter);
-    if (uBuffer) {
-      gcu_free(uBuffer);
-    }
-    return false;
-  }
 
   // Find each grapheme offset one by one.  When we find the next offset, we
   // can then determine the length of the previous grapheme in UTF-8 so that
@@ -96,11 +94,7 @@ bool gcu_unicode_string_get_grapheme_offsets(GCU_Vector32 * grapheme_offsets, co
   // required for any grapheme is the length of the original string.
   char * dummyBuffer = gcu_malloc(length + 1);
   if (dummyBuffer == NULL) {
-    ubrk_close(iter);
-    if (uBuffer) {
-      gcu_free(uBuffer);
-    }
-    return false;
+    goto DUMMY_BUFFER_CREATE_FAILED;
   }
   while (ubrk_next(iter) != UBRK_DONE) {
     int32_t current_index_in_UTF16 = ubrk_current(iter);
@@ -114,22 +108,28 @@ bool gcu_unicode_string_get_grapheme_offsets(GCU_Vector32 * grapheme_offsets, co
 
     // Add the offset to the vector.
     if (!gcu_vector32_append(grapheme_offsets, GCU_TYPE32_UI32(grapheme_length_in_UTF8 + grapheme_offsets->data[grapheme_offsets->count - 1].ui32))) {
-      ubrk_close(iter);
-      if (uBuffer) {
-        gcu_free(uBuffer);
-      }
-      gcu_free(dummyBuffer);
-      return false;
+      goto GRAPHEME_OFFSET_ADD_FAILED;
     }
     previous_index_in_UTF16 = current_index_in_UTF16;
   }
+
+  success = true;
+  // Fall-through for cleanup
+
+GRAPHEME_OFFSET_ADD_FAILED:
+  gcu_free(dummyBuffer);
+DUMMY_BUFFER_CREATE_FAILED:
+STRFROMUTF8_FAILED:
   if (uBuffer) {
+    // Note: If the buffer was an empty string, then uBuffer will be NULL.
     gcu_free(uBuffer);
   }
-  gcu_free(dummyBuffer);
+OFFSET_ADD_FAILED:
+UBUFFER_CREATE_FAILED:
   ubrk_close(iter);
-
-  return true;
+EARLY_ERROR:
+EARLY_SUCCESS:
+  return success;
 }
 
 
