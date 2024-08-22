@@ -49,10 +49,11 @@ GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value, GTA_
     return NULL;
   }
   // Attempt to add the pointer to the context's garbage collection list.
-  assert(context);
-  if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
-    gcu_free(self);
-    return NULL;
+  if(context) {
+    if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
+      gcu_free(self);
+      return NULL;
+    }
   }
   gta_computed_value_float_create_in_place(self, value, context);
   return self;
