@@ -113,6 +113,15 @@ typedef struct GTA_Program {
    * that they can be destroyed when the program is destroyed.
    */
   GTA_VectorX * singletons;
+  /**
+   * A hash table that maps object types to the attributes that they have.
+   *
+   * This is a 2-dimensional hash, in which the first dimension key is the
+   * memory address of the VTable and the second dimension is a hash of the
+   * attribute name.  The value is the function that will be called to fulfill
+   * the attribute value request.
+   */
+  GTA_HashX * attributes;
 } GTA_Program;
 
 /**
@@ -267,6 +276,33 @@ void gta_program_compile_binary__x86_32(GTA_Program * program);
  * @param program The program to be compiled.
  */
 void gta_program_compile_binary__arm_32(GTA_Program * program);
+
+/**
+ * Get the type attribute function for the given type and identifier.
+ *
+ * The return value is a function that will be called to fulfill the attribute
+ * value request.
+ *
+ * @param program The program to get the attribute function from.
+ * @param type_vtable The vtable of the type.
+ * @param identifier_hash The hash of the attribute name.
+ * @return The function that will be called to fulfill the attribute value
+ *   request.
+ */
+GTA_Computed_Value_Attribute_Callback gta_program_get_type_attribute(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger identifier_hash);
+
+/**
+ * Set an attribute function for a given type and identifier.
+ *
+ * @param program The program to set the attribute function for.
+ * @param type_vtable The vtable of the type.
+ * @param identifier_hash The hash of the attribute name.
+ * @param callback The function that will be called to fulfill the attribute
+ *   value request.
+ * @return True if the attribute function was set successfully, false
+ *   otherwise.
+ */
+bool gta_program_set_type_attribute(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger identifier_hash, GTA_Computed_Value_Attribute_Callback callback);
 
 #ifdef __cplusplus
 }

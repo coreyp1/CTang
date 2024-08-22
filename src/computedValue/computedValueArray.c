@@ -32,13 +32,15 @@ GTA_Computed_Value_VTable gta_computed_value_array_vtable = {
   .greater_than_equal = gta_computed_value_greater_than_equal_not_supported,
   .equal = gta_computed_value_array_equal,
   .not_equal = gta_computed_value_array_not_equal,
-  .period = gta_computed_value_period_not_implemented,
+  .period = gta_computed_value_generic_period,
   .index = gta_computed_value_array_index,
   .slice = gta_computed_value_array_slice,
   .iterator_get = gta_computed_value_array_iterator_get,
   .iterator_next = gta_computed_value_iterator_next_not_implemented,
   .cast = gta_computed_value_cast,
   .call = gta_computed_value_call_not_supported,
+  .attributes = NULL,
+  .attributes_count = 0,
 };
 
 

@@ -77,6 +77,8 @@ typedef enum GTA_Bytecode {
   GTA_BYTECODE_JMPT,           ///< PC offset: pop val, if true, set pc + offset
   GTA_BYTECODE_PRINT,          ///< Pop val, print(val), push error or NULL
   GTA_BYTECODE_INDEX,          ///< Pop index, pop collection, push collection[index]
+  GTA_BYTECODE_PERIOD,         ///< Get attribute hash, attribute string name,
+                               ///<   pop object, push object.attr
   GTA_BYTECODE_SLICE,          ///< Pop skip, pop end, pop begin, pop collection,
                                ///<   push collection[begin:end:skip]
   GTA_BYTECODE_ASSIGN_INDEX,   ///< Pop value, pop index, pop collection,

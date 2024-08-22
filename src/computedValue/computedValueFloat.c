@@ -31,13 +31,15 @@ GTA_Computed_Value_VTable gta_computed_value_float_vtable = {
   .greater_than_equal = gta_computed_value_float_greater_than_equal,
   .equal = gta_computed_value_float_equal,
   .not_equal = gta_computed_value_float_not_equal,
-  .period = gta_computed_value_period_not_supported,
+  .period = gta_computed_value_generic_period,
   .index = gta_computed_value_index_not_supported,
   .slice = gta_computed_value_slice_not_supported,
   .iterator_get = gta_computed_value_iterator_get_not_supported,
   .iterator_next = gta_computed_value_iterator_next_not_supported,
   .cast = gta_computed_value_float_cast,
   .call = gta_computed_value_call_not_supported,
+  .attributes = NULL,
+  .attributes_count = 0,
 };
 
 

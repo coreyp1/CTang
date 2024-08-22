@@ -93,7 +93,7 @@
 
 static bool add_to_string(char * * buffer, size_t * bufferLen, char const * append, size_t appendLen, bool * reset) {
   // If reset is true, then we need to clear the buffer and start over.
-  if (reset) {
+  if (*reset) {
     *buffer = 0;
     *bufferLen = 0;
     reset = false;
@@ -116,8 +116,8 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
   void * newPointer = gcu_realloc(*buffer, *bufferLen + appendLen + 1);
   if (newPointer) {
     // The resize succeeded.  Copy the appended string to the original.
-    memcpy(&(*buffer)[*bufferLen], append, appendLen);
-    (*buffer)[*bufferLen + appendLen] = 0;
+    memcpy(&((char *)newPointer)[*bufferLen], append, appendLen);
+    ((char *)newPointer)[*bufferLen + appendLen] = 0;
     *buffer = newPointer;
     *bufferLen += appendLen;
     return true;
@@ -165,10 +165,8 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
       };
       stringBufferReset = true;
       return GTA_PARSER_QUICKPRINTBEGINANDSTRING;
-      // return g_tang_make_QUICKPRINTBEGINANDSTRING(stringBuffer, location);
     }
     return GTA_PARSER_QUICKPRINTBEGIN;
-    // return g_tang_make_QUICKPRINTBEGIN(location);
   }
   "<%" {
     yy_push_state(SCRIPT, yyscanner);
@@ -180,21 +178,18 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
       };
       stringBufferReset = true;
       return GTA_PARSER_TEMPLATESTRING;
-      // return g_tang_make_TEMPLATESTRING(stringBuffer, location);
     }
   }
   [^<]+ {
     if (!add_to_string(&stringBuffer, &stringBufferLength, yytext, yyleng, &stringBufferReset)) {
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
-      // return g_tang_make_MEMORYERROR("Error allocating string memory.", location);
     }
   }
   "<" {
     if (!add_to_string(&stringBuffer, &stringBufferLength, yytext, yyleng, &stringBufferReset)) {
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
-      // return g_tang_make_MEMORYERROR("Error allocating string memory.", location);
     }
   }
   <<EOF>> {
@@ -207,7 +202,6 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
       };
       stringBufferReset = true;
       return GTA_PARSER_TEMPLATESTRING;
-      // return g_tang_make_TEMPLATESTRING(stringBuffer, location);
     }
     yyterminate();
   }
@@ -227,7 +221,6 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
       // Can't pop the stack.  This is an error.
       CLEANUP_BUFFER
       return GTA_PARSER_UNEXPECTEDSCRIPTEND;
-      // return g_tang_make_UNEXPECTEDSCRIPTEND(location);
     }
     yy_pop_state(yyscanner);
     stringBufferReset = true;
@@ -240,7 +233,6 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
     yy_pop_state(yyscanner);
     stringBufferReset = true;
     return GTA_PARSER_QUICKPRINTEND;
-    // return g_tang_make_QUICKPRINTEND(location);
   }
 }
 
@@ -270,6 +262,7 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
     yy_push_state(doubleQuoteString, yyscanner);
   }
   \" {
+    // " This is to fix the highlighting when editing the flex file.
     // The start of a new, double-quoted string.
     stringBufferReset = true;
     // TODO: This should be a "print" type.
@@ -279,196 +272,148 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
   if {
     // " This is to fix the highlighting when editing the flex file.
     return GTA_PARSER_IF;
-    // return g_tang_make_IF(location);
   }
   else {
     return GTA_PARSER_ELSE;
-    // return g_tang_make_ELSE(location);
   }
   do {
     return GTA_PARSER_DO;
-    // return g_tang_make_DO(location);
   }
   while {
     return GTA_PARSER_WHILE;
-    // return g_tang_make_WHILE(location);
   }
   for {
     return GTA_PARSER_FOR;
-    // return g_tang_make_FOR(location);
   }
   null {
     return GTA_PARSER_NULL_;
-    // return g_tang_make_NULL(location);
   }
   int {
     return GTA_PARSER_CASTINT;
-    // return g_tang_make_CASTINT(location);
   }
   float {
     return GTA_PARSER_CASTFLOAT;
-    // return g_tang_make_CASTFLOAT(location);
   }
   bool {
     return GTA_PARSER_CASTBOOLEAN;
-    // return g_tang_make_CASTBOOLEAN(location);
   }
   string {
     return GTA_PARSER_CASTSTRING;
-    // return g_tang_make_CASTSTRING(location);
   }
   true {
     yylval->GTA_PARSER_BOOLEAN = true;
     return GTA_PARSER_BOOLEAN;
-    // return g_tang_make_BOOLEAN(true, location);
   }
   false {
     yylval->GTA_PARSER_BOOLEAN = false;
     return GTA_PARSER_BOOLEAN;
-    // return g_tang_make_BOOLEAN(false, location);
   }
   use {
     return GTA_PARSER_USE;
-    // return g_tang_make_USE(location);
   }
   global {
     return GTA_PARSER_GLOBAL;
   }
   function {
     return GTA_PARSER_FUNCTION;
-    // return g_tang_make_FUNCTION(location);
   }
   return {
     return GTA_PARSER_RETURN;
-    // return g_tang_make_RETURN(location);
   }
   break {
     return GTA_PARSER_BREAK;
-    // return g_tang_make_BREAK(location);
   }
   continue {
     return GTA_PARSER_CONTINUE;
-    // return g_tang_make_CONTINUE(location);
   }
   print {
     return GTA_PARSER_PRINT;
-    // return g_tang_make_PRINT(location);
   }
   [0-9]+ {
     yylval->GTA_PARSER_INTEGER = strtoll(yytext, 0, 10);
     return GTA_PARSER_INTEGER;
-    // int64_t number = strtoll(yytext, 0, 10);
-    // return g_tang_make_INTEGER(number, location);
   }
   ([0-9]+\.[0-9]*)|(\.[0-9]+) {
     yylval->GTA_PARSER_FLOAT = strtold(yytext, 0);
     return GTA_PARSER_FLOAT;
-    // long double number = strtold(yytext, 0);
-    // return g_tang_make_FLOAT(number, location);
   }
   = {
     return GTA_PARSER_ASSIGN;
-    // return g_tang_make_ASSIGN(location);
   }
   \+ {
     return GTA_PARSER_PLUS;
-    // return g_tang_make_PLUS(location);
   }
   \- {
     return GTA_PARSER_MINUS;
-    // return g_tang_make_MINUS(location);
   }
   \* {
     return GTA_PARSER_MULTIPLY;
-    // return g_tang_make_MULTIPLY(location);
   }
   \/ {
     return GTA_PARSER_DIVIDE;
-    // return g_tang_make_DIVIDE(location);
   }
   \% {
     return GTA_PARSER_MODULO;
-    // return g_tang_make_MODULO(location);
   }
   \( {
     return GTA_PARSER_LPAREN;
-    // return g_tang_make_LPAREN(location);
   }
   \) {
     return GTA_PARSER_RPAREN;
-    // return g_tang_make_RPAREN(location);
   }
   \{ {
     return GTA_PARSER_LBRACE;
-    // return g_tang_make_LBRACE(location);
   }
   \} {
     return GTA_PARSER_RBRACE;
-    // return g_tang_make_RBRACE(location);
   }
   \[ {
     return GTA_PARSER_LBRACKET;
-    // return g_tang_make_LBRACKET(location);
   }
   \] {
     return GTA_PARSER_RBRACKET;
-    // return g_tang_make_RBRACKET(location);
   }
   \! {
     return GTA_PARSER_EXCLAMATIONPOINT;
-    // return g_tang_make_EXCLAMATIONPOINT(location);
   }
   \< {
     return GTA_PARSER_LESSTHAN;
-    // return g_tang_make_LESSTHAN(location);
   }
   \<= {
     return GTA_PARSER_LESSTHANEQUAL;
-    // return g_tang_make_LESSTHANEQUAL(location);
   }
   \> {
     return GTA_PARSER_GREATERTHAN;
-    // return g_tang_make_GREATERTHAN(location);
   }
   \>= {
     return GTA_PARSER_GREATERTHANEQUAL;
-    // return g_tang_make_GREATERTHANEQUAL(location);
   }
   == {
     return GTA_PARSER_EQUALCOMPARE;
-    // return g_tang_make_EQUALCOMPARE(location);
   }
   != {
     return GTA_PARSER_NOTEQUAL;
-    // return g_tang_make_NOTEQUAL(location);
   }
   && {
     return GTA_PARSER_AND;
-    // return g_tang_make_AND(location);
   }
   \|\| {
     return GTA_PARSER_OR;
-    // return g_tang_make_OR(location);
   }
   as {
     return GTA_PARSER_AS;
-    // return g_tang_make_AS(location);
   }
   \? {
     return GTA_PARSER_QUESTIONMARK;
-    // return g_tang_make_QUESTIONMARK(location);
   }
   : {
     return GTA_PARSER_COLON;
-    // return g_tang_make_COLON(location);
   }
   ; {
     return GTA_PARSER_SEMICOLON;
-    // return g_tang_make_SEMICOLON(location);
   }
   , {
     return GTA_PARSER_COMMA;
-    // return g_tang_make_COMMA(location);
   }
   [a-zA-Z_][a-zA-Z0-9_]* {
     if (!add_to_string(&stringBuffer, &stringBufferLength, yytext, yyleng, &stringBufferReset)) {
@@ -482,11 +427,9 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
     };
     stringBufferReset = true;
     return GTA_PARSER_IDENTIFIER;
-    // return g_tang_make_IDENTIFIER(yytext, location);
   }
   \. {
     return GTA_PARSER_PERIOD;
-    // return g_tang_make_PERIOD(location);
   }
   . {}
   \n {}
@@ -510,7 +453,6 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
 <doubleQuoteString>{
   <<EOF>> {
     return GTA_PARSER_STRINGERROR;
-    // return g_tang_make_STRINGERROR(location);
   }
   \" {
     // " This is to fix the highlighting in Vim.
@@ -529,7 +471,6 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
     };
     stringBufferReset = true;
     return GTA_PARSER_STRING;
-    // return g_tang_make_STRING({stringBuffer, type}, location);
   }
   \\[0-7]{1,3} {
     // Interpret an escaped octal number.
@@ -554,8 +495,9 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
     }
+    stringBufferReset = false;
   }
-  \\x[a-fA-F0-9]{1,2} {
+  \\[xX][a-fA-F0-9]{1,2} {
     // Match a hexadecimal char.
     unsigned char result = 0;
     for (int i = 2; i < yyleng; ++i) {
@@ -571,57 +513,58 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
       }
     }
     char buff[2] = {result, 0};
+
     if (!add_to_string(&stringBuffer, &stringBufferLength, buff, 1, &stringBufferReset)) {
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
     }
+    stringBufferReset = false;
   }
   \\[0-9]+ {
     // Generate Error - Bad escape sequence.
     // Something like "\48" or "\07777777"
     CLEANUP_BUFFER
     return GTA_PARSER_STRINGERROR;
-    // return g_tang_make_STRINGERROR(location);
   }
   \n|\\n {
     // Matches either an explicit or escaped newline.
     if (!add_to_string(&stringBuffer, &stringBufferLength, "\n", 1, &stringBufferReset)) {
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
-      // return g_tang_make_MEMORYERROR("Error allocating string memory.", location);
     }
+    stringBufferReset = false;
   }
   \t|\\t {
     // Matches either an explicit or escaped tab.
     if (!add_to_string(&stringBuffer, &stringBufferLength, "\t", 1, &stringBufferReset)) {
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
-      // return g_tang_make_MEMORYERROR("Error allocating string memory.", location);
     }
+    stringBufferReset = false;
   }
   \r|\\r {
     // Matches either an explicit or escaped carriage return.
     if (!add_to_string(&stringBuffer, &stringBufferLength, "\r", 1, &stringBufferReset)) {
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
-      // return g_tang_make_MEMORYERROR("Error allocating string memory.", location);
     }
+    stringBufferReset = false;
   }
   \b|\\b {
     // Matches either an explicit or escaped bell.
     if (!add_to_string(&stringBuffer, &stringBufferLength, "\b", 1, &stringBufferReset)) {
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
-      // return g_tang_make_MEMORYERROR("Error allocating string memory.", location);
     }
+    stringBufferReset = false;
   }
   \f|\\f {
     // Matches either an explicit or escaped form feed.
     if (!add_to_string(&stringBuffer, &stringBufferLength, "\f", 1, &stringBufferReset)) {
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
-      // return g_tang_make_MEMORYERROR("Error allocating string memory.", location);
     }
+    stringBufferReset = false;
   }
   \\(.|\n) {
     // Any other escaped character.
@@ -629,8 +572,8 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
     if (!add_to_string(&stringBuffer, &stringBufferLength, buff, 1, &stringBufferReset)) {
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
-      // return g_tang_make_MEMORYERROR("Error allocating string memory.", location);
     }
+    stringBufferReset = false;
   }
   [^\\\n\"]+ {
     // "] <-- to fix the highlighting in Vim.
@@ -638,15 +581,14 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
     if (!add_to_string(&stringBuffer, &stringBufferLength, yytext, yyleng, &stringBufferReset)) {
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
-      // return g_tang_make_MEMORYERROR("Error allocating string memory.", location);
     }
+    stringBufferReset = false;
   }
   \\ {
     // Because we specified escape characters, we also need to specify what to
     // do if we see only a single backslash at the end of the input.
     CLEANUP_BUFFER
     return GTA_PARSER_STRINGERROR;
-    // return g_tang_make_STRINGERROR(location);
   }
 }
 

@@ -9,6 +9,7 @@
 #include <tang/computedValue/computedValueFloat.h>
 #include <tang/computedValue/computedValueInteger.h>
 #include <tang/computedValue/computedValueString.h>
+#include <tang/program/program.h>
 
 
 #define BINARY_OPERATION_TRY_OR_REVERSE(A) \
@@ -47,13 +48,15 @@ GTA_Computed_Value_VTable gta_computed_value_null_vtable = {
   .greater_than_equal = gta_computed_value_greater_than_equal_not_supported,
   .equal = gta_computed_value_equal_not_implemented,
   .not_equal = gta_computed_value_not_equal_not_implemented,
-  .period = gta_computed_value_period_not_supported,
+  .period = gta_computed_value_generic_period,
   .index = gta_computed_value_index_not_supported,
   .slice = gta_computed_value_slice_not_supported,
   .iterator_get = gta_computed_value_iterator_get_not_supported,
   .iterator_next = gta_computed_value_iterator_next_not_supported,
   .cast = gta_computed_value_null_cast,
   .call = gta_computed_value_call_not_supported,
+  .attributes = NULL,
+  .attributes_count = 0,
 };
 
 
@@ -228,11 +231,11 @@ GTA_Computed_Value * gta_computed_value_not_equal(GTA_Computed_Value * self, GTA
 }
 
 
-GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value * self, const char * identifier, GTA_Execution_Context * context) {
+GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->period);
-  return self->vtable->period(self, identifier, context);
+  return self->vtable->period(self, identifier_hash, context);
 }
 
 
@@ -411,7 +414,7 @@ GTA_Computed_Value * gta_computed_value_not_equal_not_implemented(GTA_MAYBE_UNUS
 }
 
 
-GTA_Computed_Value * gta_computed_value_period_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(const char * identifier), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * gta_computed_value_period_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_UInteger identifier_hash), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
@@ -516,7 +519,7 @@ GTA_Computed_Value * gta_computed_value_not_equal_not_supported(GTA_MAYBE_UNUSED
 }
 
 
-GTA_Computed_Value * gta_computed_value_period_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(const char * identifier), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * gta_computed_value_period_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_UInteger identifier_hash), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
@@ -562,4 +565,16 @@ GTA_Unicode_String * gta_computed_value_generic_print_from_to_string(GTA_Compute
     return NULL;
   }
   return unicode_str;
+}
+
+GTA_Computed_Value * gta_computed_value_generic_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context) {
+  assert(self);
+  assert(self->vtable);
+  assert(context);
+  assert(context->program);
+  GTA_Computed_Value_Attribute_Callback callback = gta_program_get_type_attribute(context->program, self->vtable, identifier_hash);
+  if (!callback) {
+    return gta_computed_value_error_not_implemented;
+  }
+  return callback(self, context);
 }

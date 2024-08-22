@@ -890,6 +890,22 @@ TEST(Cast, FromString) {
   }
 }
 
+TEST(String, EscapedCharacters) {
+  {
+    // Multi-codepoint graphemes.
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_primary_parse(R"("$\xF0\x9F\x8F\xB4\xF3\xA0\x81\xA7\xF3\xA0\x81\xA2\xF3\xA0\x81\xB3\xF3\xA0\x81\xA3\xF3\xA0\x81\xB4\xF3\xA0\x81\xBF.")");
+    ASSERT_NE(ast, nullptr);
+    ASSERT_EQ(1, gta_tang_node_count(ast));
+    ASSERT_TRUE(GTA_AST_IS_STRING(ast));
+    ASSERT_STREQ("$\xF0\x9F\x8F\xB4\xF3\xA0\x81\xA7\xF3\xA0\x81\xA2\xF3\xA0\x81\xB3\xF3\xA0\x81\xA3\xF3\xA0\x81\xB4\xF3\xA0\x81\xBF.", ((GTA_Ast_Node_String *)ast)->string->buffer);
+    ASSERT_EQ(3, ((GTA_Ast_Node_String *)ast)->string->grapheme_length);
+    ASSERT_EQ(30, ((GTA_Ast_Node_String *)ast)->string->byte_length);
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
 // Other optimizations:
 // - Remove unused variables.
 

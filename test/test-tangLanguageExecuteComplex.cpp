@@ -661,6 +661,30 @@ TEST(NativeFunction, Library) {
 }
 
 
+TEST(Attributes, String) {
+  {
+    // Length (in graphemes).
+    // The long string of hex values is a UTF-8 encoding of the Scottish Flag.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print("$\xF0\x9F\x8F\xB4\xF3\xA0\x81\xA7\xF3\xA0\x81\xA2\xF3\xA0\x81\xB3\xF3\xA0\x81\xA3\xF3\xA0\x81\xB4\xF3\xA0\x81\xBF.".length);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 3 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Length (in bytes).
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print("$\xF0\x9F\x8F\xB4\xF3\xA0\x81\xA7\xF3\xA0\x81\xA2\xF3\xA0\x81\xB3\xF3\xA0\x81\xA3\xF3\xA0\x81\xB4\xF3\xA0\x81\xBF.".byte_length);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 30 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

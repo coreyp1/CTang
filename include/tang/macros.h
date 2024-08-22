@@ -328,6 +328,7 @@ typedef struct GTA_Ast_Node_VTable GTA_Ast_Node_VTable;
 typedef struct GTA_Compiler_Context GTA_Compiler_Context;
 typedef struct GTA_Bytecode_Compiler_Context GTA_Bytecode_Compiler_Context;
 typedef struct GTA_Computed_Value GTA_Computed_Value;
+typedef struct GTA_Computed_Value_Attribute_Pair GTA_Computed_Value_Attribute_Pair;
 typedef struct GTA_Computed_Value_Array GTA_Computed_Value_Array;
 typedef struct GTA_Computed_Value_Boolean GTA_Computed_Value_Boolean;
 typedef struct GTA_Computed_Value_Error GTA_Computed_Value_Error;

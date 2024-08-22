@@ -24,6 +24,23 @@ extern "C" {
  */
 typedef GTA_VectorX GTA_Computed_Value_Vector;
 
+typedef GTA_Computed_Value * GTA_CALL (*GTA_Computed_Value_Attribute_Callback)(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+/**
+ * This is a pair of an attribute name and a function to get the attribute
+ * value.  It is used to set up the language's default attributes.
+ */
+struct GTA_Computed_Value_Attribute_Pair {
+  /**
+   * The attribute name.
+   */
+  const char * name;
+  /**
+   * The function to be called to get the attribute value.
+   */
+  GTA_Computed_Value_Attribute_Callback callback;
+};
+
 /**
  * Virtual table for the computed value class.
  *
@@ -243,11 +260,11 @@ typedef struct GTA_Computed_Value_VTable {
    * Gets a value from the object using a period identifier.
    *
    * @param self The object to get the value from.
-   * @param identifier The identifier to get.
+   * @param identifier_hash The hash of the identifier to get.
    * @param context The execution context of the program.
    * @return The value of the identifier or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*period)(GTA_Computed_Value * self, const char * identifier, GTA_Execution_Context * context);
+  GTA_Computed_Value * (*period)(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
   /**
    * Gets a value from the object using an index.
    *
@@ -303,6 +320,14 @@ typedef struct GTA_Computed_Value_VTable {
    * @return The result of the operation or NULL if the operation failed.
    */
   GTA_Computed_Value * (*call)(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
+  /**
+   * The default attributes for this type.
+   */
+  GTA_Computed_Value_Attribute_Pair * attributes;
+  /**
+   * The number of attributes in the `attributes` array.
+   */
+  size_t attributes_count;
 } GTA_Computed_Value_VTable;
 
 /**
@@ -334,6 +359,17 @@ typedef struct GTA_Computed_Value {
    * @see GTA_Execution_Context
    */
   GTA_Execution_Context * context;
+  /**
+   * The attributes of the value.
+   *
+   * This is a hash map of read-only attributes that may be accessed.  The key
+   * is the hash of the attribute name, and the value is the computed value
+   * that should be returned.  The computed value may be of any type.
+   *
+   * These values are stored per-object and may be used to override the default
+   * attribute values of the class.
+   */
+  GTA_HashX * attributes;
   /**
    * Whether or not the value is truthy, to aid in logical operations.
    */
@@ -635,11 +671,11 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal(GTA_Computed_Va
  * Calls the `period` method of the virtual table.
  *
  * @param self The object to get the value from.
- * @param identifier The identifier to get.
+ * @param identifier_hash The hash of the identifier to get.
  * @param context The execution context of the program.
  * @return The value of the identifier or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value * self, const char * identifier, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
 
 /**
  * Gets a value from a computed value using an index.
@@ -954,11 +990,11 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal_not_implemented
  * table.
  *
  * @param self The object to get the value from.
- * @param identifier The identifier to get.
+ * @param identifier_hash The hash of the identifier to get.
  * @param context The execution context of the program.
  * @return The value of the identifier or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period_not_implemented(GTA_Computed_Value * self, const char * identifier, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period_not_implemented(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `index` method for the virtual
@@ -1213,11 +1249,11 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal_not_supported(G
  * table.
  *
  * @param self The object to get the value from.
- * @param identifier The identifier to get.
+ * @param identifier_hash The hash of the identifier to get.
  * @param context The execution context of the program.
  * @return The value of the identifier or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period_not_supported(GTA_Computed_Value * self, const char * identifier, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period_not_supported(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `index` method for the virtual
@@ -1294,6 +1330,18 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call_not_supported(GTA_Co
  *  failed.
  */
 GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_generic_print_from_to_string(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+/**
+ * Generic "period" method which searches the object and the language for any
+ * pre-defined attribute name/callback pairs and executes the callback if
+ * found.
+ *
+ * @param self The object to get the value from.
+ * @param identifier_hash The hash of the identifier to get.
+ * @param context The execution context of the program.
+ * @return The value of the identifier or NULL if the operation failed.
+ */
+GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_generic_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

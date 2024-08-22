@@ -180,6 +180,10 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%p\tINDEX\n", (void *)current);
         ++current;
         break;
+      case GTA_BYTECODE_PERIOD:
+        printf("%p\tPERIOD\t%p (%s)\n", (void *)current, GTA_TYPEX_P(*(current + 1)), (char *)GTA_TYPEX_P(*(current + 2)));
+        current += 3;
+        break;
       case GTA_BYTECODE_SLICE:
         printf("%p\tSLICE\n", (void *)current);
         ++current;

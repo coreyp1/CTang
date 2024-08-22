@@ -17,8 +17,7 @@
 #include <stdio.h>
 #include <cutil/memory.h>
 #include <tang/ast/astNodeAll.h>
-#include <tang/computedValue/computedValue.h>
-#include <tang/computedValue/computedValueFunction.h>
+#include <tang/computedValue/computedValueAll.h>
 #include <tang/program/compilerContext.h>
 #include <tang/program/executionContext.h>
 #include <tang/program/binary.h>
@@ -26,6 +25,15 @@
 #include <tang/program/variable.h>
 #include <tang/program/virtualMachine.h>
 #include <tang/tangLanguage.h>
+
+
+/**
+ * Helper function to clean up the type/attribute -> callback hash.
+ *
+ * @param hash The hash to clean up.
+ */
+static void computed_value_attribute_hash_cleanup(GTA_HashX * hash);
+
 
 static void gta_program_compile_bytecode(GTA_Program * program) {
   assert(program);
@@ -222,7 +230,39 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * 
     .flags = flags,
     .scope = 0,
     .singletons = 0,
+    .attributes = 0,
   };
+
+  // Create the attributes hash.
+  program->attributes = GTA_HASHX_CREATE(32);
+  if (!program->attributes) {
+    goto ATTRIBUTE_HASH_CREATE_FAILURE;
+  }
+  program->attributes->cleanup = computed_value_attribute_hash_cleanup;
+
+  GTA_Computed_Value_VTable * vtable[] = {
+    &gta_computed_value_array_vtable,
+    &gta_computed_value_boolean_vtable,
+    &gta_computed_value_error_vtable,
+    &gta_computed_value_float_vtable,
+    &gta_computed_value_function_vtable,
+    &gta_computed_value_function_native_vtable,
+    &gta_computed_value_integer_vtable,
+    &gta_computed_value_iterator_vtable,
+    &gta_computed_value_map_vtable,
+    &gta_computed_value_null_vtable,
+    &gta_computed_value_string_vtable,
+  };
+  size_t vtable_count = sizeof(vtable) / sizeof(vtable[0]);
+  for (size_t i = 0; i < vtable_count; ++i) {
+    GTA_Computed_Value_Attribute_Pair * attributes = vtable[i]->attributes;
+    size_t attributes_count = vtable[i]->attributes_count;
+    for (size_t j = 0; j < attributes_count; ++j) {
+      if (!gta_program_set_type_attribute(program, vtable[i], GTA_STRING_HASH(attributes[j].name, strlen(attributes[j].name)), attributes[j].callback)) {
+        goto ATTRIBUTE_HASH_POPULATE_FAILURE;
+      }
+    }
+  }
 
   // Allocate the singleton vector.
   program->singletons = GTA_VECTORX_CREATE(32);
@@ -295,6 +335,9 @@ COMPLETE_FAILURE:
   GTA_VECTORX_DESTROY(program->singletons);
   program->singletons = 0;
 SINGLETON_VECTOR_CREATE_FAILURE:
+ATTRIBUTE_HASH_POPULATE_FAILURE:
+  GTA_HASHX_DESTROY(program->attributes);
+ATTRIBUTE_HASH_CREATE_FAILURE:
   return false;
 }
 
@@ -318,6 +361,10 @@ void gta_program_destroy_in_place(GTA_Program * self) {
   // Destroy the scope.
   gta_variable_scope_destroy(self->scope);
   self->scope = 0;
+
+  // Destroy the attributes.
+  assert(self->attributes);
+  GTA_HASHX_DESTROY(self->attributes);
 
   // Destroy the singletons.
   assert(self->singletons);
@@ -345,6 +392,53 @@ void gta_program_destroy_in_place(GTA_Program * self) {
 #endif // _WIN32
   }
   self->binary = 0;
+}
+
+
+static void computed_value_attribute_hash_cleanup(GTA_HashX * hash) {
+  assert(hash);
+  GTA_HashX_Iterator iterator = GTA_HASHX_ITERATOR_GET(hash);
+  while (iterator.exists) {
+    GTA_HASHX_DESTROY(GTA_TYPEX_P(iterator.value));
+    iterator = GTA_HASHX_ITERATOR_NEXT(iterator);
+  }
+}
+
+
+GTA_Computed_Value_Attribute_Callback gta_program_get_type_attribute(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger identifier_hash) {
+  assert(program);
+  assert(program->attributes);
+  GTA_HashX_Value value = GTA_HASHX_GET(program->attributes, (GTA_UInteger)type_vtable);
+  if (value.exists) {
+    GTA_HashX * type_hash = GTA_TYPEX_P(value.value);
+    value = GTA_HASHX_GET(type_hash, identifier_hash);
+    if (value.exists) {
+      return (GTA_Computed_Value_Attribute_Callback)(GTA_TYPEX_UI(value.value));
+    }
+  }
+  return NULL;
+}
+
+
+bool gta_program_set_type_attribute(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger identifier_hash, GTA_Computed_Value_Attribute_Callback callback) {
+  assert(program);
+  assert(program->attributes);
+  GTA_HashX_Value type_value = GTA_HASHX_GET(program->attributes, (GTA_UInteger)type_vtable);
+  GTA_HashX * attribute_hash;
+  if (!type_value.exists) {
+    attribute_hash = GTA_HASHX_CREATE(32);
+    if (!attribute_hash) {
+      return false;
+    }
+    if (!GTA_HASHX_SET(program->attributes, (GTA_UInteger)type_vtable, GTA_TYPEX_MAKE_P(attribute_hash))) {
+      GTA_HASHX_DESTROY(attribute_hash);
+      return false;
+    }
+  }
+  else {
+    attribute_hash = GTA_TYPEX_P(type_value.value);
+  }
+  return GTA_HASHX_SET(attribute_hash, identifier_hash, GTA_TYPEX_MAKE_UI(GTA_JIT_FUNCTION_CONVERTER(callback)));
 }
 
 

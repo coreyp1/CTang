@@ -11,6 +11,36 @@
 #include <tang/computedValue/computedValueString.h>
 #include <tang/program/executionContext.h>
 
+
+/**
+ * Return the length of the string in graphemes.
+ *
+ * @param self The string object.
+ * @param context The execution context.
+ * @return The length of the string in graphemes.
+ */
+static GTA_Computed_Value * GTA_CALL string_length(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+
+/**
+ * Return the length of the string in bytes.
+ *
+ * @param self The string object.
+ * @param context The execution context.
+ * @return The length of the string in bytes.
+ */
+static GTA_Computed_Value * GTA_CALL string_byte_length(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+
+/**
+ * The attributes for the GTA_Computed_Value_String class.
+ */
+static GTA_Computed_Value_Attribute_Pair attributes[] = {
+  {"length", string_length},
+  {"byte_length", string_byte_length},
+};
+
+
 GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .name = "String",
   .destroy = gta_computed_value_string_destroy,
@@ -31,14 +61,17 @@ GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .greater_than_equal = gta_computed_value_greater_than_equal_not_implemented,
   .equal = gta_computed_value_equal_not_implemented,
   .not_equal = gta_computed_value_not_equal_not_implemented,
-  .period = gta_computed_value_period_not_implemented,
+  .period = gta_computed_value_generic_period,
   .index = gta_computed_value_string_index,
   .slice = gta_computed_value_string_slice,
   .iterator_get = gta_computed_value_iterator_get_not_implemented,
   .iterator_next = gta_computed_value_iterator_next_not_implemented,
   .cast = gta_computed_value_string_cast,
   .call = gta_computed_value_call_not_supported,
+  .attributes = attributes,
+  .attributes_count = 2,
 };
+
 
 /*
  * The following code defines a singleton for an empty string.
@@ -94,6 +127,10 @@ GTA_Computed_Value_String gta_computed_value_string_empty_singleton = {
 };
 
 GTA_Computed_Value * gta_computed_value_string_empty = (GTA_Computed_Value *)&gta_computed_value_string_empty_singleton;
+
+/*
+ * End of the empty string singleton code.
+ */
 
 
 GTA_Computed_Value_String * gta_computed_value_string_create(GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context) {
@@ -389,4 +426,20 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_slice(GTA_Computed_Value
   }
 
   return result;
+}
+
+
+GTA_Computed_Value * GTA_CALL string_length(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(self));
+  GTA_Computed_Value_String * string = (GTA_Computed_Value_String *)self;
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(string->value->grapheme_length, context);
+}
+
+
+static GTA_Computed_Value * GTA_CALL string_byte_length(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(self));
+  GTA_Computed_Value_String * string = (GTA_Computed_Value_String *)self;
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(string->value->byte_length, context);
 }

@@ -451,6 +451,15 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_index(collection, index, context));
         break;
       }
+      case GTA_BYTECODE_PERIOD: {
+        // Perform a period operation.
+        // The value will be left on the stack.
+        GTA_UInteger attribute_hash = GTA_TYPEX_UI(*next++);
+        GTA_Computed_Value * object = GTA_TYPEX_P(context->stack->data[*sp-1]);
+        context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_period(object, attribute_hash, context));
+        ++next;
+        break;
+      }
       case GTA_BYTECODE_SLICE: {
         // Perform a slice operation.
         // The value will be left on the stack.

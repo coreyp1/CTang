@@ -3,19 +3,21 @@
 #include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
+#include <cutil/string.h>
 #include <tang/ast/astNodePeriod.h>
+#include <tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_period_vtable = {
   .name = "Period",
-  .compile_to_bytecode = 0,
-  .compile_to_binary__x86_64 = 0,
+  .compile_to_bytecode = gta_ast_node_period_compile_to_bytecode,
+  .compile_to_binary__x86_64 = gta_ast_node_period_compile_to_binary__x86_64,
   .compile_to_binary__arm_64 = 0,
   .compile_to_binary__x86_32 = 0,
   .compile_to_binary__arm_32 = 0,
   .destroy = gta_ast_node_period_destroy,
   .print = gta_ast_node_period_print,
   .simplify = gta_ast_node_period_simplify,
-  .analyze = 0,
+  .analyze = gta_ast_node_period_analyze,
   .walk = gta_ast_node_period_walk,
 };
 
@@ -94,6 +96,15 @@ GTA_Ast_Node * gta_ast_node_period_simplify(GTA_Ast_Node * self, GTA_Ast_Simplif
 }
 
 
+GTA_Ast_Node * gta_ast_node_period_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope) {
+  assert(self);
+  assert(GTA_AST_IS_PERIOD(self));
+  GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) self;
+
+  return gta_ast_node_analyze(period->lhs, program, scope);
+}
+
+
 void gta_ast_node_period_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value) {
   assert(self);
   assert(GTA_AST_IS_PERIOD(self));
@@ -101,4 +112,57 @@ void gta_ast_node_period_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback ca
 
   callback(self, data, return_value);
   gta_ast_node_walk(period->lhs, callback, data, return_value);
+}
+
+
+bool gta_ast_node_period_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_PERIOD(self));
+  GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) self;
+
+  return true
+    && gta_ast_node_compile_to_bytecode(period->lhs, context)
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_PERIOD))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_STRING_HASH(period->rhs, strlen(period->rhs))))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_P((void *)period->rhs))
+  ;
+}
+
+
+bool gta_ast_node_period_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
+  assert(self);
+  assert(GTA_AST_IS_PERIOD(self));
+  GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) self;
+
+  assert(context);
+  assert(context->binary_vector);
+  GCU_Vector8 * v = context->binary_vector;
+  GTA_UInteger attribute_hash = GTA_STRING_HASH(period->rhs, strlen(period->rhs));
+
+  return true
+  // Compile the LHS
+    && gta_ast_node_compile_to_binary__x86_64(period->lhs, context)
+  // The result is in RAX.  Call the period function.
+  //   mov rdi, rax
+  //   mov rsi, attribute_hash
+  //   mov rdx, r15             ; context
+  //   mov rax, gta_computed_value_period
+  //   push rbp
+  //   mov rbp, rsp
+  //   and rsp, 0xFFFFFFF0
+  //   call rax
+  //   mov rsp, rbp
+  //   pop rbp
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, attribute_hash)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_R15)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)gta_computed_value_period)
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
+    && gta_call_reg__x86_64(v, GTA_REG_RAX)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+  ;
 }
