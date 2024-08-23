@@ -12,6 +12,24 @@
 #include <tang/program/executionContext.h>
 
 
+/**
+ * Return the size of the array.
+ *
+ * @param self The array object.
+ * @param context The execution context.
+ * @return The size of the array.
+ */
+static GTA_Computed_Value * GTA_CALL array_size(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+
+/**
+ * The attributes for the GTA_Computed_Value_Array class.
+ */
+static GTA_Computed_Value_Attribute_Pair attributes[] = {
+  {"size", array_size},
+};
+
+
 GTA_Computed_Value_VTable gta_computed_value_array_vtable = {
   .name = "Array",
   .destroy = gta_computed_value_array_destroy,
@@ -39,9 +57,17 @@ GTA_Computed_Value_VTable gta_computed_value_array_vtable = {
   .iterator_next = gta_computed_value_iterator_next_not_implemented,
   .cast = gta_computed_value_cast,
   .call = gta_computed_value_call_not_supported,
-  .attributes = NULL,
+  .attributes = attributes,
   .attributes_count = 0,
 };
+
+
+/*
+ * Setup the proper attribute count, which cannot be done at compile time.
+ */
+GTA_INIT_FUNCTION(setup) {
+  gta_computed_value_array_vtable.attributes_count = sizeof(attributes) / sizeof(GTA_Computed_Value_Attribute_Pair);
+}
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_array_create(size_t size, GTA_Execution_Context * context) {
@@ -588,4 +614,12 @@ GTA_Computed_Value * gta_computed_value_array_iterator_get(GTA_Computed_Value * 
   ((GTA_Computed_Value_Iterator *)iterator)->advance = __advance;
 
   return iterator;
+}
+
+
+GTA_Computed_Value * GTA_CALL array_size(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
+  GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self;
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(array->elements->count, context);
 }

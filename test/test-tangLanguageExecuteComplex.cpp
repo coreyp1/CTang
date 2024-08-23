@@ -686,6 +686,40 @@ TEST(Attributes, String) {
   }
 }
 
+TEST(Attributes, Array) {
+  {
+    // size (empty array).
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print([].size);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 0 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // size (non-empty array).
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print([1, 2, 3].size);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 3 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // size (sliced array).
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      a = [1, 2, 3];
+      print(a[-2:].size);
+      print(" end");
+    )");
+    ASSERT_STREQ(context->output->buffer, "start 2 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   int result = RUN_ALL_TESTS();
