@@ -83,13 +83,27 @@ bool gta_ast_node_string_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
   assert(GTA_AST_IS_STRING(self));
   GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)self;
 
+  GTA_UInteger hash = (GTA_UInteger)string->string;
+
+  GTA_Computed_Value * singleton = gta_program_get_singleton(context->program, &gta_computed_value_string_vtable, hash);
+  if (!singleton) {
+    singleton = (GTA_Computed_Value *)gta_computed_value_string_create(string->string, 0, NULL);
+    if (!singleton) {
+      return false;
+    }
+    if (!gta_program_set_singleton(context->program, &gta_computed_value_string_vtable, hash, singleton)) {
+      gta_computed_value_destroy(singleton);
+      return false;
+    }
+  }
+
   assert(context);
   assert(context->program);
   assert(context->program->bytecode);
   assert(context->bytecode_offsets);
   return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_STRING))
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_P(string->string));
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_LOAD))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_P(singleton));
 }
 
 
@@ -102,13 +116,22 @@ bool gta_ast_node_string_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_MAYB
   assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
+  GTA_UInteger hash = (GTA_UInteger)string->string;
+
+  GTA_Computed_Value * singleton = gta_program_get_singleton(context->program, &gta_computed_value_string_vtable, hash);
+  if (!singleton) {
+    singleton = (GTA_Computed_Value *)gta_computed_value_string_create(string->string, 0, NULL);
+    if (!singleton) {
+      return false;
+    }
+    if (!gta_program_set_singleton(context->program, &gta_computed_value_string_vtable, hash, singleton)) {
+      gta_computed_value_destroy(singleton);
+      return false;
+    }
+  }
+
   return true
-  // gta_computed_value_string_create(&string->string, 0, context):
-  //   mov rdi, string->string
-  //   mov rsi, 0x0
-  //   mov rdx, r15
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, (int64_t)string->string)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, 0)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_R15)
-    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_string_create);
+  // mov rax, singleton
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)singleton)
+  ;
 }

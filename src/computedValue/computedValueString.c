@@ -180,7 +180,7 @@ bool gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self,
 
 
 void gta_computed_value_string_destroy(GTA_Computed_Value * self) {
-  if (!self || self->is_singleton) {
+  if (!self) {
     return;
   }
   gta_computed_value_string_destroy_in_place(self);
@@ -189,7 +189,7 @@ void gta_computed_value_string_destroy(GTA_Computed_Value * self) {
 
 
 void gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self) {
-  if (!self || self->is_singleton) {
+  if (!self) {
     return;
   }
   assert(GTA_COMPUTED_VALUE_IS_STRING(self));

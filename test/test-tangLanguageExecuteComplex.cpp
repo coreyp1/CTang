@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <cutil/memory.h>
 #include <iostream>
+#include <unicode/uclean.h>
 
 #include <tang/tang.h>
 #include <tang/macros.h>
@@ -687,5 +688,7 @@ TEST(Attributes, String) {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  int result = RUN_ALL_TESTS();
+  u_cleanup();
+  return result;
 }
