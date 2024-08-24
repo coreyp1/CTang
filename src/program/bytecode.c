@@ -10,208 +10,209 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
   assert(bytecode);
   GTA_TypeX_Union * current = &bytecode->data[0];
   GTA_TypeX_Union * end = &bytecode->data[bytecode->count];
+  GTA_TypeX_Union * start = current;
   assert(current);
   assert(end);
   while (current < end) {
     switch (GTA_TYPEX_UI(*current)) {
       case GTA_BYTECODE_RETURN:
-        printf("%p\tRETURN\n", (void *)current);
+        printf("%4zu RETURN\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_NOP:
-        printf("%p\tNOP\n", (void *)current);
+        printf("%4zu NOP\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_NULL:
-        printf("%p\tNULL\n", (void *)current);
+        printf("%4zu NULL\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_BOOLEAN:
-        printf("%p\tBOOLEAN\t%s\n", (void *)current, GTA_TYPEX_B(*(current + 1)) ? "true" : "false");
+        printf("%4zu BOOLEAN\t%s\n", current - start, GTA_TYPEX_B(*(current + 1)) ? "true" : "false");
         current += 2;
         break;
       case GTA_BYTECODE_FLOAT:
-        printf(GTA_64_BIT ? "%p\tFLOAT\t%lf\n" : "%p\tFLOAT\t%f\n", (void *)current, GTA_TYPEX_F(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu FLOAT\t%lf\n" : "%4zu FLOAT\t%f\n", current - start, GTA_TYPEX_F(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_INTEGER:
-        printf(GTA_64_BIT ? "%p\tINT\t%ld\n" : "%p\tINT\t%d\n", (void *)current, GTA_TYPEX_I(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu INT\t%ld\n" : "%4zu INT\t%d\n", current - start, GTA_TYPEX_I(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_STRING:
-        printf("%p\tSTRING\t%p\n", (void *)current, (void *)GTA_TYPEX_P(*(current + 1)));
+        printf("%4zu STRING\t%p\n", current - start, (void *)GTA_TYPEX_P(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_ARRAY:
-        printf(GTA_64_BIT ? "%p\tARRAY\t%lu\n" : "%s\tARRAY\t%u", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu ARRAY\t%lu\n" : "%s\tARRAY\t%u", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_MAP:
-        printf(GTA_64_BIT ? "%p\tMAP\t%lu\n" : "%p\tMAP\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu MAP\t%lu\n" : "%4zu MAP\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_CAST:
-        printf("%p\tCAST\t%p\n", (void *)current, GTA_TYPEX_P(*(current + 1)));
+        printf("%4zu CAST\t%p\n", current - start, GTA_TYPEX_P(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_SET_NOT_TEMP:
-        printf("%p\tSET_NOT_TEMP\n", (void *)current);
+        printf("%4zu SET_NOT_TEMP\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_ADOPT:
-        printf("%p\tADOPT\n", (void *)current);
+        printf("%4zu ADOPT\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_POP:
-        printf("%p\tPOP\n", (void *)current);
+        printf("%4zu POP\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_PEEK_GLOBAL:
-        printf(GTA_64_BIT ? "%p\tPEEK_GLOBAL\t%lu\n" : "%p\tPEEK_GLOBAL\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu PEEK_GLOBAL\t%lu\n" : "%4zu PEEK_GLOBAL\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_POKE_GLOBAL:
-        printf(GTA_64_BIT ? "%p\tPOKE_GLOBAL\t%lu\n" : "%p\tPOKE_GLOBAL\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu POKE_GLOBAL\t%lu\n" : "%4zu POKE_GLOBAL\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_PEEK_LOCAL:
-        printf(GTA_64_BIT ? "%p\tPEEK_LOCAL\t%lu\n" : "%p\tPEEK_LOCAL\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu PEEK_LOCAL\t%lu\n" : "%4zu PEEK_LOCAL\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_POKE_LOCAL:
-        printf(GTA_64_BIT ? "%p\tPOKE_LOCAL\t%lu\n" : "%p\tPOKE_LOCAL\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu POKE_LOCAL\t%lu\n" : "%4zu POKE_LOCAL\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_MARK_FP:
-        printf("%p\tMARK_FP\n", (void *)current);
+        printf("%4zu MARK_FP\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_PUSH_FP:
-        printf("%p\tPUSH_FP\n", (void *)current);
+        printf("%4zu PUSH_FP\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_POP_FP:
-        printf("%p\tPOP_FP\n", (void *)current);
+        printf("%4zu POP_FP\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_LOAD: {
         GTA_Computed_Value * value = GTA_TYPEX_P(*(current + 1));
         char * output = gta_computed_value_to_string(value);
-        printf(GTA_64_BIT ? "%p\tLOAD\t%lu\t%s\n" : "%p\tLOAD\t%u\t%s\n", (void *)current, GTA_TYPEX_UI(*(current + 1)), output);
+        printf(GTA_64_BIT ? "%4zu LOAD\t%lu\t%s\n" : "%4zu LOAD\t%u\t%s\n", current - start, GTA_TYPEX_UI(*(current + 1)), output);
         gcu_free(output);
         current += 2;
         break;
       }
       case GTA_BYTECODE_LOAD_LIBRARY:
-        printf(GTA_64_BIT ? "%p\tLOAD_LIBRARY\t%lu\n" : "%p\tLOAD_LIBRARY\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu LOAD_LIBRARY\t%lu\n" : "%4zu LOAD_LIBRARY\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_NEGATIVE:
-        printf("%p\tNEGATIVE\n", (void *)current);
+        printf("%4zu NEGATIVE\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_NOT:
-        printf("%p\tNOT\n", (void *)current);
+        printf("%4zu NOT\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_ADD:
-        printf("%p\tADD\n", (void *)current);
+        printf("%4zu ADD\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_SUBTRACT:
-        printf("%p\tSUBTRACT\n", (void *)current);
+        printf("%4zu SUBTRACT\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_MULTIPLY:
-        printf("%p\tMULTIPLY\n", (void *)current);
+        printf("%4zu MULTIPLY\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_DIVIDE:
-        printf("%p\tDIVIDE\n", (void *)current);
+        printf("%4zu DIVIDE\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_MODULO:
-        printf("%p\tMODULO\n", (void *)current);
+        printf("%4zu MODULO\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_LESS_THAN:
-        printf("%p\tLESS_THAN\n", (void *)current);
+        printf("%4zu LESS_THAN\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_LESS_THAN_EQUAL:
-        printf("%p\tLESS_THAN_EQUAL\n", (void *)current);
+        printf("%4zu LESS_THAN_EQUAL\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_GREATER_THAN:
-        printf("%p\tGREATER_THAN\n", (void *)current);
+        printf("%4zu GREATER_THAN\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_GREATER_THAN_EQUAL:
-        printf("%p\tGREATER_THAN_EQUAL\n", (void *)current);
+        printf("%4zu GREATER_THAN_EQUAL\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_EQUAL:
-        printf("%p\tEQUAL\n", (void *)current);
+        printf("%4zu EQUAL\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_NOT_EQUAL:
-        printf("%p\tNOT_EQUAL\n", (void *)current);
+        printf("%4zu NOT_EQUAL\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_AND:
-        printf("%p\tAND\n", (void *)current);
+        printf("%4zu AND\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_OR:
-        printf("%p\tOR\n", (void *)current);
+        printf("%4zu OR\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_JMP:
-        printf(GTA_64_BIT ? "%p\tJMP\t%ld\n" : "%p\tJMP\t%d\n", (void *)current, GTA_TYPEX_I(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu JMP\t%ld\n" : "%4zu JMP\t%d\n", current - start, GTA_TYPEX_I(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_JMPF:
-        printf(GTA_64_BIT ? "%p\tJMPF\t%ld\n" : "%p\tJMPF\t%d\n", (void *)current, GTA_TYPEX_I(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu JMPF\t%ld\n" : "%4zu JMPF\t%d\n", current - start, GTA_TYPEX_I(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_JMPT:
-        printf(GTA_64_BIT ? "%p\tJMPT\t%ld\n" : "%p\tJMPT\t%d\n", (void *)current, GTA_TYPEX_I(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu JMPT\t%ld\n" : "%4zu JMPT\t%d\n", current - start, GTA_TYPEX_I(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_PRINT:
-        printf("%p\tPRINT\n", (void *)current);
+        printf("%4zu PRINT\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_INDEX:
-        printf("%p\tINDEX\n", (void *)current);
+        printf("%4zu INDEX\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_PERIOD:
-        printf("%p\tPERIOD\t%p (%s)\n", (void *)current, GTA_TYPEX_P(*(current + 1)), (char *)GTA_TYPEX_P(*(current + 2)));
+        printf("%4zu PERIOD\t%p (%s)\n", current - start, GTA_TYPEX_P(*(current + 1)), (char *)GTA_TYPEX_P(*(current + 2)));
         current += 3;
         break;
       case GTA_BYTECODE_SLICE:
-        printf("%p\tSLICE\n", (void *)current);
+        printf("%4zu SLICE\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_ASSIGN_INDEX:
-        printf("%p\tASSIGN_INDEX\n", (void *)current);
+        printf("%4zu ASSIGN_INDEX\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_ITERATOR:
-        printf("%p\tITERATOR\n", (void *)current);
+        printf("%4zu ITERATOR\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_ITERATOR_NEXT:
-        printf("%p\tITERATOR_NEXT\n", (void *)current);
+        printf("%4zu ITERATOR_NEXT\n", current - start);
         ++current;
         break;
       case GTA_BYTECODE_CALL:
-        printf(GTA_64_BIT ? "%p\tCALL\t%lu\n" : "%p\tCALL\t%u\n", (void *)current, GTA_TYPEX_UI(*(current + 1)));
+        printf(GTA_64_BIT ? "%4zu CALL\t%lu\n" : "%4zu CALL\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       default:
-        printf("%p\tUnknown\n", (void *)current);
+        printf("%4zu Unknown\n", current - start);
         ++current;
         break;
     }

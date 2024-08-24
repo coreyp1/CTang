@@ -720,6 +720,29 @@ TEST(Attributes, Array) {
   }
 }
 
+TEST(Recursion, Fibonacci) {
+  {
+    // Fibonacci sequence.
+    TEST_PROGRAM_SETUP_NO_RUN(R"(
+      print("start ");
+      function fib(n) {
+        if (n <= 0) {
+          return 0;
+        }
+        else if (n <= 2) {
+          return 1;
+        }
+        return fib(n - 1) + fib(n - 2);
+      }
+      print(fib(10));
+      print(" end");
+    )");
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_STREQ(context->output->buffer, "start 55 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   int result = RUN_ALL_TESTS();

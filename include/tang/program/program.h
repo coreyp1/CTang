@@ -74,6 +74,16 @@ typedef uint32_t GTA_Program_Flags;
 #define GTA_PROGRAM_FLAG_DISABLE_BINARY 8
 
 /**
+ * Set the program to be interpreted as a template.
+ *
+ * The default mode is to interpret the program as a script.
+ *
+ * @see GTA_Program_Flags
+ * @see gta_program_create()
+ */
+#define GTA_PROGRAM_FLAG_IS_TEMPLATE 16
+
+/**
  * Holds the metadata for a program.
  */
 typedef struct GTA_Program {

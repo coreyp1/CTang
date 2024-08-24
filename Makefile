@@ -83,7 +83,7 @@ TESTFLAGS := `pkg-config --libs --cflags gtest`
 TANGLIBRARY := -L $(APP_DIR) -l$(SUITE)-$(PROJECT)$(BRANCH)
 
 
-all: $(APP_DIR)/$(TARGET) #$(APP_DIR)/tang ## Build the shared library
+all: $(APP_DIR)/$(TARGET) $(APP_DIR)/tang ## Build the shared library
 
 ####################################################################
 # Dependency Variables
@@ -352,6 +352,12 @@ DEP_VIRTUALMACHINE = \
 	include/tang/program/virtualMachine.h \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_EXECUTIONCONTEXT) \
+	$(DEP_PROGRAM)
+
+DEP_TANG = \
+	include/tang/tang.h \
+	$(DEP_COMPUTEDVALUEALL) \
+	$(DEP_MACROS) \
 	$(DEP_PROGRAM)
 
 
@@ -931,7 +937,7 @@ $(APP_DIR)/tang: \
 				$(APP_DIR)/$(TARGET)
 	@echo "\n### Compiling Tang Command Line Utility ###"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TANGLIBRARY)
+	$(CC) $(CFLAGS) $(INCLUDE) -o $@ $<  $(LDFLAGS) $(TANGLIBRARY)
 
 ####################################################################
 # Unit Tests
@@ -1020,14 +1026,15 @@ watch: ## Watch the file directory for changes and compile the target
 
 test-watch: ## Watch the file directory for changes and run the unit tests
 	@while true; do \
-					make --no-print-directory test; \
-					echo "\033[0;32m"; \
-					echo "#########################"; \
-					echo "# Waiting for changes.. #"; \
-					echo "#########################"; \
-					echo "\033[0m"; \
-					inotifywait -qr -e modify -e create -e delete -e move src include bison flex test Makefile --exclude '/\.'; \
-					done
+		make --no-print-directory all; \
+		make --no-print-directory test; \
+		echo "\033[0;32m"; \
+		echo "#########################"; \
+		echo "# Waiting for changes.. #"; \
+		echo "#########################"; \
+		echo "\033[0m"; \
+		inotifywait -qr -e modify -e create -e delete -e move src include bison flex test Makefile --exclude '/\.'; \
+		done
 
 test: ## Make and run the Unit tests
 test: \

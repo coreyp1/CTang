@@ -34,7 +34,14 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
     current = next++;
     switch (GTA_TYPEX_UI(*current)) {
       case GTA_BYTECODE_RETURN: {
-        context->result = GTA_TYPEX_P(context->stack->data[*sp]);
+        context->result = GTA_TYPEX_P(context->stack->data[*sp - 1]);
+        // Restore the stack by setting the stack pointer to the frame pointer.
+        *sp = context->fp;
+        // Push the result onto the stack.
+        if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(context->result))) {
+          context->result = gta_computed_value_error_out_of_memory;
+        }
+
         // Pop the frame pointer from the pc_stack.
         context->fp = context->pc_stack->count > 0
           ? GTA_TYPEX_UI(context->pc_stack->data[--context->pc_stack->count])

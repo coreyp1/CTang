@@ -18,5 +18,9 @@
 #ifndef G_TANG_H
 #define G_TANG_H
 
+#include <tang/macros.h>
+#include <tang/program/program.h>
+#include <tang/computedValue/computedValueAll.h>
+
 #endif // G_TANG_H
 

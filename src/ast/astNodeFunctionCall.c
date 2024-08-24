@@ -168,16 +168,20 @@ bool gta_ast_node_function_call_compile_to_bytecode(GTA_Ast_Node * self, GTA_Com
   GTA_VectorX * b = context->program->bytecode;
   GTA_VectorX * o = context->bytecode_offsets;
 
+  bool error_free = true;
+
   // Compile the arguments.
   assert(function_call->arguments);
   assert(function_call->arguments->count ? (bool)function_call->arguments->data : true);
-  for (size_t i = 0; i < GTA_VECTORX_COUNT(function_call->arguments); ++i) {
-    if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]), context)) {
-      return false;
-    }
+  for (size_t i = 0; error_free && (i < GTA_VECTORX_COUNT(function_call->arguments)); ++i) {
+    error_free &= true
+      && gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]), context)
+      && GTA_BYTECODE_APPEND(o, b->count)
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SET_NOT_TEMP))
+    ;
   }
 
-  return true
+  return error_free
   // Compile the LHS.
     && gta_ast_node_compile_to_bytecode(function_call->lhs, context)
   // Call the function
