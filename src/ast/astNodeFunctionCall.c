@@ -206,6 +206,7 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   int32_t pointer_offset = (int32_t)(size_t)(&((GTA_Computed_Value_Function *)0)->pointer);
   int32_t bound_object = (int32_t)(size_t)(&((GTA_Computed_Value_Function_Native *)0)->bound_object);
   int32_t callback = (int32_t)(size_t)(&((GTA_Computed_Value_Function_Native *)0)->callback);
+  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
 
   // Jump Labels
   GTA_Integer not_a_native_function;
@@ -241,9 +242,8 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
     && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
     && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, stack_padding_needed ? -8 : 0)
-  // Set the new frame pointer (r12) to the current stack pointer (rsp).
-  //   mov r12, rsp
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_R12, GTA_REG_RSP)
+  // Note: We can't change the frame pointer (r12) until we have processed all
+  // of the arguments, which may require the original r12 value.
   ;
 
   // Compile and push the arguments.
@@ -253,8 +253,18 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
     // Note: The arguments are pushed in reverse order.
     // TODO: Does these values need to be marked as not temporary?
     error_free &= true
+    // Compile the argument.
       && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[num_arguments - i - 1]), context)
-      && gta_push_reg__x86_64(v, GTA_REG_RAX);
+    // Set is_temporary to 0.
+    //   mov rdx, is_temporary_offset  ; Load the byte offset of is_temporary.
+    //   xor rcx, rcx                  ; The the value for non-temporary.
+    //   mov [rax + rdx], cl           ; Mark the value as non-temporary.
+      && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (int64_t)is_temporary_offset)
+      && gta_xor_reg_reg__x86_64(v, GTA_REG_RCX, GTA_REG_RCX)
+      && gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 0, GTA_REG_CL)
+    // Push the argument onto the stack.
+      && gta_push_reg__x86_64(v, GTA_REG_RAX)
+    ;
   }
 
   // Try to call the function.  If the function is not found, then clean up the
@@ -262,6 +272,10 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   return error_free
   // Load the lhs into rax.
     && gta_ast_node_compile_to_binary__x86_64(function_call->lhs, context)
+
+  // Set the new frame pointer (r12).
+  //   lea r12, [rsp + 8 * num_arguments]
+    && gta_lea_reg_ind__x86_64(v, GTA_REG_R12, GTA_REG_RSP, GTA_REG_NONE, 0, 8 * num_arguments)
 
   // If the lhs is not a native function, then see if it is a normal function.
   //   mov rdx, [rax + vtable_offset]
