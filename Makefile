@@ -855,6 +855,7 @@ $(OBJ_DIR)/computedValue/computedValueString.o: \
 $(OBJ_DIR)/program/binary.o: \
 	src/program/binary.c \
 	$(DEP_PROGRAM_BINARY) \
+	$(DEP_COMPUTEDVALUE) \
 	$(DEP_MACROS)
 
 $(OBJ_DIR)/program/bytecode.o: \

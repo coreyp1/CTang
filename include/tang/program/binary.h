@@ -461,6 +461,31 @@ bool gta_test_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Regist
  */
 bool gta_xor_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
 
+/**
+ * Debug helper function to push all registers to the stack.
+ *
+ * @param vector The vector in which to store the instructions.
+ * @return True on success, false on failure.
+ */
+bool gta_push_all_registers__x86_64(GCU_Vector8 * vector);
+
+/**
+ * Debug helper function to pop all registers from the stack.
+ *
+ * @param vector The vector in which to store the instructions.
+ * @return True on success, false on failure.
+ */
+bool gta_pop_all_registers__x86_64(GCU_Vector8 * vector);
+
+/**
+ * Debug helper function to print the entire stack.
+ *
+ * @param vector The vector to print.
+ * @return True on success, false on failure.
+ */
+bool gta_print_stack__x86_64(GCU_Vector8 * vector);
+
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

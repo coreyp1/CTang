@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <tang/program/binary.h>
+#include <tang/computedValue/computedValue.h>
 
 #define VECTOR_GROWTH_FACTOR ((double)1.5)
 
@@ -1414,4 +1415,73 @@ bool gta_xor_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
     return true;
   }
   return false;
+}
+
+bool gta_push_all_registers__x86_64(GCU_Vector8 * vector) {
+  assert(vector);
+  return true
+    && gta_push_reg__x86_64(vector, GTA_REG_R15)
+    && gta_push_reg__x86_64(vector, GTA_REG_R14)
+    && gta_push_reg__x86_64(vector, GTA_REG_R13)
+    && gta_push_reg__x86_64(vector, GTA_REG_R12)
+    && gta_push_reg__x86_64(vector, GTA_REG_R11)
+    && gta_push_reg__x86_64(vector, GTA_REG_R10)
+    && gta_push_reg__x86_64(vector, GTA_REG_R9)
+    && gta_push_reg__x86_64(vector, GTA_REG_R8)
+    && gta_push_reg__x86_64(vector, GTA_REG_RDI)
+    && gta_push_reg__x86_64(vector, GTA_REG_RSI)
+    && gta_push_reg__x86_64(vector, GTA_REG_RBP)
+    && gta_push_reg__x86_64(vector, GTA_REG_RBX)
+    && gta_push_reg__x86_64(vector, GTA_REG_RDX)
+    && gta_push_reg__x86_64(vector, GTA_REG_RCX)
+    && gta_push_reg__x86_64(vector, GTA_REG_RAX)
+  ;
+}
+
+bool gta_pop_all_registers__x86_64(GCU_Vector8 * vector) {
+  assert(vector);
+  return true
+    && gta_pop_reg__x86_64(vector, GTA_REG_RAX)
+    && gta_pop_reg__x86_64(vector, GTA_REG_RCX)
+    && gta_pop_reg__x86_64(vector, GTA_REG_RDX)
+    && gta_pop_reg__x86_64(vector, GTA_REG_RBX)
+    && gta_pop_reg__x86_64(vector, GTA_REG_RBP)
+    && gta_pop_reg__x86_64(vector, GTA_REG_RSI)
+    && gta_pop_reg__x86_64(vector, GTA_REG_RDI)
+    && gta_pop_reg__x86_64(vector, GTA_REG_R8)
+    && gta_pop_reg__x86_64(vector, GTA_REG_R9)
+    && gta_pop_reg__x86_64(vector, GTA_REG_R10)
+    && gta_pop_reg__x86_64(vector, GTA_REG_R11)
+    && gta_pop_reg__x86_64(vector, GTA_REG_R12)
+    && gta_pop_reg__x86_64(vector, GTA_REG_R13)
+    && gta_pop_reg__x86_64(vector, GTA_REG_R14)
+    && gta_pop_reg__x86_64(vector, GTA_REG_R15)
+  ;
+}
+
+static void GTA_CALL __print_stack__x86_64(uint64_t start, uint64_t end) {
+  printf("Stack:\n");
+  printf("    Start: %zu\n", start);
+  printf("    End:   %zu\n", end);
+  // for (uint64_t * ptr = start; ptr > end; ptr -= 1) {
+  //   printf("  %p\n", (void *)ptr);
+  // }
+}
+
+bool gta_print_stack__x86_64(GCU_Vector8 * vector) {
+  assert(vector);
+  return true
+  // Save all registers to the stack.
+    && gta_push_all_registers__x86_64(vector)
+  // Call the print stack helper.
+  //   mov rdi, r13
+  //   lea rsi, [rsp + (15 * 8)]
+  //   mov rax, __print_stack__x86_64
+    && gta_mov_reg_reg__x86_64(vector, GTA_REG_RDI, GTA_REG_R13)
+    && gta_lea_reg_ind__x86_64(vector, GTA_REG_RSI, GTA_REG_RSP, GTA_REG_NONE, 0, 15 * 8)
+    && gta_mov_reg_imm__x86_64(vector, GTA_REG_RAX, (int64_t)__print_stack__x86_64)
+    && gta_call_reg__x86_64(vector, GTA_REG_RAX)
+  // Restore all registers from the stack.
+    && gta_pop_all_registers__x86_64(vector)
+  ;
 }
