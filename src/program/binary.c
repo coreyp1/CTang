@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <tang/program/binary.h>
+#include <tang/program/compilerContext.h>
 #include <tang/computedValue/computedValue.h>
 
 #define VECTOR_GROWTH_FACTOR ((double)1.5)
@@ -87,6 +88,71 @@ bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   //   pop rbp
     && gta_mov_reg_reg__x86_64(vector, GTA_REG_RSP, GTA_REG_RBP)
     && gta_pop_reg__x86_64(vector, GTA_REG_RBP);
+}
+
+
+bool gta_binary_adopt__x86_64(GTA_Compiler_Context * context, GTA_Register target_reg, GTA_Register scratch_1, GTA_Register scratch_2, GTA_Register scratch_3) {
+  assert(context);
+  assert(context->binary_vector);
+  assert(REG_IS_INTEGER(target_reg));
+  assert(REG_IS_INTEGER(scratch_1));
+  assert(REG_IS_INTEGER(scratch_2));
+  assert(REG_IS_INTEGER(scratch_3));
+  GCU_Vector8 * v = context->binary_vector;
+
+  bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
+  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
+
+  GTA_Integer label_done;
+
+  // Overview:
+  // If the computed value is a singleton or temporary, then set the
+  // `is_temporary` value to 1 and store the value in the appropriate location.
+  // Otherwise, make a deep copy of the value and store the copy in the
+  // appropriate location.
+
+  return true
+  /////////////////////////////////////////////////////////////////////////////
+  // if (is_singleton || is_temporary) jump to done
+  /////////////////////////////////////////////////////////////////////////////
+  //   mov scratch_1, is_singleton_offset  ; Load the byte offset of is_singleton.
+  //   mov scratch_2, [target_reg + scratch_1]           ; Load the is_singleton value.
+  //   mov scratch_1, is_temporary_offset  ; Load the byte offset of is_temporary.
+  //   mov scratch_3, [target_reg + scratch_1]           ; Load the is_temporary value.
+  //   or scratch_2, r9                     ; Combine the is_singleton and is_temporary values.
+  //   jnz done                      ; If singleton, then jump to done.
+    && gta_mov_reg_imm__x86_64(v, scratch_1, (int64_t)is_singleton_offset)
+    && gta_mov_reg_ind__x86_64(v, scratch_2, target_reg, scratch_1, 1, 0)
+    && gta_mov_reg_imm__x86_64(v, scratch_1, (int64_t)is_temporary_offset)
+    && gta_mov_reg_ind__x86_64(v, scratch_3, target_reg, scratch_1, 1, 0)
+    && gta_or_reg_reg__x86_64(v, scratch_2, scratch_3)
+    && gta_jcc__x86_64(v, GTA_CC_NZ, 0xDEADBEEF)
+    && ((label_done = gta_compiler_context_get_label(context)) >= 0)
+    && gta_compiler_context_add_label_jump(context, label_done, v->count - 4)
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Call the deep copy function.
+  /////////////////////////////////////////////////////////////////////////////
+  //   mov rdi, target_reg                  ; Move the value to RDI.
+  //   mov rsi, r15                  ; Move the context to RSI.
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, target_reg)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+  // gta_computed_value_deep_copy(target_reg, context)
+    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_deep_copy)
+
+  /////////////////////////////////////////////////////////////////////////////
+  // done:
+  //   is_temporary = 0
+  /////////////////////////////////////////////////////////////////////////////
+  //   done:                         ; Done.
+  //   mov scratch_1, is_temporary_offset  ; Load the byte offset of is_temporary.
+  //   xor rcx, rcx                  ; The the value for non-temporary.
+  //   mov [target_reg + scratch_1], cl           ; Mark the value as non-temporary.
+    && gta_compiler_context_set_label(context, label_done, v->count)
+    && gta_mov_reg_imm__x86_64(v, scratch_1, (int64_t)is_temporary_offset)
+    && gta_xor_reg_reg__x86_64(v, GTA_REG_RCX, GTA_REG_RCX)
+    && gta_mov_ind_reg__x86_64(v, target_reg, scratch_1, 1, 0, GTA_REG_CL)
+  ;
 }
 
 

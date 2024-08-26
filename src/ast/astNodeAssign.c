@@ -231,19 +231,8 @@ static bool __compile_binary_lhs_is_identifier__x86_64(GTA_Ast_Node * lhs, GTA_C
   assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
-  bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
-  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
-
-  GTA_Integer label_done;
-  GTA_HashX_Value val;
-
-  // Overview:
-  // If the computed value is a singleton or temporary, then set the
-  // `is_temporary` value to 1 and store the value in the appropriate location.
-  // Otherwise, make a deep copy of the value and store the copy in the
-  // appropriate location.
-
   // Find the identifier's position in the global or local positions.
+  GTA_HashX_Value val;
   bool look_in_global = (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY)
     || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL);
   val = look_in_global
@@ -259,50 +248,10 @@ static bool __compile_binary_lhs_is_identifier__x86_64(GTA_Ast_Node * lhs, GTA_C
   int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
 
   return true
-  /////////////////////////////////////////////////////////////////////////////
-  // if (is_singleton || is_temporary) jump to done
-  /////////////////////////////////////////////////////////////////////////////
-  //   mov rdx, is_singleton_offset  ; Load the byte offset of is_singleton.
-  //   mov r8, [rax + rdx]           ; Load the is_singleton value.
-  //   mov rdx, is_temporary_offset  ; Load the byte offset of is_temporary.
-  //   mov r9, [rax + rdx]           ; Load the is_temporary value.
-  //   or r8, r9                     ; Combine the is_singleton and is_temporary values.
-  //   jnz done                      ; If singleton, then jump to done.
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (int64_t)is_singleton_offset)
-    && gta_mov_reg_ind__x86_64(v, GTA_REG_R8, GTA_REG_RAX, GTA_REG_RDX, 1, 0)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (int64_t)is_temporary_offset)
-    && gta_mov_reg_ind__x86_64(v, GTA_REG_R9, GTA_REG_RAX, GTA_REG_RDX, 1, 0)
-    && gta_or_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_R9)
-    && gta_jcc__x86_64(v, GTA_CC_NZ, 0xDEADBEEF)
-    && ((label_done = gta_compiler_context_get_label(context)) >= 0)
-    && gta_compiler_context_add_label_jump(context, label_done, v->count - 4)
+  // Adopt the value.
+    && gta_binary_adopt__x86_64(context, GTA_REG_RAX, GTA_REG_RDX, GTA_REG_R8, GTA_REG_R9)
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Call the deep copy function.
-  /////////////////////////////////////////////////////////////////////////////
-  //   mov rdi, rax                  ; Move the value to RDI.
-  //   mov rsi, r15                  ; Move the context to RSI.
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
-  // gta_computed_value_deep_copy(RAX, context)
-    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_deep_copy)
-
-  /////////////////////////////////////////////////////////////////////////////
-  // done:
-  //   is_temporary = 0
-  /////////////////////////////////////////////////////////////////////////////
-  //   done:                         ; Done.
-  //   mov rdx, is_temporary_offset  ; Load the byte offset of is_temporary.
-  //   xor rcx, rcx                  ; The the value for non-temporary.
-  //   mov [rax + rdx], cl           ; Mark the value as non-temporary.
-    && gta_compiler_context_set_label(context, label_done, v->count)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (int64_t)is_temporary_offset)
-    && gta_xor_reg_reg__x86_64(v, GTA_REG_RCX, GTA_REG_RCX)
-    && gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 0, GTA_REG_CL)
-
-  /////////////////////////////////////////////////////////////////////////////
   // Store the value in the appropriate location.
-  /////////////////////////////////////////////////////////////////////////////
   // RAX contains the final value of the RHS.
   // Copy the value from the indexed position (GTA_TYPEX_UI(val.value)) to RAX.
   // If global:

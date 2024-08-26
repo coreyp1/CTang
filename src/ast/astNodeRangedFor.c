@@ -378,8 +378,6 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
   GCU_Vector8 * v = context->binary_vector;
 
   // Offsets.
-  // bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
-  // bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
   void * vtable_offset = &((GTA_Computed_Value *)0)->vtable;
 
   // Find where the iterator is stored.  It will always be local.
@@ -420,10 +418,11 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
   //   4. Save the iterator.
   //   5. Call the iterator next.
   //   6. If the iterator next fails, jump to the end of the loop.
-  //   7. Assign the iterator value to the ranged-for variable.
-  //   8. Execute the block.
-  //   9. Load the iterator.
-  //   10. Jump to 5.
+  //   7. Adopt the iterator value.
+  //   8. Assign the iterator value to the ranged-for variable.
+  //   9. Execute the block.
+  //   10. Load the iterator.
+  //   11. Jump to 5.
 
   // Compile the expression.
   return true
@@ -476,20 +475,23 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, end_of_loop, v->count - 4)
 
-  // 7. Assign the iterator value to the ranged-for variable.
+  // 7. Adopt the value.
+    && gta_binary_adopt__x86_64(context, GTA_REG_RAX, GTA_REG_RDX, GTA_REG_R8, GTA_REG_R9)
+
+  // 8. Assign the iterator value to the ranged-for variable.
   //   mov [REG(12 or 13) + identifier_stack_location_offset], rax
     && gta_mov_ind_reg__x86_64(v, identifier_is_local ? GTA_REG_R12 : GTA_REG_R13, GTA_REG_NONE, 0, identifier_stack_location_offset, GTA_REG_RAX)
 
-  // 8. Execute the block.
+  // 9. Execute the block.
     && gta_ast_node_compile_to_binary__x86_64(ranged_for->block, context)
 
-  // 9. Load the iterator.
+  // 10. Load the iterator.
   // get_next_iterator_value:
   //   mov rdi, [r12 + iterator_stack_location_offset]
     && gta_compiler_context_set_label(context, get_next_iterator_value, v->count)
     && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_R12, GTA_REG_NONE, 0, iterator_stack_location_offset)
 
-  // 10. Jump to 5.
+  // 11. Jump to 5.
   //   jmp top_of_loop
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, top_of_loop, v->count - 4)

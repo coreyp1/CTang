@@ -189,6 +189,20 @@ bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function);
 bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 
 /**
+ * Helper function to add the commands to adopt a value.
+ *
+ * Uses RCX, too.
+ *
+ * @param context The compiler context.
+ * @param target_reg The register holding the value to be adopted.
+ * @param scratch_1 The first scratch register.
+ * @param scratch_2 The second scratch register.
+ * @param scratch_3 The third scratch register.
+ * @return True on success, false on failure.
+ */
+bool gta_binary_adopt__x86_64(GTA_Compiler_Context * context, GTA_Register target_reg, GTA_Register scratch_1, GTA_Register scratch_2, GTA_Register scratch_3);
+
+/**
  * x86_64 instruction: ADD reg, imm
  *
  * @param vector The vector in which to store the instruction.
