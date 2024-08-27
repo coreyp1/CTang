@@ -90,6 +90,8 @@ Here's the broad plan:
 ### Ghoti.io CUtil
 Tang makes use of another library of mine called CUtil.  Compile and intall it following the instructions [here](https://github.com/Ghoti-io/CUtil).
 
+I may move this project into the Ghoti.io group in the future and have it all as one big project.
+
 ### Install packages
 First, the necessary packages must be installed.
 ```
