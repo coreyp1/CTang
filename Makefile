@@ -1044,10 +1044,10 @@ test: \
 				$(APP_DIR)/testTangLanguageParse \
 				$(APP_DIR)/testTangLanguageExecuteSimple \
 				$(APP_DIR)/testTangLanguageExecuteComplex \
-				$(APP_DIR)/testBinary
+				$(APP_DIR)/testBinary \
+				$(APP_DIR)/tang
 #				$(APP_DIR)/libtestLibrary.so \
 #				$(APP_DIR)/test \
-#				$(APP_DIR)/tang
 	@echo "\033[0;30;43m"
 	@echo "############################"
 	@echo "### Running string tests ###"
@@ -1090,6 +1090,12 @@ test: \
 	@echo -n "########################################################"
 	@echo "\033[0m\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
+	@echo "\033[0;30;47m"
+	@echo "###################"
+	@echo "### Running CLI ###"
+	@echo -n "###################"
+	@echo "\033[0m\n"
+	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang ./test/fib.tang
 #	@echo "\033[0;32m"
 #	@echo "############################"
 #	@echo "### Running normal tests ###"
