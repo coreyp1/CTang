@@ -430,23 +430,29 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
           // The print function was not implemented.  Do nothing.
           break;
         }
-        if (context->output->byte_length == 0) {
-          // This is the first string to be printed, so we can just adopt it.
-          gta_unicode_string_destroy(context->output);
-          context->output = string;
-          break;
-        }
-        // Concatenate the string with the output.
-        GTA_Unicode_String * new_string = gta_unicode_string_concat(context->output, string);
-        gta_unicode_string_destroy(string);
-        if (!new_string) {
-          // If it failed, it is because we ran out of memory.
-          context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_error_out_of_memory);
+        if (!(context->program->flags & GTA_PROGRAM_FLAG_PRINT_TO_STDOUT)) {
+          // Concatenate the string with the output.
+          if (context->output->byte_length == 0) {
+            // This is the first string to be printed, so we can just adopt it.
+            gta_unicode_string_destroy(context->output);
+            context->output = string;
+            break;
+          }
+          GTA_Unicode_String * new_string = gta_unicode_string_concat(context->output, string);
+          gta_unicode_string_destroy(string);
+          if (!new_string) {
+            // If it failed, it is because we ran out of memory.
+            context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_error_out_of_memory);
+          }
+          else {
+            // No failures, so adopt the new string.
+            gta_unicode_string_destroy(context->output);
+            context->output = new_string;
+          }
         }
         else {
-          // No failures, so adopt the new string.
-          gta_unicode_string_destroy(context->output);
-          context->output = new_string;
+          // The string is already printed, so destroy it.
+          gta_unicode_string_destroy(string);
         }
         break;
       }

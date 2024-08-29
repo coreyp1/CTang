@@ -84,6 +84,16 @@ typedef uint32_t GTA_Program_Flags;
 #define GTA_PROGRAM_FLAG_IS_TEMPLATE 16
 
 /**
+ * Print the output directly to stdout.
+ *
+ * The output buffer will not be populated.
+ *
+ * @see GTA_Program_Flags
+ * @see gta_program_create()
+ */
+#define GTA_PROGRAM_FLAG_PRINT_TO_STDOUT 32
+
+/**
  * Holds the metadata for a program.
  */
 typedef struct GTA_Program {

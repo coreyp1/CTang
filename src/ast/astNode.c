@@ -42,6 +42,7 @@ GTA_Ast_Node * GTA_CALL gta_ast_node_create(GTA_PARSER_LTYPE location) {
 
 void GTA_CALL gta_ast_node_destroy(GTA_Ast_Node * self) {
   assert(self);
+  assert(self->vtable);
   !self->is_singleton && self->vtable->destroy
     ? self->vtable->destroy(self)
     : gta_ast_node_null_destroy(self);

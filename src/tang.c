@@ -135,7 +135,7 @@ int main(int argc, const char * argv[]) {
   }
   
   // Compile the code into a Program.
-  GTA_Program * program = gta_program_create_with_flags(eval, is_script ? 0 : GTA_PROGRAM_FLAG_IS_TEMPLATE);
+  GTA_Program * program = gta_program_create_with_flags(eval, GTA_PROGRAM_FLAG_PRINT_TO_STDOUT | (is_script ? 0 : GTA_PROGRAM_FLAG_IS_TEMPLATE));
   if (!program) {
     // Error: failed to compile the program.
     fprintf(stderr, "Error, failed to compile the program\n");
@@ -155,18 +155,9 @@ int main(int argc, const char * argv[]) {
     // Error: failed to execute the program.
     fprintf(stderr, "Error, failed to execute the program\n");
     error = 3;
-    goto EXECUTE_FAILED;
-  }
-
-  if (context->output) {
-    printf("%s", context->output->buffer);
   }
 
   // Intentional fall-through.
-  if (cleanup) {
-    gcu_free(buffer);
-  }
-EXECUTE_FAILED:
   if (cleanup) {
     gta_execution_context_destroy(context);
   }

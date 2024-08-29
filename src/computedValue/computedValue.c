@@ -1,6 +1,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 #include <cutil/memory.h>
 #include <tang/computedValue/computedValue.h>
@@ -123,7 +124,12 @@ GTA_Unicode_String * gta_computed_value_print(GTA_Computed_Value * self, GTA_Exe
   assert(self);
   assert(self->vtable);
   assert(self->vtable->print);
-  return self->vtable->print(self, context);
+  GTA_Unicode_String * result = self->vtable->print(self, context);
+  if (result && (context->program->flags & GTA_PROGRAM_FLAG_PRINT_TO_STDOUT)) {
+    // TODO: Escape if required.
+    printf("%s", result->buffer);
+  }
+  return result;
 }
 
 
