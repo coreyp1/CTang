@@ -185,12 +185,14 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
     }
+    stringBufferReset = false;
   }
   "<" {
     if (!add_to_string(&stringBuffer, &stringBufferLength, yytext, yyleng, &stringBufferReset)) {
       CLEANUP_BUFFER
       return GTA_PARSER_MEMORYERROR;
     }
+    stringBufferReset = false;
   }
   <<EOF>> {
     if (!eofSeen && stringBufferLength) {
@@ -593,4 +595,9 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
 }
 
 %%
+
+// Tang helper function to set the initial state to TEMPLATE.
+void gta_flex_set_state(int state, void * yyscanner) {
+  yy_push_state(state, yyscanner);
+}
 

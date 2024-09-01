@@ -2,13 +2,17 @@
 #include <assert.h>
 #include <tang/tangLanguage.h>
 #include <tang/tangScanner.h>
+
+#define YY_HEADER_EXPORT_START_CONDITIONS
 #include "flexTangScanner.h"
+#undef YY_HEADER_EXPORT_START_CONDITIONS
+
 #include <tang/macros.h>
 #include <tang/ast/astNodeIdentifier.h>
 #include <tang/ast/astNodeParseError.h>
 
-GTA_Ast_Node * gta_tang_parse(const char * source) {
-  GTA_Ast_Node * primary = gta_tang_primary_parse(source);
+GTA_Ast_Node * gta_tang_parse(const char * source, bool is_template) {
+  GTA_Ast_Node * primary = gta_tang_primary_parse(source, is_template);
   return primary;
     // NOTE: temporarily diabled because it does not pick up on global variable changes.
     // ? gta_tang_simplify(primary)
@@ -16,7 +20,10 @@ GTA_Ast_Node * gta_tang_parse(const char * source) {
 }
 
 
-GTA_Ast_Node * gta_tang_primary_parse(const char * source) {
+void gta_flex_set_state(int state, void * yyscanner);
+
+
+GTA_Ast_Node * gta_tang_primary_parse(const char * source, bool is_template) {
   assert(source);
   GTA_Ast_Node * ast = 0;
   GTA_Parser_Error parseError = 0;
@@ -27,12 +34,26 @@ GTA_Ast_Node * gta_tang_primary_parse(const char * source) {
     return 0;
   }
 
+  if (is_template) {
+    gta_flex_set_state(TEMPLATE, scanner);
+  }
+
   state = gta_flex_scan_string(source, scanner);
   GTA_Parser_parse(scanner, &ast, &parseError);
 
   gta_flex_delete_buffer(state, scanner);
   gta_flexlex_destroy(scanner);
   return ast;
+}
+
+
+GTA_Ast_Node * gta_tang_parse_script(const char * source) {
+  return gta_tang_primary_parse(source, false);
+}
+
+
+GTA_Ast_Node * gta_tang_parse_template(const char * source) {
+  return gta_tang_primary_parse(source, true);
 }
 
 

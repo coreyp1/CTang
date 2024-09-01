@@ -292,7 +292,9 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * 
   program->singletons->cleanup = computed_value_singleton_hash_cleanup_1;
 
   // Either parse the code into an AST or create a null AST.
-  program->ast = gta_tang_parse(code);
+  program->ast = program->flags & GTA_PROGRAM_FLAG_IS_TEMPLATE
+    ? gta_tang_parse_template(code)
+    : gta_tang_parse_script(code);
   if (!program->ast) {
     program->ast = gta_ast_node_create((GTA_PARSER_LTYPE) {
       .first_line = 0,

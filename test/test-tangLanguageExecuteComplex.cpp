@@ -14,9 +14,9 @@
 
 using namespace std;
 
-#define TEST_REUSABLE_PROGRAM(code) \
+#define TEST_REUSABLE_PROGRAM(code, flags) \
   gcu_memory_reset_counts(); \
-  GTA_Program * program = gta_program_create(code); \
+  GTA_Program * program = gta_program_create_with_flags(code, flags); \
   ASSERT_TRUE(program); \
   size_t alloc_count = gcu_get_alloc_count(); \
   size_t free_count = gcu_get_free_count();
@@ -36,18 +36,28 @@ using namespace std;
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
 
 #define TEST_PROGRAM_SETUP(code) \
-  TEST_REUSABLE_PROGRAM(code); \
+  TEST_REUSABLE_PROGRAM(code, GTA_PROGRAM_FLAG_DEFAULT); \
   TEST_CONTEXT_SETUP(); \
   ASSERT_TRUE(gta_program_execute(context)); \
   ASSERT_TRUE(context->result);
 
 #define TEST_PROGRAM_SETUP_NO_RUN(code) \
-  TEST_REUSABLE_PROGRAM(code); \
+  TEST_REUSABLE_PROGRAM(code, GTA_PROGRAM_FLAG_DEFAULT); \
   TEST_CONTEXT_SETUP();
 
 #define TEST_PROGRAM_TEARDOWN() \
   TEST_CONTEXT_TEARDOWN(); \
   TEST_REUSABLE_PROGRAM_TEARDOWN();
+
+#define TEST_TEMPLATE_SETUP(code) \
+  TEST_REUSABLE_PROGRAM(code, GTA_PROGRAM_FLAG_IS_TEMPLATE); \
+  TEST_CONTEXT_SETUP(); \
+  ASSERT_TRUE(gta_program_execute(context)); \
+  ASSERT_TRUE(context->result);
+
+#define TEST_TEMPLATE_SETUP_NO_RUN(code) \
+  TEST_REUSABLE_PROGRAM(code, GTA_PROGRAM_FLAG_IS_TEMPLATE); \
+  TEST_CONTEXT_SETUP();
 
 
 TEST(ControlFlow, IF) {
@@ -723,7 +733,7 @@ TEST(Attributes, Array) {
 TEST(Recursion, Fibonacci) {
   {
     // Fibonacci sequence.
-    TEST_PROGRAM_SETUP_NO_RUN(R"(
+    TEST_PROGRAM_SETUP(R"(
       print("start ");
       function fib(n) {
         if (n <= 0) {
@@ -737,7 +747,26 @@ TEST(Recursion, Fibonacci) {
       print(fib(10));
       print(" end");
     )");
-    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_STREQ(context->output->buffer, "start 55 end");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Execute, Template) {
+  {
+    // Fibonacci sequence.
+    TEST_TEMPLATE_SETUP(R"(<%
+      function fib(n) {
+        if (n <= 0) {
+          return 0;
+        }
+        else if (n <= 2) {
+          return 1;
+        }
+        return fib(n - 1) + fib(n - 2);
+      }
+      num = fib(10);
+    %>start <%= num %> end)");
     ASSERT_STREQ(context->output->buffer, "start 55 end");
     TEST_PROGRAM_TEARDOWN();
   }

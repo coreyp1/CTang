@@ -724,12 +724,23 @@ closedStatement
         gcu_free((void *)$1.str);
         break;
       }
-      $$ = (GTA_Ast_Node *)gta_ast_node_string_create(string, @1);
+
+      GTA_Ast_Node * template_string = (GTA_Ast_Node *)gta_ast_node_string_create(string, @1);
       if (!$$) {
         gta_unicode_string_destroy(string);
         parseError = &ErrorOutOfMemory;
         break;
       }
+
+      GTA_Ast_Node * print_template_string = (GTA_Ast_Node *)gta_ast_node_print_create(template_string, @1);
+      if (!print_template_string) {
+        gta_ast_node_destroy(template_string);
+        $$ = 0;
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
+
+      $$ = print_template_string;
     }
   | QUICKPRINTBEGINANDSTRING expression QUICKPRINTEND
     {
@@ -763,16 +774,25 @@ closedStatement
         break;
       }
 
+      GTA_Ast_Node * print_expression = (GTA_Ast_Node *)gta_ast_node_print_create($2, @2);
+      if (!print_expression) {
+        gta_ast_node_destroy(print_preceding);
+        $$ = 0;
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
+
       GCU_Vector64 * block = gcu_vector64_create(2);
       if (!block) {
         gta_ast_node_destroy(print_preceding);
+        gta_ast_node_destroy(print_expression);
         $$ = 0;
         parseError = &ErrorOutOfMemory;
         break;
       }
       block->cleanup = vector64_ast_node_cleanup;
       gcu_vector64_append(block, GCU_TYPE64_P((void *)print_preceding));
-      gcu_vector64_append(block, GCU_TYPE64_P((void *)$2));
+      gcu_vector64_append(block, GCU_TYPE64_P((void *)print_expression));
 
       $$ = (GTA_Ast_Node *)gta_ast_node_block_create(block, location);
       if (!$$) {

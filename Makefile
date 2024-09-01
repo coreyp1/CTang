@@ -1095,7 +1095,13 @@ test: \
 	@echo "### Running CLI ###"
 	@echo -n "###################"
 	@echo "\033[0m\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang ./test/fib.tang
+	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang -s ./test/fib.tang
+	@echo "\033[0;30;47m"
+	@echo "###################"
+	@echo "### Running CLI ###"
+	@echo -n "###################"
+	@echo "\033[0m\n"
+	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang ./test/fib.template.tang
 #	@echo "\033[0;32m"
 #	@echo "############################"
 #	@echo "### Running normal tests ###"

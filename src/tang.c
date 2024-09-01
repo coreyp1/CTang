@@ -19,8 +19,8 @@ void print_help_text() {
     "%-*s%s\n"
     "%-*s%s\n",
     width, "--evaluate ARGUMENT, -e ARGUMENT", "Evaluate supplied ARGUMENT instead of stdin",
-    indent, "--script -s", "Evaluate the code as a script rather than a template",
-    indent, "--cleanup -c", "Cleanup memory before shutdown (useful for valgrind debugging)",
+    indent, "--script, -s", "Evaluate the code as a script rather than a template",
+    indent, "--cleanup, -c", "Cleanup memory before shutdown (useful for valgrind debugging)",
     width, "--help, -h", "Display help message"
   );
 }
