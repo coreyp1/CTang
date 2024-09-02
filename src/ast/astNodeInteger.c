@@ -96,7 +96,7 @@ bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_
 }
 
 
-bool gta_ast_node_integer_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_MAYBE_UNUSED(GTA_Compiler_Context * context)) {
+bool gta_ast_node_integer_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   assert(self);
   assert(GTA_AST_IS_INTEGER(self));
   GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) self;
