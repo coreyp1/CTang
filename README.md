@@ -45,6 +45,7 @@ for (name : users) {
   print(name);
   print!("</li>\n");
 }
+%>
 </ul>
 ```
 
