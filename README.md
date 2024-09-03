@@ -139,3 +139,5 @@ There are so many things to flesh out, and I'm working on this in my spare time 
 I would like to have help getting this running on Windows.  I have a few things already stubbed out, but nothing is tested yet.  I haven't done proper Windows development in a long time.  Have any insight?  Send me an email. `pennycuff.c` is the first part, and Gmail is my email provider.
 
 There's plenty of other things (non-Windows) that could be done, too, such as supporting other architectures for the JIT, additional built-in libraries (math, date), compiler optimizations, etc.  If you want to work on something, but don't know what, just send me an email and we can talk!
+
+Update: look at the `TODO.md` file!!!
