@@ -192,7 +192,7 @@ BYTECODE_SET_NULL:
 }
 
 
-GTA_Program * gta_program_create(const char * code) {
+GTA_Program * gta_program_create(GTA_Language * language, const char * code) {
   assert(code);
 
   GTA_Program * program = gcu_malloc(sizeof(GTA_Program));
@@ -200,7 +200,7 @@ GTA_Program * gta_program_create(const char * code) {
     return 0;
   }
 
-  if (!gta_program_create_in_place(program, code)) {
+  if (!gta_program_create_in_place(program, language, code)) {
     gcu_free(program);
     return 0;
   }
@@ -208,7 +208,7 @@ GTA_Program * gta_program_create(const char * code) {
 }
 
 
-bool gta_program_create_in_place(GTA_Program * program, const char * code) {
+bool gta_program_create_in_place(GTA_Program * program, GTA_Language * language, const char * code) {
   // Initialize flags based on environment variables.
   GTA_Program_Flags flags = GTA_PROGRAM_FLAG_DEFAULT;
   if (getenv("TANG_DEBUG")) {
@@ -220,17 +220,17 @@ bool gta_program_create_in_place(GTA_Program * program, const char * code) {
   if (getenv("TANG_DISABLE_BINARY")) {
     flags |= GTA_PROGRAM_FLAG_DISABLE_BINARY;
   }
-  return gta_program_create_in_place_with_flags(program, code, flags);
+  return gta_program_create_in_place_with_flags(program, language, code, flags);
 }
 
 
-GTA_Program * gta_program_create_with_flags(const char * code, GTA_Program_Flags flags) {
+GTA_Program * gta_program_create_with_flags(GTA_Language * language, const char * code, GTA_Program_Flags flags) {
   GTA_Program * program = gcu_malloc(sizeof(GTA_Program));
   if (!program) {
     return 0;
   }
 
-  if (!gta_program_create_in_place_with_flags(program, code, flags)) {
+  if (!gta_program_create_in_place_with_flags(program, language, code, flags)) {
     gcu_free(program);
     return 0;
   }
@@ -238,11 +238,12 @@ GTA_Program * gta_program_create_with_flags(const char * code, GTA_Program_Flags
 }
 
 
-bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * code, GTA_Program_Flags flags) {
+bool gta_program_create_in_place_with_flags(GTA_Program * program, GTA_Language * language, const char * code, GTA_Program_Flags flags) {
   assert(program);
 
   // Initialize the program data structure.
   *program = (GTA_Program) {
+    .language = language,
     .code = code,
     .ast = 0,
     .bytecode = 0,

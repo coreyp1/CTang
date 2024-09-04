@@ -1,3 +1,5 @@
+
+#include <assert.h>
 #include <gtest/gtest.h>
 #include <cutil/memory.h>
 #include <iostream>
@@ -14,9 +16,13 @@
 
 using namespace std;
 
+
+GTA_Language * language;
+
+
 #define TEST_REUSABLE_PROGRAM(code) \
   gcu_memory_reset_counts(); \
-  GTA_Program * program = gta_program_create(code); \
+  GTA_Program * program = gta_program_create(language, code); \
   ASSERT_TRUE(program); \
   size_t alloc_count = gcu_get_alloc_count(); \
   size_t free_count = gcu_get_free_count();
@@ -52,7 +58,7 @@ using namespace std;
 
 TEST(Syntax, InvalidSyntax) {
   gcu_memory_reset_counts();
-  GTA_Program * program = gta_program_create("invalid syntax :(");
+  GTA_Program * program = gta_program_create(language, "invalid syntax :(");
   ASSERT_FALSE(program);
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
 }
@@ -2531,8 +2537,20 @@ TEST(Print, Simple) {
 }
 
 int main(int argc, char **argv) {
+  gcu_memory_reset_counts();
+  language = gta_language_create();
+  size_t alloc_count = gcu_get_alloc_count();
+  size_t free_count = gcu_get_free_count();
+  assert(language);
+
   ::testing::InitGoogleTest(&argc, argv);
   int result = RUN_ALL_TESTS();
+
+  gcu_memory_reset_counts(); \
+  gta_language_destroy(language);
+  assert((alloc_count + gcu_get_alloc_count()) == (free_count + gcu_get_free_count()));
+
+  // ICU cleanup.
   u_cleanup();
   return result;
 }

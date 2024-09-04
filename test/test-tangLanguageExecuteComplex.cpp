@@ -14,9 +14,13 @@
 
 using namespace std;
 
+
+GTA_Language * language;
+
+
 #define TEST_REUSABLE_PROGRAM(code, flags) \
   gcu_memory_reset_counts(); \
-  GTA_Program * program = gta_program_create_with_flags(code, flags); \
+  GTA_Program * program = gta_program_create_with_flags(language, code, flags); \
   ASSERT_TRUE(program); \
   size_t alloc_count = gcu_get_alloc_count(); \
   size_t free_count = gcu_get_free_count();
@@ -773,8 +777,20 @@ TEST(Execute, Template) {
 }
 
 int main(int argc, char **argv) {
+  gcu_memory_reset_counts();
+  language = gta_language_create();
+  size_t alloc_count = gcu_get_alloc_count();
+  size_t free_count = gcu_get_free_count();
+  assert(language);
+
   ::testing::InitGoogleTest(&argc, argv);
   int result = RUN_ALL_TESTS();
+
+  gcu_memory_reset_counts(); \
+  gta_language_destroy(language);
+  assert((alloc_count + gcu_get_alloc_count()) == (free_count + gcu_get_free_count()));
+
+  // ICU cleanup.
   u_cleanup();
   return result;
 }

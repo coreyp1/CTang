@@ -71,6 +71,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/program/compilerContext.o \
 	$(OBJ_DIR)/program/executionContext.o \
 	$(OBJ_DIR)/program/garbageCollector.o \
+	$(OBJ_DIR)/program/language.o \
 	$(OBJ_DIR)/program/program.o \
 	$(OBJ_DIR)/program/variable.o \
 	$(OBJ_DIR)/tangLanguage.o \
@@ -340,12 +341,18 @@ DEP_PROGRAM_VARIABLE = \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODE)
 
+DEP_PROGRAM_LANGUAGE = \
+	include/tang/program/language.h \
+	$(DEP_MACROS)
+
 DEP_PROGRAM = \
 	include/tang/program/program.h \
 	$(DEP_ASTNODE) \
 	$(DEP_BYTECODE) \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_EXECUTIONCONTEXT) \
+	$(DEP_PROGRAM_COMPILERCONTEXT) \
+	$(DEP_PROGRAM_LANGUAGE) \
 	$(DEP_UNICODESTRING)
 
 DEP_VIRTUALMACHINE = \
@@ -876,6 +883,10 @@ $(OBJ_DIR)/program/executionContext.o: \
 $(OBJ_DIR)/program/garbageCollector.o: \
 	src/program/garbageCollector.c \
 	$(DEP_GARBAGECOLLECTOR)
+
+$(OBJ_DIR)/program/language.o: \
+	src/program/language.c \
+	$(DEP_PROGRAM_LANGUAGE)
 
 $(OBJ_DIR)/program/program.o: \
 	src/program/program.c \

@@ -34,6 +34,8 @@ Remember that the use case for Tang is that a program may have thousands of temp
   2. There should be a way to declare **general** libraries (as described earlier) which `program` objects may consult when a library load is requested.
   3. There must be a way to declare **specific** libraries on a particular program.
 
+**NOTE:** Implementation of this has been started.
+
 ## Libraries To Implement
 These are not necessarily stand-alone (e.g., `date`).  Libraries should make use of singleton objects, if possible.
 

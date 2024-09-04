@@ -18,6 +18,7 @@ extern "C" {
 #include <tang/computedValue/computedValue.h>
 #include <tang/program/bytecode.h>
 #include <tang/program/executionContext.h>
+#include <tang/program/language.h>
 
 /**
  * The flags for a program.
@@ -98,6 +99,10 @@ typedef uint32_t GTA_Program_Flags;
  */
 typedef struct GTA_Program {
   /**
+   * The language with which the program should be executed.
+   */
+  GTA_Language * language;
+  /**
    * The code that the program was created from.
    */
   const char * code;
@@ -160,10 +165,11 @@ typedef struct GTA_Program {
  * | TANG_DISABLE_BYTECODE |  | If set, then programs will not be compiled to bytecode. |
  * | TANG_DISABLE_BINARY |  | If set, then programs will not be compiled to binary. |
  *
+ * @param language The language with which the program should be executed.
  * @param code The code to create the program from.
  * @return The new program or null if the program could not be created.
  */
-GTA_NO_DISCARD GTA_Program * gta_program_create(const char * code);
+GTA_NO_DISCARD GTA_Program * gta_program_create(GTA_Language * language, const char * code);
 
 /**
  * Create a new program from the given code in the memory location provided.
@@ -177,19 +183,21 @@ GTA_NO_DISCARD GTA_Program * gta_program_create(const char * code);
  * @see gta_program_destroy_in_place()
  *
  * @param program The memory location to create the program in.
+ * @param language The language with which the program should be executed.
  * @param code The code to create the program from.
  * @return True if the program was created successfully, false otherwise.
  */
-bool gta_program_create_in_place(GTA_Program * program, const char * code);
+bool gta_program_create_in_place(GTA_Program * program, GTA_Language * language, const char * code);
 
 /**
  * Create a new program from the given code with the given flags.
  *
+ * @param language The language with which the program should be executed.
  * @param code The code to create the program from.
  * @param flags The flags to create the program with.
  * @return The new program or null if the program could not be created.
  */
-GTA_NO_DISCARD GTA_Program * gta_program_create_with_flags(const char * code, GTA_Program_Flags flags);
+GTA_NO_DISCARD GTA_Program * gta_program_create_with_flags(GTA_Language * language, const char * code, GTA_Program_Flags flags);
 
 /**
  * Create a new program from the given code with the given flags in the memory
@@ -201,11 +209,12 @@ GTA_NO_DISCARD GTA_Program * gta_program_create_with_flags(const char * code, GT
  * @see gta_program_destroy_in_place()
  *
  * @param program The memory location to create the program in.
+ * @param language The language with which the program should be executed.
  * @param code The code to create the program from.
  * @param flags The flags to create the program with.
  * @return True if the program was created successfully, false otherwise.
  */
-bool gta_program_create_in_place_with_flags(GTA_Program * program, const char * code, GTA_Program_Flags flags);
+bool gta_program_create_in_place_with_flags(GTA_Program * program, GTA_Language * language, const char * code, GTA_Program_Flags flags);
 
 /**
  * Destroy the given program.

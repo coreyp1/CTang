@@ -133,9 +133,18 @@ int main(int argc, const char * argv[]) {
     buffer[size] = '\0';
     eval = buffer;
   }
+
+  // Initialize the language.
+  GTA_Language * language = gta_language_create();
+  if (!language) {
+    // Error: failed to create the language.
+    fprintf(stderr, "Error, failed to create the language\n");
+    error = 1;
+    goto LANGUAGE_CREATE_FAILED;
+  }
   
   // Compile the code into a Program.
-  GTA_Program * program = gta_program_create_with_flags(eval, GTA_PROGRAM_FLAG_PRINT_TO_STDOUT | (is_script ? 0 : GTA_PROGRAM_FLAG_IS_TEMPLATE));
+  GTA_Program * program = gta_program_create_with_flags(language, eval, GTA_PROGRAM_FLAG_PRINT_TO_STDOUT | (is_script ? 0 : GTA_PROGRAM_FLAG_IS_TEMPLATE));
   if (!program) {
     // Error: failed to compile the program.
     fprintf(stderr, "Error, failed to compile the program\n");
@@ -166,5 +175,9 @@ CONTEXT_CREATE_FAILED:
     gta_program_destroy(program);
   }
 COMPILE_FAILED:
+  if (cleanup) {
+    gta_language_destroy(language);
+  }
+LANGUAGE_CREATE_FAILED:
   return error;
 }
