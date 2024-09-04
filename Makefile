@@ -66,6 +66,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/computedValue/computedValueIterator.o \
 	$(OBJ_DIR)/computedValue/computedValueMap.o \
 	$(OBJ_DIR)/computedValue/computedValueString.o \
+	$(OBJ_DIR)/library/library.o \
 	$(OBJ_DIR)/program/binary.o \
 	$(OBJ_DIR)/program/bytecode.o \
 	$(OBJ_DIR)/program/compilerContext.o \
@@ -322,6 +323,11 @@ DEP_COMPUTEDVALUEALL = \
 	$(DEP_COMPUTEDVALUEMAP) \
 	$(DEP_COMPUTEDVALUESTRING)
 
+DEP_LIBRARY = \
+	include/tang/library/library.h \
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_MACROS)
+
 DEP_TANGLANGUAGE = \
 	$(DEP_ASTNODE)
 
@@ -343,6 +349,7 @@ DEP_PROGRAM_VARIABLE = \
 
 DEP_PROGRAM_LANGUAGE = \
 	include/tang/program/language.h \
+	$(DEP_LIBRARY) \
 	$(DEP_MACROS)
 
 DEP_PROGRAM = \
@@ -351,6 +358,7 @@ DEP_PROGRAM = \
 	$(DEP_BYTECODE) \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_EXECUTIONCONTEXT) \
+	$(DEP_LIBRARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_PROGRAM_LANGUAGE) \
 	$(DEP_UNICODESTRING)
@@ -433,7 +441,7 @@ $(OBJ_DIR)/ast/astNode.o: \
 	src/ast/astNode.c \
 	$(DEP_ASTNODE) \
 	$(DEP_MACROS) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_BYTECODE) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
@@ -444,7 +452,7 @@ $(OBJ_DIR)/ast/astNodeArray.o: \
 	src/ast/astNodeArray.c \
 	$(DEP_ASTNODEARRAY) \
 	$(DEP_ASTNODEIDENTIFIER) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_COMPUTEDVALUEARRAY) \
 	$(DEP_COMPUTEDVALUEERROR) \
@@ -456,7 +464,7 @@ $(OBJ_DIR)/ast/astNodeAssign.o: \
 	src/ast/astNodeAssign.c \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEIDENTIFIER) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_ASTNODEINDEX) \
 	$(DEP_OPCODE) \
@@ -471,7 +479,7 @@ $(OBJ_DIR)/ast/astNodeBinary.o: \
 	$(DEP_ASTNODEBOOLEAN) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_UNICODESTRING) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_OPCODE) \
@@ -483,7 +491,7 @@ $(OBJ_DIR)/ast/astNodeBlock.o: \
 	$(DEP_ASTNODEFUNCTION) \
 	$(DEP_ASTNODEGLOBAL) \
 	$(DEP_ASTNODEUSE) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -492,7 +500,7 @@ $(OBJ_DIR)/ast/astNodeBoolean.o: \
 	src/ast/astNodeBoolean.c \
 	$(DEP_ASTNODEBOOLEAN) \
 	$(DEP_COMPUTEDVALUEBOOLEAN) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -500,7 +508,7 @@ $(OBJ_DIR)/ast/astNodeBoolean.o: \
 $(OBJ_DIR)/ast/astNodeBreak.o: \
 	src/ast/astNodeBreak.c \
 	$(DEP_ASTNODEBREAK) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_COMPUTED_VALUE) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
@@ -513,7 +521,7 @@ $(OBJ_DIR)/ast/astNodeCast.o: \
 	$(DEP_ASTNODEFLOAT) \
 	$(DEP_ASTNODEBOOLEAN) \
 	$(DEP_ASTNODESTRING) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -521,7 +529,7 @@ $(OBJ_DIR)/ast/astNodeCast.o: \
 $(OBJ_DIR)/ast/astNodeContinue.o: \
 	src/ast/astNodeContinue.c \
 	$(DEP_ASTNODECONTINUE) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -532,7 +540,7 @@ $(OBJ_DIR)/ast/astNodeDoWhile.o: \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEBINARY) \
 	$(DEP_ASTNODEIDENTIFIER) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -543,7 +551,7 @@ $(OBJ_DIR)/ast/astNodeFor.o: \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEBINARY) \
 	$(DEP_ASTNODEIDENTIFIER) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -551,7 +559,7 @@ $(OBJ_DIR)/ast/astNodeFor.o: \
 $(OBJ_DIR)/ast/astNodeFloat.o: \
 	src/ast/astNodeFloat.c \
 	$(DEP_ASTNODEFLOAT) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_COMPUTEDVALUEERROR) \
@@ -566,7 +574,7 @@ $(OBJ_DIR)/ast/astNodeFunction.o: \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_COMPUTEDVALUEFUNCTION) \
 	$(DEP_MACROS) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_PROGRAM_VARIABLE) \
 	$(DEP_OPCODE) \
@@ -575,7 +583,7 @@ $(OBJ_DIR)/ast/astNodeFunction.o: \
 $(OBJ_DIR)/ast/astNodeFunctionCall.o: \
 	src/ast/astNodeFunctionCall.c \
 	$(DEP_ASTNODEFUNCTIONCALL) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEFUNCTION) \
 	$(DEP_COMPUTEDVALUEFUNCTIONNATIVE) \
@@ -588,7 +596,7 @@ $(OBJ_DIR)/ast/astNodeGlobal.o: \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEGLOBAL) \
 	$(DEP_ASTNODEIDENTIFIER) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -604,7 +612,7 @@ $(OBJ_DIR)/ast/astNodeIdentifier.o: \
 	$(DEP_ASTNODEPARSEERROR) \
 	$(DEP_ASTNODESTRING) \
 	$(DEP_ASTNODEUSE) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_VARIABLE) \
@@ -613,7 +621,7 @@ $(OBJ_DIR)/ast/astNodeIdentifier.o: \
 $(OBJ_DIR)/ast/astNodeIfElse.o: \
 	src/ast/astNodeIfElse.c \
 	$(DEP_ASTNODEIFELSE) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -621,7 +629,7 @@ $(OBJ_DIR)/ast/astNodeIfElse.o: \
 $(OBJ_DIR)/ast/astNodeIndex.o: \
 	src/ast/astNodeIndex.c \
 	$(DEP_ASTNODEINDEX) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -631,7 +639,7 @@ $(OBJ_DIR)/ast/astNodeInteger.o: \
 	$(DEP_ASTNODEINTEGER) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUEERROR) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -640,7 +648,7 @@ $(OBJ_DIR)/ast/astNodeLibrary.o: \
 	src/ast/astNodeLibrary.c \
 	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_ASTNODELIBRARY) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_OPCODE) \
@@ -650,7 +658,7 @@ $(OBJ_DIR)/ast/astNodeMap.o: \
 	src/ast/astNodeMap.c \
 	$(DEP_ASTNODEMAP) \
 	$(DEP_ASTNODESTRING) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_COMPUTEDVALUEMAP) \
 	$(DEP_COMPUTEDVALUEERROR) \
@@ -666,7 +674,7 @@ $(OBJ_DIR)/ast/astNodePeriod.o: \
 	src/ast/astNodePeriod.c \
 	$(DEP_ASTNODEPERIOD) \
 	$(DEP_ASTNODESTRING) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -674,7 +682,7 @@ $(OBJ_DIR)/ast/astNodePeriod.o: \
 $(OBJ_DIR)/ast/astNodePrint.o: \
 	src/ast/astNodePrint.c \
 	$(DEP_ASTNODEPRINT) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_OPCODE) \
@@ -686,7 +694,7 @@ $(OBJ_DIR)/ast/astNodeRangedFor.o: \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEBINARY) \
 	$(DEP_ASTNODEIDENTIFIER) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_COMPUTEDVALUEITERATOR) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY) \
@@ -696,7 +704,7 @@ $(OBJ_DIR)/ast/astNodeRangedFor.o: \
 $(OBJ_DIR)/ast/astNodeReturn.o: \
 	src/ast/astNodeReturn.c \
 	$(DEP_ASTNODERETURN) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -704,7 +712,7 @@ $(OBJ_DIR)/ast/astNodeReturn.o: \
 $(OBJ_DIR)/ast/astNodeSlice.o: \
 	src/ast/astNodeSlice.c \
 	$(DEP_ASTNODESLICE) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -715,7 +723,7 @@ $(OBJ_DIR)/ast/astNodeString.o: \
 	$(DEP_UNICODESTRING) \
 	$(DEP_COMPUTEDVALUESTRING) \
 	$(DEP_COMPUTEDVALUEERROR) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -723,7 +731,7 @@ $(OBJ_DIR)/ast/astNodeString.o: \
 $(OBJ_DIR)/ast/astNodeTernary.o: \
 	src/ast/astNodeTernary.c \
 	$(DEP_ASTNODETERNARY) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -735,7 +743,7 @@ $(OBJ_DIR)/ast/astNodeUnary.o: \
 	$(DEP_ASTNODEFLOAT) \
 	$(DEP_ASTNODEBOOLEAN) \
 	$(DEP_ASTNODESTRING) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -745,7 +753,7 @@ $(OBJ_DIR)/ast/astNodeUse.o: \
 	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_ASTNODEPARSEERROR) \
 	$(DEP_ASTNODEUSE) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_VARIABLE) \
@@ -757,7 +765,7 @@ $(OBJ_DIR)/ast/astNodeWhile.o: \
 	$(DEP_ASTNODEASSIGN) \
 	$(DEP_ASTNODEBINARY) \
 	$(DEP_ASTNODEIDENTIFIER) \
-	$(DEP_BINARY) \
+	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
@@ -858,6 +866,10 @@ $(OBJ_DIR)/computedValue/computedValueString.o: \
 	$(DEP_COMPUTEDVALUESTRING) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_UNICODESTRING)
+
+$(OBJ_DIR)/library/library.o: \
+	src/library/library.c \
+	$(DEP_LIBRARY)
 
 $(OBJ_DIR)/program/binary.o: \
 	src/program/binary.c \
@@ -1005,7 +1017,7 @@ $(APP_DIR)/testTangLanguageExecuteComplex: \
 
 $(APP_DIR)/testBinary: \
 	test/test-binary.cpp \
-	$(DEP_BINARY)
+	$(DEP_PROGRAM_BINARY)
 	@echo "\n### Compiling Binary JIT functions Test ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)

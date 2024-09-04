@@ -16,6 +16,7 @@ extern "C" {
 #include <cutil/hash.h>
 #include <tang/ast/astNode.h>
 #include <tang/computedValue/computedValue.h>
+#include <tang/library/library.h>
 #include <tang/program/bytecode.h>
 #include <tang/program/executionContext.h>
 #include <tang/program/language.h>
@@ -102,6 +103,10 @@ typedef struct GTA_Program {
    * The language with which the program should be executed.
    */
   GTA_Language * language;
+  /**
+   * The library entries associated with this program.
+   */
+  GTA_Library * library;
   /**
    * The code that the program was created from.
    */

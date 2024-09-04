@@ -244,6 +244,7 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, GTA_Language 
   // Initialize the program data structure.
   *program = (GTA_Program) {
     .language = language,
+    .library = 0,
     .code = code,
     .ast = 0,
     .bytecode = 0,
@@ -253,6 +254,12 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, GTA_Language 
     .singletons = 0,
     .attributes = 0,
   };
+
+  // Create the library.
+  program->library = gta_library_create();
+  if (!program->library) {
+    goto LIBRARY_CREATE_FAILURE;
+  }
 
   // Create the attributes hash.
   program->attributes = GTA_HASHX_CREATE(32);
@@ -362,6 +369,9 @@ SINGLETON_HASH_CREATE_FAILURE:
 ATTRIBUTE_HASH_POPULATE_FAILURE:
   GTA_HASHX_DESTROY(program->attributes);
 ATTRIBUTE_HASH_CREATE_FAILURE:
+  gta_library_destroy(program->library);
+  program->library = 0;
+LIBRARY_CREATE_FAILURE:
   return false;
 }
 
@@ -375,6 +385,11 @@ void gta_program_destroy(GTA_Program * self) {
 
 void gta_program_destroy_in_place(GTA_Program * self) {
   assert(self);
+
+  // Destroy the library.
+  if (self->library) {
+    gta_library_destroy(self->library);
+  }
 
   // Destroy the AST.
   if (self->ast) {
