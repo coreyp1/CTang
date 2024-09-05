@@ -626,7 +626,7 @@ TEST(NativeFunction, Library) {
       print(a());
       print(" end");
     )");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_STREQ(context->output->buffer, "start 3 end");
@@ -640,7 +640,7 @@ TEST(NativeFunction, Library) {
       print(a(1, 2));
       print(" end");
     )");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_add));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_add));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_STREQ(context->output->buffer, "start 3 end");
@@ -654,7 +654,7 @@ TEST(NativeFunction, Library) {
       print(a());
       print(" end");
     )");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_str_len));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_str_len));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_STREQ(context->output->buffer, "start 3 end");

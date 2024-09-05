@@ -67,7 +67,7 @@ typedef struct GTA_Execution_Context {
   /**
    * A hash table used to store libraries and user-defined global variables.
    */
-  GTA_HashX * globals;
+  GTA_Library * library;
   /**
    * A user-defined pointer that can be used to store additional data.
    */
@@ -127,16 +127,6 @@ void gta_execution_context_destroy(GTA_Execution_Context * context);
  * @param context The Context object to destroy.
  */
 void gta_execution_context_destroy_in_place(GTA_Execution_Context * context);
-
-/**
- * Adds a global variable to the execution context.
- *
- * @param context The execution context.
- * @param identifier The name of the global variable.
- * @param func The function to be invoked to create the Computed Value.
- * @return true on success, false on failure.
- */
-bool gta_execution_context_add_library(GTA_Execution_Context * context, const char * identifier, GTA_Execution_Context_Global_Create func);
 
 #ifdef __cplusplus
 }

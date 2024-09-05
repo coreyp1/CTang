@@ -342,6 +342,7 @@ typedef struct GTA_Computed_Value_Map GTA_Computed_Value_Map;
 typedef struct GTA_Computed_Value_String GTA_Computed_Value_String;
 typedef struct GTA_Computed_Value_VTable GTA_Computed_Value_VTable;
 typedef struct GTA_Execution_Context GTA_Execution_Context;
+typedef struct GTA_Library GTA_Library;
 typedef struct GTA_Program GTA_Program;
 typedef struct GTA_Variable_Scope GTA_Variable_Scope;
 

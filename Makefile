@@ -724,10 +724,12 @@ $(OBJ_DIR)/ast/astNodeUse.o: \
 	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_ASTNODEPARSEERROR) \
 	$(DEP_ASTNODEUSE) \
-	$(DEP_PROGRAM_COMPILERCONTEXT) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_LIBRARY) \
 	$(DEP_OPCODE) \
-	$(DEP_PROGRAM_VARIABLE) \
-	$(DEP_PROGRAM_BINARY)
+	$(DEP_PROGRAM_COMPILERCONTEXT) \
+	$(DEP_PROGRAM_BINARY) \
+	$(DEP_PROGRAM_VARIABLE)
 
 $(OBJ_DIR)/ast/astNodeWhile.o: \
 	src/ast/astNodeWhile.c \
@@ -838,6 +840,9 @@ $(OBJ_DIR)/computedValue/computedValueString.o: \
 
 $(OBJ_DIR)/library/library.o: \
 	src/library/library.c \
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_LIBRARY)
 
 $(OBJ_DIR)/program/binary.o: \
@@ -859,7 +864,9 @@ $(OBJ_DIR)/program/compilerContext.o: \
 
 $(OBJ_DIR)/program/executionContext.o: \
 	src/program/executionContext.c \
-	$(DEP_EXECUTIONCONTEXT)
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_EXECUTIONCONTEXT) \
+	$(DEP_LIBRARY)
 
 $(OBJ_DIR)/program/garbageCollector.o: \
 	src/program/garbageCollector.c \
@@ -889,7 +896,8 @@ $(OBJ_DIR)/program/virtualMachine.o: \
 	src/program/virtualMachine.c \
 	$(DEP_VIRTUALMACHINE) \
 	$(DEP_BYTECODE) \
-	$(DEP_COMPUTEDVALUEALL)
+	$(DEP_COMPUTEDVALUEALL) \
+	$(DEP_LIBRARY)
 
 $(OBJ_DIR)/tangParser.o: \
 				$(GEN_DIR)/tangParser.c \

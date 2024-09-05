@@ -4,9 +4,10 @@
 #include <string.h>
 #include <cutil/memory.h>
 #include <cutil/string.h>
+#include <tang/computedValue/computedValueAll.h>
+#include <tang/library/library.h>
 #include <tang/program/bytecode.h>
 #include <tang/program/virtualMachine.h>
-#include <tang/computedValue/computedValueAll.h>
 
 bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
   if (!context || !context->program || !context->program->bytecode) {
@@ -273,9 +274,9 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       case GTA_BYTECODE_LOAD_LIBRARY: {
         // Load a library value.
         // The value will be left on the stack.
-        GTA_HashX_Value func = GTA_HASHX_GET(context->globals, GTA_TYPEX_UI(*next++));
-        GTA_Computed_Value * library_value = func.exists
-          ? (GTA_Function_Converter){.b = GTA_TYPEX_P(func.value)}.f(context)
+        GTA_Library_Callback func = gta_library_get_library(context->library, GTA_TYPEX_UI(*next++));
+        GTA_Computed_Value * library_value = func
+          ? func(context)
           : gta_computed_value_null;
         if (!library_value) {
           context->result = gta_computed_value_error_out_of_memory;

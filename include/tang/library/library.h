@@ -73,16 +73,39 @@ void gta_library_destroy_in_place(GTA_Library * library);
  * @param func The function to be invoked to create the Computed Value.
  * @return true on success, false on failure.
  */
-bool gta_library_add_library(GTA_Library * library, GTA_UInteger hash, GTA_Library_Callback func);
+bool gta_library_add_library_from_hash(GTA_Library * library, GTA_UInteger hash, GTA_Library_Callback func);
+
+/**
+ * Adds a library entry to the execution context.
+ *
+ * @param context The execution context.
+ * @param identifier The character string that identifies the library.
+ * @param func The function to be invoked to create the Computed Value.
+ * @return true on success, false on failure.
+ */
+bool gta_library_add_library_from_string(GTA_Library * library, const char * identifier, GTA_Library_Callback func);
 
 /**
  * Get the library entry for the given hash.
  *
  * @param library The library object.
  * @param hash The hash of the library entry identifier.
- * @return GTA_HashX_Value 
+ * @return The callback function, or NULL on failure.
  */
-GTA_HashX_Value gta_library_get_library(GTA_Library * library, GTA_UInteger hash);
+GTA_Library_Callback gta_library_get_library(GTA_Library * library, GTA_UInteger hash);
+
+/**
+ * Load the library entry for the given hash.
+ *
+ * This function will search the execution context's library for the supplied
+ * hash.  If the hash is not found, the Progam's library will be searched,
+ * followed by the Language library.
+ *
+ * @param context The execution context.
+ * @param hash The hash of the library entry identifier.
+ * @return The callback function, or NULL on failure.
+ */
+GTA_Library_Callback GTA_CALL gta_library_get_from_context(GTA_Execution_Context * context, GTA_UInteger hash);
 
 
 #ifdef __cplusplus

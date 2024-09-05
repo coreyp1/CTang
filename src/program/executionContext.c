@@ -3,6 +3,7 @@
 #include <string.h>
 #include <cutil/memory.h>
 #include <tang/computedValue/computedValue.h>
+#include <tang/library/library.h>
 #include <tang/program/executionContext.h>
 
 GTA_Execution_Context * gta_execution_context_create(GTA_Program * program) {
@@ -29,9 +30,9 @@ bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_
   if (!garbage_collection) {
     goto GARBAGE_COLLECTION_VECTOR_CREATE_FAILED;
   }
-  GTA_HashX * globals = GTA_HASHX_CREATE(32);
-  if (!globals) {
-    goto GLOBALS_HASH_CREATE_FAILED;
+  GTA_Library * library = gta_library_create();
+  if (!library) {
+    goto LIBRARY_CREATE_FAILED;
   }
   GTA_Unicode_String * output = gta_unicode_string_create("", 0, GTA_UNICODE_STRING_TYPE_TRUSTED);
   if (!output) {
@@ -46,7 +47,7 @@ bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_
     .stack = stack,
     .pc_stack = 0,
     .garbage_collection = garbage_collection,
-    .globals = globals,
+    .library = library,
     .user_data = 0,
     .fp = 0,
   };
@@ -54,8 +55,8 @@ bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_
 
   // Failure conditions.
 OUTPUT_STRING_CREATE_FAILED:
-  GTA_HASHX_DESTROY(globals);
-GLOBALS_HASH_CREATE_FAILED:
+  gta_library_destroy(library);
+LIBRARY_CREATE_FAILED:
   GTA_VECTORX_DESTROY(garbage_collection);
 GARBAGE_COLLECTION_VECTOR_CREATE_FAILED:
   GTA_VECTORX_DESTROY(stack);
@@ -82,23 +83,6 @@ void gta_execution_context_destroy_in_place(GTA_Execution_Context * self) {
     gta_computed_value_destroy(GTA_TYPEX_P(self->garbage_collection->data[i]));
   }
   GTA_VECTORX_DESTROY(self->garbage_collection);
-  GTA_HASHX_DESTROY(self->globals);
+  gta_library_destroy(self->library);
   gta_unicode_string_destroy(self->output);
-}
-
-
-/**
- * Helper class, only existing to aid in the transform a function pointer to a
- * value able to be stored in the hash.
- */
-typedef union Function_Converter {
-  GTA_Execution_Context_Global_Create f;
-  void * b;
-} Function_Converter;
-
-
-bool gta_execution_context_add_library(GTA_Execution_Context * context, const char * identifier, GTA_Execution_Context_Global_Create func) {
-  assert(context);
-  assert(identifier);
-  return GTA_HASHX_SET(context->globals, GTA_STRING_HASH(identifier, strlen(identifier)), GTA_TYPEX_MAKE_P((Function_Converter){.f = func}.b));
 }

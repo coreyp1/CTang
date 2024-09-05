@@ -1,8 +1,13 @@
 
 #include <assert.h>
+#include <string.h>
 #include <cutil/hash.h>
 #include <cutil/memory.h>
+#include <cutil/string.h>
 #include <tang/library/library.h>
+#include <tang/program/executionContext.h>
+#include <tang/computedValue/computedValue.h>
+#include <tang/computedValue/computedValueError.h>
 
 /**
  * Helper class, only existing to aid in the transform a function pointer to a
@@ -58,15 +63,34 @@ void gta_library_destroy_in_place(GTA_Library * library) {
 }
 
 
-bool gta_library_add_library(GTA_Library * library, GTA_UInteger hash, GTA_Library_Callback func) {
+bool gta_library_add_library_from_hash(GTA_Library * library, GTA_UInteger hash, GTA_Library_Callback func) {
   assert(library);
   assert(library->manifest);
   return GTA_HASHX_SET(library->manifest, hash, GTA_TYPEX_MAKE_P((GTA_Library_Callback_Function_Converter){.f = func}.b));
 }
 
 
-GTA_HashX_Value gta_library_get_library(GTA_Library * library, GTA_UInteger hash) {
+bool gta_library_add_library_from_string(GTA_Library * library, const char * identifier, GTA_Library_Callback func) {
+  assert(identifier);
+  return gta_library_add_library_from_hash(library, GTA_STRING_HASH(identifier, strlen(identifier)), func);
+}
+
+
+GTA_Library_Callback gta_library_get_library(GTA_Library * library, GTA_UInteger hash) {
   assert(library);
   assert(library->manifest);
-  return GTA_HASHX_GET(library->manifest, hash);
+  GTA_HashX_Value result = GTA_HASHX_GET(library->manifest, hash);
+  return result.exists ? (GTA_Library_Callback_Function_Converter){.b = GTA_TYPEX_P(result.value)}.f : NULL;
+}
+
+
+GTA_Library_Callback GTA_CALL gta_library_get_from_context(GTA_Execution_Context * context, GTA_UInteger hash) {
+  assert(context);
+  assert(context->library);
+
+  GTA_Library_Callback func = gta_library_get_library(context->library, hash);
+  if (!func) {
+    return NULL;
+  }
+  return func;
 }

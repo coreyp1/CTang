@@ -362,7 +362,7 @@ TEST(Identifier, Library) {
   {
     // `a` is declared global, so should have the default value.
     TEST_PROGRAM_SETUP_NO_RUN("use a; a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -373,8 +373,8 @@ TEST(Identifier, Library) {
     // `a` and `b` are libraries.
     // Confirm that `a` can be loaded.
     TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -385,8 +385,8 @@ TEST(Identifier, Library) {
     // `a` and `b` are libraries.
     // Confirm that `b` can be loaded.
     TEST_PROGRAM_SETUP_NO_RUN("use a; use b; b;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -420,7 +420,7 @@ TEST(Assignment, ToIdentifier) {
   {
     // Assign a value to a library.
     TEST_PROGRAM_SETUP_NO_RUN("use a; a = 42; a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -430,8 +430,8 @@ TEST(Assignment, ToIdentifier) {
   {
     // Load two libraries.  Overwrite the first, return the first.
     TEST_PROGRAM_SETUP_NO_RUN("use a; use b; a = 10; a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -441,8 +441,8 @@ TEST(Assignment, ToIdentifier) {
   {
     // Load two libraries.  Overwrite the second, return the first.
     TEST_PROGRAM_SETUP_NO_RUN("use a; use b; b = 10; a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -452,8 +452,8 @@ TEST(Assignment, ToIdentifier) {
   {
     // Load two libraries.  Overwrite the second, return the second.
     TEST_PROGRAM_SETUP_NO_RUN("use a; use b; b = 10; b;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-    ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -465,8 +465,8 @@ TEST(Assignment, ToIdentifier) {
     // another library.  Return the local variable.
     // Verifying that the local variable is not overwritten by the library.
     TEST_PROGRAM_SETUP_NO_RUN("use a; b = 10; use c; b;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-    ASSERT_TRUE(gta_execution_context_add_library(context, "c", make_int_42));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "c", make_int_42));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -482,7 +482,7 @@ TEST(Unary, Negative) {
   {
     // Integer negation.
     TEST_PROGRAM_SETUP_NO_RUN("use a; -a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -492,7 +492,7 @@ TEST(Unary, Negative) {
   {
     // Double negation.
     TEST_PROGRAM_SETUP_NO_RUN("use a; -(-a);");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -502,7 +502,7 @@ TEST(Unary, Negative) {
   {
     // Float negation.
     TEST_PROGRAM_SETUP_NO_RUN("use a; -a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -533,7 +533,7 @@ TEST(Unary, Not) {
   {
     // Boolean !true
     TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_true));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -543,7 +543,7 @@ TEST(Unary, Not) {
   {
     // Boolean !false
     TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_false));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_false));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -553,7 +553,7 @@ TEST(Unary, Not) {
   {
     // Integer !3
     TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -563,7 +563,7 @@ TEST(Unary, Not) {
   {
     // Integer !0
     TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_0));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_0));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -573,7 +573,7 @@ TEST(Unary, Not) {
   {
     // Float !3.5
     TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -583,7 +583,7 @@ TEST(Unary, Not) {
   {
     // Float !0.0
     TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_0));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -593,7 +593,7 @@ TEST(Unary, Not) {
   {
     // String !"hello"
     TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_hello));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_string_hello));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -603,7 +603,7 @@ TEST(Unary, Not) {
   {
     // String !""
     TEST_PROGRAM_SETUP_NO_RUN("use a; !a;");
-    ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_empty));
+    ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_string_empty));
     ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -618,8 +618,8 @@ TEST(Binary, Add) {
     {
       // Integer + Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -629,8 +629,8 @@ TEST(Binary, Add) {
     {
       // Integer + Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -640,8 +640,8 @@ TEST(Binary, Add) {
     {
       // Float + Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -651,8 +651,8 @@ TEST(Binary, Add) {
     {
       // Float + Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -669,8 +669,8 @@ TEST(Binary, Subtract) {
     {
       // Integer - Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -680,8 +680,8 @@ TEST(Binary, Subtract) {
     {
       // Integer - Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -691,8 +691,8 @@ TEST(Binary, Subtract) {
     {
       // Float - Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -702,8 +702,8 @@ TEST(Binary, Subtract) {
     {
       // Float - Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -720,8 +720,8 @@ TEST(Binary, Multiply) {
     {
       // Integer * Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -731,8 +731,8 @@ TEST(Binary, Multiply) {
     {
       // Integer * Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -742,8 +742,8 @@ TEST(Binary, Multiply) {
     {
       // Float * Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -753,8 +753,8 @@ TEST(Binary, Multiply) {
     {
       // Float * Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -771,8 +771,8 @@ TEST(Binary, Divide) {
     {
       // Integer / Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -782,8 +782,8 @@ TEST(Binary, Divide) {
     {
       // Integer / -Integer. (not evenly divisible)
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_negative_10));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_negative_10));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -793,8 +793,8 @@ TEST(Binary, Divide) {
     {
       // Integer / Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -804,8 +804,8 @@ TEST(Binary, Divide) {
     {
       // Float / Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -815,8 +815,8 @@ TEST(Binary, Divide) {
     {
       // Float / Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -826,8 +826,8 @@ TEST(Binary, Divide) {
     {
       // Division by zero, Integer / Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
@@ -837,8 +837,8 @@ TEST(Binary, Divide) {
     {
       // Division by zero, Integer / Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
@@ -848,8 +848,8 @@ TEST(Binary, Divide) {
     {
       // Division by zero, Float / Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
@@ -859,8 +859,8 @@ TEST(Binary, Divide) {
     {
       // Division by zero, Float / Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
@@ -877,8 +877,8 @@ TEST(Binary, Modulo) {
     {
       // Integer % Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -888,8 +888,8 @@ TEST(Binary, Modulo) {
     {
       // -Integer % Integer. (not evenly divisible)
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_negative_10));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_negative_10));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -899,8 +899,8 @@ TEST(Binary, Modulo) {
     {
       // Integer % -Integer. (not evenly divisible)
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_negative_10));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_negative_10));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -910,8 +910,8 @@ TEST(Binary, Modulo) {
     {
       // Integer % Float. Should error.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
@@ -928,8 +928,8 @@ TEST(Binary, LessThan) {
     {
       // Integer < Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -939,8 +939,8 @@ TEST(Binary, LessThan) {
     {
       // Integer < Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -950,8 +950,8 @@ TEST(Binary, LessThan) {
     {
       // Integer < Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -961,8 +961,8 @@ TEST(Binary, LessThan) {
     {
       // Integer < Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -972,8 +972,8 @@ TEST(Binary, LessThan) {
     {
       // Integer < Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -983,8 +983,8 @@ TEST(Binary, LessThan) {
     {
       // Float < Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -994,8 +994,8 @@ TEST(Binary, LessThan) {
     {
       // Float < Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1005,8 +1005,8 @@ TEST(Binary, LessThan) {
     {
       // Float < Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1016,8 +1016,8 @@ TEST(Binary, LessThan) {
     {
       // Float < Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1027,8 +1027,8 @@ TEST(Binary, LessThan) {
     {
       // Float < Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1045,8 +1045,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Integer <= Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1056,8 +1056,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Integer <= Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1067,8 +1067,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Integer <= Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1078,8 +1078,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Integer <= Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1089,8 +1089,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Integer <= Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1100,8 +1100,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Integer <= Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1111,8 +1111,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Float <= Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1122,8 +1122,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Float <= Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1133,8 +1133,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Float <= Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1144,8 +1144,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Float <= Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1155,8 +1155,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Float <= Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1166,8 +1166,8 @@ TEST(Binary, LessThanEqual) {
     {
       // Float <= Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1184,8 +1184,8 @@ TEST(Binary, GreaterThan) {
     {
       // Integer > Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1195,8 +1195,8 @@ TEST(Binary, GreaterThan) {
     {
       // Integer > Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1206,8 +1206,8 @@ TEST(Binary, GreaterThan) {
     {
       // Integer > Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1217,8 +1217,8 @@ TEST(Binary, GreaterThan) {
     {
       // Integer > Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1228,8 +1228,8 @@ TEST(Binary, GreaterThan) {
     {
       // Integer > Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1239,8 +1239,8 @@ TEST(Binary, GreaterThan) {
     {
       // Float > Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1250,8 +1250,8 @@ TEST(Binary, GreaterThan) {
     {
       // Float > Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1261,8 +1261,8 @@ TEST(Binary, GreaterThan) {
     {
       // Float > Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1272,8 +1272,8 @@ TEST(Binary, GreaterThan) {
     {
       // Float > Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1283,8 +1283,8 @@ TEST(Binary, GreaterThan) {
     {
       // Float > Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1301,8 +1301,8 @@ TEST(Binary, GreaterThanEqual) {
     {
       // Integer >= Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1312,8 +1312,8 @@ TEST(Binary, GreaterThanEqual) {
     {
       // Integer >= Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1323,8 +1323,8 @@ TEST(Binary, GreaterThanEqual) {
     {
       // Integer >= Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1334,8 +1334,8 @@ TEST(Binary, GreaterThanEqual) {
     {
       // Integer >= Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1345,8 +1345,8 @@ TEST(Binary, GreaterThanEqual) {
     {
       // Integer >= Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1356,8 +1356,8 @@ TEST(Binary, GreaterThanEqual) {
     {
       // Integer >= Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1367,8 +1367,8 @@ TEST(Binary, GreaterThanEqual) {
     {
       // Float >= Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1378,8 +1378,8 @@ TEST(Binary, GreaterThanEqual) {
     {
       // Float >= Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1389,8 +1389,8 @@ TEST(Binary, GreaterThanEqual) {
     {
       // Float >= Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1400,8 +1400,8 @@ TEST(Binary, GreaterThanEqual) {
     {
       // Float >= Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1411,8 +1411,8 @@ TEST(Binary, GreaterThanEqual) {
     {
       // Float >= Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1429,8 +1429,8 @@ TEST(Binary, Equal) {
     {
       // Integer == Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1440,8 +1440,8 @@ TEST(Binary, Equal) {
     {
       // Integer == Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1451,8 +1451,8 @@ TEST(Binary, Equal) {
     {
       // Integer == Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1462,8 +1462,8 @@ TEST(Binary, Equal) {
     {
       // Integer == Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1473,8 +1473,8 @@ TEST(Binary, Equal) {
     {
       // Float == Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1484,8 +1484,8 @@ TEST(Binary, Equal) {
     {
       // Float == Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1495,8 +1495,8 @@ TEST(Binary, Equal) {
     {
       // Float == Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1506,8 +1506,8 @@ TEST(Binary, Equal) {
     {
       // Float == Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1524,8 +1524,8 @@ TEST(Binary, NotEqual) {
     {
       // Integer != Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1535,8 +1535,8 @@ TEST(Binary, NotEqual) {
     {
       // Integer != Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1546,8 +1546,8 @@ TEST(Binary, NotEqual) {
     {
       // Integer != Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1557,8 +1557,8 @@ TEST(Binary, NotEqual) {
     {
       // Integer != Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1568,8 +1568,8 @@ TEST(Binary, NotEqual) {
     {
       // Float != Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1579,8 +1579,8 @@ TEST(Binary, NotEqual) {
     {
       // Float != Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_float_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1590,8 +1590,8 @@ TEST(Binary, NotEqual) {
     {
       // Float != Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1601,8 +1601,8 @@ TEST(Binary, NotEqual) {
     {
       // Float != Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1619,8 +1619,8 @@ TEST(Binary, And) {
     {
       // true && true => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_bool_true));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1630,8 +1630,8 @@ TEST(Binary, And) {
     {
       // true && false => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_false));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_bool_false));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1641,8 +1641,8 @@ TEST(Binary, And) {
     {
       // false && true => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_false));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_false));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_bool_true));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1652,8 +1652,8 @@ TEST(Binary, And) {
     {
       // false && false => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_false));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_false));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_false));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_bool_false));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1670,8 +1670,8 @@ TEST(Binary, Or) {
     {
       // true || true => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_bool_true));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1681,8 +1681,8 @@ TEST(Binary, Or) {
     {
       // true || false => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_false));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_bool_false));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1692,8 +1692,8 @@ TEST(Binary, Or) {
     {
       // false || true => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_false));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_false));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_bool_true));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1703,8 +1703,8 @@ TEST(Binary, Or) {
     {
       // false || false => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_false));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_bool_false));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_false));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_bool_false));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1721,9 +1721,9 @@ TEST(Ternary, Conditional) {
     {
       // true ? 42 : 3 => 42.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "c", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "c", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -1733,9 +1733,9 @@ TEST(Ternary, Conditional) {
     {
       // false ? 42 : 3 => 3.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_false));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "b", make_int_42));
-      ASSERT_TRUE(gta_execution_context_add_library(context, "c", make_int_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_false));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "b", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "c", make_int_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -1752,7 +1752,7 @@ TEST(Cast, ToBoolean) {
     {
       // Integer => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1762,7 +1762,7 @@ TEST(Cast, ToBoolean) {
     {
       // Integer => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1772,7 +1772,7 @@ TEST(Cast, ToBoolean) {
     {
       // Float => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1782,7 +1782,7 @@ TEST(Cast, ToBoolean) {
     {
       // Float => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_0));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_0));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1792,7 +1792,7 @@ TEST(Cast, ToBoolean) {
     {
       // Boolean => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_true));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1811,7 +1811,7 @@ TEST(Cast, ToBoolean) {
     {
       // String => true.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_hello));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_string_hello));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1821,7 +1821,7 @@ TEST(Cast, ToBoolean) {
     {
       // Empty String => false.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_empty));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_string_empty));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
@@ -1838,7 +1838,7 @@ TEST(Case, ToInteger) {
     {
       // Integer => Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -1848,7 +1848,7 @@ TEST(Case, ToInteger) {
     {
       // Float => Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -1858,7 +1858,7 @@ TEST(Case, ToInteger) {
     {
       // Boolean => Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_true));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -1877,7 +1877,7 @@ TEST(Case, ToInteger) {
     {
       // String => Integer.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_3));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_string_3));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
@@ -1894,7 +1894,7 @@ TEST(Cast, ToFloat) {
     {
       // Integer => Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -1904,7 +1904,7 @@ TEST(Cast, ToFloat) {
     {
       // Float => Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -1914,7 +1914,7 @@ TEST(Cast, ToFloat) {
     {
       // Boolean => Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_true));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -1933,7 +1933,7 @@ TEST(Cast, ToFloat) {
     {
       // String => Float.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_42f5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_string_42f5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_FLOAT(context->result));
@@ -1950,7 +1950,7 @@ TEST(Cast, ToString) {
     {
       // Integer => String.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_int_42));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_int_42));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
@@ -1960,7 +1960,7 @@ TEST(Cast, ToString) {
     {
       // Float => String.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_float_3_5));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_float_3_5));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
@@ -1970,7 +1970,7 @@ TEST(Cast, ToString) {
     {
       // Boolean => String.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_bool_true));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_bool_true));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
@@ -1989,7 +1989,7 @@ TEST(Cast, ToString) {
     {
       // String => String.
       TEST_CONTEXT_SETUP();
-      ASSERT_TRUE(gta_execution_context_add_library(context, "a", make_string_hello));
+      ASSERT_TRUE(gta_library_add_library_from_string(context->library, "a", make_string_hello));
       ASSERT_TRUE(gta_program_execute(context));
       ASSERT_TRUE(context->result);
       ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));

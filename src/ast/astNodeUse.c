@@ -8,6 +8,7 @@
 #include <tang/ast/astNodeParseError.h>
 #include <tang/ast/astNodeUse.h>
 #include <tang/computedValue/computedValueError.h>
+#include <tang/library/library.h>
 #include <tang/program/binary.h>
 #include <tang/program/variable.h>
 
@@ -164,13 +165,13 @@ void gta_ast_node_use_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callb
 
 static GTA_Computed_Value * GTA_CALL __load_library(GTA_Execution_Context * context, GTA_UInteger hash) {
   assert(context);
-  assert(context->globals);
+  assert(context->library);
 
-  GTA_HashX_Value func = GTA_HASHX_GET(context->globals, hash);
-  if (!func.exists) {
+  GTA_Library_Callback func = gta_library_get_from_context(context, hash);
+  if (!func) {
     return gta_computed_value_null;
   }
-  GTA_Computed_Value * library_value = (GTA_Function_Converter){.b = GTA_TYPEX_P(func.value)}.f(context);
+  GTA_Computed_Value * library_value = func(context);
   if (!library_value) {
     return gta_computed_value_error_out_of_memory;
   }
