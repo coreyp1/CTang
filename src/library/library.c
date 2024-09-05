@@ -19,16 +19,25 @@ GTA_Library * gta_library_create(void) {
   if (library == NULL) {
     goto LIBRARY_CREATE_FAILED;
   }
-  library->manifest = GTA_HASHX_CREATE(32);
-  if (library->manifest == NULL) {
-    goto MANIFEST_CREATE_FAILED;
+
+  if (!gta_library_create_in_place(library)) {
+    goto IN_PLACE_CREATE_FAILED;
   }
   return library;
 
-MANIFEST_CREATE_FAILED:
+IN_PLACE_CREATE_FAILED:
   gcu_free(library);
 LIBRARY_CREATE_FAILED:
   return NULL;
+}
+
+
+bool gta_library_create_in_place(GTA_Library * library) {
+  assert(library);
+  *library = (GTA_Library){
+    .manifest = GTA_HASHX_CREATE(32),
+  };
+  return library->manifest;
 }
 
 
@@ -36,8 +45,16 @@ void gta_library_destroy(GTA_Library * library) {
   assert(library);
   assert(library->manifest);
 
-  GTA_HASHX_DESTROY(library->manifest);
+  gta_library_destroy_in_place(library);
   gcu_free(library);
+}
+
+
+void gta_library_destroy_in_place(GTA_Library * library) {
+  assert(library);
+  assert(library->manifest);
+
+  GTA_HASHX_DESTROY(library->manifest);
 }
 
 

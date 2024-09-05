@@ -45,11 +45,25 @@ typedef struct GTA_Library {
 GTA_NO_DISCARD GTA_Library * gta_library_create(void);
 
 /**
+ * Create a new library object in place.
+ *
+ * @return True on success, false on failure.
+ */
+bool gta_library_create_in_place(GTA_Library * library);
+
+/**
  * Destroy the given library object.
  *
  * @param library The library object to destroy.
  */
 void gta_library_destroy(GTA_Library * library);
+
+/**
+ * Destroy the given library object in place.
+ *
+ * @param library The library object to destroy.
+ */
+void gta_library_destroy_in_place(GTA_Library * library);
 
 /**
  * Adds a library entry to the execution context.
