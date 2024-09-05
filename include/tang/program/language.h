@@ -23,7 +23,7 @@ typedef struct GTA_Language {
   /**
    * The general libraries available to the language.
    */
-  GTA_HashX * libraries;
+  GTA_Library * library;
 } GTA_Language;
 
 /**

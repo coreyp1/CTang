@@ -5,6 +5,7 @@
 #include <cutil/memory.h>
 #include <cutil/string.h>
 #include <tang/library/library.h>
+#include <tang/program/program.h>
 #include <tang/program/executionContext.h>
 #include <tang/computedValue/computedValue.h>
 #include <tang/computedValue/computedValueError.h>
@@ -87,10 +88,24 @@ GTA_Library_Callback gta_library_get_library(GTA_Library * library, GTA_UInteger
 GTA_Library_Callback GTA_CALL gta_library_get_from_context(GTA_Execution_Context * context, GTA_UInteger hash) {
   assert(context);
   assert(context->library);
+  assert(context->program);
+  assert(context->program->language);
+  assert(context->program->language->library);
 
+  // Attempt to load the library from the current execution context.
   GTA_Library_Callback func = gta_library_get_library(context->library, hash);
+
+  // If the library was not found in the current execution context, attempt to
+  // load it from the program's library.
   if (!func) {
-    return NULL;
+    func = gta_library_get_library(context->program->library, hash);
   }
+
+  // If the library was not found in the program's library, attempt to load it
+  // from the language library.
+  if (!func) {
+    func = gta_library_get_library(context->program->language->library, hash);
+  }
+
   return func;
 }

@@ -843,7 +843,8 @@ $(OBJ_DIR)/library/library.o: \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_EXECUTIONCONTEXT) \
-	$(DEP_LIBRARY)
+	$(DEP_LIBRARY) \
+	$(DEP_PROGRAM)
 
 $(OBJ_DIR)/program/binary.o: \
 	src/program/binary.c \
@@ -874,6 +875,7 @@ $(OBJ_DIR)/program/garbageCollector.o: \
 
 $(OBJ_DIR)/program/language.o: \
 	src/program/language.c \
+	$(DEP_LIBRARY) \
 	$(DEP_PROGRAM_LANGUAGE)
 
 $(OBJ_DIR)/program/program.o: \
