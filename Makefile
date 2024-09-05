@@ -64,6 +64,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/computedValue/computedValueFunctionNative.o \
 	$(OBJ_DIR)/computedValue/computedValueInteger.o \
 	$(OBJ_DIR)/computedValue/computedValueIterator.o \
+	$(OBJ_DIR)/computedValue/computedValueLibrary.o \
 	$(OBJ_DIR)/computedValue/computedValueMap.o \
 	$(OBJ_DIR)/computedValue/computedValueString.o \
 	$(OBJ_DIR)/library/library.o \
@@ -302,6 +303,10 @@ DEP_COMPUTEDVALUEINTEGER = \
 DEP_COMPUTEDVALUEITERATOR = \
 	include/tang/computedValue/computedValueIterator.h \
 	$(DEP_COMPUTEDVALUE)
+DEP_COMPUTEDVALUELIBRARY = \
+	include/tang/computedValue/computedValueLibrary.h \
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_LIBRARY)
 DEP_COMPUTEDVALUEMAP = \
 	include/tang/computedValue/computedValueMap.h \
 	$(DEP_COMPUTEDVALUE)
@@ -320,6 +325,7 @@ DEP_COMPUTEDVALUEALL = \
 	$(DEP_COMPUTEDVALUEFUNCTIONNATIVE) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUEITERATOR) \
+	$(DEP_COMPUTEDVALUELIBRARY) \
 	$(DEP_COMPUTEDVALUEMAP) \
 	$(DEP_COMPUTEDVALUESTRING)
 
@@ -818,6 +824,12 @@ $(OBJ_DIR)/computedValue/computedValueIterator.o: \
 	$(DEP_COMPUTEDVALUEITERATOR) \
 	$(DEP_COMPUTEDVALUEITERATOREND) \
 	$(DEP_COMPUTEDVALUEERROR)
+
+$(OBJ_DIR)/computedValue/computedValueLibrary.o: \
+	src/computedValue/computedValueLibrary.c \
+	$(DEP_COMPUTEDVALUELIBRARY) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_EXECUTIONCONTEXT)
 
 $(OBJ_DIR)/computedValue/computedValueMap.o: \
 	src/computedValue/computedValueMap.c \
