@@ -19,34 +19,36 @@ print("\n");
 The areas of tasks are:
 
 ### The overall library mechanism.
-The current state does support the use of the `use` keyword, as demonstrated in the "simple" and "complex" language unit tests, but revision is needed before the feature is practically usable.  The needs are discussed below.
+In order to understand the Library implementation, you must understand the problem that it is trying to solve.
 
-First, understand that there are 2 uses for Libraries in Tang.
+Remember that the use case for Tang is that a program may have *thousands* of templates.  Depending on the templates, the program may want some templates to have access to a library that is not available to other templates (for security reasons).  I implemented a 3-tiered approach.
+  1. **Language libraries** - There should be a standard set of libraries that are always available by default as part of the language itself, such as `math`.  There should, therefore, be a registry of libraries that are shared by all scripts/templates.  This is implemented on the Language object and is populated when the Language object is created.
+  2. **Program libraries** - There should be a way to declare libraries which `program` objects may consult when a library load is requested, but that are not available to other Program objects.  These libraries are stored on the Program object itself.
+  3. **Execution-specific libraries** - There must be a way to declare libraries on a particular program execution.  This is the most granular option, and these libraries are stored on the Execution Context object.
+
+Understand that there are 2 uses for Libraries in Tang.
   1. Generic functions or constants, such as a `math` library.
-  2. To provide external **variables** to the script execution (as demonstrated many times in `test-tangLanguageExecuteSimple.cpp`).  Such variables may need to have **general** availability or **specific** availability.
-    * An example of a variable that is **general** may be a `user` variable which represents the logged-in user, or a `request` variable.  The meaning of the word "general" is that the variable itself is meant to be applied to multiple templates.
-    * An example of a variable that is **specific** may be an `article` variable which represents the specific article associated with the template being rendered.  The variable itself is meant to be applied to this template specifically.
+  2. To provide external **variables** to the script execution (as demonstrated many times in `test-tangLanguageExecuteSimple.cpp`).  Such variables may exist in any of the 3 scopes mentioned above.
 
-It may seem "weird" to think of external variables being implemented as a type of library, but the weirdness is not noticed by the end user.
+External variables are supplied to the program via a Library.  It may seem "weird" to think of external variables being implemented as a type of library, but the weirdness is not noticed by the end user.
 
-Remember that the use case for Tang is that a program may have thousands of templates.  Depending on the templates, the program may want some templates to have access to a library that is not available to other templates (for security reasons).  I suggest a 3-tiered approach.
-  1. There should be a standard set of libraries that are always available by default, such as `math`.  There should, therefore, be a registry of libraries that are shared by all scripts/templates.  This does not exist yet.
-  2. There should be a way to declare **general** libraries (as described earlier) which `program` objects may consult when a library load is requested.
-  3. There must be a way to declare **specific** libraries on a particular program.
-
-**NOTE:** Implementation of this has been started.
+Examples of the 3 Library applications:
+  1. **Language libraries** - already mentioned.  Examples include `math` and `random`.
+  2. **Program libraries** - Imagine a template for an article.  `Article` may be a library containing information about the article, but it doesn't need to be available to a template for an image.
+  3. **Execution-specific libraries** - This is a library that may be present or not depending on factors related to the specific execution context, or perhaps a library that changes behavior based on some external factor.
 
 ## Libraries To Implement
 These are not necessarily stand-alone (e.g., `date`).  Libraries should make use of singleton objects, if possible.
 
 ### `math`
-This library should contain common math constants and trigonometric functions.  If a function can be supplied as an attribute on an object, then that is preferred.
+**Started.**  This library should contain common math constants and trigonometric functions.  If a function can be supplied as an attribute on an object, then that is preferred.
 
 For example, a `ceil` or `floor` is always associated with a value, and could be added to the integer and float attributes rather than putting it into the `math` library.  Note that this is a departure from most other languages.
 
 We also need to come up with a representation of `+ infinity`, `- infinity`, and perhaps `NAN`.
 
-  * `pi` - Provide the constant.
+(Strikethrough indicates that feature is added.)
+  * ~~`pi` - Provide the constant.~~
   * `e` - Provide the constant.
   * `ln(x)` - Calculate the natural log of a number.
   * `lg(x)` - Calculate the log base 2 of a number.
