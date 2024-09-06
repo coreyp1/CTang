@@ -786,7 +786,7 @@ int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   int result = RUN_ALL_TESTS();
 
-  gcu_memory_reset_counts(); \
+  gcu_memory_reset_counts();
   gta_language_destroy(language);
   assert((alloc_count + gcu_get_alloc_count()) == (free_count + gcu_get_free_count()));
 

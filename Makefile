@@ -68,6 +68,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/computedValue/computedValueMap.o \
 	$(OBJ_DIR)/computedValue/computedValueString.o \
 	$(OBJ_DIR)/library/library.o \
+	$(OBJ_DIR)/library/libraryMath.o \
 	$(OBJ_DIR)/program/binary.o \
 	$(OBJ_DIR)/program/bytecode.o \
 	$(OBJ_DIR)/program/compilerContext.o \
@@ -333,6 +334,10 @@ DEP_LIBRARY = \
 	include/tang/library/library.h \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_MACROS)
+
+DEP_LIBRARYMATH = \
+	include/tang/library/libraryMath.h \
+	$(DEP_LIBRARY)
 
 DEP_TANGLANGUAGE = \
 	$(DEP_ASTNODE)
@@ -858,6 +863,14 @@ $(OBJ_DIR)/library/library.o: \
 	$(DEP_LIBRARY) \
 	$(DEP_PROGRAM)
 
+$(OBJ_DIR)/library/libraryMath.o: \
+	src/library/libraryMath.c \
+	$(DEP_LIBRARYMATH) \
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_EXECUTIONCONTEXT) \
+	$(DEP_PROGRAM)
+
 $(OBJ_DIR)/program/binary.o: \
 	src/program/binary.c \
 	$(DEP_PROGRAM_BINARY) \
@@ -1006,6 +1019,17 @@ $(APP_DIR)/testTangLanguageExecuteComplex: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
+$(APP_DIR)/testTangLanguageLibrary: \
+	test/test-tangLanguageLibrary.cpp \
+	$(DEP_ASTNODE_ALL) \
+	$(DEP_COMPUTEDVALUE_ALL) \
+	$(DEP_PROGRAM) \
+	$(DEP_EXECUTIONCONTEXT) \
+	$(DEP_BYTECODE)
+	@echo "\n### Compiling Tang Language Library Test ###"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
+
 $(APP_DIR)/testBinary: \
 	test/test-binary.cpp \
 	$(DEP_PROGRAM_BINARY)
@@ -1058,6 +1082,7 @@ test: \
 				$(APP_DIR)/testTangLanguageParse \
 				$(APP_DIR)/testTangLanguageExecuteSimple \
 				$(APP_DIR)/testTangLanguageExecuteComplex \
+				$(APP_DIR)/testTangLanguageLibrary \
 				$(APP_DIR)/testBinary \
 				$(APP_DIR)/tang
 #				$(APP_DIR)/libtestLibrary.so \
@@ -1080,6 +1105,7 @@ test: \
 	@echo -n "################################"
 	@echo "\033[0m\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testBinary --gtest_brief=1
+
 	@echo "\033[0;30;104m"
 	@echo "########################################################"
 	@echo "### Running Bytecode Language Execution Simple tests ###"
@@ -1092,6 +1118,13 @@ test: \
 	@echo -n "#########################################################"
 	@echo "\033[0m\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
+	@echo "\033[0;30;104m"
+	@echo "################################################"
+	@echo "### Running Bytecode Language Library tests  ###"
+	@echo -n "################################################"
+	@echo "\033[0m\n"
+	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
+
 	@echo "\033[0;30;45m"
 	@echo "########################################################"
 	@echo "### Running Binary Language Execution Simple tests   ###"
@@ -1104,6 +1137,13 @@ test: \
 	@echo -n "########################################################"
 	@echo "\033[0m\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
+	@echo "\033[0;30;45m"
+	@echo "##############################################"
+	@echo "### Running Binary Language Library tests  ###"
+	@echo -n "##############################################"
+	@echo "\033[0m\n"
+	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
+
 	@echo "\033[0;30;47m"
 	@echo "###################"
 	@echo "### Running CLI ###"
