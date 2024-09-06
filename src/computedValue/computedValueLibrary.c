@@ -96,9 +96,18 @@ bool GTA_CALL gta_computed_value_library_create_in_place(GTA_Computed_Value_Libr
     .name = name_copy,
     .attributes = attributes_copy,
     .attribute_count = attribute_count,
+    .library = NULL,
   };
+
+  if (!gta_computed_value_library_build_library_attributes_hash(self)) {
+    goto BUILD_LIBRARY_ATTRIBUTES_HASH_FAILED;
+  }
   return true;
 
+BUILD_LIBRARY_ATTRIBUTES_HASH_FAILED:
+  if (self->library) {
+    gta_library_destroy(self->library);
+  }
 ATTRIBUTES_MALLOC_FAILED:
   gcu_free(name_copy);
 NAME_MALLOC_FAILED:
@@ -164,10 +173,32 @@ GTA_Computed_Value * gta_computed_value_library_period(GTA_Computed_Value * self
   assert(GTA_COMPUTED_VALUE_IS_LIBRARY(self));
 
   GTA_Computed_Value_Library * library = (GTA_Computed_Value_Library *)self;
-  for (GTA_UInteger i = 0; i < library->attribute_count; ++i) {
-    if (GTA_STRING_HASH(library->attributes[i].name, strlen(library->attributes[i].name) == identifier_hash)) {
-      return library->attributes[i].callback(context);
+  if (library->library) {
+    GTA_Library_Callback callback = gta_library_get_library(library->library, identifier_hash);
+    if (callback) {
+      return callback(context);
     }
   }
   return gta_computed_value_error_not_implemented;
+}
+
+
+bool gta_computed_value_library_build_library_attributes_hash(GTA_Computed_Value_Library * self) {
+  assert(self);
+
+  if (self->attribute_count) {
+    assert(self->attributes);
+
+    self->library = gta_library_create();
+    if (!self->library) {
+      return false;
+    }
+
+    for (GTA_UInteger i = 0; i < self->attribute_count; ++i) {
+      if (!gta_library_add_library_from_string(self->library, self->attributes[i].name, self->attributes[i].callback)) {
+        return false;
+      }
+    }
+  }
+  return true;
 }

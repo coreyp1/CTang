@@ -16,6 +16,7 @@
 #include <tang/computedValue/computedValueFunctionNative.h>
 #include <tang/computedValue/computedValueInteger.h>
 #include <tang/computedValue/computedValueIterator.h>
+#include <tang/computedValue/computedValueLibrary.h>
 #include <tang/computedValue/computedValueMap.h>
 #include <tang/computedValue/computedValueString.h>
 

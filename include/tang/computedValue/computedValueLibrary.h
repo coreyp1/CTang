@@ -54,6 +54,13 @@ typedef struct GTA_Computed_Value_Library {
    * The number of library attribute pairs.
    */
   GTA_UInteger attribute_count;
+  /**
+   * The library attributes.
+   *
+   * This reuses the GTA_Library structure so that library attributes can be
+   * organized and quickly retrieved.
+   */
+  GTA_Library * library;
 } GTA_Computed_Value_Library;
 
 /**
@@ -136,6 +143,14 @@ char * GTA_CALL gta_computed_value_library_to_string(GTA_Computed_Value * self);
  * @return The value of the attribute or NULL if the operation failed.
  */
 GTA_Computed_Value * gta_computed_value_library_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
+
+/**
+ * Helper function to build the internal library attributes hash.
+ *
+ * @param self The Library object.
+ * @return True if the operation was successful, false otherwise.
+ */
+bool gta_computed_value_library_build_library_attributes_hash(GTA_Computed_Value_Library * self);
 
 #ifdef __cplusplus
 }

@@ -339,6 +339,10 @@ DEP_LIBRARYMATH = \
 	include/tang/library/libraryMath.h \
 	$(DEP_LIBRARY)
 
+DEP_LIBRARYALL = \
+	$(DEP_LIBRARY) \
+	$(DEP_LIBRARYMATH)
+
 DEP_TANGLANGUAGE = \
 	$(DEP_ASTNODE)
 
@@ -383,6 +387,7 @@ DEP_VIRTUALMACHINE = \
 DEP_TANG = \
 	include/tang/tang.h \
 	$(DEP_COMPUTEDVALUEALL) \
+	$(DEP_LIBRARYALL) \
 	$(DEP_MACROS) \
 	$(DEP_PROGRAM)
 
@@ -868,6 +873,9 @@ $(OBJ_DIR)/library/libraryMath.o: \
 	$(DEP_LIBRARYMATH) \
 	$(DEP_COMPUTEDVALUE) \
 	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_COMPUTEDVALUEFLOAT) \
+	$(DEP_COMPUTEDVALUEINTEGER) \
+	$(DEP_COMPUTEDVALUELIBRARY) \
 	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_PROGRAM)
 
@@ -900,7 +908,9 @@ $(OBJ_DIR)/program/garbageCollector.o: \
 
 $(OBJ_DIR)/program/language.o: \
 	src/program/language.c \
+	$(DEP_COMPUTEDVALUELIBRARY) \
 	$(DEP_LIBRARY) \
+	$(DEP_LIBRARYMATH) \
 	$(DEP_PROGRAM_LANGUAGE)
 
 $(OBJ_DIR)/program/program.o: \

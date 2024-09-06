@@ -54,13 +54,28 @@ GTA_Language * language;
   TEST_CONTEXT_TEARDOWN(); \
   TEST_REUSABLE_PROGRAM_TEARDOWN();
 
+
+TEST(Library, Load) {
+  {
+    // Math
+    TEST_PROGRAM_SETUP("use Math; Math;");
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_LIBRARY(context->result));
+    GTA_Computed_Value_Library * library = (GTA_Computed_Value_Library *)context->result;
+    ASSERT_STREQ("Math", library->name);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 TEST(Math, Constants) {
   {
     // PI
     TEST_PROGRAM_SETUP("use Math; print(Math.pi);");
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
-    ASSERT_STREQ("3.14159", context->output->buffer);
+    ASSERT_STREQ("3.141593", context->output->buffer);
     TEST_PROGRAM_TEARDOWN();
   }
 }

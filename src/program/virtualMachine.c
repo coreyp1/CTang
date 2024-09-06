@@ -274,7 +274,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
       case GTA_BYTECODE_LOAD_LIBRARY: {
         // Load a library value.
         // The value will be left on the stack.
-        GTA_Library_Callback func = gta_library_get_library(context->library, GTA_TYPEX_UI(*next++));
+        GTA_Library_Callback func = gta_library_get_from_context(context, GTA_TYPEX_UI(*next++));
         GTA_Computed_Value * library_value = func
           ? func(context)
           : gta_computed_value_null;

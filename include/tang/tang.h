@@ -21,6 +21,7 @@
 #include <tang/macros.h>
 #include <tang/program/program.h>
 #include <tang/computedValue/computedValueAll.h>
+#include <tang/library/libraryAll.h>
 
 #endif // G_TANG_H
 
