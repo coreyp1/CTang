@@ -35,7 +35,7 @@ static GTA_Computed_Value_Library gta_computed_value_library_math_singleton = {
     .is_singleton = true,
     .is_a_reference = false,
   },
-  .name = "Math",
+  .name = "math",
   .attributes = attributes,
   .attribute_count = 0,
   .library = 0,

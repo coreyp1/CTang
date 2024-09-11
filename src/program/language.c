@@ -18,7 +18,7 @@ GTA_Language * gta_language_create(void) {
   }
 
   GTA_Computed_Value_Library_Attribute_Pair libraries[] = {
-    {"Math", gta_library_math_load},
+    {"math", gta_library_math_load},
   };
   size_t library_count = sizeof(libraries) / sizeof(GTA_Computed_Value_Library_Attribute_Pair);
   for (size_t i = 0; i < library_count; i++) {
