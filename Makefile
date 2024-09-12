@@ -655,9 +655,7 @@ $(OBJ_DIR)/ast/astNodeInteger.o: \
 
 $(OBJ_DIR)/ast/astNodeLibrary.o: \
 	src/ast/astNodeLibrary.c \
-	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_ASTNODELIBRARY) \
-	$(DEP_PROGRAM_COMPILERCONTEXT) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_OPCODE) \
 	$(DEP_PROGRAM_BINARY)
