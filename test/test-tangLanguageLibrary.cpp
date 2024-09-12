@@ -66,6 +66,16 @@ TEST(Library, Load) {
     ASSERT_STREQ("math", library->name);
     TEST_PROGRAM_TEARDOWN();
   }
+  {
+    // Random
+    TEST_PROGRAM_SETUP("use random; random;");
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_LIBRARY(context->result));
+    GTA_Computed_Value_Library * library = (GTA_Computed_Value_Library *)context->result;
+    ASSERT_STREQ("random", library->name);
+    TEST_PROGRAM_TEARDOWN();
+  }
 }
 
 
@@ -73,12 +83,22 @@ TEST(Math, Constants) {
   {
     // PI
     TEST_PROGRAM_SETUP("use math; print(math.pi);");
-    ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
     ASSERT_STREQ("3.141593", context->output->buffer);
     TEST_PROGRAM_TEARDOWN();
   }
 }
+
+
+TEST(Random, Random) {
+  {
+    // Random
+    TEST_PROGRAM_SETUP("use random; random.global.next_int;");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 
 int main(int argc, char **argv) {
   gcu_memory_reset_counts();

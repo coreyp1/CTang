@@ -66,9 +66,11 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/computedValue/computedValueIterator.o \
 	$(OBJ_DIR)/computedValue/computedValueLibrary.o \
 	$(OBJ_DIR)/computedValue/computedValueMap.o \
+	$(OBJ_DIR)/computedValue/computedValueRNG.o \
 	$(OBJ_DIR)/computedValue/computedValueString.o \
 	$(OBJ_DIR)/library/library.o \
 	$(OBJ_DIR)/library/libraryMath.o \
+	$(OBJ_DIR)/library/libraryRandom.o \
 	$(OBJ_DIR)/program/binary.o \
 	$(OBJ_DIR)/program/bytecode.o \
 	$(OBJ_DIR)/program/compilerContext.o \
@@ -311,6 +313,11 @@ DEP_COMPUTEDVALUELIBRARY = \
 DEP_COMPUTEDVALUEMAP = \
 	include/tang/computedValue/computedValueMap.h \
 	$(DEP_COMPUTEDVALUE)
+DEP_COMPUTEDVALUERNG = \
+	include/tang/computedValue/computedValueRNG.h \
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_COMPUTEDVALUEINTEGER) \
+	$(DEP_COMPUTEDVALUEFLOAT)
 DEP_COMPUTEDVALUESTRING = \
 	include/tang/computedValue/computedValueString.h \
 	$(DEP_COMPUTEDVALUE) \
@@ -328,6 +335,7 @@ DEP_COMPUTEDVALUEALL = \
 	$(DEP_COMPUTEDVALUEITERATOR) \
 	$(DEP_COMPUTEDVALUELIBRARY) \
 	$(DEP_COMPUTEDVALUEMAP) \
+	$(DEP_COMPUTEDVALUERNG) \
 	$(DEP_COMPUTEDVALUESTRING)
 
 DEP_LIBRARY = \
@@ -338,10 +346,14 @@ DEP_LIBRARY = \
 DEP_LIBRARYMATH = \
 	include/tang/library/libraryMath.h \
 	$(DEP_LIBRARY)
+DEP_LIBRARYRANDOM = \
+	include/tang/library/libraryRandom.h \
+	$(DEP_LIBRARY)
 
 DEP_LIBRARYALL = \
 	$(DEP_LIBRARY) \
-	$(DEP_LIBRARYMATH)
+	$(DEP_LIBRARYMATH) \
+	$(DEP_LIBRARYRANDOM)
 
 DEP_TANGLANGUAGE = \
 	$(DEP_ASTNODE)
@@ -850,6 +862,15 @@ $(OBJ_DIR)/computedValue/computedValueMap.o: \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_UNICODESTRING)
 
+$(OBJ_DIR)/computedValue/computedValueRNG.o: \
+	src/computedValue/computedValueRNG.c \
+	$(DEP_COMPUTEDVALUERNG) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_COMPUTEDVALUEINTEGER) \
+	$(DEP_COMPUTEDVALUEFLOAT) \
+	$(DEP_COMPUTEDVALUEFUNCTIONNATIVE) \
+	$(DEP_EXECUTIONCONTEXT)
+
 $(OBJ_DIR)/computedValue/computedValueString.o: \
 	src/computedValue/computedValueString.c \
 	$(DEP_COMPUTEDVALUE) \
@@ -876,6 +897,16 @@ $(OBJ_DIR)/library/libraryMath.o: \
 	$(DEP_COMPUTEDVALUEFLOAT) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUELIBRARY) \
+	$(DEP_EXECUTIONCONTEXT) \
+	$(DEP_PROGRAM)
+
+$(OBJ_DIR)/library/libraryRandom.o: \
+	src/library/libraryRandom.c \
+	$(DEP_LIBRARYRANDOM) \
+	$(DEP_COMPUTEDVALUE) \
+	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_COMPUTEDVALUELIBRARY) \
+	$(DEP_COMPUTEDVALUERNG) \
 	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_PROGRAM)
 
@@ -911,6 +942,7 @@ $(OBJ_DIR)/program/language.o: \
 	$(DEP_COMPUTEDVALUELIBRARY) \
 	$(DEP_LIBRARY) \
 	$(DEP_LIBRARYMATH) \
+	$(DEP_LIBRARYRANDOM) \
 	$(DEP_PROGRAM_LANGUAGE)
 
 $(OBJ_DIR)/program/program.o: \

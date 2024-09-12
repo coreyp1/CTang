@@ -4,6 +4,7 @@
 #include <tang/computedValue/computedValueLibrary.h>
 #include <tang/library/library.h>
 #include <tang/library/libraryMath.h>
+#include <tang/library/libraryRandom.h>
 #include <tang/program/language.h>
 
 GTA_Language * gta_language_create(void) {
@@ -19,6 +20,7 @@ GTA_Language * gta_language_create(void) {
 
   GTA_Computed_Value_Library_Attribute_Pair libraries[] = {
     {"math", gta_library_math_load},
+    {"random", gta_library_random_load},
   };
   size_t library_count = sizeof(libraries) / sizeof(GTA_Computed_Value_Library_Attribute_Pair);
   for (size_t i = 0; i < library_count; i++) {

@@ -18,6 +18,7 @@
 #include <tang/computedValue/computedValueIterator.h>
 #include <tang/computedValue/computedValueLibrary.h>
 #include <tang/computedValue/computedValueMap.h>
+#include <tang/computedValue/computedValueRNG.h>
 #include <tang/computedValue/computedValueString.h>
 
 

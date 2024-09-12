@@ -932,6 +932,25 @@ libraryExpression
         parseError = &ErrorOutOfMemory;
       }
     }
+  | libraryExpression "." "global"
+    {
+      // Verify that there have been no memory errors.
+      VERIFY1($1,$$);
+
+      char * identifier = gcu_calloc(7, sizeof(char));
+      if (!identifier) {
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
+      strcpy(identifier, "global");
+
+      LOCATION(@1, @3);
+      $$ = (GTA_Ast_Node *)gta_ast_node_period_create($1, identifier, location);
+      if (!$$) {
+        gcu_free(identifier);
+        parseError = &ErrorOutOfMemory;
+      }
+    }
   ;
 
 // These should only have an openStatement as the last terminal.
@@ -1288,6 +1307,25 @@ expression
       $$ = (GTA_Ast_Node *)gta_ast_node_period_create($1, identifier, location);
       if (!$$) {
         gcu_free((void *)identifier);
+        parseError = &ErrorOutOfMemory;
+      }
+    }
+  | expression "." "global"
+    {
+      // Verify that there have been no memory errors.
+      VERIFY1($1,$$);
+
+      char * identifier = gcu_calloc(7, sizeof(char));
+      if (!identifier) {
+        parseError = &ErrorOutOfMemory;
+        break;
+      }
+      strcpy(identifier, "global");
+
+      LOCATION(@1, @3);
+      $$ = (GTA_Ast_Node *)gta_ast_node_period_create($1, identifier, location);
+      if (!$$) {
+        gcu_free(identifier);
         parseError = &ErrorOutOfMemory;
       }
     }

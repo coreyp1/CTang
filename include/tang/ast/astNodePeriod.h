@@ -37,6 +37,9 @@ typedef struct GTA_Ast_Node_Period {
 /**
  * Creates a new GTA_Ast_Node_Period object.
  *
+ * The `rhs` string is adopted by the new object and should not be freed by the
+ * caller.
+ *
  * @param lhs The left-hand side of the period operation.
  * @param rhs The right-hand side of the period operation.
  * @param location The location of the period operation in the source code.

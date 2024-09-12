@@ -79,6 +79,12 @@ extern GTA_Computed_Value * gta_computed_value_error_invalid_function_call;
 extern GTA_Computed_Value * gta_computed_value_error_argument_count_mismatch;
 
 /**
+ * Error resulting from trying to set the seed of the global random number
+ * generator.
+ */
+extern GTA_Computed_Value * gta_computed_value_error_global_rng_seed_not_changeable;
+
+/**
  * Represents an error value.
  */
 typedef struct GTA_Computed_Value_Error {

@@ -279,6 +279,7 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, GTA_Language 
     &gta_computed_value_iterator_vtable,
     &gta_computed_value_map_vtable,
     &gta_computed_value_null_vtable,
+    &gta_computed_value_rng_vtable,
     &gta_computed_value_string_vtable,
   };
   size_t vtable_count = sizeof(vtable) / sizeof(vtable[0]);
