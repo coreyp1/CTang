@@ -18,6 +18,9 @@ static GTA_Computed_Value * GTA_CALL gta_library_random_make_global(GTA_Executio
  * The attributes of the Random library.
  */
 static GTA_Computed_Value_Library_Attribute_Pair attributes[] = {
+  // TODO: additional attributes planned
+  // {"seeded", gta_library_random_make_seeded},
+  // {"default", gta_library_random_make_default},
   {"global", gta_library_random_make_global},
 };
 

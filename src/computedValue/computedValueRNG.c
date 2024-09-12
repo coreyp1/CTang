@@ -85,6 +85,15 @@ static GTA_Computed_Value * rng_set_seed_callback(GTA_Computed_Value * bound_obj
  * The attributes for the GTA_Computed_Value_String class.
  */
 static GTA_Computed_Value_Attribute_Pair attributes[] = {
+  // TODO: Additional attributes planned:
+  // {"next_float", rng_next_float},
+  // {"next_int_range", rng_next_int_range},
+  // {"next_float_range", rng_next_float_range},
+  // {"next_gaussian", rng_next_gaussian},
+  // {"next_bool", rng_next_bool},
+  // {"shuffle", rng_shuffle},
+  // {"sample", rng_sample},
+  // {"choose", rng_choose},
   {"next_int", rng_next_int},
   {"set_seed", rng_set_seed},
 };
