@@ -83,6 +83,32 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_library_simplify(GTA_Ast_Node * self,
  */
 void gta_ast_node_library_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
+/**
+ * Compiles a GTA_Ast_Node_Library object to binary for x86_64.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_binary()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_binary__x86_64
+ *
+ * @param self The GTA_Ast_Node_Library object.
+ * @param context The compiler state to use for compilation.
+ */
+bool gta_ast_node_library_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+
+/**
+ * Compiles a GTA_Ast_Node_Library object to bytecode.
+ *
+ * This function should not be called directly. Use gta_ast_node_compile_to_bytecode()
+ * instead.
+ *
+ * @see gta_ast_node_compile_to_bytecode
+ *
+ * @param self The GTA_Ast_Node_Library object.
+ * @param context The compiler state to use for compilation.
+ */
+bool gta_ast_node_library_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+
 #ifdef __cplusplus
 }
 #endif //__cplusplus

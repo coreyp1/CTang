@@ -749,14 +749,8 @@ $(OBJ_DIR)/ast/astNodeUnary.o: \
 
 $(OBJ_DIR)/ast/astNodeUse.o: \
 	src/ast/astNodeUse.c \
-	$(DEP_ASTNODEIDENTIFIER) \
 	$(DEP_ASTNODEPARSEERROR) \
 	$(DEP_ASTNODEUSE) \
-	$(DEP_COMPUTEDVALUEERROR) \
-	$(DEP_LIBRARY) \
-	$(DEP_OPCODE) \
-	$(DEP_PROGRAM_COMPILERCONTEXT) \
-	$(DEP_PROGRAM_BINARY) \
 	$(DEP_PROGRAM_VARIABLE)
 
 $(OBJ_DIR)/ast/astNodeWhile.o: \

@@ -4,13 +4,10 @@
 #include <string.h>
 #include <cutil/memory.h>
 #include <cutil/hash.h>
-#include <cutil/string.h>
 #include <tang/ast/astNodeParseError.h>
 #include <tang/ast/astNodeUse.h>
-#include <tang/computedValue/computedValueError.h>
-#include <tang/library/library.h>
-#include <tang/program/binary.h>
 #include <tang/program/variable.h>
+
 
 GTA_Ast_Node_VTable gta_ast_node_use_vtable = {
   .name = "Use",
@@ -163,44 +160,12 @@ void gta_ast_node_use_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callb
 }
 
 
-static GTA_Computed_Value * GTA_CALL __load_library(GTA_Execution_Context * context, GTA_UInteger hash) {
-  assert(context);
-  assert(context->library);
-
-  GTA_Library_Callback func = gta_library_get_from_context(context, hash);
-  if (!func) {
-    return gta_computed_value_null;
-  }
-  GTA_Computed_Value * library_value = func(context);
-  if (!library_value) {
-    return gta_computed_value_error_out_of_memory;
-  }
-  if (!library_value->is_singleton && library_value->is_temporary) {
-    // This is an assignment, so make sure that it is not temporary.
-    library_value->is_temporary = false;
-  }
-  return library_value;
-}
-
-
 bool gta_ast_node_use_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   assert(self);
   assert(GTA_AST_IS_USE(self));
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
 
-  assert(context);
-  assert(context->binary_vector);
-  GCU_Vector8 * v = context->binary_vector;
-
-  // Load the library.
-  // TODO: JIT the __load_library function to avoid the extra function call.
-  return true
-  // __load_library(boolean->value, use->hash):
-  //   mov rdi, r15
-  //   mov rsi, use->hash
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_R15)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, use->hash)
-    && gta_binary_call__x86_64(v, (uint64_t)__load_library);
+  return gta_ast_node_compile_to_binary__x86_64(use->expression, context);
 }
 
 
@@ -208,12 +173,6 @@ bool gta_ast_node_use_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Cont
   assert(self);
   assert(GTA_AST_IS_USE(self));
   GTA_Ast_Node_Use * use = (GTA_Ast_Node_Use *)self;
-
-  assert(context);
-  assert(context->program);
-  assert(context->program->bytecode);
-  assert(context->bytecode_offsets);
-  return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_LOAD_LIBRARY))
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(use->hash));
+  assert(use->expression);
+  return gta_ast_node_compile_to_bytecode(use->expression, context);
 }

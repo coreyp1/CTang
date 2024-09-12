@@ -81,8 +81,36 @@ TEST(Library, Load) {
 
 TEST(Math, Constants) {
   {
-    // PI
+    // Pi
     TEST_PROGRAM_SETUP("use math; print(math.pi);");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ("3.141593", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
+TEST(Library, UseAs) {
+  {
+    // math, with library aliased.
+    TEST_PROGRAM_SETUP("use math as m; m;");
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_LIBRARY(context->result));
+    GTA_Computed_Value_Library * library = (GTA_Computed_Value_Library *)context->result;
+    ASSERT_STREQ("math", library->name);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // math.pi, with library aliased.
+    TEST_PROGRAM_SETUP("use math as m; print(m.pi);");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ("3.141593", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // math.pi, with pi aliased.
+    TEST_PROGRAM_SETUP("use math.pi as pi; print(pi);");
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
     ASSERT_STREQ("3.141593", context->output->buffer);
     TEST_PROGRAM_TEARDOWN();
