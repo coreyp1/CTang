@@ -64,7 +64,7 @@ static GTA_Computed_Value * GTA_CALL rng_next_int(GTA_Computed_Value * self, GTA
  *
  * @param self The random number generator object.
  * @param context The execution context.
- * @return The seed of the .
+ * @return The native function callback for setting the seed.
  */
 static GTA_Computed_Value * GTA_CALL rng_set_seed(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
@@ -150,7 +150,7 @@ GTA_Computed_Value_VTable gta_computed_value_rng_vtable = {
 };
 
 // The global random number generator computed value singleton.
-static GTA_Computed_Value_RNG gta_computed_value_library_random_global_singleton = {
+static GTA_Computed_Value_RNG gta_computed_value_random_global_singleton = {
   .base = {
     .vtable = &gta_computed_value_rng_vtable,
     .context = 0,
@@ -164,7 +164,7 @@ static GTA_Computed_Value_RNG gta_computed_value_library_random_global_singleton
   .seed = 0,
   .state = NULL,
 };
-GTA_Computed_Value * gta_computed_value_library_random_global = (GTA_Computed_Value *)&gta_computed_value_library_random_global_singleton;
+GTA_Computed_Value * gta_computed_value_random_global = (GTA_Computed_Value *)&gta_computed_value_random_global_singleton;
 
 
 GTA_Computed_Value_RNG * GTA_CALL gta_computed_value_rng_create(GTA_Execution_Context * context) {
@@ -264,7 +264,7 @@ static GTA_UInteger rng_get_default_seed(void) {
 
 static GTA_UInteger rng_get_next(GTA_Computed_Value_RNG * self) {
   assert(self);
-  if ((GTA_Computed_Value *)self == gta_computed_value_library_random_global) {
+  if ((GTA_Computed_Value *)self == gta_computed_value_random_global) {
     // Acquire the global semaphore.
     gcu_semaphore_wait(&global_semaphore);
 
@@ -318,7 +318,7 @@ static GTA_Computed_Value * rng_set_seed_callback(GTA_Computed_Value * bound_obj
   }
 
   // Check if the object is the global RNG.
-  if (bound_object == gta_computed_value_library_random_global) {
+  if (bound_object == gta_computed_value_random_global) {
     return gta_computed_value_error_global_rng_seed_not_changeable;
   }
 
@@ -338,7 +338,7 @@ static GTA_Computed_Value * rng_set_seed_callback(GTA_Computed_Value * bound_obj
  * Setup things that cannot be done at compile time.
  */
 GTA_INIT_FUNCTION(setup) {
-  gta_computed_value_library_random_global_singleton.seed = rng_get_default_seed();
+  gta_computed_value_random_global_singleton.seed = rng_get_default_seed();
   gta_computed_value_rng_vtable.attributes_count = sizeof(attributes) / sizeof(GTA_Computed_Value_Attribute_Pair);
 
   if (gcu_semaphore_create(&global_semaphore, 1)) {

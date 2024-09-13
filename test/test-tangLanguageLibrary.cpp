@@ -1,9 +1,10 @@
 #include <assert.h>
-#include <gtest/gtest.h>
-#include <cutil/memory.h>
 #include <iostream>
+#include <random>
+#include <gtest/gtest.h>
 #include <unicode/uclean.h>
 
+#include <cutil/memory.h>
 #include <tang/tang.h>
 #include <tang/macros.h>
 #include <tang/computedValue/computedValueAll.h>
@@ -59,7 +60,6 @@ TEST(Library, Load) {
   {
     // Math
     TEST_PROGRAM_SETUP("use math; math;");
-    ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_LIBRARY(context->result));
     GTA_Computed_Value_Library * library = (GTA_Computed_Value_Library *)context->result;
@@ -69,7 +69,6 @@ TEST(Library, Load) {
   {
     // Random
     TEST_PROGRAM_SETUP("use random; random;");
-    ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_LIBRARY(context->result));
     GTA_Computed_Value_Library * library = (GTA_Computed_Value_Library *)context->result;
@@ -94,7 +93,6 @@ TEST(Library, UseAs) {
   {
     // math, with library aliased.
     TEST_PROGRAM_SETUP("use math as m; m;");
-    ASSERT_TRUE(gta_program_execute(context));
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_LIBRARY(context->result));
     GTA_Computed_Value_Library * library = (GTA_Computed_Value_Library *)context->result;
@@ -120,9 +118,37 @@ TEST(Library, UseAs) {
 
 TEST(Random, Random) {
   {
-    // Random
+    // global
+    TEST_PROGRAM_SETUP("use random; random.global;");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_RNG(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_random_global);
+    ASSERT_TRUE(context->result->is_singleton);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // global, next_int
     TEST_PROGRAM_SETUP("use random; random.global.next_int;");
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Seeded
+    TEST_PROGRAM_SETUP("use random; random.seeded(123);");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_RNG(context->result));
+    GTA_Computed_Value_RNG * rng = (GTA_Computed_Value_RNG *)context->result;
+    ASSERT_FALSE(rng->base.is_singleton);
+    ASSERT_EQ(rng->seed, 123);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Seeded, compared with c++ mt19937_64
+    TEST_PROGRAM_SETUP("use random; random.seeded(123).next_int;");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    GTA_Computed_Value_Integer * result = (GTA_Computed_Value_Integer *)context->result;
+    std::mt19937_64 mt(123);
+    ASSERT_EQ(result->value, mt());
     TEST_PROGRAM_TEARDOWN();
   }
 }

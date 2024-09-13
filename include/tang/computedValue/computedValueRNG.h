@@ -14,7 +14,7 @@ extern "C" {
 /**
  * A singleton representing the global random number generator.
  */
-extern GTA_Computed_Value * gta_computed_value_library_random_global;
+extern GTA_Computed_Value * gta_computed_value_random_global;
 
 /**
  * The VTable for the ComputedValueRNG class.

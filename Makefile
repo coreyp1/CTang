@@ -841,8 +841,11 @@ $(OBJ_DIR)/computedValue/computedValueIterator.o: \
 
 $(OBJ_DIR)/computedValue/computedValueLibrary.o: \
 	src/computedValue/computedValueLibrary.c \
-	$(DEP_COMPUTEDVALUELIBRARY) \
 	$(DEP_COMPUTEDVALUEERROR) \
+	$(DEP_COMPUTEDVALUEINTEGER) \
+	$(DEP_COMPUTEDVALUELIBRARY) \
+	$(DEP_COMPUTEDVALUERNG) \
+	$(DEP_COMPUTEDVALUEFUNCTIONNATIVE) \
 	$(DEP_EXECUTIONCONTEXT)
 
 $(OBJ_DIR)/computedValue/computedValueMap.o: \
