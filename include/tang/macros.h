@@ -134,9 +134,17 @@ extern "C" {
 #if GTA_32_BIT
 typedef int32_t GTA_Integer;
 typedef uint32_t GTA_UInteger;
+#define GTA_INTEGER_MAX INT32_MAX
+#define GTA_INTEGER_MIN INT32_MIN
+#define GTA_UINTEGER_MAX UINT32_MAX
+#define GTA_UINTEGER_MIN 0
 #elif GTA_64_BIT
 typedef int64_t GTA_Integer;
 typedef uint64_t GTA_UInteger;
+#define GTA_INTEGER_MAX INT64_MAX
+#define GTA_INTEGER_MIN INT64_MIN
+#define GTA_UINTEGER_MAX UINT64_MAX
+#define GTA_UINTEGER_MIN 0
 #else
 #error "Unsupported architecture"
 #endif

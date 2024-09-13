@@ -58,6 +58,18 @@ static GTA_Computed_Value * GTA_CALL rng_next_int(GTA_Computed_Value * self, GTA
 
 
 /**
+ * Get the next random float from the random number generator.
+ *
+ * The float is in the range [0, 1].
+ *
+ * @param self The random number generator object.
+ * @param context The execution context.
+ * @return The next random float.
+ */
+static GTA_Computed_Value * GTA_CALL rng_next_float(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+
+/**
  * Set the seed of the random number generator.
  *
  * The seed of the global random number generator can not be changed.
@@ -86,7 +98,6 @@ static GTA_Computed_Value * rng_set_seed_callback(GTA_Computed_Value * bound_obj
  */
 static GTA_Computed_Value_Attribute_Pair attributes[] = {
   // TODO: Additional attributes planned:
-  // {"next_float", rng_next_float},
   // {"next_int_range", rng_next_int_range},
   // {"next_float_range", rng_next_float_range},
   // {"next_gaussian", rng_next_gaussian},
@@ -95,6 +106,7 @@ static GTA_Computed_Value_Attribute_Pair attributes[] = {
   // {"sample", rng_sample},
   // {"choose", rng_choose},
   {"next_int", rng_next_int},
+  {"next_float", rng_next_float},
   {"set_seed", rng_set_seed},
 };
 
@@ -290,6 +302,14 @@ static GTA_Computed_Value * GTA_CALL rng_next_int(GTA_Computed_Value * self, GTA
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_RNG(self));
   return (GTA_Computed_Value *)gta_computed_value_integer_create(rng_get_next((GTA_Computed_Value_RNG *)self), context);
+}
+
+
+// .next_float
+static GTA_Computed_Value * GTA_CALL rng_next_float(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_RNG(self));
+  return (GTA_Computed_Value *)gta_computed_value_float_create((GTA_Float)rng_get_next((GTA_Computed_Value_RNG *)self) / (GTA_Float)GTA_UINTEGER_MAX, context);
 }
 
 
