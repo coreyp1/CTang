@@ -133,6 +133,22 @@ TEST(Random, Random) {
     TEST_PROGRAM_TEARDOWN();
   }
   {
+    // default
+    TEST_PROGRAM_SETUP("use random; random.default;");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_RNG(context->result));
+    GTA_Computed_Value_RNG * rng = (GTA_Computed_Value_RNG *)context->result;
+    ASSERT_FALSE(rng->base.is_singleton);
+    ASSERT_TRUE(rng->seed);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // default.next_int
+    TEST_PROGRAM_SETUP("use random; random.default.next_int;");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result));
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
     // Seeded
     TEST_PROGRAM_SETUP("use random; random.seeded(123);");
     ASSERT_TRUE(context->result);

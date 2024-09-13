@@ -19,6 +19,17 @@ static GTA_Computed_Value * GTA_CALL gta_library_random_make_global(GTA_Executio
 
 
 /**
+ * Random library attribute to get a random number generator seeded with the
+ * current time.
+ *
+ * @param context The context of the program being executed.
+ * @return The computed value for a random number generator seeded with the
+ *  current time.
+ */
+static GTA_Computed_Value * GTA_CALL gta_library_random_make_default(GTA_Execution_Context * context);
+
+
+/**
  * Random library attribute to get a seeded random number generator.
  *
  * @param context The context of the program being executed.
@@ -65,8 +76,7 @@ static GTA_Computed_Value_Function_Native lib_rand_make_seeded = {
  * The attributes of the Random library.
  */
 static GTA_Computed_Value_Library_Attribute_Pair attributes[] = {
-  // TODO: additional attributes planned
-  // {"default", gta_library_random_make_default},
+  {"default", gta_library_random_make_default},
   {"global", gta_library_random_make_global},
   {"seeded", gta_library_random_make_seeded},
 };
@@ -94,13 +104,18 @@ static GTA_Computed_Value_Library gta_computed_value_library_random_singleton = 
 GTA_Computed_Value * gta_computed_value_library_random = (GTA_Computed_Value *)&gta_computed_value_library_random_singleton;
 
 
-static GTA_Computed_Value * GTA_CALL gta_library_random_make_global(GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
-  return gta_computed_value_random_global;
+GTA_Computed_Value * GTA_CALL gta_library_random_load(GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  return gta_computed_value_library_random;
 }
 
 
-GTA_Computed_Value * GTA_CALL gta_library_random_load(GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
-  return gta_computed_value_library_random;
+static GTA_Computed_Value * GTA_CALL gta_library_random_make_default(GTA_Execution_Context * context) {
+  return (GTA_Computed_Value *)gta_computed_value_rng_create(context);
+}
+
+
+static GTA_Computed_Value * GTA_CALL gta_library_random_make_global(GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  return gta_computed_value_random_global;
 }
 
 
