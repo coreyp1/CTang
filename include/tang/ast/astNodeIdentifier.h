@@ -58,7 +58,7 @@ typedef enum GTA_Ast_Node_Identifier_Type {
  *   by default.)
  * 3. Otherwise, the identifier is resolved to the local variable.
  */
-typedef struct GTA_Ast_Node_Identifier {
+struct GTA_Ast_Node_Identifier {
   /**
    * The base class.
    */
@@ -97,7 +97,7 @@ typedef struct GTA_Ast_Node_Identifier {
    * how to resolve a variable name.
    */
   GTA_Variable_Scope * scope;
-} GTA_Ast_Node_Identifier;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Identifier object.

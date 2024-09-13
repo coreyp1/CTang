@@ -174,6 +174,7 @@
 %code requires {
 #include <stdint.h>
 #include <cutil/hash.h>
+#include <tang/macros.h>
 #include <tang/ast/astNode.h>
 #include <tang/location.h>
 #include <tang/unicodeString.h>

@@ -24,7 +24,7 @@ extern GTA_Computed_Value_VTable gta_computed_value_rng_vtable;
 /**
  * The computed value for a random number generator.
  */
-typedef struct GTA_Computed_Value_RNG {
+struct GTA_Computed_Value_RNG {
   /**
    * The base class for the computed value.
    */
@@ -37,7 +37,7 @@ typedef struct GTA_Computed_Value_RNG {
    * The random number generator state.
    */
   void * state;
-} GTA_Computed_Value_RNG;
+};
 
 /**
  * Create a new computed value for a random number generator with the provided

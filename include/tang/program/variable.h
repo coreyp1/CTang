@@ -23,87 +23,87 @@ extern "C" {
  * Functions are considered to be accessible only from the scope in which they
  * are declared, or from a child scope.
  */
-typedef struct GTA_Variable_Scope {
-    /**
-     * The name of the scope.
-     *
-     * This name will be prepended to any child scope names, separated by a
-     * "/" character.  For example, if the parent scope is named "foo" and the
-     * child scope is named "bar", the child scope's full name will be
-     * "foo/bar".
-     */
-    char * name;
-    /**
-     * The hash of the name.
-     *
-     * This is used for quick comparisons.
-     */
-    GTA_Integer name_hash;
-    /**
-     * The parent scope.
-     *
-     * This is NULL for the global scope.
-     */
-    GTA_Variable_Scope * parent_scope;
-    /**
-     * The AST node that created this scope.
-     */
-    GTA_Ast_Node * ast_node;
-    /**
-     * The library variables in this scope.
-     *
-     * Library variables are automatically available to all scopes.  They may
-     * be declared in the outermost scope using the "use <expression> as
-     * <identifier>" statement or "use <identifier>" statement.  In either
-     * case, the identifier is added to the library scope as the key, and the
-     * "use..." AST node is added as the value.
-     *
-     * An identifier may only be used once.  It is an error to attempt to use
-     * an identifier that has already been declared in the local or global
-     * scope.
-     */
-    GTA_HashX * library_declarations;
-    /**
-     * This records the first AST node in a scope for which a given identifier
-     * was linked to a library, global, local, or function variable.
-     *
-     * The key is the identifier hash (non-mangled), and the value is the AST
-     * node that first identified what the identifier should reference.
-     *
-     * This is used so that, as the scope is traversed, all identifiers can be
-     * quickly identified as library, global, local, or function variables
-     * without having to search through all of the hash tables.
-     */
-    GTA_HashX * identified_variables;
-    /**
-     * This records the position of the local variable within the stack.
-     *
-     * The key is the identifier hash, and the value is the position in the
-     * stack (not accounting for any offsets from the base pointer).
-     *
-     * Function arguments are automatically considered to be local variables.
-     */
-    GTA_HashX * variable_positions;
-    /**
-     * The functions in this scope.
-     *
-     * The key is the mangled identifier hash, and the value is the
-     * GTA_Variable_Scope object that represents the function.
-     *
-     * A function's mangled name is created by concatenating the parent scope's
-     * name with the function's identifier, separated by a "/" character.
-     *
-     * Only the outermost scope will contain the function declarations,
-     * regardless of where the function is declared in the program.
-     *
-     * This must be empty for scopes that are not the outermost scope.
-     */
-    GTA_HashX * function_scopes;
-    /**
-     * A list of name hashes that should be freed when the scope is destroyed.
-     */
-    GTA_VectorX * allocated_mangled_names;
-} GTA_Variable_Scope;
+struct GTA_Variable_Scope {
+  /**
+   * The name of the scope.
+   *
+   * This name will be prepended to any child scope names, separated by a
+   * "/" character.  For example, if the parent scope is named "foo" and the
+   * child scope is named "bar", the child scope's full name will be
+   * "foo/bar".
+   */
+  char * name;
+  /**
+   * The hash of the name.
+   *
+   * This is used for quick comparisons.
+   */
+  GTA_Integer name_hash;
+  /**
+   * The parent scope.
+   *
+   * This is NULL for the global scope.
+   */
+  GTA_Variable_Scope * parent_scope;
+  /**
+   * The AST node that created this scope.
+   */
+  GTA_Ast_Node * ast_node;
+  /**
+   * The library variables in this scope.
+   *
+   * Library variables are automatically available to all scopes.  They may
+   * be declared in the outermost scope using the "use <expression> as
+   * <identifier>" statement or "use <identifier>" statement.  In either
+   * case, the identifier is added to the library scope as the key, and the
+   * "use..." AST node is added as the value.
+   *
+   * An identifier may only be used once.  It is an error to attempt to use
+   * an identifier that has already been declared in the local or global
+   * scope.
+   */
+  GTA_HashX * library_declarations;
+  /**
+   * This records the first AST node in a scope for which a given identifier
+   * was linked to a library, global, local, or function variable.
+   *
+   * The key is the identifier hash (non-mangled), and the value is the AST
+   * node that first identified what the identifier should reference.
+   *
+   * This is used so that, as the scope is traversed, all identifiers can be
+   * quickly identified as library, global, local, or function variables
+   * without having to search through all of the hash tables.
+   */
+  GTA_HashX * identified_variables;
+  /**
+   * This records the position of the local variable within the stack.
+   *
+   * The key is the identifier hash, and the value is the position in the
+   * stack (not accounting for any offsets from the base pointer).
+   *
+   * Function arguments are automatically considered to be local variables.
+   */
+  GTA_HashX * variable_positions;
+  /**
+   * The functions in this scope.
+   *
+   * The key is the mangled identifier hash, and the value is the
+   * GTA_Variable_Scope object that represents the function.
+   *
+   * A function's mangled name is created by concatenating the parent scope's
+   * name with the function's identifier, separated by a "/" character.
+   *
+   * Only the outermost scope will contain the function declarations,
+   * regardless of where the function is declared in the program.
+   *
+   * This must be empty for scopes that are not the outermost scope.
+   */
+  GTA_HashX * function_scopes;
+  /**
+   * A list of name hashes that should be freed when the scope is destroyed.
+   */
+  GTA_VectorX * allocated_mangled_names;
+};
 
 /**
  * Create a new variable scope.

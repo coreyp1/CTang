@@ -31,10 +31,10 @@ extern GTA_Computed_Value * gta_computed_value_boolean_false;
 /**
  * The GTA_Computed_Value_Boolean class.
  */
-typedef struct GTA_Computed_Value_Boolean {
+struct GTA_Computed_Value_Boolean {
   GTA_Computed_Value base;
   bool value;
-} GTA_Computed_Value_Boolean;
+};
 
 /**
  * Initializes a GTA_Computed_Value_Boolean object.

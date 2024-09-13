@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_slice_vtable;
 /**
  * The GTA_Ast_Node_Slice class.
  */
-typedef struct GTA_Ast_Node_Slice {
+struct GTA_Ast_Node_Slice {
   /**
    * The base class.
    */
@@ -40,7 +40,7 @@ typedef struct GTA_Ast_Node_Slice {
    * The skip of the slice operation.
    */
   GTA_Ast_Node * skip;
-} GTA_Ast_Node_Slice;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Slice object.

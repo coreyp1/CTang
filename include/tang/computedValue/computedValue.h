@@ -57,7 +57,7 @@ struct GTA_Computed_Value_Attribute_Pair {
  *
  * @see GTA_Computed_Value
  */
-typedef struct GTA_Computed_Value_VTable {
+struct GTA_Computed_Value_VTable {
   /**
    * The name of the class.
    */
@@ -328,7 +328,7 @@ typedef struct GTA_Computed_Value_VTable {
    * The number of attributes in the `attributes` array.
    */
   size_t attributes_count;
-} GTA_Computed_Value_VTable;
+};
 
 /**
  * The null virtual table singleton for the computed value class.
@@ -338,7 +338,7 @@ extern GTA_Computed_Value_VTable gta_computed_value_null_vtable;
 /**
  * The base class for all computed values.
  */
-typedef struct GTA_Computed_Value {
+struct GTA_Computed_Value {
   /**
    * The virtual table for the class.
    *
@@ -401,7 +401,7 @@ typedef struct GTA_Computed_Value {
    * is used in multiple places, such as in passing an object to a function.
    */
   bool is_a_reference;
-} GTA_Computed_Value;
+};
 
 /**
  * The NULL computed value singleton.

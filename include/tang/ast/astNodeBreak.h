@@ -19,12 +19,12 @@ extern GTA_Ast_Node_VTable gta_ast_node_break_vtable;
 /**
  * The GTA_Ast_Node_Break class.
  */
-typedef struct GTA_Ast_Node_Break {
+struct GTA_Ast_Node_Break {
   /**
    * The base class.
    */
   GTA_Ast_Node base;
-} GTA_Ast_Node_Break;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Break object.

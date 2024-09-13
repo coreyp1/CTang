@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_use_vtable;
 /**
  * The GTA_Ast_Node_Use class.
  */
-typedef struct GTA_Ast_Node_Use {
+struct GTA_Ast_Node_Use {
   /**
    * The base class.
    */
@@ -36,7 +36,7 @@ typedef struct GTA_Ast_Node_Use {
    * The expression of the use statement.
    */
   GTA_Ast_Node * expression;
-} GTA_Ast_Node_Use;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Use object.

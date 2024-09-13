@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_index_vtable;
 /**
  * The GTA_Ast_Node_Index class.
  */
-typedef struct GTA_Ast_Node_Index {
+struct GTA_Ast_Node_Index {
   /**
    * The base class.
    */
@@ -32,7 +32,7 @@ typedef struct GTA_Ast_Node_Index {
    * The right-hand side of the index operation.
    */
   GTA_Ast_Node * rhs;
-} GTA_Ast_Node_Index;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Index object.

@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_function_call_vtable;
 /**
  * The GTA_Ast_Node_Function_Call class.
  */
-typedef struct GTA_Ast_Node_Function_Call {
+struct GTA_Ast_Node_Function_Call {
   /**
    * The base class.
    */
@@ -34,7 +34,7 @@ typedef struct GTA_Ast_Node_Function_Call {
    * This is a vector of GTA_Ast_Node objects.
    */
   GTA_VectorX * arguments;
-} GTA_Ast_Node_Function_Call;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Function_Call object.

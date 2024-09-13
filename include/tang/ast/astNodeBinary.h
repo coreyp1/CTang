@@ -38,7 +38,7 @@ typedef enum GTA_Binary_Type {
 /**
  * The GTA_Ast_Node_Binary class.
  */
-typedef struct GTA_Ast_Node_Binary {
+struct GTA_Ast_Node_Binary {
   /**
    * The base class.
    */
@@ -55,7 +55,7 @@ typedef struct GTA_Ast_Node_Binary {
    * The type of binary operation.
    */
   GTA_Binary_Type operator_type;
-} GTA_Ast_Node_Binary;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Binary object.

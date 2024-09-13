@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_return_vtable;
 /**
  * The GTA_Ast_Node_Return class.
  */
-typedef struct GTA_Ast_Node_Return {
+struct GTA_Ast_Node_Return {
   /**
    * The base class.
    */
@@ -28,7 +28,7 @@ typedef struct GTA_Ast_Node_Return {
    * The expression to return.
    */
   GTA_Ast_Node * expression;
-} GTA_Ast_Node_Return;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Return object.

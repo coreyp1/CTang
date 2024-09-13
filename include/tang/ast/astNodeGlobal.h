@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_global_vtable;
 /**
  * The GTA_Ast_Node_Global class.
  */
-typedef struct GTA_Ast_Node_Global {
+struct GTA_Ast_Node_Global {
   /**
    * The base class.
    */
@@ -35,7 +35,7 @@ typedef struct GTA_Ast_Node_Global {
    * The assignment (if present).
    */
   GTA_Ast_Node * assignment;
-} GTA_Ast_Node_Global;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Global object.

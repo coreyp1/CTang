@@ -87,7 +87,7 @@ extern GTA_Computed_Value * gta_computed_value_error_global_rng_seed_not_changea
 /**
  * Represents an error value.
  */
-typedef struct GTA_Computed_Value_Error {
+struct GTA_Computed_Value_Error {
   /**
    * The base class.
    */
@@ -96,7 +96,7 @@ typedef struct GTA_Computed_Value_Error {
    * The error message.
    */
   char * message;
-} GTA_Computed_Value_Error;
+};
 
 /**
  * Creates a new GTA_Computed_Value_Error object.

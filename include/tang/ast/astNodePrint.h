@@ -29,7 +29,7 @@ enum GTA_Print_Type {
 /**
  * The GTA_Ast_Node_Print class.
  */
-typedef struct GTA_Ast_Node_Print {
+struct GTA_Ast_Node_Print {
   /**
    * The base class.
    */
@@ -38,7 +38,7 @@ typedef struct GTA_Ast_Node_Print {
    * The type of print.
    */
   GTA_Ast_Node * expression;
-} GTA_Ast_Node_Print;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Print object.

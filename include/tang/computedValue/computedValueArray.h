@@ -21,7 +21,7 @@ extern GTA_Computed_Value_VTable gta_computed_value_array_vtable;
 /**
  * The computed value for an array.
  */
-typedef struct GTA_Computed_Value_Array {
+struct GTA_Computed_Value_Array {
   /**
    * The base class for the computed value.
    */
@@ -30,7 +30,7 @@ typedef struct GTA_Computed_Value_Array {
    * The values in the array.
    */
   GTA_VectorX * elements;
-} GTA_Computed_Value_Array;
+};
 
 /**
  * Create a new computed value for an array.

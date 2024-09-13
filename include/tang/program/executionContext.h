@@ -39,7 +39,7 @@ typedef GTA_Computed_Value * GTA_CALL (*GTA_Execution_Context_Global_Create) (GT
  * The Context class is used to manage the state of the execution environment
  * for a Tang program as it is being executed.
 */
-typedef struct GTA_Execution_Context {
+struct GTA_Execution_Context {
   /**
    * The program being executed.
   */
@@ -76,7 +76,7 @@ typedef struct GTA_Execution_Context {
    * The current frame pointer.
    */
   GTA_UInteger fp;
-} GTA_Execution_Context;
+};
 
 /**
  * Creates a new Context object.

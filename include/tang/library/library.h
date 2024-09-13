@@ -30,12 +30,12 @@ typedef GTA_Computed_Value * GTA_CALL (*GTA_Library_Callback) (GTA_Execution_Con
 /**
  * The library structure.
  */
-typedef struct GTA_Library {
+struct GTA_Library {
   /**
    * The entries in the library.
    */
   GTA_HashX * manifest;
-} GTA_Library;
+};
 
 /**
  * Create a new library object.

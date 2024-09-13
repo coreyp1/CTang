@@ -50,7 +50,7 @@ extern GTA_Ast_Node * gta_ast_node_parse_error_global_identifier_redeclared;
 /**
  * The GTA_Ast_Node_Parse_Error class.
  */
-typedef struct GTA_Ast_Node_Parse_Error {
+struct GTA_Ast_Node_Parse_Error {
   /**
    * The base class.
    */
@@ -59,7 +59,7 @@ typedef struct GTA_Ast_Node_Parse_Error {
    * The message of the parse error.
    */
   char * message;
-} GTA_Ast_Node_Parse_Error;
+};
 
 
 /**

@@ -19,12 +19,12 @@ extern "C" {
  * the details of the language (such as the available libraries) to the needs
  * of the program(s) with which it is interacting.
  */
-typedef struct GTA_Language {
+struct GTA_Language {
   /**
    * The general libraries available to the language.
    */
   GTA_Library * library;
-} GTA_Language;
+};
 
 /**
  * Create a new language.

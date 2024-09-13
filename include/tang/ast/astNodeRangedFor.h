@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_ranged_for_vtable;
 /**
  * The GTA_Ast_Node_Ranged_For class.
  */
-typedef struct GTA_Ast_Node_Ranged_For {
+struct GTA_Ast_Node_Ranged_For {
   /**
    * The base class.
    */
@@ -40,7 +40,7 @@ typedef struct GTA_Ast_Node_Ranged_For {
    * The block of the ranged for loop.
    */
   GTA_Ast_Node * block;
-} GTA_Ast_Node_Ranged_For;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Ranged_For object.

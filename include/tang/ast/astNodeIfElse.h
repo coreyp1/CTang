@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_if_else_vtable;
 /**
  * The GTA_Ast_Node_If_Else class.
  */
-typedef struct GTA_Ast_Node_If_Else {
+struct GTA_Ast_Node_If_Else {
   /**
    * The base class.
    */
@@ -36,7 +36,7 @@ typedef struct GTA_Ast_Node_If_Else {
    * The else block of the if-else statement.
    */
   GTA_Ast_Node * elseBlock;
-} GTA_Ast_Node_If_Else;
+};
 
 /**
  * Creates a new GTA_Ast_Node_If_Else object.

@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_period_vtable;
 /**
  * The GTA_Ast_Node_Period class.
  */
-typedef struct GTA_Ast_Node_Period {
+struct GTA_Ast_Node_Period {
   /**
    * The base class.
    */
@@ -32,7 +32,7 @@ typedef struct GTA_Ast_Node_Period {
    * The right-hand side of the period operation.
    */
   const char * rhs;
-} GTA_Ast_Node_Period;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Period object.

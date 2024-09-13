@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_boolean_vtable;
 /**
  * The GTA_Ast_Node_Boolean class.
  */
-typedef struct GTA_Ast_Node_Boolean {
+struct GTA_Ast_Node_Boolean {
   /**
    * The base class.
    */
@@ -28,7 +28,7 @@ typedef struct GTA_Ast_Node_Boolean {
    * The boolean value.
    */
   bool value;
-} GTA_Ast_Node_Boolean;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Boolean object.

@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_assign_vtable;
 /**
  * The GTA_Ast_Node_Assign class.
  */
-typedef struct GTA_Ast_Node_Assign {
+struct GTA_Ast_Node_Assign {
   /**
    * The base class.
    */
@@ -32,7 +32,7 @@ typedef struct GTA_Ast_Node_Assign {
    * The right-hand side of the assignment.
    */
   GTA_Ast_Node * rhs;
-} GTA_Ast_Node_Assign;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Assign object.

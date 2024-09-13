@@ -29,7 +29,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_function_vtable;
  * separately and will resolve to the correct function declaration according to
  * the scope resolution rules.
  */
-typedef struct GTA_Ast_Node_Function {
+struct GTA_Ast_Node_Function {
   /**
    * The base class.
    */
@@ -74,7 +74,7 @@ typedef struct GTA_Ast_Node_Function {
    * runtime.  Obviously, this cannot be created until compile time.
    */
   GTA_Computed_Value_Function * runtime_function;
-} GTA_Ast_Node_Function;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Function object.

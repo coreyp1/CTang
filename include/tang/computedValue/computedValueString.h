@@ -22,7 +22,7 @@ extern GTA_Computed_Value_VTable gta_computed_value_string_vtable;
 /**
  * The GTA_Computed_Value_String class.
  */
-typedef struct GTA_Computed_Value_String {
+struct GTA_Computed_Value_String {
   /**
    * The base class.
    */
@@ -42,7 +42,7 @@ typedef struct GTA_Computed_Value_String {
    * string is also a singleton.
    */
   bool is_owned;
-} GTA_Computed_Value_String;
+};
 
 /**
  * Singleton for an empty Computed_Value_String object.

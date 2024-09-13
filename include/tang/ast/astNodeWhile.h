@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_while_vtable;
 /**
  * The GTA_Ast_Node_While class.
  */
-typedef struct GTA_Ast_Node_While {
+struct GTA_Ast_Node_While {
   /**
    * The base class.
    */
@@ -32,7 +32,7 @@ typedef struct GTA_Ast_Node_While {
    * The block of the while loop.
    */
   GTA_Ast_Node * block;
-} GTA_Ast_Node_While;
+};
 
 /**
  * Creates a new GTA_Ast_Node_While object.

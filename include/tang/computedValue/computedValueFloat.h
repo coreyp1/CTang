@@ -21,7 +21,7 @@ extern GTA_Computed_Value_VTable gta_computed_value_float_vtable;
 /**
  * The Computed Value Float class.
  */
-typedef struct GTA_Computed_Value_Float {
+struct GTA_Computed_Value_Float {
   /**
    * The base class.
    */
@@ -30,7 +30,7 @@ typedef struct GTA_Computed_Value_Float {
    * The value.
    */
   GTA_Float value;
-} GTA_Computed_Value_Float;
+};
 
 /**
  * Create a new Computed Value Float.

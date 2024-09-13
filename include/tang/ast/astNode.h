@@ -65,7 +65,7 @@ typedef enum GTA_Ast_Possible_Type {
 /**
  * The vtable for the GTA_Ast_Node class.
  */
-typedef struct GTA_Ast_Node_VTable {
+struct GTA_Ast_Node_VTable {
   /**
    * The name of the class.  It should be unique for each class, and should be
    * suitable for printing in error messages.
@@ -163,7 +163,7 @@ typedef struct GTA_Ast_Node_VTable {
    *   the callback function.  This value can be modified by the callback.
    */
   void (*walk)(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
-} GTA_Ast_Node_VTable;
+};
 
 /**
  * The vtable for the GTA_Ast_Node class.
@@ -175,7 +175,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_null_vtable;
 /**
  * The base class for all AST nodes.
  */
-typedef struct GTA_Ast_Node {
+struct GTA_Ast_Node {
   /**
    * The vtable for the GTA_Ast_Node class.
    */
@@ -192,7 +192,7 @@ typedef struct GTA_Ast_Node {
    * Whether or not the AST node is a singleton.
    */
   bool is_singleton;
-} GTA_Ast_Node;
+};
 
 /**
  * Create a new AST node.

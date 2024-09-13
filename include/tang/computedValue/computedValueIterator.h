@@ -76,7 +76,7 @@ typedef void (*GTA_Iterator_Destroy)(GTA_Computed_Value_Iterator * iterator);
  * value is provided to signify that the iterator has reached the end of the
  * collection and no more values are available.
  */
-typedef struct GTA_Computed_Value_Iterator {
+struct GTA_Computed_Value_Iterator {
   /**
    * The base class for the computed value.
    */
@@ -106,7 +106,7 @@ typedef struct GTA_Computed_Value_Iterator {
    * The value returned by the iterator when it is advanced.
    */
   GTA_Computed_Value * value;
-} GTA_Computed_Value_Iterator;
+};
 
 /**
  * Create a new iterator object.

@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_array_vtable;
 /**
  * The GTA_Ast_Node_Array class.
  */
-typedef struct GTA_Ast_Node_Array {
+struct GTA_Ast_Node_Array {
   /**
    * The base class.
    */
@@ -28,7 +28,7 @@ typedef struct GTA_Ast_Node_Array {
    * The elements of the array.
    */
   GTA_VectorX * elements;
-} GTA_Ast_Node_Array;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Array object.

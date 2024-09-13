@@ -61,7 +61,7 @@ extern GTA_Computed_Value_VTable gta_computed_value_function_vtable;
  * the function must reserve an empty "slot" for the frame pointer when it is
  * analyzing the function, before the compilation step.
  */
-typedef struct GTA_Computed_Value_Function {
+struct GTA_Computed_Value_Function {
   /**
    * The base class.
    */
@@ -74,7 +74,7 @@ typedef struct GTA_Computed_Value_Function {
    * The pointer to the function (either bytecode or binary).
    */
   size_t pointer;
-} GTA_Computed_Value_Function;
+};
 
 /**
  * Creates a new GTA_Computed_Value_Function object.

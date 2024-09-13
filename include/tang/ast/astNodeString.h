@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_string_vtable;
 /**
  * The GTA_Ast_Node_String class.
  */
-typedef struct GTA_Ast_Node_String {
+struct GTA_Ast_Node_String {
   /**
    * The base class.
    */
@@ -28,7 +28,7 @@ typedef struct GTA_Ast_Node_String {
    * The string.
    */
   GTA_Unicode_String * string;
-} GTA_Ast_Node_String;
+};
 
 /**
  * Creates a new GTA_Ast_Node_String object.

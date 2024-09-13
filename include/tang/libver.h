@@ -113,6 +113,12 @@
 // Type-Related Definitions
 //-----------------------------------------------------------------------------
 
+/// @cond HIDDEN_SYMBOLS
+#define GTA_Unicode_String G_TANG(GTA_Unicode_String)
+/// @endcond HIDDEN_SYMBOLS
+
+
+
 #if DOXYGEN
 /**
  * Indicate the size of the `wchar` type.

@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_float_vtable;
 /**
  * The GTA_Ast_Node_Float class.
  */
-typedef struct GTA_Ast_Node_Float {
+struct GTA_Ast_Node_Float {
   /**
    * The base class.
    */
@@ -28,7 +28,7 @@ typedef struct GTA_Ast_Node_Float {
    * The value of the float.
    */
   GCU_float64_t value;
-} GTA_Ast_Node_Float;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Float object.

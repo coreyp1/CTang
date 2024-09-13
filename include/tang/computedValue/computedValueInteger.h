@@ -21,7 +21,7 @@ extern GTA_Computed_Value_VTable gta_computed_value_integer_vtable;
 /**
  * The computed value for an integer.
  */
-typedef struct GTA_Computed_Value_Integer {
+struct GTA_Computed_Value_Integer {
   /**
    * The base class for the computed value.
    */
@@ -30,7 +30,7 @@ typedef struct GTA_Computed_Value_Integer {
    * The value of the integer.
    */
   GTA_Integer value;
-} GTA_Computed_Value_Integer;
+};
 
 /**
  * Create a new computed value for an integer.

@@ -29,7 +29,7 @@ typedef enum GTA_Cast_Type {
 /**
  * The GTA_Ast_Node_Cast class.
  */
-typedef struct GTA_Ast_Node_Cast {
+struct GTA_Ast_Node_Cast {
   /**
    * The base class.
    */
@@ -42,7 +42,7 @@ typedef struct GTA_Ast_Node_Cast {
    * The type of cast.
    */
   GTA_Cast_Type type;
-} GTA_Ast_Node_Cast;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Cast object.

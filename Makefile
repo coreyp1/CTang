@@ -97,7 +97,8 @@ all: $(APP_DIR)/$(TARGET) $(APP_DIR)/tang ## Build the shared library
 DEP_LIBVER = \
 	include/tang/libver.h
 DEP_MACROS = \
-	include/tang/macros.h
+	include/tang/macros.h \
+	$(DEP_LIBVER)
 DEP_UNICODESTRING = \
 	include/tang/unicodeString.h \
 	$(DEP_MACROS)

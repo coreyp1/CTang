@@ -19,12 +19,12 @@ extern GTA_Ast_Node_VTable gta_ast_node_continue_vtable;
 /**
  * The GTA_Ast_Node_Continue class.
  */
-typedef struct GTA_Ast_Node_Continue {
+struct GTA_Ast_Node_Continue {
   /**
    * The base class.
    */
   GTA_Ast_Node base;
-} GTA_Ast_Node_Continue;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Continue object.

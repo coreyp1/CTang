@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_ternary_vtable;
 /**
  * The GTA_Ast_Node_Ternary class.
  */
-typedef struct GTA_Ast_Node_Ternary {
+struct GTA_Ast_Node_Ternary {
   /**
    * The base class.
    */
@@ -36,7 +36,7 @@ typedef struct GTA_Ast_Node_Ternary {
    * The value if the condition is false.
    */
   GTA_Ast_Node * ifFalse;
-} GTA_Ast_Node_Ternary;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Ternary object.

@@ -27,7 +27,7 @@ typedef enum GTA_Unary_Type {
 /**
  * The GTA_Ast_Node_Unary class.
  */
-typedef struct GTA_Ast_Node_Unary {
+struct GTA_Ast_Node_Unary {
   /**
    * The base class.
    */
@@ -40,7 +40,7 @@ typedef struct GTA_Ast_Node_Unary {
    * The type of unary operation.
    */
   GTA_Unary_Type operator_type;
-} GTA_Ast_Node_Unary;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Unary object.

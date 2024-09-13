@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_library_vtable;
 /**
  * The GTA_Ast_Node_Library class.
  */
-typedef struct GTA_Ast_Node_Library {
+struct GTA_Ast_Node_Library {
   /**
    * The base class.
    */
@@ -32,7 +32,7 @@ typedef struct GTA_Ast_Node_Library {
    * A hash of the identifier.
    */
   GTA_UInteger hash;
-} GTA_Ast_Node_Library;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Library object.

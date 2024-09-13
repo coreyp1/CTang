@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_block_vtable;
 /**
  * The GTA_Ast_Node_Block class.
  */
-typedef struct GTA_Ast_Node_Block {
+struct GTA_Ast_Node_Block {
   /**
    * The base class.
    */
@@ -28,7 +28,7 @@ typedef struct GTA_Ast_Node_Block {
    * The statements in the block.
    */
   GTA_VectorX * statements;
-} GTA_Ast_Node_Block;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Block object.

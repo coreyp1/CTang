@@ -21,7 +21,7 @@ extern "C" {
 /**
  * The context for the compiler.
  */
-typedef struct GTA_Compiler_Context {
+struct GTA_Compiler_Context {
   /**
    * The program that the compiler is compiling.
    */
@@ -99,7 +99,7 @@ typedef struct GTA_Compiler_Context {
    * The code should ensure that a value is on the stack, ready for a POP.
    */
   GTA_Integer return_label;
-} GTA_Compiler_Context;
+};
 
 /**
  * Create a new compiler context.

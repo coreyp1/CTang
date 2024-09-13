@@ -35,7 +35,7 @@ extern GTA_Computed_Value * gta_computed_value_error_map_key_not_string;
  * the key and the value.  The reason for this is so that the map can be
  * iterated over and that the actual key string value is recoverable.
  */
-typedef struct GTA_Computed_Value_Map {
+struct GTA_Computed_Value_Map {
   /**
    * The base class for the computed value.
    */
@@ -48,7 +48,7 @@ typedef struct GTA_Computed_Value_Map {
    * The hash table for the values.
    */
   GTA_HashX * value_hash;
-} GTA_Computed_Value_Map;
+};
 
 /**
  * Create a new computed value for a map container.

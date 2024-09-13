@@ -98,7 +98,7 @@ typedef uint32_t GTA_Program_Flags;
 /**
  * Holds the metadata for a program.
  */
-typedef struct GTA_Program {
+struct GTA_Program {
   /**
    * The language with which the program should be executed.
    */
@@ -156,7 +156,7 @@ typedef struct GTA_Program {
    * the attribute value request.
    */
   GTA_HashX * attributes;
-} GTA_Program;
+};
 
 /**
  * Create a new program from the given code.

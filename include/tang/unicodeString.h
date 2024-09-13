@@ -33,10 +33,6 @@
 extern "C" {
 #endif
 
-/// @cond HIDDEN_SYMBOLS
-#define GTA_Unicode_String G_TANG(GTA_Unicode_String)
-/// @endcond HIDDEN_SYMBOLS
-
 /**
  * Get the top 32 bits of a 64-bit integer.
  *
@@ -71,7 +67,7 @@ extern "C" {
  * included here for efficiency in locality of reference when accessing the
  * string.
  */
-typedef struct {
+struct GTA_Unicode_String {
   const char * buffer;             ///< The string buffer.
   size_t grapheme_length;          ///< Length of the string in graphemes.
   size_t byte_length;              ///< Length of the string in bytes.  Does
@@ -83,7 +79,7 @@ typedef struct {
                                    ///<   that the string can be encoded
                                    ///<   correctly, even if it has been
                                    ///<   concatenated with other strings.
-} GTA_Unicode_String;
+};
 
 /**
  * The type of the substring.

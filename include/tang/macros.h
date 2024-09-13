@@ -21,6 +21,7 @@ extern "C" {
 #include <cutil/vector.h>
 #include <cutil/hash.h>
 #include <cutil/string.h>
+#include <tang/libver.h>
 
 /**
  * Declaring the calling convention (for consistency).
@@ -332,9 +333,11 @@ typedef struct GTA_Ast_Node_Slice GTA_Ast_Node_Slice;
 typedef struct GTA_Ast_Node_String GTA_Ast_Node_String;
 typedef struct GTA_Ast_Node_Ternary GTA_Ast_Node_Ternary;
 typedef struct GTA_Ast_Node_Unary GTA_Ast_Node_Unary;
+typedef struct GTA_Ast_Node_Use GTA_Ast_Node_Use;
 typedef struct GTA_Ast_Node_VTable GTA_Ast_Node_VTable;
-typedef struct GTA_Compiler_Context GTA_Compiler_Context;
+typedef struct GTA_Ast_Node_While GTA_Ast_Node_While;
 typedef struct GTA_Bytecode_Compiler_Context GTA_Bytecode_Compiler_Context;
+typedef struct GTA_Compiler_Context GTA_Compiler_Context;
 typedef struct GTA_Computed_Value GTA_Computed_Value;
 typedef struct GTA_Computed_Value_Attribute_Pair GTA_Computed_Value_Attribute_Pair;
 typedef struct GTA_Computed_Value_Array GTA_Computed_Value_Array;
@@ -348,12 +351,15 @@ typedef struct GTA_Computed_Value_Iterator GTA_Computed_Value_Iterator;
 typedef struct GTA_Computed_Value_Library GTA_Computed_Value_Library;
 typedef struct GTA_Computed_Value_Library_Attribute_Pair GTA_Computed_Value_Library_Attribute_Pair;
 typedef struct GTA_Computed_Value_Map GTA_Computed_Value_Map;
+typedef struct GTA_Computed_Value_RNG GTA_Computed_Value_RNG;
 typedef struct GTA_Computed_Value_String GTA_Computed_Value_String;
 typedef struct GTA_Computed_Value_VTable GTA_Computed_Value_VTable;
 typedef struct GTA_Execution_Context GTA_Execution_Context;
+typedef struct GTA_Language GTA_Language;
 typedef struct GTA_Library GTA_Library;
 typedef struct GTA_Program GTA_Program;
 typedef struct GTA_Variable_Scope GTA_Variable_Scope;
+typedef struct GTA_Unicode_String GTA_Unicode_String;
 
 /**
  * Helper union for converting between function pointers and void pointers.

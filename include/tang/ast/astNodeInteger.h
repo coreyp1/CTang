@@ -19,7 +19,7 @@ extern GTA_Ast_Node_VTable gta_ast_node_integer_vtable;
 /**
  * The GTA_Ast_Node_Integer class.
  */
-typedef struct GTA_Ast_Node_Integer {
+struct GTA_Ast_Node_Integer {
   /**
    * The base class.
    */
@@ -28,7 +28,7 @@ typedef struct GTA_Ast_Node_Integer {
    * The value of the integer.
    */
   int64_t value;
-} GTA_Ast_Node_Integer;
+};
 
 /**
  * Creates a new GTA_Ast_Node_Integer object.

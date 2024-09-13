@@ -23,7 +23,7 @@ extern GTA_Computed_Value_VTable gta_computed_value_library_vtable;
  *
  * The function is called with only the context as an argument.
  */
-typedef struct GTA_Computed_Value_Library_Attribute_Pair {
+struct GTA_Computed_Value_Library_Attribute_Pair {
   /**
    * The attribute name.
    */
@@ -32,12 +32,12 @@ typedef struct GTA_Computed_Value_Library_Attribute_Pair {
    * The function to be called to get the library's attribute value.
    */
   GTA_Library_Callback callback;
-} GTA_Computed_Value_Library_Attribute_Pair;
+};
 
 /**
  * The GTA_Computed_Value_Library class.
  */
-typedef struct GTA_Computed_Value_Library {
+struct GTA_Computed_Value_Library {
   /**
    * The base class.
    */
@@ -61,7 +61,7 @@ typedef struct GTA_Computed_Value_Library {
    * organized and quickly retrieved.
    */
   GTA_Library * library;
-} GTA_Computed_Value_Library;
+};
 
 /**
  * Initializes a GTA_Computed_Value_Library object.
