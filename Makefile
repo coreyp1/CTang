@@ -860,6 +860,7 @@ $(OBJ_DIR)/computedValue/computedValueMap.o: \
 $(OBJ_DIR)/computedValue/computedValueRNG.o: \
 	src/computedValue/computedValueRNG.c \
 	$(DEP_COMPUTEDVALUERNG) \
+	$(DEP_COMPUTEDVALUEBOOLEAN) \
 	$(DEP_COMPUTEDVALUEERROR) \
 	$(DEP_COMPUTEDVALUEINTEGER) \
 	$(DEP_COMPUTEDVALUEFLOAT) \

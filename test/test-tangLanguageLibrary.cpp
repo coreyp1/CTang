@@ -176,6 +176,15 @@ TEST(Random, Random) {
     ASSERT_EQ(result->value, (GTA_Float)mt() / (GTA_Float)std::mt19937_64::max());
     TEST_PROGRAM_TEARDOWN();
   }
+  {
+    // Seeded, next_bool, compared with c++ mt19937_64
+    TEST_PROGRAM_SETUP("use random; random.seeded(123).next_bool;");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
+    GTA_Computed_Value_Boolean * result = (GTA_Computed_Value_Boolean *)context->result;
+    std::mt19937_64 mt(123);
+    ASSERT_EQ(result->value, mt() & 1);
+    TEST_PROGRAM_TEARDOWN();
+  }
 }
 
 

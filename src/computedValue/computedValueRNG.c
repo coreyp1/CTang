@@ -6,6 +6,7 @@
 #include <cutil/random.h>
 #include <tang/library/libraryRandom.h>
 #include <tang/computedValue/computedValue.h>
+#include <tang/computedValue/computedValueBoolean.h>
 #include <tang/computedValue/computedValueError.h>
 #include <tang/computedValue/computedValueInteger.h>
 #include <tang/computedValue/computedValueFloat.h>
@@ -45,6 +46,12 @@ static GCU_Semaphore global_semaphore;
  * The state for the global random number generator.
  */
 static RNG_STATE rng_state;
+
+
+/**
+ * Get the next random boolean from the random number generator.
+ */
+static GTA_Computed_Value * GTA_CALL rng_next_bool(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 
 /**
@@ -101,10 +108,10 @@ static GTA_Computed_Value_Attribute_Pair attributes[] = {
   // {"next_int_range", rng_next_int_range},
   // {"next_float_range", rng_next_float_range},
   // {"next_gaussian", rng_next_gaussian},
-  // {"next_bool", rng_next_bool},
   // {"shuffle", rng_shuffle},
   // {"sample", rng_sample},
   // {"choose", rng_choose},
+  {"next_bool", rng_next_bool},
   {"next_int", rng_next_int},
   {"next_float", rng_next_float},
   {"set_seed", rng_set_seed},
@@ -294,6 +301,16 @@ static GTA_UInteger rng_get_next(GTA_Computed_Value_RNG * self) {
     return result;
   }
   return RNG_NEXT(self->state);
+}
+
+
+// .next_bool
+static GTA_Computed_Value * GTA_CALL rng_next_bool(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_RNG(self));
+  return rng_get_next((GTA_Computed_Value_RNG *)self) & 1
+    ? gta_computed_value_boolean_true
+    : gta_computed_value_boolean_false;
 }
 
 
