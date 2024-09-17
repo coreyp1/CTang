@@ -36,7 +36,7 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         current += 2;
         break;
       case GTA_BYTECODE_INTEGER:
-        printf(GTA_64_BIT ? "%4zu INT\t%ld\n" : "%4zu INT\t%d\n", current - start, GTA_TYPEX_I(*(current + 1)));
+        printf("%4zu INT\t%zd\n", current - start, GTA_TYPEX_I(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_STRING:
@@ -44,11 +44,11 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         current += 2;
         break;
       case GTA_BYTECODE_ARRAY:
-        printf(GTA_64_BIT ? "%4zu ARRAY\t%lu\n" : "%s\tARRAY\t%u", current - start, GTA_TYPEX_UI(*(current + 1)));
+        printf("%4zu ARRAY\t%zu\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_MAP:
-        printf(GTA_64_BIT ? "%4zu MAP\t%lu\n" : "%4zu MAP\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
+        printf("%4zu MAP\t%zu\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_CAST:
@@ -68,19 +68,19 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         ++current;
         break;
       case GTA_BYTECODE_PEEK_GLOBAL:
-        printf(GTA_64_BIT ? "%4zu PEEK_GLOBAL\t%lu\n" : "%4zu PEEK_GLOBAL\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
+        printf("%4zu PEEK_GLOBAL\t%zu\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_POKE_GLOBAL:
-        printf(GTA_64_BIT ? "%4zu POKE_GLOBAL\t%lu\n" : "%4zu POKE_GLOBAL\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
+        printf("%4zu POKE_GLOBAL\t%zu\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_PEEK_LOCAL:
-        printf(GTA_64_BIT ? "%4zu PEEK_LOCAL\t%lu\n" : "%4zu PEEK_LOCAL\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
+        printf("%4zu PEEK_LOCAL\t%zu\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_POKE_LOCAL:
-        printf(GTA_64_BIT ? "%4zu POKE_LOCAL\t%lu\n" : "%4zu POKE_LOCAL\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
+        printf("%4zu POKE_LOCAL\t%zu\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_MARK_FP:
@@ -98,13 +98,13 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
       case GTA_BYTECODE_LOAD: {
         GTA_Computed_Value * value = GTA_TYPEX_P(*(current + 1));
         char * output = gta_computed_value_to_string(value);
-        printf(GTA_64_BIT ? "%4zu LOAD\t%lu\t%s\n" : "%4zu LOAD\t%u\t%s\n", current - start, GTA_TYPEX_UI(*(current + 1)), output);
+        printf("%4zu LOAD\t%zu\t%s\n", current - start, GTA_TYPEX_UI(*(current + 1)), output);
         gcu_free(output);
         current += 2;
         break;
       }
       case GTA_BYTECODE_LOAD_LIBRARY:
-        printf(GTA_64_BIT ? "%4zu LOAD_LIBRARY\t%lu\n" : "%4zu LOAD_LIBRARY\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
+        printf("%4zu LOAD_LIBRARY\t%zu\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_NEGATIVE:
@@ -168,15 +168,15 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         ++current;
         break;
       case GTA_BYTECODE_JMP:
-        printf(GTA_64_BIT ? "%4zu JMP\t%ld\n" : "%4zu JMP\t%d\n", current - start, GTA_TYPEX_I(*(current + 1)));
+        printf("%4zu JMP\t%zd\n", current - start, GTA_TYPEX_I(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_JMPF:
-        printf(GTA_64_BIT ? "%4zu JMPF\t%ld\n" : "%4zu JMPF\t%d\n", current - start, GTA_TYPEX_I(*(current + 1)));
+        printf("%4zu JMPF\t%zd\n", current - start, GTA_TYPEX_I(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_JMPT:
-        printf(GTA_64_BIT ? "%4zu JMPT\t%ld\n" : "%4zu JMPT\t%d\n", current - start, GTA_TYPEX_I(*(current + 1)));
+        printf("%4zu JMPT\t%zd\n", current - start, GTA_TYPEX_I(*(current + 1)));
         current += 2;
         break;
       case GTA_BYTECODE_PRINT:
@@ -208,7 +208,7 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         ++current;
         break;
       case GTA_BYTECODE_CALL:
-        printf(GTA_64_BIT ? "%4zu CALL\t%lu\n" : "%4zu CALL\t%u\n", current - start, GTA_TYPEX_UI(*(current + 1)));
+        printf("%4zu CALL\t%zu\n", current - start, GTA_TYPEX_UI(*(current + 1)));
         current += 2;
         break;
       default:

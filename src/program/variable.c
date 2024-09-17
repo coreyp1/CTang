@@ -137,11 +137,11 @@ void gta_variable_scope_print(GTA_Variable_Scope * scope, const char * indent) {
     GTA_HashX_Value val = GTA_HASHX_GET(scope->identified_variables, hash);
     if (val.exists) {
       GTA_Ast_Node * node = (GTA_Ast_Node *)GTA_TYPEX_P(val.value);
-      printf("%s    %lu\n", indent, position);
+      printf("%s    %zu\n", indent, position);
       gta_ast_node_print(node, new_indent);
     }
     else {
-      printf("%s    %lu\n", indent, position);
+      printf("%s    %zu\n", indent, position);
       printf("%s      (Missing declaration)\n", new_indent);
     }
     hash_iterator = GTA_HASHX_ITERATOR_NEXT(hash_iterator);

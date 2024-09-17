@@ -42,9 +42,6 @@ GTA_Computed_Value_VTable gta_computed_value_integer_vtable = {
   .attributes_count = 0,
 };
 
-#include <execinfo.h>
-#include <stdlib.h>
-
 
 GTA_Computed_Value_Integer * GTA_CALL gta_computed_value_integer_create(GTA_Integer value, GTA_Execution_Context * context) {
   GTA_Computed_Value_Integer * self = gcu_malloc(sizeof(GTA_Computed_Value_Integer));
@@ -299,7 +296,7 @@ char * GTA_CALL gta_computed_value_integer_to_string(GTA_Computed_Value * self) 
   if (!str) {
     return 0;
   }
-  sprintf(str, sizeof(GTA_Integer) == 8 ? "%ld" : "%d", integer->value);
+  sprintf(str, "%zd", integer->value);
   return str;
 }
 
