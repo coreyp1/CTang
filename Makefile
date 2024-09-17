@@ -16,7 +16,64 @@ BASE_NAME := lib$(SUITE)-$(PROJECT)$(BRANCH).so
 MAJOR_VERSION := 0
 MINOR_VERSION := 0.0
 SO_NAME := $(BASE_NAME).$(MAJOR_VERSION)
-TARGET := $(SO_NAME).$(MINOR_VERSION)
+
+# Detect OS
+UNAME_S := $(shell uname -s)
+
+ifeq ($(UNAME_S), Linux)
+	OS_NAME := Linux
+	LIB_EXTENSION := so
+	OS_SPECIFIC_CXX_FLAGS := -shared -fPIC
+	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-soname,$(SO_NAME)
+	TARGET := $(SO_NAME).$(MINOR_VERSION)
+	EXE_EXTENSION :=
+	# Additional Linux-specific variables
+	PKG_CONFIG_PATH := /usr/local/share/pkgconfig
+	INCLUDE_INSTALL_PATH := /usr/local/include
+	LIB_INSTALL_PATH := /usr/local/lib
+
+else ifeq ($(UNAME_S), Darwin)
+	OS_NAME := Mac
+	LIB_EXTENSION := dylib
+	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-install_name,$(BASE_NAME_PREFIX).dylib
+	TARGET := $(BASE_NAME_PREFIX).dylib
+	EXE_EXTENSION :=
+	# Additional macOS-specific variables
+
+else ifeq ($(findstring MINGW32_NT,$(UNAME_S)),MINGW32_NT)  # 32-bit Windows
+	OS_NAME := Windows
+	LIB_EXTENSION := dll
+	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
+	TARGET := $(BASE_NAME_PREFIX).dll
+	EXE_EXTENSION := .exe
+	# Additional Windows-specific variables
+	# This is the path to the pkg-config files on MSYS2
+	PKG_CONFIG_PATH := /mingw32/lib/pkgconfig
+	INCLUDE_INSTALL_PATH := /mingw32/include
+	LIB_INSTALL_PATH := /mingw32/lib
+	BIN_INSTALL_PATH := /mingw32/bin
+
+else ifeq ($(findstring MINGW64_NT,$(UNAME_S)),MINGW64_NT)  # 64-bit Windows
+	OS_NAME := Windows
+	LIB_EXTENSION := dll
+	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
+	TARGET := $(BASE_NAME_PREFIX).dll
+	EXE_EXTENSION := .exe
+	# Additional Windows-specific variables
+	# This is the path to the pkg-config files on MSYS2
+	PKG_CONFIG_PATH := /mingw64/lib/pkgconfig
+	INCLUDE_INSTALL_PATH := /mingw64/include
+	LIB_INSTALL_PATH := /mingw64/lib
+	BIN_INSTALL_PATH := /mingw64/bin
+
+else
+    $(error Unsupported OS: $(UNAME_S))
+
+endif
+
 
 INCLUDE := -I include/tang -I include/ -I $(GEN_DIR)/
 LIBOBJECTS := \
@@ -83,7 +140,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/program/virtualMachine.o \
 
 
-TESTFLAGS := `pkg-config --libs --cflags gtest`
+TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs --cflags gtest`
 
 
 TANGLIBRARY := -L $(APP_DIR) -l$(SUITE)-$(PROJECT)$(BRANCH)
@@ -425,34 +482,34 @@ $(GEN_DIR)/tangParser.c: $(GEN_DIR)/tangParser.h
 # Flex-Generated Files
 ####################################################################
 $(GEN_DIR)/htmlEscape.c: \
-				flex/htmlEscape.l
+		flex/htmlEscape.l
 	@echo "\n### Generating The HtmlEscape Scanner ###"
 	@mkdir -p $(@D)
 	flex -o $@ $<
 
 $(GEN_DIR)/htmlEscapeAscii.c: \
-				flex/htmlEscapeAscii.l \
-				$(DEP_UNICODESTRING)
+		flex/htmlEscapeAscii.l \
+		$(DEP_UNICODESTRING)
 	@echo "\n### Generating The HtmlEscapeAscii Scanner ###"
 	@mkdir -p $(@D)
 	flex -o $@ $<
 
 $(GEN_DIR)/percentEncode.c: \
-				flex/percentEncode.l
+		flex/percentEncode.l
 	@echo "\n### Generating The PercentEncode Scanner ###"
 	@mkdir -p $(@D)
 	flex -o $@ $<
 
 $(GEN_DIR)/tangScanner.c: \
-				flex/tangScanner.l \
-				$(GEN_DIR)/tangParser.h \
-				$(DEP_UNICODESTRING)
+		flex/tangScanner.l \
+		$(GEN_DIR)/tangParser.h \
+		$(DEP_UNICODESTRING)
 	@echo "\n### Generating Flex TangScanner ###"
 	@mkdir -p $(@D)
 	flex -o $@ --header-file=$(GEN_DIR)/flexTangScanner.h $<
 
 $(GEN_DIR)/unescape.c: \
-				flex/unescape.l
+		flex/unescape.l
 	@echo "\n### Generating The Unescape Scanner ###"
 	@mkdir -p $(@D)
 	flex -o $@ $<
@@ -462,9 +519,9 @@ $(GEN_DIR)/unescape.c: \
 ####################################################################
 
 $(LIBOBJECTS) :
-	@echo "\n### Compiling $@ ###"
+	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ -fPIC
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ $(OS_SPECIFIC_CXX_FLAGS)
 
 $(OBJ_DIR)/ast/astNode.o: \
 	src/ast/astNode.c \
@@ -966,17 +1023,17 @@ $(OBJ_DIR)/program/virtualMachine.o: \
 	$(DEP_LIBRARY)
 
 $(OBJ_DIR)/tangParser.o: \
-				$(GEN_DIR)/tangParser.c \
-				$(DEP_ASTNODE)
+	$(GEN_DIR)/tangParser.c \
+	$(DEP_ASTNODE)
 
 $(OBJ_DIR)/tangScanner.o: \
-				$(GEN_DIR)/tangScanner.c \
-				$(DEP_UNICODESTRING) \
-				include/tang/tangScanner.h \
-				$(DEP_LOCATION)
-	@echo "\n### Compiling $@ ###"
+		$(GEN_DIR)/tangScanner.c \
+		$(DEP_UNICODESTRING) \
+		include/tang/tangScanner.h \
+		$(DEP_LOCATION)
+	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ -fPIC -Wno-unused-function
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ $(OS_SPECIFIC_CXX_FLAGS) -Wno-unused-function
 
 $(OBJ_DIR)/unicodeString.o: \
 				src/unicodeString.c \
@@ -987,12 +1044,15 @@ $(OBJ_DIR)/unicodeString.o: \
 ####################################################################
 
 $(APP_DIR)/$(TARGET): \
-				$(LIBOBJECTS)
-	@echo "\n### Compiling Tang Shared Library ###"
+		$(LIBOBJECTS)
+	@printf "\n### Compiling Tang Shared Library ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LDFLAGS) -Wl,-soname,$(SO_NAME)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LDFLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
+
+ifeq ($(OS_NAME), Linux)
 	@ln -f -s $(TARGET) $(APP_DIR)/$(SO_NAME)
 	@ln -f -s $(SO_NAME) $(APP_DIR)/$(BASE_NAME)
+endif
 
 ####################################################################
 # Command Line Utility
@@ -1002,7 +1062,7 @@ $(APP_DIR)/tang: \
 				src/tang.c \
 				$(DEP_TANG) \
 				$(APP_DIR)/$(TARGET)
-	@echo "\n### Compiling Tang Command Line Utility ###"
+	@printf "\n### Compiling Tang Command Line Utility ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE) -o $@ $<  $(LDFLAGS) $(TANGLIBRARY)
 
@@ -1014,25 +1074,25 @@ $(APP_DIR)/libtestLibrary.so: \
 				test/libtestLibrary.cpp \
 				$(APP_DIR)/$(TARGET) \
 				include/tang/tang.h
-	@echo "\n### Compiling Test Library ###"
+	@printf "\n### Compiling Test Library ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -shared -o $@ $< $(LDFLAGS) -fPIC
 
 $(APP_DIR)/testUnicodeString: \
-				test/test-unicodeString.cpp \
-				$(OBJ_DIR)/unicodeString.o
+		test/test-unicodeString.cpp \
+		$(OBJ_DIR)/unicodeString.o
 #				$(OBJ_DIR)/htmlEscape.o \
 #				$(OBJ_DIR)/htmlEscapeAscii.o \
 #				$(OBJ_DIR)/percentEncode.o \
 #				$(OBJ_DIR)/unescape.o
-	@echo "\n### Compiling UnicodeString Test ###"
+	@printf "\n### Compiling UnicodeString Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $^ $(LDFLAGS) $(TESTFLAGS)
 
 $(APP_DIR)/testTangLanguageParse: \
 	test/test-tangLanguageParse.cpp \
 	$(DEP_ASTNODE_ALL)
-	@echo "\n### Compiling Tang Language Parse Test ###"
+	@printf "\n### Compiling Tang Language Parse Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
@@ -1043,7 +1103,7 @@ $(APP_DIR)/testTangLanguageExecuteSimple: \
 	$(DEP_PROGRAM) \
 	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_BYTECODE)
-	@echo "\n### Compiling Tang Language Execution Simple Test ###"
+	@printf "\n### Compiling Tang Language Execution Simple Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
@@ -1054,7 +1114,7 @@ $(APP_DIR)/testTangLanguageExecuteComplex: \
 	$(DEP_PROGRAM) \
 	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_BYTECODE)
-	@echo "\n### Compiling Tang Language Execution Complex Test ###"
+	@printf "\n### Compiling Tang Language Execution Complex Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
@@ -1065,14 +1125,14 @@ $(APP_DIR)/testTangLanguageLibrary: \
 	$(DEP_PROGRAM) \
 	$(DEP_EXECUTIONCONTEXT) \
 	$(DEP_BYTECODE)
-	@echo "\n### Compiling Tang Language Library Test ###"
+	@printf "\n### Compiling Tang Language Library Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
 $(APP_DIR)/testBinary: \
 	test/test-binary.cpp \
 	$(DEP_PROGRAM_BINARY)
-	@echo "\n### Compiling Binary JIT functions Test ###"
+	@printf "\n### Compiling Binary JIT functions Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
@@ -1080,7 +1140,7 @@ $(APP_DIR)/test: \
 				test/test.cpp \
 				$(DEP_TANG) \
 				$(APP_DIR)/$(TARGET)
-	@echo "\n### Compiling Tang Test ###"
+	@printf "\n### Compiling Tang Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
@@ -1094,11 +1154,11 @@ watch: ## Watch the file directory for changes and compile the target
 	@while true; do \
           make --no-print-directory $(GEN_DIR)/tangParser.h; \
 					make --no-print-directory all; \
-					echo "\033[0;32m"; \
-					echo "#########################"; \
-					echo "# Waiting for changes.. #"; \
-					echo "#########################"; \
-					echo "\033[0m"; \
+					printf "\033[0;32m\n"; \
+					printf "#########################\n"; \
+					printf "# Waiting for changes.. #\n"; \
+					printf "#########################\n"; \
+					printf "\033[0m\n"; \
 					inotifywait -qr -e modify -e create -e delete -e move src include bison flex test Makefile --exclude '/\.'; \
 					done
 
@@ -1106,11 +1166,11 @@ test-watch: ## Watch the file directory for changes and run the unit tests
 	@while true; do \
 		make --no-print-directory all; \
 		make --no-print-directory test; \
-		echo "\033[0;32m"; \
-		echo "#########################"; \
-		echo "# Waiting for changes.. #"; \
-		echo "#########################"; \
-		echo "\033[0m"; \
+		printf "\033[0;32m\n"; \
+		printf "#########################\n"; \
+		printf "# Waiting for changes.. #\n"; \
+		printf "#########################\n"; \
+		printf "\033[0m\n"; \
 		inotifywait -qr -e modify -e create -e delete -e move src include bison flex test Makefile --exclude '/\.'; \
 		done
 
@@ -1126,80 +1186,80 @@ test: \
 				$(APP_DIR)/tang
 #				$(APP_DIR)/libtestLibrary.so \
 #				$(APP_DIR)/test \
-	@echo "\033[0;30;43m"
-	@echo "############################"
-	@echo "### Running string tests ###"
-	@echo -n "############################"
-	@echo "\033[0m\n"
+	@printf "\033[0;30;43m\n"
+	@printf "############################\n"
+	@printf "### Running string tests ###\n"
+	@printf "############################\n"
+	@printf "\033[0m\n\n"
 	$(APP_DIR)/testUnicodeString --gtest_brief=1
-	@echo "\033[0;30;43m"
-	@echo "####################################"
-	@echo "### Running Language Parse tests ###"
-	@echo -n "####################################"
-	@echo "\033[0m\n"
+	@printf "\033[0;30;43m\n"
+	@printf "####################################\n"
+	@printf "### Running Language Parse tests ###\n"
+	@printf "####################################\n"
+	@printf "\033[0m\n\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1 --gtest_fail_fast
-	@echo "\033[0;30;43m"
-	@echo "################################"
-	@echo "### Running Binary JIT tests ###"
-	@echo -n "################################"
-	@echo "\033[0m\n"
+	@printf "\033[0;30;43m\n"
+	@printf "################################\n"
+	@printf "### Running Binary JIT tests ###\n"
+	@printf "################################\n"
+	@printf "\033[0m\n\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testBinary --gtest_brief=1
 
-	@echo "\033[0;30;104m"
-	@echo "########################################################"
-	@echo "### Running Bytecode Language Execution Simple tests ###"
-	@echo -n "########################################################"
-	@echo "\033[0m\n"
+	@printf "\033[0;30;104m\n"
+	@printf "########################################################\n"
+	@printf "### Running Bytecode Language Execution Simple tests ###\n"
+	@printf "########################################################\n"
+	@printf "\033[0m\n\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
-	@echo "\033[0;30;104m"
-	@echo "#########################################################"
-	@echo "### Running Bytecode Language Execution Complex tests ###"
-	@echo -n "#########################################################"
-	@echo "\033[0m\n"
+	@printf "\033[0;30;104m\n"
+	@printf "#########################################################\n"
+	@printf "### Running Bytecode Language Execution Complex tests ###\n"
+	@printf "#########################################################\n"
+	@printf "\033[0m\n\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
-	@echo "\033[0;30;104m"
-	@echo "################################################"
-	@echo "### Running Bytecode Language Library tests  ###"
-	@echo -n "################################################"
-	@echo "\033[0m\n"
+	@printf "\033[0;30;104m\n"
+	@printf "################################################\n"
+	@printf "### Running Bytecode Language Library tests  ###\n"
+	@printf "################################################\n"
+	@printf "\033[0m\n\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
 
-	@echo "\033[0;30;45m"
-	@echo "########################################################"
-	@echo "### Running Binary Language Execution Simple tests   ###"
-	@echo -n "########################################################"
-	@echo "\033[0m\n"
+	@printf "\033[0;30;45m\n"
+	@printf "########################################################\n"
+	@printf "### Running Binary Language Execution Simple tests   ###\n"
+	@printf "########################################################\n"
+	@printf "\033[0m\n\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
-	@echo "\033[0;30;45m"
-	@echo "########################################################"
-	@echo "### Running Binary Language Execution Complex tests  ###"
-	@echo -n "########################################################"
-	@echo "\033[0m\n"
+	@printf "\033[0;30;45m\n"
+	@printf "########################################################\n"
+	@printf "### Running Binary Language Execution Complex tests  ###\n"
+	@printf "########################################################\n"
+	@printf "\033[0m\n\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
-	@echo "\033[0;30;45m"
-	@echo "##############################################"
-	@echo "### Running Binary Language Library tests  ###"
-	@echo -n "##############################################"
-	@echo "\033[0m\n"
+	@printf "\033[0;30;45m\n"
+	@printf "##############################################\n"
+	@printf "### Running Binary Language Library tests  ###\n"
+	@printf "##############################################\n"
+	@printf "\033[0m\n\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
 
-	@echo "\033[0;30;47m"
-	@echo "###################"
-	@echo "### Running CLI ###"
-	@echo -n "###################"
-	@echo "\033[0m\n"
+	@printf "\033[0;30;47m\n"
+	@printf "###################\n"
+	@printf "### Running CLI ###\n"
+	@printf "###################\n"
+	@printf "\033[0m\n\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang -s ./test/fib.tang
-	@echo "\033[0;30;47m"
-	@echo "###################"
-	@echo "### Running CLI ###"
-	@echo -n "###################"
-	@echo "\033[0m\n"
+	@printf "\033[0;30;47m\n"
+	@printf "###################\n"
+	@printf "### Running CLI ###\n"
+	@printf "###################\n"
+	@printf "\033[0m\n\n"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang ./test/fib.template.tang
-#	@echo "\033[0;32m"
-#	@echo "############################"
-#	@echo "### Running normal tests ###"
-#	@echo "############################"
-#	@echo "\033[0m"
+#	@printf "\033[0;32m\n"
+#	@printf "############################\n"
+#	@printf "### Running normal tests ###\n"
+#	@printf "############################\n"
+#	@printf "\033[0m\n"
 #	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test --gtest_brief=1
 
 clean: ## Remove all contents of the build directories.
@@ -1220,37 +1280,56 @@ clean: ## Remove all contents of the build directories.
 
 install: ## Install the library globally, requires sudo
 	# Installing the shared library.
-	@mkdir -p /usr/local/lib/$(SUITE)
-	@cp $(APP_DIR)/$(TARGET) /usr/local/lib/$(SUITE)/
-	@ln -f -s $(TARGET) /usr/local/lib/$(SUITE)/$(SO_NAME)
-	@ln -f -s $(SO_NAME) /usr/local/lib/$(SUITE)/$(BASE_NAME)
+	@mkdir -p $(LIB_INSTALL_PATH)/$(SUITE)
+ifeq ($(OS_NAME), Linux)
+# Install the .so file
+	@cp $(APP_DIR)/$(TARGET) $(LIB_INSTALL_PATH)/$(SUITE)/
+	@ln -f -s $(TARGET) $(LIB_INSTALL_PATH)/$(SUITE)/$(SO_NAME)
+	@ln -f -s $(SO_NAME) $(LIB_INSTALL_PATH)/$(SUITE)/$(BASE_NAME)
 	# Installing the ld configuration file.
 	@echo "/usr/local/lib/$(SUITE)" > /etc/ld.so.conf.d/$(SUITE)-$(PROJECT)$(BRANCH).conf
+endif
+ifeq ($(OS_NAME), Windows)
+# The .dll file and the .dll.a file
+	@mkdir -p $(BIN_INSTALL_PATH)/$(SUITE)
+	@cp $(APP_DIR)/$(TARGET).a $(LIB_INSTALL_PATH)
+	@cp $(APP_DIR)/$(TARGET) $(BIN_INSTALL_PATH)
+endif
 	# Installing the headers.
-	@mkdir -p /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
-	@cp include/tang/*.h /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
-	@cp build/generated/*.h /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
+	@mkdir -p $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
+	@cp include/tang/*.h $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
+	@cp build/generated/*.h $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
 	# Installing the pkg-config files.
-	@mkdir -p /usr/local/share/pkgconfig
-	@cat pkgconfig/$(SUITE)-$(PROJECT).pc | sed 's/(SUITE)/$(SUITE)/g; s/(PROJECT)/$(PROJECT)/g; s/(BRANCH)/$(BRANCH)/g; s/(VERSION)/$(VERSION)/g' > /usr/local/share/pkgconfig/$(SUITE)-$(PROJECT)$(BRANCH).pc
+	@mkdir -p $(PKG_CONFIG_PATH)
+	@cat pkgconfig/$(SUITE)-$(PROJECT).pc | sed 's/(SUITE)/$(SUITE)/g; s/(PROJECT)/$(PROJECT)/g; s/(BRANCH)/$(BRANCH)/g; s/(VERSION)/$(VERSION)/g; s|(LIB)|$(LIB_INSTALL_PATH)|g; s|(INCLUDE)|$(INCLUDE_INSTALL_PATH)|g' > $(PKG_CONFIG_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).pc
+ifeq ($(OS_NAME), Linux)
 	# Running ldconfig.
 	@ldconfig >> /dev/null 2>&1
+endif
 	@echo "Ghoti.io $(PROJECT)$(BRANCH) installed"
 
 uninstall: ## Delete the globally-installed files.  Requires sudo.
 	# Deleting the shared library.
-	@rm -f /usr/local/lib/$(SUITE)/$(BASE_NAME)*
+ifeq ($(OS_NAME), Linux)
+	@rm -f $(LIB_INSTALL_PATH)/$(SUITE)/$(BASE_NAME)*
 	# Deleting the ld configuration file.
 	@rm -f /etc/ld.so.conf.d/$(SUITE)-$(PROJECT)$(BRANCH).conf
+endif
+ifeq ($(OS_NAME), Windows)
+	@rm -f $(LIB_INSTALL_PATH)/$(TARGET).a
+	@rm -f $(BIN_INSTALL_PATH)/$(TARGET)
+endif
 	# Deleting the headers.
-	@rm -rf /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)
+	@rm -rf $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)
 	# Deleting the pkg-config files.
-	@rm -f /usr/local/share/pkgconfig/$(SUITE)-$(PROJECT)$(BRANCH).pc
+	@rm -f $(PKG_CONFIG_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).pc
 	# Cleaning up (potentially) no longer needed directories.
-	@rmdir --ignore-fail-on-non-empty /usr/local/include/$(SUITE)
-	@rmdir --ignore-fail-on-non-empty /usr/local/lib/$(SUITE)
+	@rmdir --ignore-fail-on-non-empty $(INCLUDE_INSTALL_PATH)/$(SUITE)
+	@rmdir --ignore-fail-on-non-empty $(LIB_INSTALL_PATH)/$(SUITE)
+ifeq ($(OS_NAME), Linux)
 	# Running ldconfig.
 	@ldconfig >> /dev/null 2>&1
+endif
 	@echo "Ghoti.io $(PROJECT)$(BRANCH) has been uninstalled"
 
 docs: ## Generate the documentation in the ./docs subdirectory
