@@ -1060,7 +1060,7 @@ endif
 # Command Line Utility
 ####################################################################
 
-$(APP_DIR)/tang: \
+$(APP_DIR)/tang$(EXE_EXTENSION): \
 				src/tang.c \
 				$(DEP_TANG) \
 				$(APP_DIR)/$(TARGET)
@@ -1080,7 +1080,7 @@ $(APP_DIR)/libtestLibrary.so: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -shared -o $@ $< $(LDFLAGS) -fPIC
 
-$(APP_DIR)/testUnicodeString: \
+$(APP_DIR)/testUnicodeString$(EXE_EXTENSION): \
 		test/test-unicodeString.cpp \
 		$(OBJ_DIR)/unicodeString.o
 #				$(OBJ_DIR)/htmlEscape.o \
@@ -1091,14 +1091,14 @@ $(APP_DIR)/testUnicodeString: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $^ $(LDFLAGS) $(TESTFLAGS)
 
-$(APP_DIR)/testTangLanguageParse: \
+$(APP_DIR)/testTangLanguageParse$(EXE_EXTENSION): \
 	test/test-tangLanguageParse.cpp \
 	$(DEP_ASTNODE_ALL)
 	@printf "\n### Compiling Tang Language Parse Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
-$(APP_DIR)/testTangLanguageExecuteSimple: \
+$(APP_DIR)/testTangLanguageExecuteSimple$(EXE_EXTENSION): \
 	test/test-tangLanguageExecuteSimple.cpp \
 	$(DEP_ASTNODE_ALL) \
 	$(DEP_COMPUTEDVALUE_ALL) \
@@ -1109,7 +1109,7 @@ $(APP_DIR)/testTangLanguageExecuteSimple: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
-$(APP_DIR)/testTangLanguageExecuteComplex: \
+$(APP_DIR)/testTangLanguageExecuteComplex$(EXE_EXTENSION): \
 	test/test-tangLanguageExecuteComplex.cpp \
 	$(DEP_ASTNODE_ALL) \
 	$(DEP_COMPUTEDVALUE_ALL) \
@@ -1120,7 +1120,7 @@ $(APP_DIR)/testTangLanguageExecuteComplex: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
-$(APP_DIR)/testTangLanguageLibrary: \
+$(APP_DIR)/testTangLanguageLibrary$(EXE_EXTENSION): \
 	test/test-tangLanguageLibrary.cpp \
 	$(DEP_ASTNODE_ALL) \
 	$(DEP_COMPUTEDVALUE_ALL) \
@@ -1131,14 +1131,14 @@ $(APP_DIR)/testTangLanguageLibrary: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
-$(APP_DIR)/testBinary: \
+$(APP_DIR)/testBinary$(EXE_EXTENSION): \
 	test/test-binary.cpp \
 	$(DEP_PROGRAM_BINARY)
 	@printf "\n### Compiling Binary JIT functions Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
-$(APP_DIR)/test: \
+$(APP_DIR)/test$(EXE_EXTENSION): \
 				test/test.cpp \
 				$(DEP_TANG) \
 				$(APP_DIR)/$(TARGET)
@@ -1179,15 +1179,15 @@ test-watch: ## Watch the file directory for changes and run the unit tests
 test: ## Make and run the Unit tests
 test: \
 				$(APP_DIR)/$(TARGET) \
-				$(APP_DIR)/testUnicodeString \
-				$(APP_DIR)/testTangLanguageParse \
-				$(APP_DIR)/testTangLanguageExecuteSimple \
-				$(APP_DIR)/testTangLanguageExecuteComplex \
-				$(APP_DIR)/testTangLanguageLibrary \
-				$(APP_DIR)/testBinary \
-				$(APP_DIR)/tang
+				$(APP_DIR)/testUnicodeString$(EXE_EXTENSION) \
+				$(APP_DIR)/testTangLanguageParse$(EXE_EXTENSION) \
+				$(APP_DIR)/testTangLanguageExecuteSimple$(EXE_EXTENSION) \
+				$(APP_DIR)/testTangLanguageExecuteComplex$(EXE_EXTENSION) \
+				$(APP_DIR)/testTangLanguageLibrary$(EXE_EXTENSION) \
+				$(APP_DIR)/testBinary$(EXE_EXTENSION) \
+				$(APP_DIR)/tang$(EXE_EXTENSION)
 #				$(APP_DIR)/libtestLibrary.so \
-#				$(APP_DIR)/test \
+#				$(APP_DIR)/test$(EXE_EXTENSION) \
 	@printf "\033[0;30;43m\n"
 	@printf "############################\n"
 	@printf "### Running string tests ###\n"
