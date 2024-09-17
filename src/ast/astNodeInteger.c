@@ -54,7 +54,7 @@ void gta_ast_node_integer_print(GTA_Ast_Node * self, const char * indent) {
   assert(indent);
   assert(self->vtable);
   assert(self->vtable->name);
-  printf("%s%s: %ld\n", indent, self->vtable->name, integer->value);
+  printf("%s%s: %zd\n", indent, self->vtable->name, integer->value);
 }
 
 

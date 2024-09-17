@@ -144,7 +144,7 @@ GTA_Ast_Node * gta_ast_node_cast_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_
         // Convert the integer to a string.
         const size_t BUFFER_SIZE = 32;
         char buffer[BUFFER_SIZE];
-        snprintf(buffer, BUFFER_SIZE, "%ld", ((GTA_Ast_Node_Integer *)cast->expression)->value);
+        snprintf(buffer, BUFFER_SIZE, "%zd", ((GTA_Ast_Node_Integer *)cast->expression)->value);
         GTA_Unicode_String * string = gta_unicode_string_create(buffer, strlen(buffer), GTA_UNICODE_STRING_TYPE_TRUSTED);
         if (!string) {
           return 0;
