@@ -1,14 +1,3 @@
-CXX := g++
-CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g
-CC := cc
-CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O0 -g `pkg-config --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
-# -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
-LDFLAGS := -L /usr/lib -lstdc++ -lm `pkg-config --libs --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
-BUILD := ./build
-OBJ_DIR := $(BUILD)/objects
-GEN_DIR := $(BUILD)/generated
-APP_DIR := $(BUILD)/apps
-
 SUITE := ghoti.io
 PROJECT := tang
 BRANCH := -cdev
@@ -73,6 +62,18 @@ else
     $(error Unsupported OS: $(UNAME_S))
 
 endif
+
+
+CXX := g++
+CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g
+CC := cc
+CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O0 -g `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
+# -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
+LDFLAGS := -L /usr/lib -lstdc++ -lm `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
+BUILD := ./build
+OBJ_DIR := $(BUILD)/objects
+GEN_DIR := $(BUILD)/generated
+APP_DIR := $(BUILD)/apps
 
 
 INCLUDE := -I include/tang -I include/ -I $(GEN_DIR)/
