@@ -105,7 +105,7 @@ GTA_NO_DISCARD char * GTA_CALL gta_computed_value_array_to_string(GTA_Computed_V
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_array_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Multiplies two values together.
@@ -120,7 +120,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_array_add(GTA_Computed_Va
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_array_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if they are equal.
@@ -134,7 +134,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_array_multiply(GTA_Comput
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_array_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if they are not equal.
@@ -148,7 +148,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_array_equal(GTA_Computed_
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_array_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Assigns a value to an index of the object.
@@ -200,7 +200,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_
  * @param context The execution context of the program.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_array_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

@@ -67,13 +67,13 @@ struct GTA_Computed_Value_VTable {
    *
    * @param self The object to destroy.
    */
-  void (*destroy)(GTA_Computed_Value * self);
+  void GTA_CALL (*destroy)(GTA_Computed_Value * self);
   /**
    * Destructor for the class in place.
    *
    * @param self The object to destroy.
    */
-  void (*destroy_in_place)(GTA_Computed_Value * self);
+  void GTA_CALL (*destroy_in_place)(GTA_Computed_Value * self);
   /**
    * Performs a deep copy of the object.
    *
@@ -81,7 +81,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return A deep copy of the object or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*deep_copy)(GTA_Computed_Value * self, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*deep_copy)(GTA_Computed_Value * self, GTA_Execution_Context * context);
   /**
    * Get a string representation of the object.
    *
@@ -91,7 +91,7 @@ struct GTA_Computed_Value_VTable {
    * @return A string representation of the object or NULL if the operation
    *   failed.
    */
-  char * (*to_string)(GTA_Computed_Value * self);
+  char * GTA_CALL (*to_string)(GTA_Computed_Value * self);
   /**
    * Produce a "printable" version of the object.
    *
@@ -104,7 +104,7 @@ struct GTA_Computed_Value_VTable {
    * @return A string representation of the object or NULL if the operation
    *  failed.
    */
-  GTA_Unicode_String * (*print)(GTA_Computed_Value * self, GTA_Execution_Context * context);
+  GTA_Unicode_String * GTA_CALL (*print)(GTA_Computed_Value * self, GTA_Execution_Context * context);
   /**
    * Assigns a value to an index of the object.
    *
@@ -114,7 +114,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The modified object or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*assign_index)(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*assign_index)(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
   /**
    * Adds two values together.
    *
@@ -126,7 +126,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*add)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*add)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
   /**
    * Subtracts two values.
    *
@@ -138,7 +138,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*subtract)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*subtract)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
   /**
    * Multiplies two values together.
    *
@@ -150,7 +150,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*multiply)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*multiply)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
   /**
    * Divides two values.
    *
@@ -164,7 +164,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*divide)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*divide)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
   /**
    * Computes the modulo of two values.
    *
@@ -178,7 +178,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*modulo)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*modulo)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
   /**
    * Computes the negative of a value.
    *
@@ -187,7 +187,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*negative)(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*negative)(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context);
   /**
    * Compares two values to see if the first is less than the second.
    *
@@ -198,7 +198,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*less_than)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*less_than)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
   /**
    * Compares two values to see if the first is less than or equal to the
    * second.
@@ -210,7 +210,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*less_than_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*less_than_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
   /**
    * Compares two values to see if the first is greater than the second.
    *
@@ -221,7 +221,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*greater_than)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*greater_than)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
   /**
    * Compares two values to see if the first is greater than or equal to the
    * second.
@@ -233,7 +233,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*greater_than_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*greater_than_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
   /**
    * Compares two values to see if they are equal.
    *
@@ -244,7 +244,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
   /**
    * Compares two values to see if they are not equal.
    *
@@ -255,7 +255,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*not_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*not_equal)(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
   /**
    * Gets a value from the object using a period identifier.
    *
@@ -264,7 +264,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The value of the identifier or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*period)(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*period)(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
   /**
    * Gets a value from the object using an index.
    *
@@ -273,7 +273,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The value of the index or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*index)(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*index)(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
   /**
    * Gets a slice of the object.
    *
@@ -284,7 +284,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The slice of the object or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*slice)(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*slice)(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
   /**
    * Gets an iterator from the object.
    *
@@ -292,7 +292,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The value of the iterator or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*iterator_get)(GTA_Computed_Value * self, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*iterator_get)(GTA_Computed_Value * self, GTA_Execution_Context * context);
   /**
    * Advance an iterator to the next value.
    *
@@ -300,7 +300,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The value of the iterator or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*iterator_next)(GTA_Computed_Value * self, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*iterator_next)(GTA_Computed_Value * self, GTA_Execution_Context * context);
   /**
    * Casts the object to a different type.
    *
@@ -310,7 +310,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*cast)(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*cast)(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
   /**
    * Calls the object as a function.
    *
@@ -319,7 +319,7 @@ struct GTA_Computed_Value_VTable {
    * @param context The execution context of the program.
    * @return The result of the operation or NULL if the operation failed.
    */
-  GTA_Computed_Value * (*call)(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
+  GTA_Computed_Value * GTA_CALL (*call)(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
   /**
    * The default attributes for this type.
    */
@@ -414,7 +414,7 @@ extern GTA_Computed_Value * gta_computed_value_null;
  * @param context The execution context to create the value in.
  * @return A new computed value or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_create(GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_create(GTA_Execution_Context * context);
 
 /**
  * Creates a new computed value in place.
@@ -423,7 +423,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_create(GTA_Execution_Cont
  * @param context The execution context of the program.
  * @return True on success, false on failure.
  */
-bool gta_computed_value_create_in_place(GTA_Computed_Value * self, GTA_Execution_Context * context);
+bool GTA_CALL gta_computed_value_create_in_place(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Destroys a computed value.
@@ -432,7 +432,7 @@ bool gta_computed_value_create_in_place(GTA_Computed_Value * self, GTA_Execution
  *
  * @param self The object to destroy.
  */
-void gta_computed_value_destroy(GTA_Computed_Value * self);
+void GTA_CALL gta_computed_value_destroy(GTA_Computed_Value * self);
 
 /**
  * Destroys a computed value in place.
@@ -441,7 +441,7 @@ void gta_computed_value_destroy(GTA_Computed_Value * self);
  *
  * @param self The object to destroy.
  */
-void gta_computed_value_destroy_in_place(GTA_Computed_Value * self);
+void GTA_CALL gta_computed_value_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Performs a deep copy of a computed value.
@@ -452,7 +452,7 @@ void gta_computed_value_destroy_in_place(GTA_Computed_Value * self);
  * @param context The execution context of the program.
  * @return A deep copy of the object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Gets a string representation of a computed value.
@@ -465,7 +465,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_deep_copy(GTA_Computed_Va
  * @return A string representation of the object or NULL if the operation
  *   failed.
  */
-GTA_NO_DISCARD char * gta_computed_value_to_string(GTA_Computed_Value * self);
+GTA_NO_DISCARD char * GTA_CALL gta_computed_value_to_string(GTA_Computed_Value * self);
 
 /**
  * Prints a computed value.
@@ -477,7 +477,7 @@ GTA_NO_DISCARD char * gta_computed_value_to_string(GTA_Computed_Value * self);
  * @return A string representation of the object or NULL if the operation
  *  failed.
  */
-GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_print(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Unicode_String * GTA_CALL gta_computed_value_print(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Assigns a value to an index of a computed value.
@@ -490,7 +490,7 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_print(GTA_Computed_Value 
  * @param context The execution context of the program.
  * @return The modified object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
 
 /**
  * Adds two values together.
@@ -505,7 +505,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Subtracts two values.
@@ -520,7 +520,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * 
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Multiplies two values together.
@@ -535,7 +535,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Val
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Divides two values.
@@ -550,7 +550,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Val
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Computes the modulo of two values.
@@ -565,7 +565,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Computes the negative of a value.
@@ -577,7 +577,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_negative(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is less than the second.
@@ -591,7 +591,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Val
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is less than or equal to the
@@ -606,7 +606,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Va
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is greater than the second.
@@ -620,7 +620,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_equal(GTA_Compu
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is greater than or equal to the
@@ -635,7 +635,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than(GTA_Computed
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if they are equal.
@@ -649,7 +649,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_equal(GTA_Co
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if they are not equal.
@@ -663,7 +663,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value 
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Gets a value from a computed value using a period identifier.
@@ -675,7 +675,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal(GTA_Computed_Va
  * @param context The execution context of the program.
  * @return The value of the identifier or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
 
 /**
  * Gets a value from a computed value using an index.
@@ -687,7 +687,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value
  * @param context The execution context of the program.
  * @return The value of the index or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
 
 /**
  * Gets a slice of a computed value.
@@ -701,7 +701,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_index(GTA_Computed_Value 
  * @param context The execution context of the program.
  * @return The slice of the object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
 
 /**
  * Gets an iterator from a computed value.
@@ -712,7 +712,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_slice(GTA_Computed_Value 
  * @param context The execution context of the program.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Advance an iterator to the next value.
@@ -723,7 +723,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_get(GTA_Computed
  * @param context The execution context of the program.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_next(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Casts a computed value to a different type.
@@ -735,7 +735,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next(GTA_Compute
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
  * Calls a computed value as a function.
@@ -747,7 +747,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value *
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_call(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
 
 /**
  * Destroys a computed value of the NULL class.
@@ -756,7 +756,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call(GTA_Computed_Value *
  *
  * @param self The object to destroy.
  */
-void gta_computed_value_null_destroy(GTA_Computed_Value * self);
+void GTA_CALL gta_computed_value_null_destroy(GTA_Computed_Value * self);
 
 /**
  * Destroys a computed value of the NULL class in place.
@@ -765,7 +765,7 @@ void gta_computed_value_null_destroy(GTA_Computed_Value * self);
  *
  * @param self The object to destroy.
  */
-void gta_computed_value_null_destroy_in_place(GTA_Computed_Value * self);
+void GTA_CALL gta_computed_value_null_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Performs a deep copy of a computed value of the NULL class.
@@ -776,7 +776,7 @@ void gta_computed_value_null_destroy_in_place(GTA_Computed_Value * self);
  * @param context The execution context of the program.
  * @return A deep copy of the object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_null_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Gets a string representation of a computed value of the NULL class.
@@ -789,7 +789,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_deep_copy(GTA_Comput
  * @return A string representation of the object or NULL if the operation
  *   failed.
  */
-GTA_NO_DISCARD char * gta_computed_value_null_to_string(GTA_Computed_Value * self);
+GTA_NO_DISCARD char * GTA_CALL gta_computed_value_null_to_string(GTA_Computed_Value * self);
 
 /**
  * Casts a computed value to a different type.
@@ -801,7 +801,7 @@ GTA_NO_DISCARD char * gta_computed_value_null_to_string(GTA_Computed_Value * sel
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_null_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
  * Prints a computed value.
@@ -813,7 +813,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_null_cast(GTA_Computed_Va
  * @return A string representation of the object or NULL if the operation
  *  failed.
  */
-GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_print_not_implemented(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Unicode_String * GTA_CALL gta_computed_value_print_not_implemented(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `assign_index` method for the
@@ -825,7 +825,7 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_print_not_implemented(GTA
  * @param context The execution context of the program.
  * @return The modified object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_assign_index_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `add` method for the virtual table.
@@ -838,7 +838,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index_not_implemen
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_add_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `subtract` method for the virtual
@@ -852,7 +852,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_C
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_subtract_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `multiply` method for the virtual
@@ -866,7 +866,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_implemented(
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_multiply_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `divide` method for the virtual
@@ -880,7 +880,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_implemented(
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_divide_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `modulo` method for the virtual
@@ -894,7 +894,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_implemented(GT
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_modulo_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `negative` method for the virtual
@@ -905,7 +905,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GT
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_implemented(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_negative_not_implemented(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `less_than` method for the virtual
@@ -918,7 +918,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_implemented(
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_less_than_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `less_than_equal` method for the
@@ -931,7 +931,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_not_implemented
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_less_than_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `greater_than` method for the
@@ -944,7 +944,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_equal_not_imple
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `greater_than_equal` method for the
@@ -957,7 +957,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_not_implemen
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `equal` method for the virtual
@@ -970,7 +970,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_equal_not_im
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `not_equal` method for the virtual
@@ -983,7 +983,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_equal_not_implemented(GTA
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_not_equal_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `period` method for the virtual
@@ -994,7 +994,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal_not_implemented
  * @param context The execution context of the program.
  * @return The value of the identifier or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period_not_implemented(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_period_not_implemented(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `index` method for the virtual
@@ -1005,7 +1005,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period_not_implemented(GT
  * @param context The execution context of the program.
  * @return The value of the index or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_index_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_index_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `slice` method for the virtual
@@ -1018,7 +1018,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_index_not_implemented(GTA
  * @param context The execution context of the program.
  * @return The slice of the object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_slice_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_slice_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `iterator_get` method for the
@@ -1028,7 +1028,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_slice_not_implemented(GTA
  * @param context The execution context of the program.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_get_not_implemented(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_get_not_implemented(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `iterator_next` method for the
@@ -1038,7 +1038,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_get_not_implemen
  * @param context The execution context of the program.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next_not_implemented(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_next_not_implemented(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `cast` method for the virtual
@@ -1049,7 +1049,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next_not_impleme
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_cast_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
  * Generic "not implemented" version of the `call` method for the virtual
@@ -1060,7 +1060,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_call_not_implemented(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
 
 /**
  * Prints a computed value.
@@ -1072,7 +1072,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call_not_implemented(GTA_
  * @return A string representation of the object or NULL if the operation
  *  failed.
  */
-GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_print_not_supported(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Unicode_String * GTA_CALL gta_computed_value_print_not_supported(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `assign_index` method for the virtual
@@ -1084,7 +1084,7 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_print_not_supported(GTA_C
  * @param context The execution context of the program.
  * @return The modified object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_assign_index_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `add` method for the virtual table.
@@ -1097,7 +1097,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_assign_index_not_supporte
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_add_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `subtract` method for the virtual
@@ -1111,7 +1111,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_add_not_supported(GTA_Com
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_subtract_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `multiply` method for the virtual
@@ -1125,7 +1125,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_subtract_not_supported(GT
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_multiply_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `divide` method for the virtual
@@ -1139,7 +1139,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_multiply_not_supported(GT
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_divide_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `modulo` method for the virtual
@@ -1153,7 +1153,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_divide_not_supported(GTA_
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_modulo_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `negative` method for the virtual
@@ -1164,7 +1164,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_modulo_not_supported(GTA_
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_supported(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_negative_not_supported(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `less_than` method for the virtual
@@ -1177,7 +1177,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_negative_not_supported(GT
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_less_than_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `less_than_equal` method for the
@@ -1190,7 +1190,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_not_supported(G
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_less_than_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `greater_than` method for the virtual
@@ -1203,7 +1203,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_less_than_equal_not_suppo
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `greater_than_equal` method for the
@@ -1216,7 +1216,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_not_supporte
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `equal` method for the virtual
@@ -1229,7 +1229,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_greater_than_equal_not_su
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `not_equal` method for the virtual
@@ -1242,7 +1242,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_equal_not_supported(GTA_C
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_not_equal_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `period` method for the virtual
@@ -1253,7 +1253,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_not_equal_not_supported(G
  * @param context The execution context of the program.
  * @return The value of the identifier or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period_not_supported(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_period_not_supported(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `index` method for the virtual
@@ -1264,7 +1264,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_period_not_supported(GTA_
  * @param context The execution context of the program.
  * @return The value of the index or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_index_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_index_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `slice` method for the virtual
@@ -1277,7 +1277,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_index_not_supported(GTA_C
  * @param context The execution context of the program.
  * @return The slice of the object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_slice_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_slice_not_supported(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `iterator_get` method for the virtual
@@ -1287,7 +1287,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_slice_not_supported(GTA_C
  * @param context The execution context of the program.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_get_not_supported(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_get_not_supported(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `iterator_next` method for the
@@ -1297,7 +1297,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_get_not_supporte
  * @param context The execution context of the program.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next_not_supported(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_next_not_supported(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `cast` method for the virtual table.
@@ -1307,7 +1307,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_iterator_next_not_support
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_cast_not_supported(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
  * Generic "not supported" version of the `call` method for the virtual table.
@@ -1317,7 +1317,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_Co
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call_not_supported(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_call_not_supported(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
 
 /**
  * Generic function to use the "to_string" method to generate a printed value.
@@ -1329,7 +1329,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_call_not_supported(GTA_Co
  * @return A string representation of the object or NULL if the operation
  *  failed.
  */
-GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_generic_print_from_to_string(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Unicode_String * GTA_CALL gta_computed_value_generic_print_from_to_string(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Generic "period" method which searches the object and the language for any
@@ -1341,7 +1341,7 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_generic_print_from_to_str
  * @param context The execution context of the program.
  * @return The value of the identifier or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_generic_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_generic_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

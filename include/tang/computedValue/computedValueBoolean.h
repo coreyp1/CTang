@@ -109,7 +109,7 @@ GTA_NO_DISCARD char * GTA_CALL gta_computed_value_boolean_to_string(GTA_Computed
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_boolean_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

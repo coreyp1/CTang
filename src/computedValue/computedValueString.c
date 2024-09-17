@@ -141,7 +141,7 @@ GTA_Computed_Value * gta_computed_value_string_empty = (GTA_Computed_Value *)&gt
  */
 
 
-GTA_Computed_Value_String * gta_computed_value_string_create(GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context) {
+GTA_Computed_Value_String * GTA_CALL gta_computed_value_string_create(GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context) {
   GTA_Computed_Value_String * self = gcu_malloc(sizeof(GTA_Computed_Value_String));
   if (!self) {
     return 0;
@@ -158,7 +158,7 @@ GTA_Computed_Value_String * gta_computed_value_string_create(GTA_Unicode_String 
 }
 
 
-bool gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self, GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context) {
+bool GTA_CALL gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self, GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context) {
   assert(self);
   assert(value);
   *self = (GTA_Computed_Value_String) {
@@ -179,7 +179,7 @@ bool gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self,
 }
 
 
-void gta_computed_value_string_destroy(GTA_Computed_Value * self) {
+void GTA_CALL gta_computed_value_string_destroy(GTA_Computed_Value * self) {
   if (!self) {
     return;
   }
@@ -188,7 +188,7 @@ void gta_computed_value_string_destroy(GTA_Computed_Value * self) {
 }
 
 
-void gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self) {
+void GTA_CALL gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self) {
   if (!self) {
     return;
   }
@@ -200,7 +200,7 @@ void gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self) {
 }
 
 
-GTA_Computed_Value * gta_computed_value_string_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_string_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context) {
   assert(value);
   assert(GTA_COMPUTED_VALUE_IS_STRING(value));
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) value;
@@ -214,7 +214,7 @@ GTA_Computed_Value * gta_computed_value_string_deep_copy(GTA_Computed_Value * va
 }
 
 
-char * gta_computed_value_string_to_string(GTA_Computed_Value * value) {
+char * GTA_CALL gta_computed_value_string_to_string(GTA_Computed_Value * value) {
   assert(value);
   assert(GTA_COMPUTED_VALUE_IS_STRING(value));
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) value;
@@ -231,7 +231,7 @@ char * gta_computed_value_string_to_string(GTA_Computed_Value * value) {
 }
 
 
-GTA_Unicode_String * gta_computed_value_string_print(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Unicode_String * GTA_CALL gta_computed_value_string_print(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_STRING(self));
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *)self;
@@ -241,7 +241,7 @@ GTA_Unicode_String * gta_computed_value_string_print(GTA_Computed_Value * self, 
 }
 
 
-GTA_Computed_Value * gta_computed_value_string_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_string_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_STRING(self));
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *) self;

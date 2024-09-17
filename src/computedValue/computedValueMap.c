@@ -221,7 +221,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_index(GTA_Computed_Value * 
 /*
  * Helper function to expand and add to the provided string.
  */
-static bool expand_and_concat(char * * buffer, size_t * len, const char * string) {
+static bool GTA_CALL expand_and_concat(char * * buffer, size_t * len, const char * string) {
   assert(buffer);
   assert(len);
   assert(string);

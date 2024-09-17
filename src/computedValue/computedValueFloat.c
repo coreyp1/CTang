@@ -43,7 +43,7 @@ GTA_Computed_Value_VTable gta_computed_value_float_vtable = {
 };
 
 
-GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value, GTA_Execution_Context * context) {
+GTA_Computed_Value_Float * GTA_CALL gta_computed_value_float_create(GTA_Float value, GTA_Execution_Context * context) {
   GTA_Computed_Value_Float * self = (GTA_Computed_Value_Float *) gcu_malloc(sizeof(GTA_Computed_Value_Float));
   if (!self) {
     return NULL;
@@ -60,7 +60,7 @@ GTA_Computed_Value_Float * gta_computed_value_float_create(GTA_Float value, GTA_
 }
 
 
-bool gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, GTA_Float value, GTA_Execution_Context * context) {
+bool GTA_CALL gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, GTA_Float value, GTA_Execution_Context * context) {
   assert(self);
   *self = (GTA_Computed_Value_Float) {
     .base = {
@@ -79,16 +79,16 @@ bool gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, G
 }
 
 
-void gta_computed_value_float_destroy(GTA_Computed_Value * self) {
+void GTA_CALL gta_computed_value_float_destroy(GTA_Computed_Value * self) {
   assert(self);
   gcu_free(self);
 }
 
 
-void gta_computed_value_float_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
+void GTA_CALL gta_computed_value_float_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
 
 
-GTA_Computed_Value * gta_computed_value_float_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context) {
   assert(value);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(value));
   GTA_Computed_Value_Float * float_value = (GTA_Computed_Value_Float *)value;
@@ -96,7 +96,7 @@ GTA_Computed_Value * gta_computed_value_float_deep_copy(GTA_Computed_Value * val
 }
 
 
-char * gta_computed_value_float_to_string(GTA_Computed_Value * self) {
+char * GTA_CALL gta_computed_value_float_to_string(GTA_Computed_Value * self) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * float_value = (GTA_Computed_Value_Float *)self;
@@ -113,7 +113,7 @@ char * gta_computed_value_float_to_string(GTA_Computed_Value * self) {
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_negative(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_negative(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
@@ -126,7 +126,7 @@ GTA_Computed_Value * gta_computed_value_float_negative(GTA_Computed_Value * self
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
@@ -158,7 +158,7 @@ GTA_Computed_Value * gta_computed_value_float_add(GTA_Computed_Value * self, GTA
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
@@ -196,7 +196,7 @@ GTA_Computed_Value * gta_computed_value_float_subtract(GTA_Computed_Value * self
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
@@ -228,7 +228,7 @@ GTA_Computed_Value * gta_computed_value_float_multiply(GTA_Computed_Value * self
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
@@ -274,12 +274,12 @@ GTA_Computed_Value * gta_computed_value_float_divide(GTA_Computed_Value * self, 
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_modulo(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_modulo(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
@@ -300,7 +300,7 @@ GTA_Computed_Value * gta_computed_value_float_less_than(GTA_Computed_Value * sel
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
@@ -321,7 +321,7 @@ GTA_Computed_Value * gta_computed_value_float_less_than_equal(GTA_Computed_Value
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
@@ -342,7 +342,7 @@ GTA_Computed_Value * gta_computed_value_float_greater_than(GTA_Computed_Value * 
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
@@ -363,7 +363,7 @@ GTA_Computed_Value * gta_computed_value_float_greater_than_equal(GTA_Computed_Va
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
@@ -380,7 +380,7 @@ GTA_Computed_Value * gta_computed_value_float_equal(GTA_Computed_Value * self, G
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;
@@ -397,7 +397,7 @@ GTA_Computed_Value * gta_computed_value_float_not_equal(GTA_Computed_Value * sel
 }
 
 
-GTA_Computed_Value * gta_computed_value_float_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_float_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * number = (GTA_Computed_Value_Float *)self;

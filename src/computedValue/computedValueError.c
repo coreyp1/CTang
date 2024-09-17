@@ -198,7 +198,7 @@ GTA_Computed_Value * gta_computed_value_error_argument_count_mismatch = (GTA_Com
 GTA_Computed_Value * gta_computed_value_error_global_rng_seed_not_changeable = (GTA_Computed_Value *)&gta_computed_value_error_global_rng_seed_not_changeable_singleton;
 
 
-char * gta_computed_value_error_to_string(GTA_Computed_Value * self) {
+char * GTA_CALL gta_computed_value_error_to_string(GTA_Computed_Value * self) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_ERROR(self));
   GTA_Computed_Value_Error * error = (GTA_Computed_Value_Error *)self;

@@ -104,7 +104,7 @@ struct GTA_Computed_Value_Error {
  * @param message The error message.
  * @return The new GTA_Computed_Value_Error object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_error_create(const char * message);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_error_create(const char * message);
 
 /**
  * Produce a string representation of the error.  The caller is responsible for
@@ -113,7 +113,7 @@ GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_error_create(const char *
  * @param self The GTA_Computed_Value_Error object.
  * @return The string representation of the error.
  */
-GTA_NO_DISCARD char * gta_computed_value_error_to_string(GTA_Computed_Value * self);
+GTA_NO_DISCARD char * GTA_CALL gta_computed_value_error_to_string(GTA_Computed_Value * self);
 
 #ifdef __cplusplus
 }

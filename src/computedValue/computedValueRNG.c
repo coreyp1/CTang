@@ -97,7 +97,7 @@ static GTA_Computed_Value * GTA_CALL rng_set_seed(GTA_Computed_Value * self, GTA
  * @param context The execution context.
  * @return True if the seed was set successfully, an error otherwise.
  */
-static GTA_Computed_Value * rng_set_seed_callback(GTA_Computed_Value * bound_object, GTA_UInteger argc, GTA_Computed_Value * argv[], GTA_Execution_Context * context);
+static GTA_Computed_Value * GTA_CALL rng_set_seed_callback(GTA_Computed_Value * bound_object, GTA_UInteger argc, GTA_Computed_Value * argv[], GTA_Execution_Context * context);
 
 
 /**
@@ -125,7 +125,7 @@ static GTA_Computed_Value_Attribute_Pair attributes[] = {
  *
  * @return A default seed for the random number generator.
  */
-static GTA_UInteger rng_get_default_seed(void);
+static GTA_UInteger GTA_CALL rng_get_default_seed(void);
 
 
 /**
@@ -134,7 +134,7 @@ static GTA_UInteger rng_get_default_seed(void);
  * @param self The random number generator.
  * @return The next random number.
  */
-static GTA_UInteger rng_get_next(GTA_Computed_Value_RNG * self);
+static GTA_UInteger GTA_CALL rng_get_next(GTA_Computed_Value_RNG * self);
 
 
 GTA_Computed_Value_VTable gta_computed_value_rng_vtable = {
@@ -265,7 +265,7 @@ char * GTA_CALL gta_computed_value_rng_to_string(GTA_MAYBE_UNUSED(GTA_Computed_V
 }
 
 
-static GTA_UInteger rng_get_default_seed(void) {
+static GTA_UInteger GTA_CALL rng_get_default_seed(void) {
 #ifdef _WIN32
   // Windows implementation.
   SYSTEMTIME time;
@@ -281,7 +281,7 @@ static GTA_UInteger rng_get_default_seed(void) {
 }
 
 
-static GTA_UInteger rng_get_next(GTA_Computed_Value_RNG * self) {
+static GTA_UInteger GTA_CALL rng_get_next(GTA_Computed_Value_RNG * self) {
   assert(self);
   if ((GTA_Computed_Value *)self == gta_computed_value_random_global) {
     // Acquire the global semaphore.
@@ -340,7 +340,7 @@ static GTA_Computed_Value * GTA_CALL rng_set_seed(GTA_Computed_Value * self, GTA
 
 
 // .set_seed(seed) callback
-static GTA_Computed_Value * rng_set_seed_callback(GTA_Computed_Value * bound_object, GTA_UInteger argc, GTA_Computed_Value * argv[], GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+static GTA_Computed_Value * GTA_CALL rng_set_seed_callback(GTA_Computed_Value * bound_object, GTA_UInteger argc, GTA_Computed_Value * argv[], GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   assert(bound_object);
 
   // Check the number of arguments.

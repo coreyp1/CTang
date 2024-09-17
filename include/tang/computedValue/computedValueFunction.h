@@ -96,7 +96,7 @@ GTA_Computed_Value_Function * GTA_CALL gta_computed_value_function_create(size_t
  * @param context The execution context to create the value in.
  * @return True if the operation was successful, false otherwise.
  */
-bool gta_computed_value_function_create_in_place(GTA_Computed_Value_Function * self, size_t num_arguments, size_t pointer, GTA_Execution_Context * context);
+bool GTA_CALL gta_computed_value_function_create_in_place(GTA_Computed_Value_Function * self, size_t num_arguments, size_t pointer, GTA_Execution_Context * context);
 
 /**
  * Destroys a GTA_Computed_Value_Function object.
@@ -108,14 +108,14 @@ bool gta_computed_value_function_create_in_place(GTA_Computed_Value_Function * s
  *
  * @param self The GTA_Computed_Value_Function object to destroy.
  */
-void gta_computed_value_function_destroy(GTA_Computed_Value * self);
+void GTA_CALL gta_computed_value_function_destroy(GTA_Computed_Value * self);
 
 /**
  * Destroys a GTA_Computed_Value_Function object in place.
  * 
  * @param self The memory address of the object.
  */
-void gta_computed_value_function_destroy_in_place(GTA_Computed_Value * self);
+void GTA_CALL gta_computed_value_function_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Create a deep copy of a GTA_Computed_Value_Function object.
@@ -144,7 +144,7 @@ char * GTA_CALL gta_computed_value_function_to_string(GTA_Computed_Value * self)
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_function_call(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
+GTA_Computed_Value * GTA_CALL gta_computed_value_function_call(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

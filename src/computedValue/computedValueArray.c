@@ -273,7 +273,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_index_assign(GTA_Computed
 }
 
 
-GTA_Computed_Value * gta_computed_value_array_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_array_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
   GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
@@ -305,7 +305,7 @@ GTA_Computed_Value * gta_computed_value_array_add(GTA_Computed_Value * self, GTA
 }
 
 
-GTA_Computed_Value * gta_computed_value_array_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_array_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
   GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
@@ -355,7 +355,7 @@ GTA_Computed_Value * gta_computed_value_array_multiply(GTA_Computed_Value * self
 }
 
 
-GTA_Computed_Value * gta_computed_value_array_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_array_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
   GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
@@ -390,7 +390,7 @@ GTA_Computed_Value * gta_computed_value_array_equal(GTA_Computed_Value * self, G
 }
 
 
-GTA_Computed_Value * gta_computed_value_array_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_array_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
   GTA_Computed_Value_Array * lhs = (GTA_Computed_Value_Array *)self;
@@ -461,7 +461,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_Computed_Value 
 
 
 // Helper function to correct start and end values of a slice.
-static GTA_Integer correct_bounds(GTA_Integer value, GTA_Integer boundary, GTA_Integer step) {
+static GTA_Integer GTA_CALL correct_bounds(GTA_Integer value, GTA_Integer boundary, GTA_Integer step) {
   GTA_Integer interval = (boundary - value) / step;
   GTA_Integer roundup = (interval * step) == (boundary - value) ? 0 : 1;
   return value + ((interval + roundup) * step);
@@ -588,7 +588,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value 
 /*
  * Helper function used as the 'advance' iterator operation.
  */
-static void __advance(GTA_Computed_Value_Iterator * self) {
+static void GTA_CALL __advance(GTA_Computed_Value_Iterator * self) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_ITERATOR(self));
   GTA_Computed_Value_Array * array = (GTA_Computed_Value_Array *)self->collection;
@@ -602,7 +602,7 @@ static void __advance(GTA_Computed_Value_Iterator * self) {
 }
 
 
-GTA_Computed_Value * gta_computed_value_array_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_array_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
   GTA_Computed_Value * iterator = gta_computed_value_iterator_create(self, context);

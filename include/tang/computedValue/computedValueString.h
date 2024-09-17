@@ -130,7 +130,7 @@ char * GTA_CALL gta_computed_value_string_to_string(GTA_Computed_Value * self);
  * @return A string representation of the object or NULL if the operation
  *  failed.
  */
-GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_string_print(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Unicode_String * GTA_CALL gta_computed_value_string_print(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Casts a computed value to a different type.
@@ -142,7 +142,7 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_computed_value_string_print(GTA_Computed
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * gta_computed_value_string_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
  * Gets a value from the object using an index.

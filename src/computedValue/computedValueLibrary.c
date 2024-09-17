@@ -168,7 +168,7 @@ char * GTA_CALL gta_computed_value_library_to_string(GTA_Computed_Value * self) 
 }
 
 
-GTA_Computed_Value * gta_computed_value_library_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_library_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_LIBRARY(self));
 
@@ -183,7 +183,7 @@ GTA_Computed_Value * gta_computed_value_library_period(GTA_Computed_Value * self
 }
 
 
-bool gta_computed_value_library_build_library_attributes_hash(GTA_Computed_Value_Library * self) {
+bool GTA_CALL gta_computed_value_library_build_library_attributes_hash(GTA_Computed_Value_Library * self) {
   assert(self);
 
   if (self->attribute_count) {

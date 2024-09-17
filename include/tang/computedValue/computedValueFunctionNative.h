@@ -28,7 +28,7 @@ extern GTA_Computed_Value_VTable gta_computed_value_function_native_vtable;
  * @param context The execution context in which the function is being called.
  * @return The computed value resulting from the function call.
  */
-typedef GTA_Computed_Value * GTA_Computed_Value_Function_Native_Callback(GTA_Computed_Value *bound_object, GTA_UInteger argc, GTA_Computed_Value * argv[], GTA_Execution_Context *context);
+typedef GTA_Computed_Value * GTA_CALL GTA_Computed_Value_Function_Native_Callback(GTA_Computed_Value *bound_object, GTA_UInteger argc, GTA_Computed_Value * argv[], GTA_Execution_Context *context);
 
 /**
  * The computed value representing a natively-compiled function that may or may

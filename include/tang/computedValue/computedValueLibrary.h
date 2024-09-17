@@ -142,7 +142,7 @@ char * GTA_CALL gta_computed_value_library_to_string(GTA_Computed_Value * self);
  * @param context The execution context of the program.
  * @return The value of the attribute or NULL if the operation failed.
  */
-GTA_Computed_Value * gta_computed_value_library_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
+GTA_Computed_Value * GTA_CALL gta_computed_value_library_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
 
 /**
  * Helper function to build the internal library attributes hash.
@@ -150,7 +150,7 @@ GTA_Computed_Value * gta_computed_value_library_period(GTA_Computed_Value * self
  * @param self The Library object.
  * @return True if the operation was successful, false otherwise.
  */
-bool gta_computed_value_library_build_library_attributes_hash(GTA_Computed_Value_Library * self);
+bool GTA_CALL gta_computed_value_library_build_library_attributes_hash(GTA_Computed_Value_Library * self);
 
 #ifdef __cplusplus
 }

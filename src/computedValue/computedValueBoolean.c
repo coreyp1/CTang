@@ -75,14 +75,14 @@ GTA_Computed_Value * gta_computed_value_boolean_true = (GTA_Computed_Value *)&gt
 GTA_Computed_Value * gta_computed_value_boolean_false = (GTA_Computed_Value *)&gta_computed_value_boolean_false_singleton;
 
 
-GTA_Computed_Value_Boolean * gta_computed_value_boolean_create(bool value, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value_Boolean * GTA_CALL gta_computed_value_boolean_create(bool value, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return value
     ? (GTA_Computed_Value_Boolean *)gta_computed_value_boolean_true
     : (GTA_Computed_Value_Boolean *)gta_computed_value_boolean_false;
 }
 
 
-bool gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * self, bool value, GTA_Execution_Context * context) {
+bool GTA_CALL gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * self, bool value, GTA_Execution_Context * context) {
   assert(self);
   *self = (GTA_Computed_Value_Boolean) {
     .base = {
@@ -101,7 +101,7 @@ bool gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * sel
 }
 
 
-void gta_computed_value_boolean_destroy(GTA_Computed_Value * self) {
+void GTA_CALL gta_computed_value_boolean_destroy(GTA_Computed_Value * self) {
   assert(self);
   if (!self->is_singleton) {
     gcu_free(self);
@@ -109,15 +109,15 @@ void gta_computed_value_boolean_destroy(GTA_Computed_Value * self) {
 }
 
 
-void gta_computed_value_boolean_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
+void GTA_CALL gta_computed_value_boolean_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
 
 
-GTA_Computed_Value * gta_computed_value_boolean_deep_copy(GTA_Computed_Value * value, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_deep_copy(GTA_Computed_Value * value, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return value;
 }
 
 
-char * gta_computed_value_boolean_to_string(GTA_Computed_Value * self) {
+char * GTA_CALL gta_computed_value_boolean_to_string(GTA_Computed_Value * self) {
   assert(self);
   char * str = (char *)gcu_malloc(6);
   if (!str) {
@@ -128,7 +128,7 @@ char * gta_computed_value_boolean_to_string(GTA_Computed_Value * self) {
 }
 
 
-GTA_Computed_Value * gta_computed_value_boolean_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
   assert(self);
   if (type == &gta_computed_value_boolean_vtable) {
     return self;

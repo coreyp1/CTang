@@ -76,19 +76,19 @@ static GTA_Computed_Value computed_value_null_singleton = {
 GTA_Computed_Value * gta_computed_value_null = &computed_value_null_singleton;
 
 
-GTA_Computed_Value * gta_computed_value_create(GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_create(GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_null;
 }
 
 
-bool gta_computed_value_create_in_place(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+bool GTA_CALL gta_computed_value_create_in_place(GTA_Computed_Value * self, GTA_Execution_Context * context) {
   assert(self);
   self->context = context;
   return true;
 }
 
 
-void gta_computed_value_destroy(GTA_Computed_Value * self) {
+void GTA_CALL gta_computed_value_destroy(GTA_Computed_Value * self) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->destroy);
@@ -96,7 +96,7 @@ void gta_computed_value_destroy(GTA_Computed_Value * self) {
 }
 
 
-void gta_computed_value_destroy_in_place(GTA_Computed_Value * self) {
+void GTA_CALL gta_computed_value_destroy_in_place(GTA_Computed_Value * self) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->destroy_in_place);
@@ -104,7 +104,7 @@ void gta_computed_value_destroy_in_place(GTA_Computed_Value * self) {
 }
 
 
-GTA_Computed_Value * gta_computed_value_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->deep_copy);
@@ -112,7 +112,7 @@ GTA_Computed_Value * gta_computed_value_deep_copy(GTA_Computed_Value * self, GTA
 }
 
 
-char * gta_computed_value_to_string(GTA_Computed_Value * self) {
+char * GTA_CALL gta_computed_value_to_string(GTA_Computed_Value * self) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->to_string);
@@ -120,7 +120,7 @@ char * gta_computed_value_to_string(GTA_Computed_Value * self) {
 }
 
 
-GTA_Unicode_String * gta_computed_value_print(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+GTA_Unicode_String * GTA_CALL gta_computed_value_print(GTA_Computed_Value * self, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->print);
@@ -133,7 +133,7 @@ GTA_Unicode_String * gta_computed_value_print(GTA_Computed_Value * self, GTA_Exe
 }
 
 
-GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->assign_index);
@@ -141,7 +141,7 @@ GTA_Computed_Value * gta_computed_value_assign_index(GTA_Computed_Value * self, 
 }
 
 
-GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->add);
@@ -149,7 +149,7 @@ GTA_Computed_Value * gta_computed_value_add(GTA_Computed_Value * self, GTA_Compu
 }
 
 
-GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->subtract);
@@ -157,7 +157,7 @@ GTA_Computed_Value * gta_computed_value_subtract(GTA_Computed_Value * self, GTA_
 }
 
 
-GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->multiply);
@@ -165,7 +165,7 @@ GTA_Computed_Value * gta_computed_value_multiply(GTA_Computed_Value * self, GTA_
 }
 
 
-GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->divide);
@@ -173,7 +173,7 @@ GTA_Computed_Value * gta_computed_value_divide(GTA_Computed_Value * self, GTA_Co
 }
 
 
-GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->modulo);
@@ -181,7 +181,7 @@ GTA_Computed_Value * gta_computed_value_modulo(GTA_Computed_Value * self, GTA_Co
 }
 
 
-GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_negative(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->negative);
@@ -189,7 +189,7 @@ GTA_Computed_Value * gta_computed_value_negative(GTA_Computed_Value * self, bool
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->less_than);
@@ -197,7 +197,7 @@ GTA_Computed_Value * gta_computed_value_less_than(GTA_Computed_Value * self, GTA
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->less_than_equal);
@@ -205,7 +205,7 @@ GTA_Computed_Value * gta_computed_value_less_than_equal(GTA_Computed_Value * sel
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->greater_than);
@@ -213,7 +213,7 @@ GTA_Computed_Value * gta_computed_value_greater_than(GTA_Computed_Value * self, 
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->greater_than_equal);
@@ -221,7 +221,7 @@ GTA_Computed_Value * gta_computed_value_greater_than_equal(GTA_Computed_Value * 
 }
 
 
-GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->equal);
@@ -229,7 +229,7 @@ GTA_Computed_Value * gta_computed_value_equal(GTA_Computed_Value * self, GTA_Com
 }
 
 
-GTA_Computed_Value * gta_computed_value_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->not_equal);
@@ -237,7 +237,7 @@ GTA_Computed_Value * gta_computed_value_not_equal(GTA_Computed_Value * self, GTA
 }
 
 
-GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->period);
@@ -245,7 +245,7 @@ GTA_Computed_Value * gta_computed_value_period(GTA_Computed_Value * self, GTA_UI
 }
 
 
-GTA_Computed_Value * gta_computed_value_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->index);
@@ -253,7 +253,7 @@ GTA_Computed_Value * gta_computed_value_index(GTA_Computed_Value * self, GTA_Com
 }
 
 
-GTA_Computed_Value * gta_computed_value_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->slice);
@@ -261,7 +261,7 @@ GTA_Computed_Value * gta_computed_value_slice(GTA_Computed_Value * self, GTA_Com
 }
 
 
-GTA_Computed_Value * gta_computed_value_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->iterator_get);
@@ -269,7 +269,7 @@ GTA_Computed_Value * gta_computed_value_iterator_get(GTA_Computed_Value * self, 
 }
 
 
-GTA_Computed_Value * gta_computed_value_iterator_next(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_next(GTA_Computed_Value * self, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->iterator_next);
@@ -277,7 +277,7 @@ GTA_Computed_Value * gta_computed_value_iterator_next(GTA_Computed_Value * self,
 }
 
 
-GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->cast);
@@ -285,7 +285,7 @@ GTA_Computed_Value * gta_computed_value_cast(GTA_Computed_Value * self, GTA_Comp
 }
 
 
-GTA_Computed_Value * gta_computed_value_call(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_call(GTA_Computed_Value * self, GTA_Computed_Value_Vector * arguments, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(self->vtable->call);
@@ -293,22 +293,22 @@ GTA_Computed_Value * gta_computed_value_call(GTA_Computed_Value * self, GTA_Comp
 }
 
 
-void gta_computed_value_null_destroy(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+void GTA_CALL gta_computed_value_null_destroy(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
   return;
 }
 
 
-void gta_computed_value_null_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+void GTA_CALL gta_computed_value_null_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
   return;
 }
 
 
-GTA_Computed_Value * gta_computed_value_null_deep_copy(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_null_deep_copy(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return self;
 }
 
 
-char * gta_computed_value_null_to_string(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
+char * GTA_CALL gta_computed_value_null_to_string(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {
   char * str = (char *)gcu_malloc(5);
   if (!str) {
     return 0;
@@ -318,7 +318,7 @@ char * gta_computed_value_null_to_string(GTA_MAYBE_UNUSED(GTA_Computed_Value * s
 }
 
 
-GTA_Computed_Value * gta_computed_value_null_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_null_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
   assert(self);
   if (type == &gta_computed_value_boolean_vtable) {
     return gta_computed_value_boolean_false;
@@ -350,216 +350,216 @@ GTA_Computed_Value * gta_computed_value_null_cast(GTA_Computed_Value * self, GTA
 }
 
 
-GTA_Unicode_String * gta_computed_value_print_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Unicode_String * GTA_CALL gta_computed_value_print_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return NULL;
 }
 
 
-GTA_Computed_Value * gta_computed_value_assign_index_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * index), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_assign_index_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * index), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_add_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_add_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_subtract_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_subtract_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_multiply_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_multiply_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_divide_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_divide_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_modulo_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_modulo_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_negative_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_negative_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_less_than_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_less_than_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_not_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_not_equal_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_period_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_UInteger identifier_hash), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_period_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_UInteger identifier_hash), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_index_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * index), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_index_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * index), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_slice_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * start), GTA_MAYBE_UNUSED(GTA_Computed_Value * end), GTA_MAYBE_UNUSED(GTA_Computed_Value * step), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_slice_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * start), GTA_MAYBE_UNUSED(GTA_Computed_Value * end), GTA_MAYBE_UNUSED(GTA_Computed_Value * step), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_iterator_get_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_get_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_iterator_next_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_next_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_cast_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_cast_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Computed_Value * gta_computed_value_call_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_Vector * arguments), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_call_not_implemented(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_Vector * arguments), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_implemented;
 }
 
 
-GTA_Unicode_String * gta_computed_value_print_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Unicode_String * GTA_CALL gta_computed_value_print_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return NULL;
 }
 
 
-GTA_Computed_Value * gta_computed_value_assign_index_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * index), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_assign_index_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * index), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_add_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_add_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_subtract_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_subtract_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_multiply_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_multiply_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_divide_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_divide_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_modulo_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_modulo_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_negative_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_negative_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(bool is_assignment), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_less_than_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_less_than_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_less_than_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_greater_than_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_greater_than_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_not_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_not_equal_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * other), GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_period_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_UInteger identifier_hash), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_period_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_UInteger identifier_hash), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_index_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * index), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_index_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * index), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_slice_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * start), GTA_MAYBE_UNUSED(GTA_Computed_Value * end), GTA_MAYBE_UNUSED(GTA_Computed_Value * step), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_slice_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value * start), GTA_MAYBE_UNUSED(GTA_Computed_Value * end), GTA_MAYBE_UNUSED(GTA_Computed_Value * step), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_iterator_get_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_get_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_iterator_next_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_next_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_cast_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_cast_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_VTable * type), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
 
-GTA_Computed_Value * gta_computed_value_call_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_Vector * arguments), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_call_not_supported(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_MAYBE_UNUSED(GTA_Computed_Value_Vector * arguments), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   return gta_computed_value_error_not_supported;
 }
 
-GTA_Unicode_String * gta_computed_value_generic_print_from_to_string(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Unicode_String * GTA_CALL gta_computed_value_generic_print_from_to_string(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   assert(self);
   char * str = gta_computed_value_to_string(self);
   if (!str) {
@@ -573,7 +573,7 @@ GTA_Unicode_String * gta_computed_value_generic_print_from_to_string(GTA_Compute
   return unicode_str;
 }
 
-GTA_Computed_Value * gta_computed_value_generic_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_generic_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context) {
   assert(self);
   assert(self->vtable);
   assert(context);

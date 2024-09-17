@@ -42,11 +42,18 @@ extern "C" {
  */
 #if defined(ARM) || defined(ARM64)
 #define GTA_CALL __attribute__((pcs("aapcs")))
+
 #elif defined(_WIN32) || defined(_WIN64)
 #define GTA_CALL __cdecl
+
+#elif defined(__i386__) || defined(__x86_64__)
+#define GTA_CALL __attribute__((cdecl))
+
 #else
-#define GTA_CALL
+#error "Unsupported architecture or compiler"
+
 #endif
+
 
 /**
  * A cross-compiler macro for declaring a function as no discard.
@@ -56,13 +63,24 @@ extern "C" {
 #elif defined(__GNUC__) || defined(__clang__)
 #define GTA_NO_DISCARD __attribute__((warn_unused_result))
 #else
-#define GTA_NO_DISCARD
+#error "Unsupported compiler"
 #endif
+
 
 /**
  * A cross-compiler macro for marking a function parameter as unused.
  */
+#if defined(__GNUC__) || defined(__clang__)
 #define GTA_MAYBE_UNUSED(X) __attribute__((unused)) X
+
+#elif defined(_MSC_VER)
+#define GTA_MAYBE_UNUSED(X) (void)(X)
+
+#else
+#define GTA_MAYBE_UNUSED(X) X
+
+#endif
+
 
 /**
  * A cross-compiler macro for identifying the system is big endian.

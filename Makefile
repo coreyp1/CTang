@@ -1218,7 +1218,7 @@ test: \
 	@printf "### Running Bytecode Language Execution Complex tests ###\n"
 	@printf "#########################################################\n"
 	@printf "\033[0m\n\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
+	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteComplex
 	@printf "\033[0;30;104m\n"
 	@printf "################################################\n"
 	@printf "### Running Bytecode Language Library tests  ###\n"

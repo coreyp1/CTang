@@ -59,7 +59,7 @@ GTA_Computed_Value_Function * GTA_CALL gta_computed_value_function_create(size_t
 }
 
 
-bool gta_computed_value_function_create_in_place(GTA_Computed_Value_Function * self, size_t num_arguments, size_t pointer, GTA_Execution_Context * context) {
+bool GTA_CALL gta_computed_value_function_create_in_place(GTA_Computed_Value_Function * self, size_t num_arguments, size_t pointer, GTA_Execution_Context * context) {
   assert(self);
   *self = (GTA_Computed_Value_Function) {
     .base = {
@@ -79,16 +79,16 @@ bool gta_computed_value_function_create_in_place(GTA_Computed_Value_Function * s
 }
 
 
-void gta_computed_value_function_destroy(GTA_Computed_Value * self) {
+void GTA_CALL gta_computed_value_function_destroy(GTA_Computed_Value * self) {
   assert(self);
   gcu_free(self);
 }
 
 
-void gta_computed_value_function_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
+void GTA_CALL gta_computed_value_function_destroy_in_place(GTA_MAYBE_UNUSED(GTA_Computed_Value * self)) {}
 
 
-GTA_Computed_Value * gta_computed_value_function_deep_copy(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_function_deep_copy(GTA_Computed_Value * self, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
   // These are always singletons.
   return self;
 }

@@ -28,7 +28,7 @@ extern GTA_Computed_Value * gta_computed_value_error_iterator_end;
  * @param iterator The iterator object to mutate.
  * @return True if the operation was successful, false otherwise.
  */
-typedef void (*GTA_Iterator_Advance)(GTA_Computed_Value_Iterator * iterator);
+typedef void GTA_CALL (*GTA_Iterator_Advance)(GTA_Computed_Value_Iterator * iterator);
 
 /**
  * A user-defined function to be called when the iterator is destroyed.
@@ -37,7 +37,7 @@ typedef void (*GTA_Iterator_Advance)(GTA_Computed_Value_Iterator * iterator);
  *
  * @param iterator The iterator object to mutate.
  */
-typedef void (*GTA_Iterator_Destroy)(GTA_Computed_Value_Iterator * iterator);
+typedef void GTA_CALL (*GTA_Iterator_Destroy)(GTA_Computed_Value_Iterator * iterator);
 
 /**
  * An iterator object over a collection of some kind.
