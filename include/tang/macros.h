@@ -47,7 +47,9 @@ extern "C" {
 #define GTA_CALL __cdecl
 
 #elif defined(__i386__) || defined(__x86_64__)
-#define GTA_CALL __attribute__((cdecl))
+// x86 and x86-64 use the cdecl calling convention already, and some compilers
+// will give an attribute error if we try to add it.
+#define GTA_CALL
 
 #else
 #error "Unsupported architecture or compiler"
@@ -391,7 +393,7 @@ typedef union GTA_Function_Converter {
  * Helper union for converting between function pointers and integers.
  */
 typedef union GTA_JIT_Function_Converter {
-  void (*f)(void);
+  void GTA_CALL (*f)(void);
   GTA_UInteger i;
 } GTA_JIT_Function_Converter;
 
@@ -399,7 +401,7 @@ typedef union GTA_JIT_Function_Converter {
  * Convert a function pointer to an integer.
  */
 #define GTA_JIT_FUNCTION_CONVERTER(F) \
-  ((GTA_JIT_Function_Converter){.f = (void (*)(void))(F)}.i)
+  ((GTA_JIT_Function_Converter){.f = (void GTA_CALL (*)(void))(F)}.i)
 
 
 #ifdef GTA_X86_64
