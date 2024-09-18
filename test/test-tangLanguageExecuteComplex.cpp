@@ -40,21 +40,13 @@ GTA_Language * language;
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
 
 #define TEST_PROGRAM_SETUP(code) \
-  gcu_memory_reset_counts(); \
-  GTA_Program * program = gta_program_create(language, code); \
-  ASSERT_TRUE(program); \
-  size_t alloc_count = gcu_get_alloc_count(); \
-  size_t free_count = gcu_get_free_count(); \
+  TEST_REUSABLE_PROGRAM(code, GTA_PROGRAM_FLAG_DEFAULT); \
   TEST_CONTEXT_SETUP(); \
   ASSERT_TRUE(gta_program_execute(context)); \
   ASSERT_TRUE(context->result);
 
 #define TEST_PROGRAM_SETUP_NO_RUN(code) \
-  gcu_memory_reset_counts(); \
-  GTA_Program * program = gta_program_create(language, code); \
-  ASSERT_TRUE(program); \
-  size_t alloc_count = gcu_get_alloc_count(); \
-  size_t free_count = gcu_get_free_count(); \
+  TEST_REUSABLE_PROGRAM(code, GTA_PROGRAM_FLAG_DEFAULT); \
   TEST_CONTEXT_SETUP();
 
 #define TEST_PROGRAM_TEARDOWN() \
@@ -581,7 +573,7 @@ TEST(VariableScope, Global) {
 }
 
 
-static GTA_Computed_Value * int_3_callback(GTA_MAYBE_UNUSED(GTA_Computed_Value * bound_object), GTA_MAYBE_UNUSED(GTA_UInteger argc), GTA_MAYBE_UNUSED(GTA_Computed_Value * argv[]), GTA_Execution_Context * context) {
+static GTA_Computed_Value * GTA_CALL int_3_callback(GTA_MAYBE_UNUSED(GTA_Computed_Value * bound_object), GTA_MAYBE_UNUSED(GTA_UInteger argc), GTA_MAYBE_UNUSED(GTA_Computed_Value * argv[]), GTA_Execution_Context * context) {
   assert(!bound_object);
   assert(argv);
   return (GTA_Computed_Value *)gta_computed_value_integer_create(3, context);
@@ -591,7 +583,7 @@ static GTA_Computed_Value * GTA_CALL make_int_3(GTA_Execution_Context * context)
   return (GTA_Computed_Value *)gta_computed_value_function_native_create(int_3_callback, NULL, context);
 }
 
-static GTA_Computed_Value * add_callback(GTA_MAYBE_UNUSED(GTA_Computed_Value * bound_object), GTA_UInteger argc, GTA_Computed_Value * argv[], GTA_Execution_Context * context) {
+static GTA_Computed_Value * GTA_CALL add_callback(GTA_MAYBE_UNUSED(GTA_Computed_Value * bound_object), GTA_UInteger argc, GTA_Computed_Value * argv[], GTA_Execution_Context * context) {
   assert(!bound_object);
   assert(argc == 2);
   assert(argv);

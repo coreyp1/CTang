@@ -96,6 +96,14 @@ typedef uint32_t GTA_Program_Flags;
 #define GTA_PROGRAM_FLAG_PRINT_TO_STDOUT 32
 
 /**
+ * Ignore environment variables when setting flags.
+ *
+ * @see GTA_Program_Flags
+ * @see gta_program_create()
+ */
+#define GTA_PROGRAM_FLAG_IGNORE_ENVIRONMENT 64
+
+/**
  * Holds the metadata for a program.
  */
 struct GTA_Program {

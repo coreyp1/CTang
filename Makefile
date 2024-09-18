@@ -823,6 +823,7 @@ $(OBJ_DIR)/ast/astNodeWhile.o: \
 
 $(OBJ_DIR)/tangLanguage.o: \
 	src/tangLanguage.c \
+	include/tang/tangScanner.h \
 	$(DEP_TANGLANGUAGE) \
 	$(DEP_MACROS) \
 	$(DEP_ASTNODE_IDENTIFIER) \
@@ -1218,7 +1219,7 @@ test: \
 	@printf "### Running Bytecode Language Execution Complex tests ###\n"
 	@printf "#########################################################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteComplex
+	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
 	@printf "\033[0;30;104m\n"
 	@printf "################################################\n"
 	@printf "### Running Bytecode Language Library tests  ###\n"

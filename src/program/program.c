@@ -209,18 +209,7 @@ GTA_Program * gta_program_create(GTA_Language * language, const char * code) {
 
 
 bool gta_program_create_in_place(GTA_Program * program, GTA_Language * language, const char * code) {
-  // Initialize flags based on environment variables.
-  GTA_Program_Flags flags = GTA_PROGRAM_FLAG_DEFAULT;
-  if (getenv("TANG_DEBUG")) {
-    flags |= GTA_PROGRAM_FLAG_DEBUG;
-  }
-  if (getenv("TANG_DISABLE_BYTECODE")) {
-    flags |= GTA_PROGRAM_FLAG_DISABLE_BYTECODE;
-  }
-  if (getenv("TANG_DISABLE_BINARY")) {
-    flags |= GTA_PROGRAM_FLAG_DISABLE_BINARY;
-  }
-  return gta_program_create_in_place_with_flags(program, language, code, flags);
+  return gta_program_create_in_place_with_flags(program, language, code, GTA_PROGRAM_FLAG_DEFAULT);
 }
 
 
@@ -240,6 +229,19 @@ GTA_Program * gta_program_create_with_flags(GTA_Language * language, const char 
 
 bool gta_program_create_in_place_with_flags(GTA_Program * program, GTA_Language * language, const char * code, GTA_Program_Flags flags) {
   assert(program);
+
+  // Override flags (if allowed).
+  if (!(flags & GTA_PROGRAM_FLAG_IGNORE_ENVIRONMENT)) {
+    if (getenv("TANG_DEBUG")) {
+      flags |= GTA_PROGRAM_FLAG_DEBUG;
+    }
+    if (getenv("TANG_DISABLE_BYTECODE")) {
+      flags |= GTA_PROGRAM_FLAG_DISABLE_BYTECODE;
+    }
+    if (getenv("TANG_DISABLE_BINARY")) {
+      flags |= GTA_PROGRAM_FLAG_DISABLE_BINARY;
+    }
+  }
 
   // Initialize the program data structure.
   *program = (GTA_Program) {
