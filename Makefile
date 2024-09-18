@@ -1199,70 +1199,70 @@ test: \
 	@printf "### Running Language Parse tests ###\n"
 	@printf "####################################\n"
 	@printf "\033[0m\n\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1 --gtest_fail_fast
+	LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1 --gtest_fail_fast
 	@printf "\033[0;30;43m\n"
 	@printf "################################\n"
 	@printf "### Running Binary JIT tests ###\n"
 	@printf "################################\n"
 	@printf "\033[0m\n\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testBinary --gtest_brief=1
+	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BINARY= $(APP_DIR)/testBinary --gtest_brief=1
 
 	@printf "\033[0;30;104m\n"
 	@printf "########################################################\n"
 	@printf "### Running Bytecode Language Execution Simple tests ###\n"
 	@printf "########################################################\n"
 	@printf "\033[0m\n\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
+	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
 	@printf "\033[0;30;104m\n"
 	@printf "#########################################################\n"
 	@printf "### Running Bytecode Language Execution Complex tests ###\n"
 	@printf "#########################################################\n"
 	@printf "\033[0m\n\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteComplex
+	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteComplex
 	@printf "\033[0;30;104m\n"
 	@printf "################################################\n"
 	@printf "### Running Bytecode Language Library tests  ###\n"
 	@printf "################################################\n"
 	@printf "\033[0m\n\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
+	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
 
 	@printf "\033[0;30;45m\n"
 	@printf "########################################################\n"
 	@printf "### Running Binary Language Execution Simple tests   ###\n"
 	@printf "########################################################\n"
 	@printf "\033[0m\n\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
+	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
 	@printf "\033[0;30;45m\n"
 	@printf "########################################################\n"
 	@printf "### Running Binary Language Execution Complex tests  ###\n"
 	@printf "########################################################\n"
 	@printf "\033[0m\n\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
+	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
 	@printf "\033[0;30;45m\n"
 	@printf "##############################################\n"
 	@printf "### Running Binary Language Library tests  ###\n"
 	@printf "##############################################\n"
 	@printf "\033[0m\n\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" env TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
+	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
 
 	@printf "\033[0;30;47m\n"
 	@printf "###################\n"
 	@printf "### Running CLI ###\n"
 	@printf "###################\n"
 	@printf "\033[0m\n\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang -s ./test/fib.tang
+	LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang -s ./test/fib.tang
 	@printf "\033[0;30;47m\n"
 	@printf "###################\n"
 	@printf "### Running CLI ###\n"
 	@printf "###################\n"
 	@printf "\033[0m\n\n"
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang ./test/fib.template.tang
+	LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang ./test/fib.template.tang
 #	@printf "\033[0;32m\n"
 #	@printf "############################\n"
 #	@printf "### Running normal tests ###\n"
 #	@printf "############################\n"
 #	@printf "\033[0m\n"
-#	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test --gtest_brief=1
+#	LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test --gtest_brief=1
 
 clean: ## Remove all contents of the build directories.
 	-@rm -rvf $(OBJ_DIR)/*
