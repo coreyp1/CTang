@@ -40,13 +40,21 @@ GTA_Language * language;
   ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
 
 #define TEST_PROGRAM_SETUP(code) \
-  TEST_REUSABLE_PROGRAM(code, GTA_PROGRAM_FLAG_DEFAULT); \
+  gcu_memory_reset_counts(); \
+  GTA_Program * program = gta_program_create(language, code); \
+  ASSERT_TRUE(program); \
+  size_t alloc_count = gcu_get_alloc_count(); \
+  size_t free_count = gcu_get_free_count(); \
   TEST_CONTEXT_SETUP(); \
   ASSERT_TRUE(gta_program_execute(context)); \
   ASSERT_TRUE(context->result);
 
 #define TEST_PROGRAM_SETUP_NO_RUN(code) \
-  TEST_REUSABLE_PROGRAM(code, GTA_PROGRAM_FLAG_DEFAULT); \
+  gcu_memory_reset_counts(); \
+  GTA_Program * program = gta_program_create(language, code); \
+  ASSERT_TRUE(program); \
+  size_t alloc_count = gcu_get_alloc_count(); \
+  size_t free_count = gcu_get_free_count(); \
   TEST_CONTEXT_SETUP();
 
 #define TEST_PROGRAM_TEARDOWN() \
