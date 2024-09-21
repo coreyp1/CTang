@@ -254,7 +254,7 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   //   mov GTA_X86_64_Scratch1, array->elements->count
   //   mov [GTA_X86_64_R1 + count_offset], GTA_X86_64_Scratch1
     && gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch1, array->elements->count)
-    && gta_mov_ind_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_NONE, 0, (GTA_Integer)count_offset, GTA_REG_RDX)
+    && gta_mov_ind_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_NONE, 0, (GTA_Integer)count_offset, GTA_X86_64_Scratch1)
   // Return the array.
   //   pop rax
   //   jmp end
