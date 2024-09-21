@@ -148,7 +148,7 @@ TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs --cflags gtes
 TANGLIBRARY := -L $(APP_DIR) -l$(SUITE)-$(PROJECT)$(BRANCH)
 
 
-all: $(APP_DIR)/$(TARGET) $(APP_DIR)/tang ## Build the shared library
+all: $(APP_DIR)/$(TARGET) $(APP_DIR)/tang$(EXE_EXTENSION) ## Build the shared library
 
 ####################################################################
 # Dependency Variables
