@@ -42,28 +42,28 @@ struct GTA_Library {
  *
  * @return The new library object or NULL if it could not be created.
  */
-GTA_NO_DISCARD GTA_Library * gta_library_create(void);
+GTA_NO_DISCARD GTA_Library * GTA_CALL gta_library_create(void);
 
 /**
  * Create a new library object in place.
  *
  * @return True on success, false on failure.
  */
-bool gta_library_create_in_place(GTA_Library * library);
+bool GTA_CALL gta_library_create_in_place(GTA_Library * library);
 
 /**
  * Destroy the given library object.
  *
  * @param library The library object to destroy.
  */
-void gta_library_destroy(GTA_Library * library);
+void GTA_CALL gta_library_destroy(GTA_Library * library);
 
 /**
  * Destroy the given library object in place.
  *
  * @param library The library object to destroy.
  */
-void gta_library_destroy_in_place(GTA_Library * library);
+void GTA_CALL gta_library_destroy_in_place(GTA_Library * library);
 
 /**
  * Adds a library entry to the execution context.
@@ -73,7 +73,7 @@ void gta_library_destroy_in_place(GTA_Library * library);
  * @param func The function to be invoked to create the Computed Value.
  * @return true on success, false on failure.
  */
-bool gta_library_add_library_from_hash(GTA_Library * library, GTA_UInteger hash, GTA_Library_Callback func);
+bool GTA_CALL gta_library_add_library_from_hash(GTA_Library * library, GTA_UInteger hash, GTA_Library_Callback func);
 
 /**
  * Adds a library entry to the execution context.
@@ -83,7 +83,7 @@ bool gta_library_add_library_from_hash(GTA_Library * library, GTA_UInteger hash,
  * @param func The function to be invoked to create the Computed Value.
  * @return true on success, false on failure.
  */
-bool gta_library_add_library_from_string(GTA_Library * library, const char * identifier, GTA_Library_Callback func);
+bool GTA_CALL gta_library_add_library_from_string(GTA_Library * library, const char * identifier, GTA_Library_Callback func);
 
 /**
  * Get the library entry for the given hash.
@@ -92,7 +92,7 @@ bool gta_library_add_library_from_string(GTA_Library * library, const char * ide
  * @param hash The hash of the library entry identifier.
  * @return The callback function, or NULL on failure.
  */
-GTA_Library_Callback gta_library_get_library(GTA_Library * library, GTA_UInteger hash);
+GTA_Library_Callback GTA_CALL gta_library_get_library(GTA_Library * library, GTA_UInteger hash);
 
 /**
  * Load the library entry for the given hash.

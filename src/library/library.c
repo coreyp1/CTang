@@ -20,7 +20,7 @@ typedef union GTA_Library_Callback_Function_Converter {
 } GTA_Library_Callback_Function_Converter;
 
 
-GTA_Library * gta_library_create(void) {
+GTA_Library * GTA_CALL gta_library_create(void) {
   GTA_Library * library = gcu_malloc(sizeof(GTA_Library));
   if (library == NULL) {
     goto LIBRARY_CREATE_FAILED;
@@ -38,7 +38,7 @@ LIBRARY_CREATE_FAILED:
 }
 
 
-bool gta_library_create_in_place(GTA_Library * library) {
+bool GTA_CALL gta_library_create_in_place(GTA_Library * library) {
   assert(library);
   *library = (GTA_Library){
     .manifest = GTA_HASHX_CREATE(32),
@@ -47,7 +47,7 @@ bool gta_library_create_in_place(GTA_Library * library) {
 }
 
 
-void gta_library_destroy(GTA_Library * library) {
+void GTA_CALL gta_library_destroy(GTA_Library * library) {
   assert(library);
   assert(library->manifest);
 
@@ -56,7 +56,7 @@ void gta_library_destroy(GTA_Library * library) {
 }
 
 
-void gta_library_destroy_in_place(GTA_Library * library) {
+void GTA_CALL gta_library_destroy_in_place(GTA_Library * library) {
   assert(library);
   assert(library->manifest);
 
@@ -64,20 +64,20 @@ void gta_library_destroy_in_place(GTA_Library * library) {
 }
 
 
-bool gta_library_add_library_from_hash(GTA_Library * library, GTA_UInteger hash, GTA_Library_Callback func) {
+bool GTA_CALL gta_library_add_library_from_hash(GTA_Library * library, GTA_UInteger hash, GTA_Library_Callback func) {
   assert(library);
   assert(library->manifest);
   return GTA_HASHX_SET(library->manifest, hash, GTA_TYPEX_MAKE_P((GTA_Library_Callback_Function_Converter){.f = func}.b));
 }
 
 
-bool gta_library_add_library_from_string(GTA_Library * library, const char * identifier, GTA_Library_Callback func) {
+bool GTA_CALL gta_library_add_library_from_string(GTA_Library * library, const char * identifier, GTA_Library_Callback func) {
   assert(identifier);
   return gta_library_add_library_from_hash(library, GTA_STRING_HASH(identifier, strlen(identifier)), func);
 }
 
 
-GTA_Library_Callback gta_library_get_library(GTA_Library * library, GTA_UInteger hash) {
+GTA_Library_Callback GTA_CALL gta_library_get_library(GTA_Library * library, GTA_UInteger hash) {
   assert(library);
   assert(library->manifest);
   GTA_HashX_Value result = GTA_HASHX_GET(library->manifest, hash);
@@ -85,7 +85,7 @@ GTA_Library_Callback gta_library_get_library(GTA_Library * library, GTA_UInteger
 }
 
 
-GTA_Library_Callback GTA_CALL gta_library_get_from_context(GTA_Execution_Context * context, GTA_UInteger hash) {
+GTA_Library_Callback GTA_CALL GTA_CALL gta_library_get_from_context(GTA_Execution_Context * context, GTA_UInteger hash) {
   assert(context);
   assert(context->library);
   assert(context->program);
