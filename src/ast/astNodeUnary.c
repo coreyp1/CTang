@@ -174,28 +174,28 @@ bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     // Compile the expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(unary_node->expression, context)
     // gta_computed_value_negative(RAX, is_assignment, context):
-    //   mov rdi, rax
-    //   mov rsi, is_assignment
-    //   mov rdx, context
-      && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
-      && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, 0)
-      && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_R15)
+    //   mov GTA_X86_64_R1, rax
+    //   mov GTA_X86_64_R2, is_assignment
+    //   mov GTA_X86_64_R3, context
+      && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX)
+      && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R2, 0)
+      && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R3, GTA_REG_R15)
       && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_negative);
   }
 
   // Get the offset of is_true.
   int32_t is_true_offset = (int32_t)(size_t)(&((GTA_Computed_Value *)0)->is_true);
-  //   lea r10, [rax + is_true_offset]
+  //   lea GTA_X86_64_Scratch1, [rax + is_true_offset]
   //   mov rax, gta_computed_value_boolean_true
-  //   mov rdx, gta_computed_value_boolean_false
-  //   cmp byte ptr [r10], 0
-  //   cmovne rax, rdx
+  //   mov GTA_X86_64_Scratch2, gta_computed_value_boolean_false
+  //   cmp byte ptr [GTA_X86_64_Scratch1], 0
+  //   cmovne rax, GTA_X86_64_Scratch2
   return true
     // Compile the expression.  The result will be in rax.
     && gta_ast_node_compile_to_binary__x86_64(unary_node->expression, context)
-    && gta_lea_reg_ind__x86_64(v, GTA_REG_R10, GTA_REG_RAX, GTA_REG_NONE, 0, is_true_offset)
+    && gta_lea_reg_ind__x86_64(v, GTA_X86_64_Scratch1, GTA_REG_RAX, GTA_REG_NONE, 0, is_true_offset)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (GTA_Integer)gta_computed_value_boolean_true)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (GTA_Integer)gta_computed_value_boolean_false)
-    && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_R10, GTA_REG_NONE, 0, 0, 0)
-    && gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NE, GTA_REG_RAX, GTA_REG_RDX);
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch2, (GTA_Integer)gta_computed_value_boolean_false)
+    && gta_cmp_ind8_imm8__x86_64(v, GTA_X86_64_Scratch1, GTA_REG_NONE, 0, 0, 0)
+    && gta_cmovcc_reg_reg__x86_64(v, GTA_CC_NE, GTA_REG_RAX, GTA_X86_64_Scratch2);
 }

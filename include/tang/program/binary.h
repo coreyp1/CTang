@@ -101,6 +101,54 @@ typedef enum GTA_Register {
   GTA_REG_NONE,
 } GTA_Register;
 
+#if DOXYGEN
+/**
+ * Macros for identifying Registers associated with a specific ABI and
+ * architecture.
+ * @{
+ */
+#define GTA_X86_64_R1
+#define GTA_X86_64_R2
+#define GTA_X86_64_R3
+#define GTA_X86_64_R4
+#define GTA_X86_64_R5
+#define GTA_X86_64_R6
+#define GTA_X86_64_F1
+#define GTA_X86_64_F2
+#define GTA_X86_64_Scratch1
+#define GTA_X86_64_Scratch2
+/**
+ * @}
+ */
+#endif // DOXYGEN
+
+#if defined(_WIN32) || defined(_WIN64)
+// Define the registers for the x86_64 architecture, Windows ABI.
+#define GTA_X86_64_R1 GTA_REG_RCX
+#define GTA_X86_64_R2 GTA_REG_RDX
+#define GTA_X86_64_R3 GTA_REG_R8
+#define GTA_X86_64_R4 GTA_REG_R9
+#define GTA_X86_64_F1 GTA_REG_XMM0
+#define GTA_X86_64_F2 GTA_REG_XMM1
+#define GTA_X86_64_Scratch1 GTA_REG_R10
+#define GTA_X86_64_Scratch2 GTA_REG_R11
+
+#else
+// Define the registers for the x86_64 architecture, System V ABI.
+#define GTA_X86_64_R1 GTA_REG_RDI
+#define GTA_X86_64_R2 GTA_REG_RSI
+#define GTA_X86_64_R3 GTA_REG_RDX
+#define GTA_X86_64_R4 GTA_REG_RCX
+#define GTA_X86_64_R5 GTA_REG_R8
+#define GTA_X86_64_R6 GTA_REG_R9
+#define GTA_X86_64_F1 GTA_REG_XMM0
+#define GTA_X86_64_F2 GTA_REG_XMM1
+#define GTA_X86_64_Scratch1 GTA_REG_R10
+#define GTA_X86_64_Scratch2 GTA_REG_R11
+#endif
+
+
+
 /**
  * A representation for the condition codes that may be available in the target
  * architecture.

@@ -637,6 +637,8 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   //        mov rsp, rbp
   //        pop rbp
   //   4. Restore caller-saved registers
+  //
+  // NOTE: All of the above is for the Linux ABI.
 
   GTA_Compiler_Context * context = gta_compiler_context_create(program);
   if (!context) {
@@ -666,14 +668,16 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   //   push r13
   //   push r12
   //   push rbx
+  //   push rsi              ; This is callee-saved in the Windows ABI.
     && gta_push_reg__x86_64(v, GTA_REG_R15)
     && gta_push_reg__x86_64(v, GTA_REG_R14)
     && gta_push_reg__x86_64(v, GTA_REG_R13)
     && gta_push_reg__x86_64(v, GTA_REG_R12)
     && gta_push_reg__x86_64(v, GTA_REG_RBX)
+    && gta_push_reg__x86_64(v, GTA_REG_RSI)
 
-  //   mov r15, rdi          ; Store context in r15.
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_R15, GTA_REG_RDI)
+  //   mov r15, GTA_X86_64_R1 ; Store context in r15.
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_R15, GTA_X86_64_R1)
 
   //   lea r14, [r15 + offsetof(GTA_Binary_Execution_Context, result)]
     && gta_lea_reg_ind__x86_64(v, GTA_REG_R14, GTA_REG_R15, GTA_REG_NONE, 0, (int32_t)(size_t)(&((GTA_Execution_Context *)0)->result))
@@ -732,12 +736,12 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
       }
       else {
         // We don't know how to handle this type of global.
-        // Put the memory location of the null value into rdx.
-        //   mov rdx, gta_computed_value_null
-        //   push rdx
+        // Put the memory location of the null value into GTA_X86_64_Scratch1.
+        //   mov GTA_X86_64_Scratch1, gta_computed_value_null
+        //   push GTA_X86_64_Scratch1
         error_free
-          &= gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (uint64_t)gta_computed_value_null)
-          && gta_push_reg__x86_64(v, GTA_REG_RDX);
+          &= gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch1, (uint64_t)gta_computed_value_null)
+          && gta_push_reg__x86_64(v, GTA_X86_64_Scratch1);
       }
     }
     else if (GTA_AST_IS_FUNCTION(value.value.p)) {
@@ -781,11 +785,13 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_R13)
 
   // Pop callee-saved registers off the stack.
+  //   pop rsi
   //   pop rbx
   //   pop r12
   //   pop r13
   //   pop r14
   //   pop r15
+    && gta_pop_reg__x86_64(v, GTA_REG_RSI)
     && gta_pop_reg__x86_64(v, GTA_REG_RBX)
     && gta_pop_reg__x86_64(v, GTA_REG_R12)
     && gta_pop_reg__x86_64(v, GTA_REG_R13)
@@ -841,6 +847,14 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   program->binary = VirtualAlloc(0, length, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
   if (program->binary) {
     memcpy(program->binary, v->data, length);
+    // dump the binary to stderr
+    // printf("\nProgram code:\n%s\n", program->code);
+    // Write to a file named "output.bin" for debugging.
+    // FILE * file = fopen("output.bin", "wb");
+    // if (file) {
+    //   fwrite(v->data, 1, length, file);
+    //   fclose(file);
+    // }
   }
 #else
 #if !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)

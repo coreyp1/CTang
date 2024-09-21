@@ -83,6 +83,22 @@ bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
     && gta_push_reg__x86_64(vector, GTA_REG_RBP)
     && gta_mov_reg_reg__x86_64(vector, GTA_REG_RBP, GTA_REG_RSP)
     && gta_and_reg_imm__x86_64(vector, GTA_REG_RSP, 0xFFFFFFF0)
+  // Windows needs a different offset for the function call.
+#if defined(_WIN32) || defined(_WIN64)
+  // TODO: Document why this is needed.
+  //   I am not sure why this is needed, but the stack gets corrupted if this
+  //   is not done.  I suspect that it has something to do with the calling
+  //   convention on Windows.  Based on the preceding instruction, the stack
+  //   will have been 16-byte aligned.  This instruction will move the stack
+  //   pointer down even further.  This is not needed on Linux.
+  //   A lower value will cause the stack to be misaligned (less than 24 bytes)
+  //   and a value of 56 was observed when looking at a disassembly of the
+  //   MSVC compiled code on the Compiler Explorer website
+  //   (https://godbolt.org/).
+  //
+  //   add rsp, -32
+    && gta_add_reg_imm__x86_64(vector, GTA_REG_RSP, -32)
+#endif
   //   call REG
     && gta_call_reg__x86_64(vector, reg)
   // Restore the stack after the function call.

@@ -44,7 +44,7 @@ extern "C" {
 #define GTA_CALL __attribute__((pcs("aapcs")))
 
 #elif defined(_WIN32) || defined(_WIN64)
-#define GTA_CALL __cdecl
+#define GTA_CALL
 
 #elif defined(__i386__) || defined(__x86_64__)
 // x86 and x86-64 use the cdecl calling convention already, and some compilers
