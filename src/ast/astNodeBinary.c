@@ -483,16 +483,16 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
     // Compile the RHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)
     // Prepare registers for: func(result_from_lhs, result_from_rhs, true, is_assignment, context)
-    //   pop rdi       ; result_from_lhs
-    //   mov rsi, rax  ; result_from_rhs
-    //   mov rdx, 1    ; true
-    //   mov rcx, is_assignment ; is_assignment
+    //   pop GTA_X86_64_R1       ; result_from_lhs
+    //   mov GTA_X86_64_R2, rax  ; result_from_rhs
+    //   mov GTA_X86_64_R3, 1    ; true
+    //   mov GTA_X86_64_R4, is_assignment ; is_assignment
     //   mov r8, r15   ; context
     //   mov rax, func ; func
-      && gta_pop_reg__x86_64(v, GTA_REG_RDI)
-      && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_RAX)
-      && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, 1)
-      && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, 0)
+      && gta_pop_reg__x86_64(v, GTA_X86_64_R1)
+      && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_RAX)
+      && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R3, 1)
+      && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R4, 0)
       && gta_mov_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_R15)
       && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)func)
     // Call the function.
