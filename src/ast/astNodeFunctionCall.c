@@ -256,12 +256,12 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
     // Compile the argument.
       && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[num_arguments - i - 1]), context)
     // Set is_temporary to 0.
-    //   mov rdx, is_temporary_offset  ; Load the byte offset of is_temporary.
-    //   xor rcx, rcx                  ; The the value for non-temporary.
-    //   mov [rax + rdx], cl           ; Mark the value as non-temporary.
-      && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (int64_t)is_temporary_offset)
-      && gta_xor_reg_reg__x86_64(v, GTA_REG_RCX, GTA_REG_RCX)
-      && gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDX, 1, 0, GTA_REG_CL)
+    //   mov GTA_X86_64_Scratch1, is_temporary_offset  ; Load the byte offset of is_temporary.
+    //   xor GTA_X86_64_Scratch2, GTA_X86_64_Scratch2  ; The the value for non-temporary.
+    //   mov [rax + GTA_X86_64_Scratch1], cl           ; Mark the value as non-temporary.
+      && gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch1, (int64_t)is_temporary_offset)
+      && gta_xor_reg_reg__x86_64(v, GTA_X86_64_Scratch2, GTA_X86_64_Scratch2)
+      && gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_X86_64_Scratch1, 1, 0, GTA_REG_CL)
     // Push the argument onto the stack.
       && gta_push_reg__x86_64(v, GTA_REG_RAX)
     ;
@@ -278,28 +278,28 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
     && gta_lea_reg_ind__x86_64(v, GTA_REG_R12, GTA_REG_RSP, GTA_REG_NONE, 0, 8 * num_arguments)
 
   // If the lhs is not a native function, then see if it is a normal function.
-  //   mov rdx, [rax + vtable_offset]
-  //   mov rcx, gta_computed_value_function_native_vtable
-  //   cmp rdx, rcx
+  //   mov GTA_X86_64_Scratch1, [rax + vtable_offset]
+  //   mov GTA_X86_64_Scratch2, gta_computed_value_function_native_vtable
+  //   cmp GTA_X86_64_Scratch1, GTA_X86_64_Scratch2
   //   jne not_a_native_function
-    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDX, GTA_REG_RAX, GTA_REG_NONE, 0, vtable_offset)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, (int64_t)&gta_computed_value_function_native_vtable)
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RCX)
+    && gta_mov_reg_ind__x86_64(v, GTA_X86_64_Scratch1, GTA_REG_RAX, GTA_REG_NONE, 0, vtable_offset)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch2, (int64_t)&gta_computed_value_function_native_vtable)
+    && gta_cmp_reg_reg__x86_64(v, GTA_X86_64_Scratch1, GTA_X86_64_Scratch2)
     && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, not_a_native_function, v->count - 4)
 
   // Call the native function.
-  //   mov rdi, [rax + bound_object]
-  //   mov rsi, GTA_VECTORX_COUNT(function_call->arguments)
-  //   mov rdx, rsp
-  //   mov rcx, r15
+  //   mov GTA_X86_64_R1, [rax + bound_object]
+  //   mov GTA_X86_64_R2, GTA_VECTORX_COUNT(function_call->arguments)
+  //   mov GTA_X86_64_R3, rsp
+  //   mov GTA_X86_64_R4, r15
   //   mov rax, [rax + callback]
   //   call rax
   //   jmp cleanup
-    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_RAX, GTA_REG_NONE, 0, bound_object)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, GTA_VECTORX_COUNT(function_call->arguments))
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RSP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RCX, GTA_REG_R15)
+    && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX, GTA_REG_NONE, 0, bound_object)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R2, GTA_VECTORX_COUNT(function_call->arguments))
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R3, GTA_REG_RSP)
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R4, GTA_REG_R15)
     && gta_mov_reg_ind__x86_64(v, GTA_REG_RAX, GTA_REG_RAX, GTA_REG_NONE, 0, callback)
     && gta_call_reg__x86_64(v, GTA_REG_RAX)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
@@ -307,23 +307,23 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
 
   // If the lhs is not a function, then bail.
   // not_a_native_function:
-  //   mov rcx, gta_computed_value_function_vtable
-  //   cmp rdx, rcx
+  //   mov GTA_X86_64_Scratch1, gta_computed_value_function_vtable
+  //   cmp GTA_X86_64_Scratch2, GTA_X86_64_Scratch1
   //   jne not_a_function
     && gta_compiler_context_set_label(context, not_a_native_function, v->count)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, (int64_t)&gta_computed_value_function_vtable)
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RCX)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R4, (int64_t)&gta_computed_value_function_vtable)
+    && gta_cmp_reg_reg__x86_64(v, GTA_X86_64_Scratch2, GTA_X86_64_Scratch1)
     && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, not_a_function, v->count - 4)
 
   // RAX is a function.  If the number of arguments does not match, then bail.
-  //   mov rdx, [rax + num_arguments_offset]
-  //   mov rcx, function_call->arguments->count
-  //   cmp rdx, rcx
+  //   mov GTA_X86_64_Scratch2, [rax + num_arguments_offset]
+  //   mov GTA_X86_64_Scratch1, function_call->arguments->count
+  //   cmp GTA_X86_64_Scratch2, GTA_X86_64_Scratch1
   //   jne argument_count_mismatch
-    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDX, GTA_REG_RAX, GTA_REG_NONE, 0, num_arguments_offset)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, GTA_VECTORX_COUNT(function_call->arguments))
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RCX)
+    && gta_mov_reg_ind__x86_64(v, GTA_X86_64_Scratch2, GTA_REG_RAX, GTA_REG_NONE, 0, num_arguments_offset)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch1, GTA_VECTORX_COUNT(function_call->arguments))
+    && gta_cmp_reg_reg__x86_64(v, GTA_X86_64_Scratch2, GTA_X86_64_Scratch1)
     && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, argument_count_mismatch, v->count - 4)
 

@@ -144,25 +144,15 @@ bool gta_ast_node_period_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
   // Compile the LHS
     && gta_ast_node_compile_to_binary__x86_64(period->lhs, context)
   // The result is in RAX.  Call the period function.
-  //   mov rdi, rax
-  //   mov rsi, attribute_hash
-  //   mov rdx, r15             ; context
+  //   mov GTA_X86_64_R1, rax
+  //   mov GTA_X86_64_R2, attribute_hash
+  //   mov GTA_X86_64_R3, r15             ; context
   //   mov rax, gta_computed_value_period
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFF0
   //   call rax
-  //   mov rsp, rbp
-  //   pop rbp
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, attribute_hash)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_R15)
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R2, attribute_hash)
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R3, GTA_REG_R15)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)gta_computed_value_period)
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(v, GTA_REG_RBP)
+    && gta_binary_call_reg__x86_64(v, GTA_REG_RAX)
   ;
 }

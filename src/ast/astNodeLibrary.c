@@ -125,9 +125,9 @@ bool gta_ast_node_library_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Com
   // TODO: JIT the __load_library function to avoid the extra function call.
   return true
   // __load_library(boolean->value, library->hash):
-  //   mov rdi, r15
-  //   mov rsi, library->hash
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_R15)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, library->hash)
+  //   mov GTA_X86_64_R1, r15
+  //   mov GTA_X86_64_R2, library->hash
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_R15)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R2, library->hash)
     && gta_binary_call__x86_64(v, (uint64_t)__load_library);
 }

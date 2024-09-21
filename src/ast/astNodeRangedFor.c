@@ -435,20 +435,20 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
     && gta_ast_node_compile_to_binary__x86_64(ranged_for->expression, context)
 
   // 2. gta_computed_value_iterator_get(RAX, context). Result in RAX.
-  //   mov rdi, rax
-  //   mov rsi, context
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+  //   mov GTA_X86_64_R1, rax
+  //   mov GTA_X86_64_R2, context
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX)
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
     && gta_binary_call__x86_64(v, (uint64_t)&gta_computed_value_iterator_get)
 
   // 3. If the iterator fails, jump to the end of the loop.
-  //   mov rdi, [rax + vtable_offset]
-  //   mov rsi, &gta_computed_value_iterator_vtable
-  //   cmp rdi, rsi
+  //   mov GTA_X86_64_R1, [rax + vtable_offset]
+  //   mov GTA_X86_64_R2, &gta_computed_value_iterator_vtable
+  //   cmp GTA_X86_64_R1, GTA_X86_64_R2
   //   jne end_of_loop
-    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)vtable_offset)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI, (int64_t)&gta_computed_value_iterator_vtable)
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RSI)
+    && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)vtable_offset)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R2, (int64_t)&gta_computed_value_iterator_vtable)
+    && gta_cmp_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_X86_64_R2)
     && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, end_of_loop, v->count - 4)
 
@@ -458,20 +458,20 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
 
   // 5. Call the iterator next.
   // gta_computed_value_iterator_iterator_next(RAX, context). Result in RAX.
-  //   mov rdi, rax
+  //   mov GTA_X86_64_R1, rax
   // top_of_loop:
-  //   mov rsi, context
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
+  //   mov GTA_X86_64_R2, context
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX)
     && gta_compiler_context_set_label(context, top_of_loop, v->count)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
     && gta_binary_call__x86_64(v, (uint64_t)&gta_computed_value_iterator_iterator_next)
 
   // 6. If the iterator next fails, jump to the end of the loop.
-  //  mov rdi, gta_computed_value_error_iterator_end
-  //  cmp rax, rdi
+  //  mov GTA_X86_64_R1, gta_computed_value_error_iterator_end
+  //  cmp rax, GTA_X86_64_R1
   //  je end_of_loop
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, (int64_t)gta_computed_value_error_iterator_end)
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RDI)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R1, (int64_t)gta_computed_value_error_iterator_end)
+    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_X86_64_R1)
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, end_of_loop, v->count - 4)
 
@@ -487,9 +487,9 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
 
   // 10. Load the iterator.
   // get_next_iterator_value:
-  //   mov rdi, [r12 + iterator_stack_location_offset]
+  //   mov GTA_X86_64_R1, [r12 + iterator_stack_location_offset]
     && gta_compiler_context_set_label(context, get_next_iterator_value, v->count)
-    && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_R12, GTA_REG_NONE, 0, iterator_stack_location_offset)
+    && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_R12, GTA_REG_NONE, 0, iterator_stack_location_offset)
 
   // 11. Jump to 5.
   //   jmp top_of_loop

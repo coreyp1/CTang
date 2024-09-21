@@ -117,6 +117,7 @@ typedef enum GTA_Register {
 #define GTA_X86_64_F2
 #define GTA_X86_64_Scratch1
 #define GTA_X86_64_Scratch2
+#define GTA_X86_64_Scratch3
 /**
  * @}
  */
@@ -132,6 +133,7 @@ typedef enum GTA_Register {
 #define GTA_X86_64_F2 GTA_REG_XMM1
 #define GTA_X86_64_Scratch1 GTA_REG_R10
 #define GTA_X86_64_Scratch2 GTA_REG_R11
+#define GTA_X86_64_Scratch3 GTA_REG_RSI
 
 #else
 // Define the registers for the x86_64 architecture, System V ABI.

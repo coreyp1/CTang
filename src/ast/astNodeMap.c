@@ -197,10 +197,10 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
     && ((pop_once_then_return_memory_error = gta_compiler_context_get_label(context)) >= 0)
     && ((pop_twice_then_return_memory_error = gta_compiler_context_get_label(context)) >= 0)
   // gta_computed_value_map_create(map->pairs->count, context)
-  //   mov rdi, array->elements->count
-  //   mov rsi, r15
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, map->pairs->count)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+  //   mov GTA_X86_64_R1, array->elements->count
+  //   mov GTA_X86_64_R2, r15
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R1, map->pairs->count)
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
     && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_map_create)
   // If the array creation failed, return a memory error.
   //   test rax, rax
@@ -251,10 +251,10 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
       && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
       && gta_compiler_context_add_label_jump(context, mark_not_temporary, v->count - 4)
     // gta_computed_value_deep_copy(element, context)
-    //   mov rdi, rax
-    //   mov rsi, r15
-      && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
-      && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+    //   mov GTA_X86_64_R1, rax
+    //   mov GTA_X86_64_R2, r15
+      && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX)
+      && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
       && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_deep_copy)
     // If the deep copy failed, return a memory error.
     //   test rax, rax
@@ -269,12 +269,12 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
 
     // Add the key/value pair to the map.
     // gta_computed_value_map_set_key_val(map, key, value)
-    //   mov rdx, rax                     ; rdx = value
-    //   pop rsi                          ; rsi = key
-    //   mov rdi, [rsp]                   ; rdi = map
-      && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RAX)
-      && gta_pop_reg__x86_64(v, GTA_REG_RSI)
-      && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_RSP, GTA_REG_NONE, 0, 0)
+    //   mov GTA_X86_64_R3, rax                     ; GTA_X86_64_R3 = value
+    //   pop GTA_X86_64_R2                          ; GTA_X86_64_R2 = key
+    //   mov GTA_X86_64_R1, [rsp]                   ; GTA_X86_64_R1 = map
+      && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R3, GTA_REG_RAX)
+      && gta_pop_reg__x86_64(v, GTA_X86_64_R2)
+      && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RSP, GTA_REG_NONE, 0, 0)
       && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_map_set_key_val);
   }
 

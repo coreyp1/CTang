@@ -164,24 +164,24 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     && gta_push_reg__x86_64(v, GTA_REG_RAX)
 
   // ; gta_computed_value_print(rax, context)
-  //   mov rdi, rax
-  //   mov rsi, r15
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+  //   mov GTA_X86_64_R1, rax
+  //   mov GTA_X86_64_R2, r15
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX)
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
     && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_print)
 
   // ; RAX contains a pointer to the unicode string.
-  //   xor rbx, rbx
-  //   cmp rax, rbx
+  //   xor GTA_X86_64_Scratch1, GTA_X86_64_Scratch1
+  //   cmp rax, GTA_X86_64_Scratch1
   //   je no_string_created_by_print
-    && gta_xor_reg_reg__x86_64(v, GTA_REG_RBX, GTA_REG_RBX)
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RBX)
+    && gta_xor_reg_reg__x86_64(v, GTA_X86_64_Scratch1, GTA_X86_64_Scratch1)
+    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_X86_64_Scratch1)
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, no_string_created_by_print, v->count - 4)
 
   // ; The computed value is no longer needed for this execution path.
-  //   pop rdx               ; Intentionally discarded.
-    && gta_pop_reg__x86_64(v, GTA_REG_RDX)
+  //   pop GTA_X86_64_Scratch2 ; Intentionally discarded.
+    && gta_pop_reg__x86_64(v, GTA_X86_64_Scratch2)
 
   // ; Compile differently based on whether or not the string was printed
   // ; to stdout.
@@ -189,9 +189,9 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
       ? true
       // The string was printed to stdout, so clean up and return NULL.
       // Destroy the returned string.
-      //    mov rdi, rax
-      //    call gta_unicode_string_destroy(RDI)
-        && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
+      //    mov GTA_X86_64_R1, rax
+      //    call gta_unicode_string_destroy(GTA_X86_64_R1)
+        && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX)
         && gta_binary_call__x86_64(v, (uint64_t)gta_unicode_string_destroy)
       //   jmp success_return_null
         && gta_jmp__x86_64(v, 0xDEADBEEF)
@@ -201,13 +201,13 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
       // The string was not printed to stdout, so concatenate it with the
       // existing output string.
       // ; Check if the existing output string is empty.
-      //   mov rdi, [r15 + context_output_offset]
-      //   mov rdx, [rdi + context_output_byte_length_offset]
-      //   cmp rdx, rbx
+      //   mov GTA_X86_64_R1, [r15 + context_output_offset]
+      //   mov GTA_X86_64_Scratch2, [GTA_X86_64_R1 + context_output_byte_length_offset]
+      //   cmp GTA_X86_64_Scratch2, GTA_X86_64_Scratch1
       //   jne output_string_not_empty
-        && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset)
-        && gta_mov_reg_ind__x86_64(v, GTA_REG_RDX, GTA_REG_RDI, GTA_REG_NONE, 0, (size_t)context_output_byte_length_offset)
-        && gta_cmp_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_RBX)
+        && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset)
+        && gta_mov_reg_ind__x86_64(v, GTA_X86_64_Scratch2, GTA_X86_64_R1, GTA_REG_NONE, 0, (size_t)context_output_byte_length_offset)
+        && gta_cmp_reg_reg__x86_64(v, GTA_X86_64_Scratch2, GTA_X86_64_Scratch1)
         && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
         && gta_compiler_context_add_label_jump(context, output_string_not_empty, v->count - 4)
 
@@ -216,8 +216,8 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
       //   mov [r15 + context_output_offset], rax
         && gta_mov_ind_reg__x86_64(v, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset, GTA_REG_RAX)
 
-      // ; gta_unicode_string_destroy(RDI)
-      // ;   (Note: RDI was already set.)
+      // ; gta_unicode_string_destroy(GTA_X86_64_R1)
+      // ;   (Note: GTA_X86_64_R1 was already set.)
         && gta_binary_call__x86_64(v, (uint64_t)gta_unicode_string_destroy)
 
       //   jmp success_return_null
@@ -229,37 +229,37 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
 
       //   push rax              ; The unicode "string to be printed".
       // ; Concatenate the string with the output.
-      // ; gta_unicode_string_concat(RDI, RSI)
-      //   mov rdi, [r15 + context_output_offset]
-      //   mov rsi, rax
+      // ; gta_unicode_string_concat(GTA_X86_64_R1, GTA_X86_64_R2)
+      //   mov GTA_X86_64_R1, [r15 + context_output_offset]
+      //   mov GTA_X86_64_R2, rax
         && gta_push_reg__x86_64(v, GTA_REG_RAX)
-        && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset)
-        && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_RAX)
+        && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset)
+        && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_RAX)
         && gta_binary_call__x86_64(v, (uint64_t)gta_unicode_string_concat)
 
       // ; Destroy the "string to be printed" since it has been concatenated,
       // ; but save the concatenated string to the stack.
-      // ; gta_unicode_string_destroy(RDI)
-      //   pop rdi               ; The "string to be printed."
+      // ; gta_unicode_string_destroy(GTA_X86_64_R1)
+      //   pop GTA_X86_64_R1     ; The "string to be printed."
       //   push rax              ; The concatenated string.
-        && gta_pop_reg__x86_64(v, GTA_REG_RDI)
+        && gta_pop_reg__x86_64(v, GTA_X86_64_R1)
         && gta_push_reg__x86_64(v, GTA_REG_RAX)
         && gta_binary_call__x86_64(v, (uint64_t)gta_unicode_string_destroy)
 
       // ; Verify that the contatenation was successful.
       //   pop rax               ; The concatenated string.
-      //   cmp rax, rbx
+      //   cmp rax, GTA_X86_64_Scratch1
       //   je error_out_of_memory
         && gta_pop_reg__x86_64(v, GTA_REG_RAX)
-        && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RBX)
+        && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_X86_64_Scratch1)
         && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
         && gta_compiler_context_add_label_jump(context, error_out_of_memory, v->count - 4)
 
       // ; No failure, so adopt the new string.
-      // ; gta_unicode_string_destroy(RDI)
-      //   mov rdi, [r15 + context_output_offset]
+      // ; gta_unicode_string_destroy(GTA_X86_64_R1)
+      //   mov GTA_X86_64_R1, [r15 + context_output_offset]
       //   mov [r15 + context_output_offset], rax
-        && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset)
+        && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset)
         && gta_mov_ind_reg__x86_64(v, GTA_REG_R15, GTA_REG_NONE, 0, (size_t)context_output_offset, GTA_REG_RAX)
         && gta_binary_call__x86_64(v, (uint64_t)gta_unicode_string_destroy)
 
@@ -273,28 +273,28 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
 
   // ; No string was produced by the print function.  Is this an error?
   //   pop rax               ; The computed value.
-  //   mov rbx, [rax + vtable_offset]
-  //   mov rbx, [rbx + vtable_print_offset]
+  //   mov GTA_X86_64_Scratch1, [rax + vtable_offset]
+  //   mov GTA_X86_64_Scratch1, [GTA_X86_64_Scratch1 + vtable_print_offset]
   //   mov rax, gta_computed_value_error_out_of_memory
-  //   mov rcx, gta_computed_value_print_not_implemented
-  //   mov rdx, gta_computed_value_print_not_supported
-  //   mov rdi, gta_computed_value_null
-  //   cmp rbx, rcx
-  //   cmove rax, rdi
-  //   cmp rbx, rdx
-  //   cmove rax, rdi
+  //   mov GTA_X86_64_R4, gta_computed_value_print_not_implemented
+  //   mov GTA_X86_64_Scratch2, gta_computed_value_print_not_supported
+  //   mov GTA_X86_64_R1, gta_computed_value_null
+  //   cmp GTA_X86_64_Scratch1, GTA_X86_64_R4
+  //   cmove rax, GTA_X86_64_R1
+  //   cmp GTA_X86_64_Scratch1, GTA_X86_64_Scratch2
+  //   cmove rax, GTA_X86_64_R1
   //   jmp print_return
     && gta_pop_reg__x86_64(v, GTA_REG_RAX)
-    && gta_mov_reg_ind__x86_64(v, GTA_REG_RBX, GTA_REG_RAX, GTA_REG_NONE, 0, (size_t)vtable_offset)
-    && gta_mov_reg_ind__x86_64(v, GTA_REG_RBX, GTA_REG_RBX, GTA_REG_NONE, 0, (size_t)vtable_print_offset)
+    && gta_mov_reg_ind__x86_64(v, GTA_X86_64_Scratch1, GTA_REG_RAX, GTA_REG_NONE, 0, (size_t)vtable_offset)
+    && gta_mov_reg_ind__x86_64(v, GTA_X86_64_Scratch1, GTA_X86_64_Scratch1, GTA_REG_NONE, 0, (size_t)vtable_print_offset)
     && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (size_t)gta_computed_value_error_out_of_memory)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RCX, (size_t)gta_computed_value_print_not_implemented)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, (size_t)gta_computed_value_print_not_supported)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, (size_t)gta_computed_value_null)
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RBX, GTA_REG_RCX)
-    && gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_REG_RDI)
-    && gta_cmp_reg_reg__x86_64(v, GTA_REG_RBX, GTA_REG_RDX)
-    && gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_REG_RDI)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R4, (size_t)gta_computed_value_print_not_implemented)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch2, (size_t)gta_computed_value_print_not_supported)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R1, (size_t)gta_computed_value_null)
+    && gta_cmp_reg_reg__x86_64(v, GTA_X86_64_Scratch1, GTA_X86_64_R4)
+    && gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_X86_64_R1)
+    && gta_cmp_reg_reg__x86_64(v, GTA_X86_64_Scratch1, GTA_X86_64_Scratch2)
+    && gta_cmovcc_reg_reg__x86_64(v, GTA_CC_E, GTA_REG_RAX, GTA_X86_64_R1)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, print_return, v->count - 4)
 

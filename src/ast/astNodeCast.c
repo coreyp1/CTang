@@ -276,11 +276,11 @@ bool gta_ast_node_cast_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compil
   return true
     && gta_ast_node_compile_to_binary__x86_64(cast->expression, context)
   // gta_computed_value_cast(rax, cast->type, context)
-  //   mov rdi, rax
-  //   mov rsi, cast->type
-  //   mov rdx, context
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RSI,(GTA_UInteger)(
+  //   mov GTA_X86_64_R1, rax
+  //   mov GTA_X86_64_R2, cast->type
+  //   mov GTA_X86_64_R3, context
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R2,(GTA_UInteger)(
       cast->type == GTA_CAST_TYPE_INTEGER
         ? &gta_computed_value_integer_vtable
         : cast->type == GTA_CAST_TYPE_FLOAT
@@ -290,7 +290,7 @@ bool gta_ast_node_cast_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compil
             : cast->type == GTA_CAST_TYPE_STRING
               ? &gta_computed_value_string_vtable
               : &gta_computed_value_null_vtable))
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDX, GTA_REG_R15)
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R3, GTA_REG_R15)
   // gta_computed_value_cast(RAX, cast->type, context)
     && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_cast);
 }

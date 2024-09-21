@@ -176,10 +176,10 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     && ((end = gta_compiler_context_get_label(context)) >= 0)
     && ((return_memory_error = gta_compiler_context_get_label(context)) >= 0)
   // gta_computed_value_array_create(array->elements->count, context)
-  //   mov rdi, array->elements->count
-  //   mov rsi, r15
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDI, array->elements->count)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+  //   mov GTA_X86_64_R1, array->elements->count
+  //   mov GTA_X86_64_R2, r15
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R1, array->elements->count)
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
     && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_array_create)
   // If the array creation failed, return a memory error.
   //   test rax, rax
@@ -218,10 +218,10 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
       && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
       && gta_compiler_context_add_label_jump(context, mark_not_temporary, v->count - 4)
     // gta_computed_value_deep_copy(element, context)
-    //   mov rdi, rax
-    //   mov rsi, r15
-      && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, GTA_REG_RAX)
-      && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+    //   mov GTA_X86_64_R1, rax
+    //   mov GTA_X86_64_R2, r15
+      && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX)
+      && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
       && gta_binary_call__x86_64(v, (size_t)gta_computed_value_deep_copy)
     // If the array creation failed, return a memory error.
     //   test rax, rax
@@ -234,14 +234,14 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     //   mov byte ptr [rax + is_temporary_offset], 0
       && gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
     // Append the element to the array.
-    //   mov rdi, [rsp]                   ; rdi = array
-    //   mov rdi, [rdi + elements_offset] ; rdi = array->elements
-    //   mov rbx, [rdi + data_offset]     ; rbx = array->elements->data
-    //   mov [rbx + (i * sizeof(GTA_TypeX_Union))], rax
-      && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_RSP, GTA_REG_NONE, 0, 0)
-      && gta_mov_reg_ind__x86_64(v, GTA_REG_RDI, GTA_REG_RDI, GTA_REG_NONE, 0, (GTA_Integer)elements_offset)
-      && gta_mov_reg_ind__x86_64(v, GTA_REG_RBX, GTA_REG_RDI, GTA_REG_NONE, 0, (GTA_Integer)data_offset)
-      && gta_mov_ind_reg__x86_64(v, GTA_REG_RBX, GTA_REG_NONE, 0, i * sizeof(GTA_TypeX_Union), GTA_REG_RAX);
+    //   mov GTA_X86_64_R1, [rsp]                               ; GTA_X86_64_R1 = array
+    //   mov GTA_X86_64_R1, [GTA_X86_64_R1 + elements_offset]   ; GTA_X86_64_R1 = array->elements
+    //   mov GTA_X86_64_Scratch1, [GTA_X86_64_R1 + data_offset] ; GTA_X86_64_Scratch1 = array->elements->data
+    //   mov [GTA_X86_64_Scratch1 + (i * sizeof(GTA_TypeX_Union))], rax
+      && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RSP, GTA_REG_NONE, 0, 0)
+      && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_X86_64_R1, GTA_REG_NONE, 0, (GTA_Integer)elements_offset)
+      && gta_mov_reg_ind__x86_64(v, GTA_X86_64_Scratch1, GTA_X86_64_R1, GTA_REG_NONE, 0, (GTA_Integer)data_offset)
+      && gta_mov_ind_reg__x86_64(v, GTA_X86_64_Scratch1, GTA_REG_NONE, 0, i * sizeof(GTA_TypeX_Union), GTA_REG_RAX);
   }
 
   // The code below (above the jump targets) is always compiled, but it will
@@ -250,11 +250,11 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   // appropriately set.
   return error_free
   // Fix the array count.
-  // The memory address of the VectorX is in RDI.
-  //   mov rdx, array->elements->count
-  //   mov [rdi + count_offset], rdx
-    && gta_mov_reg_imm__x86_64(v, GTA_REG_RDX, array->elements->count)
-    && gta_mov_ind_reg__x86_64(v, GTA_REG_RDI, GTA_REG_NONE, 0, (GTA_Integer)count_offset, GTA_REG_RDX)
+  // The memory address of the VectorX is in GTA_X86_64_R1.
+  //   mov GTA_X86_64_Scratch1, array->elements->count
+  //   mov [GTA_X86_64_R1 + count_offset], GTA_X86_64_Scratch1
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch1, array->elements->count)
+    && gta_mov_ind_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_NONE, 0, (GTA_Integer)count_offset, GTA_REG_RDX)
   // Return the array.
   //   pop rax
   //   jmp end

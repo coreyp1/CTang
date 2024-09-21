@@ -1232,7 +1232,7 @@ test: \
 	@printf "### Running Binary Language Execution Simple tests   ###\n"
 	@printf "########################################################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
+	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteSimple
 	@printf "\033[0;30;45m\n"
 	@printf "########################################################\n"
 	@printf "### Running Binary Language Execution Complex tests  ###\n"
