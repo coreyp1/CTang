@@ -256,12 +256,8 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
     // Compile the argument.
       && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[num_arguments - i - 1]), context)
     // Set is_temporary to 0.
-    //   mov GTA_X86_64_Scratch1, is_temporary_offset  ; Load the byte offset of is_temporary.
-    //   xor GTA_X86_64_Scratch2, GTA_X86_64_Scratch2  ; The the value for non-temporary.
-    //   mov [rax + GTA_X86_64_Scratch1], cl           ; Mark the value as non-temporary.
-      && gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch1, (int64_t)is_temporary_offset)
-      && gta_xor_reg_reg__x86_64(v, GTA_X86_64_Scratch2, GTA_X86_64_Scratch2)
-      && gta_mov_ind_reg__x86_64(v, GTA_REG_RAX, GTA_X86_64_Scratch1, 1, 0, GTA_REG_CL)
+    //   mov byte ptr [rax + is_temporary_offset], 0
+      && gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
     // Push the argument onto the stack.
       && gta_push_reg__x86_64(v, GTA_REG_RAX)
     ;
@@ -307,12 +303,12 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
 
   // If the lhs is not a function, then bail.
   // not_a_native_function:
-  //   mov GTA_X86_64_Scratch1, gta_computed_value_function_vtable
-  //   cmp GTA_X86_64_Scratch2, GTA_X86_64_Scratch1
+  //   mov GTA_X86_64_Scratch2, gta_computed_value_function_vtable
+  //   cmp GTA_X86_64_Scratch1, GTA_X86_64_Scratch2
   //   jne not_a_function
     && gta_compiler_context_set_label(context, not_a_native_function, v->count)
-    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R4, (int64_t)&gta_computed_value_function_vtable)
-    && gta_cmp_reg_reg__x86_64(v, GTA_X86_64_Scratch2, GTA_X86_64_Scratch1)
+    && gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch2, (int64_t)&gta_computed_value_function_vtable)
+    && gta_cmp_reg_reg__x86_64(v, GTA_X86_64_Scratch1, GTA_X86_64_Scratch2)
     && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, not_a_function, v->count - 4)
 
