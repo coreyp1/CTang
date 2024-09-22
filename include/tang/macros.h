@@ -405,8 +405,29 @@ typedef union GTA_JIT_Function_Converter {
 
 
 #ifdef GTA_X86_64
+
+// TODO: Figure out the Windows ABI for x86-64 (x64).
+// Although some of this is stubbed out, it is not fully working.
+// I believe the problem is with the calling convention and the extra
+// work and information that Windows requires for x64.
+// See https://learn.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-170
+// for more information.
+// Specifically, the function prologue and epilogue are different for Windows
+// x64 than for Linux x64 and, since our JIT compiled code can call functions,
+// we may also need to register the JITTED functions with the Windows API
+// before calling them (for proper exception handling).
+#if !(defined(_WIN32) || defined(_WIN64))
+
+// Define the function to compile the binary for x86-64 (Linux).
 #define gta_program_compile_binary gta_program_compile_binary__x86_64
+#endif // !(_WIN32 || _WIN64)
 #endif // GTA_X86_64
+
+#ifndef gta_program_compile_binary
+
+// Fallback for all other compilers.
+#define gta_program_compile_binary gta_program_compile_binary__unsupported
+#endif // gta_program_compile_binary
 
 
 /**

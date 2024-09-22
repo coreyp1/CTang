@@ -180,7 +180,32 @@ bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
       && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX)
       && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R2, 0)
       && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R3, GTA_REG_R15)
-      && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_negative);
+#if defined(_WIN32) || defined(_WIN64)
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
+    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
+    // Note: The 32 byte stack allocation is required by the Windows ABI
+    // (see the link below and the comment in gta_binary_call__x86_64).
+    // However, I do not know why the 40 byte stack allocation is required,
+    // but the program crashes otherwise.
+    // TODO: Investigate this further.
+    //
+    //   add rsp, -40
+      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 0)
+    //   push r15      ; context (the fifth argument)
+      && gta_push_reg__x86_64(v, GTA_REG_R15)
+    //   add rsp, -32  ; Allocate space for the function call.
+      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -32)
+    //   call func
+      && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_negative)
+    // Restore the stack after the function call.
+    //   mov rsp, rbp
+    //   pop rbp
+      && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
+      && gta_pop_reg__x86_64(v, GTA_REG_RBP);
+#else
+     && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_negative);
+#endif
   }
 
   // Get the offset of is_true.

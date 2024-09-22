@@ -324,6 +324,13 @@ void gta_program_compile_binary__x86_32(GTA_Program * program);
 void gta_program_compile_binary__arm_32(GTA_Program * program);
 
 /**
+ * The JIT compilation is not supported for the given architecture.
+ *
+ * @param program The program to be compiled.
+ */
+void gta_program_compile_binary__unsupported(GTA_Program * program);
+
+/**
  * Get the type attribute function for the given type and identifier.
  *
  * The return value is a function that will be called to fulfill the attribute

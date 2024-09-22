@@ -906,3 +906,6 @@ void gta_program_compile_binary__x86_32(GTA_MAYBE_UNUSED(GTA_Program * program))
 
 
 void gta_program_compile_binary__arm_32(GTA_MAYBE_UNUSED(GTA_Program * program)) {}
+
+
+void gta_program_compile_binary__unsupported(GTA_MAYBE_UNUSED(GTA_Program * program)) {}
