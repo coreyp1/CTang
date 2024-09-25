@@ -477,17 +477,23 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
     return true
     // Compile the LHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->lhs, context)
-    // Save the result of the LHS expression.
-    //   push rax
-      && gta_push_reg__x86_64(v, GTA_REG_RAX)
+    // "Push" the result of the LHS expression.
+    //   mov [rsp + GTA_SHADOW_SIZE__X86_64 - 8], rax
+    //   add rsp, -16
+      && gta_mov_ind_reg__x86_64(v, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64 - 8, GTA_REG_RAX)
+      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -16)
     // Compile the RHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)
+
     // Prepare registers for: func(result_from_lhs, result_from_rhs, true, is_assignment, context)
-    //   pop GTA_X86_64_R1       ; result_from_lhs
+    // "Pop" the result of the LHS expression.
+    //   add rsp, 16
+    //   mov GTA_X86_64_R1, [rsp + GTA_SHADOW_SIZE__X86_64 - 8] ; result from lhs
+      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 16)
+      && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64 - 8)
     //   mov GTA_X86_64_R2, rax  ; result_from_rhs
     //   mov GTA_X86_64_R3, 1    ; true
     //   mov GTA_X86_64_R4, is_assignment ; is_assignment
-      && gta_pop_reg__x86_64(v, GTA_X86_64_R1)
       && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_RAX)
       && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R3, 1)
       && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R4, 0)

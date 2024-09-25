@@ -42,14 +42,17 @@ extern "C" {
  */
 #if defined(ARM) || defined(ARM64)
 #define GTA_CALL __attribute__((pcs("aapcs")))
+#define GTA_SHADOW_SIZE__X86_64 0
 
 #elif defined(_WIN32) || defined(_WIN64)
 #define GTA_CALL
+#define GTA_SHADOW_SIZE__X86_64 32
 
 #elif defined(__i386__) || defined(__x86_64__)
 // x86 and x86-64 use the cdecl calling convention already, and some compilers
 // will give an attribute error if we try to add it.
 #define GTA_CALL
+#define GTA_SHADOW_SIZE__X86_64 32
 
 #else
 #error "Unsupported architecture or compiler"

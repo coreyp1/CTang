@@ -639,6 +639,48 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   //   4. Restore caller-saved registers
   //
   // NOTE: All of the above is for the Linux ABI.
+  //
+  // The Windows ABI has the following differences:
+  //  - The first four arguments are passed in registers: rcx, rdx, r8, r9
+  //  - The stack must be aligned to 16 bytes before a call
+  //  - For 5th, 6th, etc. arguments, they are pushed onto the stack in reverse
+  //    order (right to left)
+  //  - Before the call, the stack must preserve 32 bytes of space for the
+  //    callee to use for shadow space (space for the first four arguments)
+  //    if the callee so desires.
+  //
+  // Unified Procedure for preparing for function calls:
+  //   * When entering a function:
+  //     1. Save caller-saved registers (if needed)
+  //        On Linux: rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11
+  //        On Windows: rax, rcx, rdx, r8, r9
+  //     2. Align the stack to 16 bytes
+  //        push rbp
+  //        mov rbp, rsp
+  //        and rsp, 0xFFFFFFF0
+  //     3. Reserve space for the global/local variables.
+  //        sub rsp, GTA_STACK_SIZE (or, "add rsp, -GTA_STACK_SIZE")
+  //     4. Reserve shadow space for the callee (if needed)
+  //        sub rsp, GTA_SHADOW_SIZE__X86_64 (or, "add rsp, -GTA_SHADOW_SIZE__X86_64")
+  //   * The stack is now properly aligned and the shadow space is reserved.
+  //   * If a value needs to be placed on the stack, then (assuming the value
+  //     is in RAX):
+  //     1. Move the value onto the stack at the beginning of the shadow space.
+  //        mov [rsp + GTA_SHADOW_SIZE__X86_64 - 8], rax
+  //     2. Add 16 bytes to the shadow space (to maintain stack alignment).
+  //        sub rsp, 16 (or, "add rsp, -16")
+  //   * When removing a value from the stack:
+  //     1. Add 16 bytes to the shadow space (to maintain stack alignment).
+  //        add rsp, 16
+  //     2. Move the value from the stack into RAX (for example).
+  //        mov rax, [rsp + GTA_SHADOW_SIZE__X86_64 - 8]
+  //   * When accessing the value on the stack (without removing it):
+  //     1. mov rax, [rsp + GTA_SHADOW_SIZE__X86_64 + 16 - 8]
+  //   * When leaving a function:
+  //     1. Restore the stack pointer.
+  //        mov rsp, rbp
+  //        pop rbp
+  //     2. Restore caller-saved registers (if needed)
 
   GTA_Compiler_Context * context = gta_compiler_context_create(program);
   if (!context) {
@@ -655,12 +697,20 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   size_t variable_positions_count = GTA_HASHX_COUNT(program->scope->variable_positions);
   bool error_free = true;
 
-  error_free
-  // Set up the beginning of the function:
+  error_free &= true
+  // Align the stack to 16 bytes.
   //   push rbp
   //   mov rbp, rsp
-    &= gta_push_reg__x86_64(v, GTA_REG_RBP)
+  //   and rsp, 0xFFFFFFF0
+    && gta_push_reg__x86_64(v, GTA_REG_RBP)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
+    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
+  // If there is an odd number of variables, then we need to add extra 8 bytes
+  // so that we will have 16-byte alignment.
+    && ((variable_positions_count % 2)
+      ? gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -8)
+      : true
+    )
 
   // Push callee-saved registers onto the stack.
   //   push r15
@@ -686,6 +736,10 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   //   mov r12, rsp          ; Store the frame (local variable) stack pointer in r12.
     && gta_mov_reg_reg__x86_64(v, GTA_REG_R13, GTA_REG_RSP)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_R12, GTA_REG_RSP)
+
+  // Reserve space for the global variables and the shadow space.
+  //   add rsp, -((variable_positions_count * 8) + GTA_SHADOW_SIZE__X86_64)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, (-((variable_positions_count * 8) + GTA_SHADOW_SIZE__X86_64)))
   ;
 
   /////////////////////////////////////////////////////////////////////////////
@@ -709,6 +763,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     if (!value.exists) {
       goto GLOBALS_ORDER_CLEANUP;
     }
+    int32_t position_in_stack = (i + 1) * -8;
 
     if (GTA_AST_IS_IDENTIFIER(value.value.p)) {
       GTA_Ast_Node_Identifier * identifier = value.value.p;
@@ -717,31 +772,31 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
       if (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY) {
         // Find the library AST and compile it.
         GTA_HashX_Value use_node = GTA_HASHX_GET(program->scope->library_declarations, identifier->mangled_name_hash);
-        error_free
-          &= use_node.exists
+        error_free = true
+          && use_node.exists
           && GTA_AST_IS_USE(use_node.value.p)
           // Compile the expression.  The result will be in RAX.
           && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)use_node.value.p, context)
-          // Push the result onto the stack.
-          //   push rax
-          && gta_push_reg__x86_64(v, GTA_REG_RAX);
+          // Move the result into the correct location on the stack.
+          //   mov [GTA_REG_R13 + position_in_stack], rax
+          && gta_mov_ind_reg__x86_64(v, GTA_REG_R13, GTA_REG_NONE, 0, position_in_stack, GTA_REG_RAX);
       }
       else if ((identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL) || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LOCAL)) {
         // Put the memory location of the null value onto the stack.
         //   mov rax, gta_computed_value_null
-        //   push rax
-        error_free
-          &= gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)gta_computed_value_null)
-          && gta_push_reg__x86_64(v, GTA_REG_RAX);
+        //   mov [GTA_REG_R13 + position_in_stack], rax
+        error_free = true
+          && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)gta_computed_value_null)
+          && gta_mov_ind_reg__x86_64(v, GTA_REG_R13, GTA_REG_NONE, 0, position_in_stack, GTA_REG_RAX);
       }
       else {
         // We don't know how to handle this type of global.
         // Put the memory location of the null value into GTA_X86_64_Scratch1.
         //   mov GTA_X86_64_Scratch1, gta_computed_value_null
-        //   push GTA_X86_64_Scratch1
-        error_free
-          &= gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch1, (uint64_t)gta_computed_value_null)
-          && gta_push_reg__x86_64(v, GTA_X86_64_Scratch1);
+        //   mov [GTA_REG_R13 + position_in_stack], rax
+        error_free = true
+          && gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch1, (uint64_t)gta_computed_value_null)
+          && gta_mov_ind_reg__x86_64(v, GTA_REG_R13, GTA_REG_NONE, 0, position_in_stack, GTA_REG_RAX);
       }
     }
     else if (GTA_AST_IS_FUNCTION(value.value.p)) {
@@ -751,9 +806,9 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
       error_free &= true
       // Push the function onto the stack.
       //   mov rax, function->runtime_function
-      //   push rax
+      //   mov [GTA_REG_R13 + position_in_stack], rax
         && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)function->runtime_function)
-        && gta_push_reg__x86_64(v, GTA_REG_RAX);
+        && gta_mov_ind_reg__x86_64(v, GTA_REG_R13, GTA_REG_NONE, 0, position_in_stack, GTA_REG_RAX);
     }
     else {
       // We don't know how to handle this type of global.
@@ -879,6 +934,12 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
       // dump the binary to stderr
       // printf("\nProgram code:\n%s\n", program->code);
       // fwrite(v->data, 1, length, stderr);
+      //Write to a file named "output.bin" for debugging.
+      // FILE * file = fopen("output.bin", "wb");
+      // if (file) {
+      //   fwrite(v->data, 1, length, file);
+      //   fclose(file);
+      // }
     }
   }
 #endif

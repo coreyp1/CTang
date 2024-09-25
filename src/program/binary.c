@@ -76,30 +76,9 @@ bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   assert(vector);
 
   return true
-  // Prepare the stack for the function call.
-  //   push rbp
-  //   mov rbp, rsp
-  //   and rsp, 0xFFFFFFFFFFFFFFF0
-    && gta_push_reg__x86_64(vector, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(vector, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(vector, GTA_REG_RSP, 0xFFFFFFF0)
-  // Windows needs a different offset for the function call.
-#if defined(_WIN32) || defined(_WIN64)
-  // See: https://learn.microsoft.com/en-us/cpp/build/stack-usage?view=msvc-170
-  // This will allocate 32 bytes on the stack for the register spill space,
-  // which the Windows ABI requires (in case the callee needs to spill
-  // register values into the stack).
-  //
-  //   add rsp, -32
-    && gta_add_reg_imm__x86_64(vector, GTA_REG_RSP, -32)
-#endif
   //   call REG
     && gta_call_reg__x86_64(vector, reg)
-  // Restore the stack after the function call.
-  //   mov rsp, rbp
-  //   pop rbp
-    && gta_mov_reg_reg__x86_64(vector, GTA_REG_RSP, GTA_REG_RBP)
-    && gta_pop_reg__x86_64(vector, GTA_REG_RBP);
+  ;
 }
 
 
