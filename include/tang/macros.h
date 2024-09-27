@@ -429,7 +429,7 @@ typedef union GTA_JIT_Function_Converter {
 #ifndef gta_program_compile_binary
 
 // Fallback for all other compilers.
-#define gta_program_compile_binary gta_program_compile_binary__unsupported
+#define gta_program_compile_binary gta_program_compile_binary__x86_64
 #endif // gta_program_compile_binary
 
 

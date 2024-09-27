@@ -1227,8 +1227,6 @@ test: \
 	@printf "\033[0m\n\n"
 	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
 
-ifneq ($(OS_NAME), Windows)
-# Disabling the JIT tests on Windows.
 	@printf "\033[0;30;45m\n"
 	@printf "########################################################\n"
 	@printf "### Running Binary Language Execution Simple tests   ###\n"
@@ -1247,7 +1245,6 @@ ifneq ($(OS_NAME), Windows)
 	@printf "##############################################\n"
 	@printf "\033[0m\n\n"
 	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
-endif
 
 	@printf "\033[0;30;47m\n"
 	@printf "###################\n"

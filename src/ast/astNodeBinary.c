@@ -478,19 +478,19 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
     // Compile the LHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->lhs, context)
     // "Push" the result of the LHS expression.
-    //   mov [rsp + GTA_SHADOW_SIZE__X86_64 - 8], rax
     //   add rsp, -16
-      && gta_mov_ind_reg__x86_64(v, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64 - 8, GTA_REG_RAX)
+    //   mov [rsp + GTA_SHADOW_SIZE__X86_64], rax
       && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -16)
+      && gta_mov_ind_reg__x86_64(v, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64, GTA_REG_RAX)
     // Compile the RHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)
 
     // Prepare registers for: func(result_from_lhs, result_from_rhs, true, is_assignment, context)
     // "Pop" the result of the LHS expression.
-    //   add rsp, 16
-    //   mov GTA_X86_64_R1, [rsp + GTA_SHADOW_SIZE__X86_64 - 8] ; result from lhs
-      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 16)
-      && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64 - 8)
+    // NOTE: We will not change RSP, because if compiling for Windows, it will
+    // need it.  RSP will be cleaned up later in this function.
+    //   mov GTA_X86_64_R1, [rsp + GTA_SHADOW_SIZE__X86_64] ; result from lhs
+      && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64)
     //   mov GTA_X86_64_R2, rax  ; result_from_rhs
     //   mov GTA_X86_64_R3, 1    ; true
     //   mov GTA_X86_64_R4, is_assignment ; is_assignment
@@ -498,36 +498,27 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
       && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R3, 1)
       && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R4, 0)
 #if defined(_WIN32) || defined(_WIN64)
-    && gta_push_reg__x86_64(v, GTA_REG_RBP)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
-    && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    // Note: The 32 byte stack allocation is required by the Windows ABI
-    // (see the link below and the comment in gta_binary_call__x86_64).
-    // However, I do not know why the 40 byte stack allocation is required,
-    // but the program crashes otherwise.
-    // TODO: Investigate this further.
-    //
-    //   add rsp, -40
-      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -40)
-    //   push r15      ; context (the fifth argument)
-      && gta_push_reg__x86_64(v, GTA_REG_R15)
-    //   add rsp, -32  ; Allocate space for the function call.
-      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -32)
+    // The Windows x64 calling convention ABI requires that the fifth argument
+    // be put on the stack, just above the shadow space.
+    //   mov [rsp + GTA_SHADOW_SIZE__X86_64], r15 ; context (the fifth argument)
+      && gta_mov_ind_reg__x86_64(v, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64, GTA_REG_R15)
     //   call func
       && gta_binary_call__x86_64(v, (uint64_t)func)
     // Restore the stack after the function call.
-    //   mov rsp, rbp
-    //   pop rbp
-      && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_RBP)
-      && gta_pop_reg__x86_64(v, GTA_REG_RBP);
+    //   add rsp, 16
+      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 16)
 #else
+    // Restore the stack since the extra space is not needed.
+    //   add rsp, 16
+      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 16)
     //   mov r8, r15   ; context (the fifth argument)
       && gta_mov_reg_reg__x86_64(v, GTA_REG_R8, GTA_REG_R15)
     //   mov rax, func ; func
       && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (uint64_t)func)
     // Call the function.
-      && gta_binary_call_reg__x86_64(v, GTA_REG_RAX);
+      && gta_binary_call_reg__x86_64(v, GTA_REG_RAX)
 #endif
+    ;
   }
   return false;
 }
