@@ -243,7 +243,22 @@ GTA_Ast_Node * gta_ast_node_function_analyze(GTA_Ast_Node * self, GTA_Program * 
     }
   }
 
-  // Step 7: Reserve a slot in the local_positions map for the return address.
+
+  // Step 7: Reserve slots for shadow space (if used).
+  // The shadow space is used to store the registers that the callee will use,
+  // as dictated by the calling convention (ABI).  If the ABI requires shadow
+  // space, then we must reserve slots for it in the local_positions map.
+  size_t shadow_entries = GTA_SHADOW_SIZE__X86_64 / 8;
+  for (size_t i = 0; i < shadow_entries; ++i) {
+    char shadow_name[32];
+    snprintf(shadow_name, 32, " shadow space %zu", i);
+    if (!GTA_HASHX_SET(function->scope->variable_positions, GTA_STRING_HASH(shadow_name, strlen(shadow_name)), GTA_TYPEX_MAKE_UI(function->scope->variable_positions->entries))) {
+      error = gta_ast_node_parse_error_out_of_memory;
+      goto GLOBAL_REGISTRATION_ERROR;
+    }
+  }
+
+  // Step 8: Reserve a slot in the local_positions map for the return address.
   // The caller will store the old frame pointer, and set a new one to the
   // current SP.  It then pushes the arguments onto the stack, so the calling
   // function will index all local variables from this new frame pointer.  The
@@ -253,19 +268,18 @@ GTA_Ast_Node * gta_ast_node_function_analyze(GTA_Ast_Node * self, GTA_Program * 
   // local variables.  To avoid this, we reserve a slot for the return address
   // in the local_positions map, knowing that it will be supplied by the CALL
   // instruction.
-  if (!GTA_HASHX_SET(function->scope->variable_positions, GTA_STRING_HASH("", 0), GTA_TYPEX_MAKE_UI(function->scope->variable_positions->entries))) {
+  if (!GTA_HASHX_SET(function->scope->variable_positions, GTA_STRING_HASH(" return address", 0), GTA_TYPEX_MAKE_UI(function->scope->variable_positions->entries))) {
     error = gta_ast_node_parse_error_out_of_memory;
     goto GLOBAL_REGISTRATION_ERROR;
   }
-  assert(GTA_HASHX_COUNT(function->scope->variable_positions) == function->parameters->count + 1);
 
-  // Step 8: Reserve a slot in the global_positions map.
+  // Step 9: Reserve a slot in the global_positions map.
   if (!GTA_HASHX_SET(outermost_scope->variable_positions, function->mangled_name_hash, GTA_TYPEX_MAKE_UI(outermost_scope->variable_positions->entries))) {
     error = gta_ast_node_parse_error_out_of_memory;
     goto GLOBAL_REGISTRATION_ERROR;
   }
 
-  // Step 8: Analyze the block.
+  // Step 10: Analyze the block.
   return gta_ast_node_analyze(function->block, program, function->scope);
 
 GLOBAL_REGISTRATION_ERROR:
@@ -378,6 +392,22 @@ bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   GTA_Integer old_break_label = context->break_label;
   GTA_Integer old_return_label = context->return_label;
 
+  // Stack offsets.
+  size_t count_of_locals_excluding_parameters = GTA_HASHX_COUNT(function->scope->variable_positions)
+    - function->parameters->count  // Parameters are not local variables.
+    - 1                            // Return address.
+    - GTA_SHADOW_SIZE__X86_64 / 8; // Shadow space.
+  // When the function is called, the stack was 16-byte aligned.  Then, the
+  // return address was pushed onto the stack, undoing the alignment.  The
+  // alignment is restored if there is an odd number of arguments, but if there
+  // is an even number of arguments, then we will need to add padding to the
+  // stack to maintain the alignment.
+  bool is_padding_needed = (count_of_locals_excluding_parameters % 2)
+    ? false // An odd number of arguments will restore the alignment.
+    : true  // An even number of arguments will require padding.
+  ;
+  size_t total_stack_adjustment = (is_padding_needed ? 8 : 0) + (8 * count_of_locals_excluding_parameters) + GTA_SHADOW_SIZE__X86_64;
+
   assert(function->runtime_function);
   bool error_free = true
   // Create jump labels.
@@ -394,22 +424,26 @@ bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   // This will be translated into an actual pointer after the program is fully
   // compiled.
     && (function->runtime_function->pointer = v->count)
+  // Reserve the stack space for the function's local variables as well as
+  // shadow space.
+  //   add rsp, -total_stack_adjustment)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -total_stack_adjustment)
   ;
 
   // The caller will push the arguments onto the stack, as well as the return
   // address.  Reserve additional space on the stack for the remaining local
-  // variables.
+  // variables.  Remember that there may be shadow space that needs to be
+  // accounted for as well.
   assert(function->scope);
   assert(function->scope->variable_positions);
   assert(function->parameters);
-  size_t additional_locals_needed = function->scope->variable_positions->entries - function->parameters->count - 1;
-  if (additional_locals_needed) {
+  if (count_of_locals_excluding_parameters) {
     // We'll just put a NULL in those slots for now.
     //   mov RAX, gta_computed_value_null
     error_free &= gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)gta_computed_value_null);
-    for (size_t i = function->parameters->count + 1; error_free && (i < function->scope->variable_positions->entries); ++i) {
-      // push rax
-      error_free &= gta_push_reg__x86_64(v, GTA_REG_RAX);
+    for (size_t i = 0; error_free && (i < count_of_locals_excluding_parameters); ++i) {
+      // mov [rsp + total_stack_adjustment - (i * 8) - 8], rax
+      error_free &= gta_mov_ind_reg__x86_64(v, GTA_REG_RSP, GTA_REG_NONE, 0, total_stack_adjustment - (i * 8) - 8, GTA_REG_RAX);
     }
   }
 
@@ -425,10 +459,11 @@ bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
     && gta_compiler_context_set_label(context, context->break_label, v->count)
     && gta_compiler_context_set_label(context, context->return_label, v->count)
 
-  // Clean up the stack by removing the function's arguments and return.
-  //   add RSP, 8 * additional_locals_needed
+  // Clean up the stack by removing the function's arguments and shadow space,
+  // and then return.
+  //   add rsp, total_stack_adjustment
   //   ret
-    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8 * additional_locals_needed)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, total_stack_adjustment)
     && gta_ret__x86_64(v)
 
   // Continue: It is possible that a continue statement was not within a loop.

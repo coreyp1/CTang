@@ -695,6 +695,21 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
 
   assert(program->scope);
   size_t variable_positions_count = GTA_HASHX_COUNT(program->scope->variable_positions);
+  // After the stack is 16-byte aligned, 6 registers are pushed onto the stack
+  // (which does not break the alignment), then space for the global variables,
+  // then space for the shadow space.
+  // If the number of global variables is odd, then the stack will not be
+  // aligned to 16 bytes.  In this case, we will need to add padding to the
+  // stack to restore the alignment.
+  bool is_padding_needed = (variable_positions_count % 2)
+    ? true  // An odd number of arguments will require padding.
+    : false // An even number of arguments will restore the alignment.
+  ;
+  int32_t total_stack_adjustment = (is_padding_needed ? 8 : 0) + (variable_positions_count * 8) + GTA_SHADOW_SIZE__X86_64;
+  // It should be a multiple of 16.
+  assert(total_stack_adjustment % 16 == 0);
+
+  // Variable to track if there are any errors during the compilation.
   bool error_free = true;
 
   error_free &= true
@@ -705,12 +720,6 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     && gta_push_reg__x86_64(v, GTA_REG_RBP)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
     && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-  // If there is an odd number of variables, then we need to add extra 8 bytes
-  // so that we will have 16-byte alignment.
-    && ((variable_positions_count % 2)
-      ? gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -8)
-      : true
-    )
 
   // Push callee-saved registers onto the stack.
   //   push r15
@@ -738,8 +747,8 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     && gta_mov_reg_reg__x86_64(v, GTA_REG_R12, GTA_REG_RSP)
 
   // Reserve space for the global variables and the shadow space.
-  //   add rsp, -((variable_positions_count * 8) + GTA_SHADOW_SIZE__X86_64)
-    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, (-((variable_positions_count * 8) + GTA_SHADOW_SIZE__X86_64)))
+  //   add rsp, -total_stack_adjustment
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -total_stack_adjustment)
   ;
 
   /////////////////////////////////////////////////////////////////////////////
@@ -836,8 +845,8 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   // Restore the stack pointer to before we added the global and local
   // variables.  This is faster than popping the locals and globals off the
   // stack, and the garbage collector will clean up the memory.
-  //   mov rsp, r13
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSP, GTA_REG_R13)
+  //   add rsp, total_stack_adjustment
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, total_stack_adjustment)
 
   // Pop callee-saved registers off the stack.
   //   pop rsi
