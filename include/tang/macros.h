@@ -52,7 +52,7 @@ extern "C" {
 // x86 and x86-64 use the cdecl calling convention already, and some compilers
 // will give an attribute error if we try to add it.
 #define GTA_CALL
-#define GTA_SHADOW_SIZE__X86_64 32
+#define GTA_SHADOW_SIZE__X86_64 0
 
 #else
 #error "Unsupported architecture or compiler"

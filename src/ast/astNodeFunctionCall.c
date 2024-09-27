@@ -299,14 +299,14 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   // Call the native function.
   //   mov GTA_X86_64_R1, [rax + bound_object]
   //   mov GTA_X86_64_R2, GTA_VECTORX_COUNT(function_call->arguments)
-  //   lea GTA_X86_64_R3, [rsp + GTA_SHADOW_SIZE__X86_64 - 8]
+  //   lea GTA_X86_64_R3, [rsp + GTA_SHADOW_SIZE__X86_64]
   //   mov GTA_X86_64_R4, r15
   //   mov rax, [rax + callback]
   //   call rax
   //   jmp cleanup
     && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX, GTA_REG_NONE, 0, bound_object)
     && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R2, GTA_VECTORX_COUNT(function_call->arguments))
-    && gta_lea_reg_ind__x86_64(v, GTA_X86_64_R3, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64 - 8)
+    && gta_lea_reg_ind__x86_64(v, GTA_X86_64_R3, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64)
     && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R4, GTA_REG_R15)
     && gta_mov_reg_ind__x86_64(v, GTA_REG_RAX, GTA_REG_RAX, GTA_REG_NONE, 0, callback)
     && gta_call_reg__x86_64(v, GTA_REG_RAX)
