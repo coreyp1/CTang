@@ -16,9 +16,7 @@ print(math.sin(4));
 print("\n");
 ```
 
-The areas of tasks are:
-
-### The overall library mechanism.
+## Library Concepts
 In order to understand the Library implementation, you must understand the problem that it is trying to solve.
 
 Remember that the use case for Tang is that a program may have *thousands* of templates.  Depending on the templates, the program may want some templates to have access to a library that is not available to other templates (for security reasons).  I implemented a 3-tiered approach.
@@ -37,7 +35,7 @@ Examples of the 3 Library applications:
   2. **Program libraries** - Imagine a template for an article.  `Article` may be a library containing information about the article, but it doesn't need to be available to a template for an image.
   3. **Execution-specific libraries** - This is a library that may be present or not depending on factors related to the specific execution context, or perhaps a library that changes behavior based on some external factor.
 
-## Libraries To Implement
+## New Libraries To Implement
 These are not necessarily stand-alone (e.g., `date`).  Libraries should make use of singleton objects, if possible.
 
 ### `math`
@@ -72,14 +70,17 @@ We also need to come up with a representation of `+ infinity`, `- infinity`, and
     * `tanh(x)`
   * `lerp(a,b,t)` - Compute a linear interpolation `a + t(b-a)`.
 
-### `random`
-Should probably be implemented as a [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister), although I am open to suggestions.  Features desired:
+### ~~`random`~~
 
-  * Request a random number from a global RNG (seed set at startup).
-  * Request a custom generator with a specific seed (which will be a new `ComputedValue` type).
-  * Request the next random `float` or `int` from the generator (either global or custom).
-  * Request a `unit` random value (a `float` from `0` to `1`) from the generator (either global or custom)
-  * The global generator will need Mutex protection.  See the [Ghoti.io/cutil](https://github.com/Ghoti-io/CUtil) library for a cross-platform mutex implementation.
+*Done.  Mersenne Twister random library added to CUtil, and global/local RNG object libraries added.*
+
+~~Should probably be implemented as a [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister), although I am open to suggestions.  Features desired:~~
+
+  * ~~Request a random number from a global RNG (seed set at startup).~~
+  * ~~Request a custom generator with a specific seed (which will be a new `ComputedValue` type).~~
+  * ~~Request the next random `float` or `int` from the generator (either global or custom).~~
+  * ~~Request a `unit` random value (a `float` from `0` to `1`) from the generator (either global or custom).~~
+  * ~~The global generator will need Mutex protection.  See the [Ghoti.io/cutil](https://github.com/Ghoti-io/CUtil) library for a cross-platform mutex implementation.~~
 
 ### `date`
 Date/time functions are going to take some research.  They are evil.  I can see at least 2 fundamental parts of a proper date library:
@@ -91,7 +92,7 @@ See [Falsehoods programmers believe about time](https://gist.github.com/timvisee
 ### `color`
 Perhaps a library for dealing with color values (a template might have to generate color codes!).  RGB, but maybe also RGBA or HSV.  Perhaps a LERP from a color ramp?  Color mixing?
 
-## Attributes to existing object types
+## Attributes Needed On Existing Object Types
 An attribute on an object can provide a function, but if the function must then be immediately called without arguments, then it would be better for the attribute to return the value that would result.
 
 In other words, don't do ```"abc".length()```, but ```"abc".length```.  Don't do ```(3.5).ceil()```, but ```(3.5).ceil```.
@@ -105,9 +106,15 @@ In other words, don't do ```"abc".length()```, but ```"abc".length```.  Don't do
   * `format(pattern)` - Convert a number to a string using the supplied pattern.  Suggest using the `printf` formatting standard.
 
 ### String
-We are not currently respecting the `GTA_UNICODE_STRING_TYPE_TRUSTED`, `GTA_UNICODE_STRING_TYPE_UNTRUSTED`, and `GTA_UNICODE_STRING_TYPE_PERCENT` string specifiers.  `TRUSTED` strings should output as-is (the current behavior).  `UNTRUSTED` should be HTML encoded.  `PERCENT` should be URL encoded (a.k.a. percent encoded).
+We are not currently respecting the `GTA_UNICODE_STRING_TYPE_TRUSTED`, `GTA_UNICODE_STRING_TYPE_HTML`, and `GTA_UNICODE_STRING_TYPE_PERCENT` string specifiers.  `TRUSTED` strings should output as-is (the current behavior).  `HTML` should be HTML encoded.  `PERCENT` should be URL encoded (a.k.a. percent encoded).
   * `rendered` - Should provide a `TRUSTED` version of the string, with the proper encoding applied.
   * `percent` - Should provide a copy of the string with the encoding set to `PERCENT`.
-  * `untrusted` - Should provide a copy of the string with the encoding set to `UNTRUSTED`.
+  * `html` - Should provide a copy of the string with the encoding set to `HTML`.
+
+## Language Enhancements (involves use of `flex` and `bison`)
+These are just nice-to-have, ergonomic enhancements to the language:
+  * Number seperators: Many modern languages support an underscore as part of the numbers to make it easier to visually gauge values.
+
+    Example: `10000000.00001` vs `10_000_000.000_1`
 
 ## More to come...
