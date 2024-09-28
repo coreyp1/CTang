@@ -424,7 +424,7 @@ TEST(UnicodeString, Concat) {
   size_t alloc_running_count = 0;
   size_t free_running_count = 0;
   // An empty string.
-  auto s1 = gta_unicode_string_create("", 0, GTA_UNICODE_STRING_TYPE_UNTRUSTED);
+  auto s1 = gta_unicode_string_create("", 0, GTA_UNICODE_STRING_TYPE_HTML);
   EXPECT_NE(nullptr, s1);
   // A string with ascii characters.
   auto s2 = gta_unicode_string_create("abc", 3, GTA_UNICODE_STRING_TYPE_TRUSTED);
@@ -436,7 +436,7 @@ TEST(UnicodeString, Concat) {
   // codepoints.
   // The long string of hex values is a UTF-8 encoding of the Scottish Flag.
   const char * str = "$\xF0\x9F\x8F\xB4\xF3\xA0\x81\xA7\xF3\xA0\x81\xA2\xF3\xA0\x81\xB3\xF3\xA0\x81\xA3\xF3\xA0\x81\xB4\xF3\xA0\x81\xBF.";
-  auto s4 = gta_unicode_string_create(str, strlen(str), GTA_UNICODE_STRING_TYPE_UNTRUSTED);
+  auto s4 = gta_unicode_string_create(str, strlen(str), GTA_UNICODE_STRING_TYPE_HTML);
   EXPECT_NE(nullptr, s4);
   {
     // Concatenating an empty string with an empty string.
@@ -449,7 +449,7 @@ TEST(UnicodeString, Concat) {
     EXPECT_EQ(0, s5->grapheme_length);
     EXPECT_EQ(1, s5->string_type->count);
     EXPECT_EQ(string{}, string{s5->buffer});
-    EXPECT_EQ((uint32_t)GTA_UNICODE_STRING_TYPE_UNTRUSTED, GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(s5->string_type->data[0]));
+    EXPECT_EQ((uint32_t)GTA_UNICODE_STRING_TYPE_HTML, GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(s5->string_type->data[0]));
     gta_unicode_string_destroy(s5);
     ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
   }
@@ -519,7 +519,7 @@ TEST(UnicodeString, Concat) {
     EXPECT_EQ(2, s5->string_type->count);
     EXPECT_EQ(string{expected}, string{s5->buffer});
     EXPECT_EQ((uint32_t)GTA_UNICODE_STRING_TYPE_TRUSTED, GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(s5->string_type->data[0]));
-    EXPECT_EQ((uint32_t)GTA_UNICODE_STRING_TYPE_UNTRUSTED, GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(s5->string_type->data[1]));
+    EXPECT_EQ((uint32_t)GTA_UNICODE_STRING_TYPE_HTML, GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(s5->string_type->data[1]));
     gta_unicode_string_destroy(s5);
     ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
   }
@@ -543,9 +543,9 @@ TEST(UnicodeString, Concat) {
     EXPECT_EQ(4, s8->string_type->count);
     EXPECT_EQ(string{expected}, string{s8->buffer});
     EXPECT_EQ((uint32_t)GTA_UNICODE_STRING_TYPE_TRUSTED, GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(s8->string_type->data[0]));
-    EXPECT_EQ((uint32_t)GTA_UNICODE_STRING_TYPE_UNTRUSTED, GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(s8->string_type->data[1]));
+    EXPECT_EQ((uint32_t)GTA_UNICODE_STRING_TYPE_HTML, GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(s8->string_type->data[1]));
     EXPECT_EQ((uint32_t)GTA_UNICODE_STRING_TYPE_TRUSTED, GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(s8->string_type->data[2]));
-    EXPECT_EQ((uint32_t)GTA_UNICODE_STRING_TYPE_UNTRUSTED, GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(s8->string_type->data[3]));
+    EXPECT_EQ((uint32_t)GTA_UNICODE_STRING_TYPE_HTML, GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(s8->string_type->data[3]));
     EXPECT_EQ(0, GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(s8->string_type->data[0]));
     EXPECT_EQ(3, GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(s8->string_type->data[1]));
     EXPECT_EQ(6, GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(s8->string_type->data[2]));

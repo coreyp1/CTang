@@ -334,7 +334,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_null_cast(GTA_Computed_Value * 
     if (!str) {
       return NULL;
     }
-    GTA_Unicode_String * unicode_str = gta_unicode_string_create(str, strlen(str), GTA_UNICODE_STRING_TYPE_UNTRUSTED);
+    GTA_Unicode_String * unicode_str = gta_unicode_string_create(str, strlen(str), GTA_UNICODE_STRING_TYPE_HTML);
     gcu_free(str);
     if (!unicode_str) {
       return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
@@ -565,7 +565,7 @@ GTA_Unicode_String * GTA_CALL gta_computed_value_generic_print_from_to_string(GT
   if (!str) {
     return NULL;
   }
-  GTA_Unicode_String * unicode_str = gta_unicode_string_create_and_adopt(str, strlen(str), GTA_UNICODE_STRING_TYPE_UNTRUSTED);
+  GTA_Unicode_String * unicode_str = gta_unicode_string_create_and_adopt(str, strlen(str), GTA_UNICODE_STRING_TYPE_HTML);
   if (!unicode_str) {
     gcu_free(str);
     return NULL;

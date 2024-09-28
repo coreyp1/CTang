@@ -260,7 +260,7 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
     // The start of a new, double-quoted string.
     stringBufferReset = true;
     // TODO: This should be a "print" type.
-    type = GTA_UNICODE_STRING_TYPE_UNTRUSTED;
+    type = GTA_UNICODE_STRING_TYPE_HTML;
     yy_push_state(doubleQuoteString, yyscanner);
   }
   \" {

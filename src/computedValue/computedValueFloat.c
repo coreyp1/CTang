@@ -416,7 +416,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_float_cast(GTA_Computed_Value *
     if (!str) {
       return NULL;
     }
-    GTA_Unicode_String * unicode_str = gta_unicode_string_create(str, strlen(str), GTA_UNICODE_STRING_TYPE_UNTRUSTED);
+    GTA_Unicode_String * unicode_str = gta_unicode_string_create(str, strlen(str), GTA_UNICODE_STRING_TYPE_HTML);
     gcu_free(str);
     if (!unicode_str) {
       return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;

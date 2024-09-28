@@ -66,6 +66,12 @@ extern "C" {
  * be accessed directly.  Instead, use the functions provided.  They are
  * included here for efficiency in locality of reference when accessing the
  * string.
+ *
+ * A Unicode String object is a UTF-8 encoded string that is grapheme-aware.
+ * It also tracks the type of the string in parts, so that the string can be
+ * encoded correctly, even if it has been concatenated with other strings.  The
+ * concatenation and substring functions will ensure that the type of the
+ * string is maintained correctly as the string is manipulated.
  */
 struct GTA_Unicode_String {
   const char * buffer;             ///< The string buffer.
@@ -95,7 +101,7 @@ struct GTA_Unicode_String {
  */
 typedef enum {
   GTA_UNICODE_STRING_TYPE_TRUSTED,   ///< String is from a trusted source.
-  GTA_UNICODE_STRING_TYPE_UNTRUSTED, ///< String is not from a trusted source.
+  GTA_UNICODE_STRING_TYPE_HTML,      ///< String is to be HTML encoded.
   GTA_UNICODE_STRING_TYPE_PERCENT,   ///< String is to be percent encoded.
                                      ///<   This is used for query strings.
 } GTA_String_Type;
@@ -152,6 +158,20 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_concat(const GTA_Unicode_
  */
 GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * string, size_t grapheme_start, size_t grapheme_count);
 
+/**
+ * Render a string according to the types of the string parts.
+ *
+ * TRUSTED strings will be rendered as-is.
+ * UNTRUSTED strings will be HTML escaped.
+ * PERCENT strings will be percent encoded.
+ *
+ * The caller is responsible for the memory of the returned string.  It should
+ * be freed with gcu_free().
+ *
+ * @param string The string to render.
+ * @return A pointer to the rendered string, or NULL if there was an error.
+ */
+GTA_NO_DISCARD char * gta_unicode_string_render(const GTA_Unicode_String * string);
 
 #ifdef __cplusplus
 }
