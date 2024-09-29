@@ -430,13 +430,77 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
         buffer_length += bytes_to_copy;
         break;
       }
-      case GTA_UNICODE_STRING_TYPE_HTML:
+      case GTA_UNICODE_STRING_TYPE_HTML: {
+        // Encode the following characters: < > &
+
+        // First pass, determine the length of the buffer required.
+        size_t bytes_needed = 0;
+        for (size_t i = source_offset; i < next_source_offset; ++i) {
+          switch (string->buffer[i]) {
+            case '<':
+              bytes_needed += 4; // &lt;
+              break;
+            case '>':
+              bytes_needed += 4; // &gt;
+              break;
+            case '&':
+              bytes_needed += 5; // &amp;
+              break;
+            default:
+              ++bytes_needed;
+              break;
+          }
+        }
+
+        // Calculate the optimistic buffer size needed (assuming that the
+        // rest of the string is TRUSTED).
+        size_t bytes_remaining_in_source = string->byte_length - next_source_offset + 1;
+
+        // Resize the buffer if necessary.
+        if (buffer_length + bytes_needed + bytes_remaining_in_source > total_bytes_allocated) {
+          size_t new_allocated_size = buffer_length + bytes_needed + bytes_remaining_in_source;
+          char * new_buffer = gcu_realloc(buffer, new_allocated_size);
+          if (!new_buffer) {
+            goto RENDER_ERROR;
+          }
+          total_bytes_allocated = new_allocated_size;
+          buffer = new_buffer;
+        }
+
+        // Second pass, encode the characters.
+        for (size_t i = source_offset; i < next_source_offset; ++i) {
+          switch (string->buffer[i]) {
+            case '<':
+              memcpy(buffer + buffer_length, "&lt;", 4);
+              buffer_length += 4;
+              break;
+            case '>':
+              memcpy(buffer + buffer_length, "&gt;", 4);
+              buffer_length += 4;
+              break;
+            case '&':
+              memcpy(buffer + buffer_length, "&amp;", 5);
+              buffer_length += 5;
+              break;
+            default:
+              buffer[buffer_length] = string->buffer[i];
+              ++buffer_length;
+              break;
+          }
+        }
+        break;
+      }
+      case GTA_UNICODE_STRING_TYPE_HTML_ATTRIBUTE:
         // Do nothing.
         break;
       case GTA_UNICODE_STRING_TYPE_PERCENT:
         // Do nothing.
         break;
+      case GTA_UNICODE_STRING_TYPE_JAVASCRIPT:
+        // Do nothing.
+        break;
       default:
+        assert(false);
         goto RENDER_ERROR;
     }
   }

@@ -113,8 +113,10 @@ typedef enum {
                                      ///<   characters that need to be encoded
                                      ///<   in order to prevent injection
                                      ///<   attacks will actually be encoded.
-  GTA_UNICODE_STRING_TYPE_HTML_ALL,  ///< String is to be HTML encoded, with all
-                                     ///<   more aggressive encoding applied.
+  GTA_UNICODE_STRING_TYPE_HTML_ATTRIBUTE, ///< String is to be HTML encoded,
+                                     ///<   with all more aggressive encoding
+                                     ///<   applied. This is used for attribute
+                                     ///<   values.
   GTA_UNICODE_STRING_TYPE_PERCENT,   ///< String is to be percent encoded.
                                      ///<   This is used for query strings.
   GTA_UNICODE_STRING_TYPE_JAVASCRIPT,///< String is to be JavaScript encoded.
