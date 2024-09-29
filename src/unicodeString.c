@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <ctype.h>
 #include <string.h>
 #include <cutil/memory.h>
 #include <unicode/uconfig.h>
@@ -523,9 +524,57 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
         }
         break;
       }
-      case GTA_UNICODE_STRING_TYPE_PERCENT:
-        // Do nothing.
+      case GTA_UNICODE_STRING_TYPE_PERCENT: {
+        // Encodes everything except for the following characters: A-Z a-z 0-9 - _ . ~
+
+        // First pass, determine the length of the buffer required.
+        size_t bytes_needed = 0;
+        for (size_t i = source_offset; i < next_source_offset; ++i) {
+          if (isalnum(string->buffer[i])
+            || string->buffer[i] == '-'
+            || string->buffer[i] == '_'
+            || string->buffer[i] == '.'
+            || string->buffer[i] == '~') {
+            ++bytes_needed;
+          }
+          else {
+            bytes_needed += 3; // %XX
+          }
+        }
+
+        // Calculate the optimistic buffer size needed (assuming that the
+        // rest of the string is TRUSTED).
+        size_t bytes_remaining_in_source = string->byte_length - next_source_offset + 1;
+
+        // Resize the buffer if necessary.
+        if (buffer_length + bytes_needed + bytes_remaining_in_source > total_bytes_allocated) {
+          size_t new_allocated_size = buffer_length + bytes_needed + bytes_remaining_in_source;
+          char * new_buffer = gcu_realloc(buffer, new_allocated_size);
+          if (!new_buffer) {
+            goto RENDER_ERROR;
+          }
+          total_bytes_allocated = new_allocated_size;
+          buffer = new_buffer;
+        }
+
+        // Second pass, encode the characters.
+        for (size_t i = source_offset; i < next_source_offset; ++i) {
+          if (isalnum(string->buffer[i])
+            || string->buffer[i] == '-'
+            || string->buffer[i] == '_'
+            || string->buffer[i] == '.'
+            || string->buffer[i] == '~') {
+            buffer[buffer_length] = string->buffer[i];
+            ++buffer_length;
+          }
+          else {
+            buffer[buffer_length++] = '%';
+            buffer[buffer_length++] = "0123456789ABCDEF"[string->buffer[i] >> 4];
+            buffer[buffer_length++] = "0123456789ABCDEF"[string->buffer[i] & 0x0F];
+          }
+        }
         break;
+      }
       case GTA_UNICODE_STRING_TYPE_JAVASCRIPT: {
         // Encodes the following characters: ' " \ \n \r \t < > &
 

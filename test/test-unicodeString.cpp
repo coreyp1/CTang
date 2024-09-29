@@ -626,6 +626,13 @@ TEST(Render, JAVASCRIPT) {
   DO_ALL_TEST("Test ' \" < > \\ & \n \r \t", R"(Test \' \" \u003C \u003E \\ \u0026 \n \r \t)", GTA_UNICODE_STRING_TYPE_JAVASCRIPT);
 }
 
+TEST(Render, PERCENT) {
+  // Testing an empty string.
+  DO_ALL_TEST("", "", GTA_UNICODE_STRING_TYPE_PERCENT);
+  // Testing a string with various characters.
+  DO_ALL_TEST("Test ' \" < > \\ & \n \r \t", R"(Test%20%27%20%22%20%3C%20%3E%20%5C%20%26%20%0A%20%0D%20%09)", GTA_UNICODE_STRING_TYPE_PERCENT);
+}
+
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
