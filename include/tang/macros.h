@@ -383,6 +383,7 @@ typedef struct GTA_Library GTA_Library;
 typedef struct GTA_Program GTA_Program;
 typedef struct GTA_Variable_Scope GTA_Variable_Scope;
 typedef struct GTA_Unicode_String GTA_Unicode_String;
+typedef struct GTA_Unicode_Rendered_String GTA_Unicode_Rendered_String;
 
 /**
  * Helper union for converting between function pointers and void pointers.
@@ -469,6 +470,7 @@ typedef union GTA_JIT_Function_Converter {
 #define GTA_CLEANUP_FUNCTION(function_name)
 
 #endif
+
 
 #ifdef __cplusplus
 }

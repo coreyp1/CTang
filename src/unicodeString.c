@@ -382,3 +382,93 @@ GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * str
   }
   return newString;
 }
+
+
+GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String * string) {
+  assert(string);
+
+  if (!string->buffer) {
+    return (GTA_Unicode_Rendered_String){
+      .buffer = NULL,
+      .length = 0
+    };
+  }
+
+  assert(string->string_type);
+  assert(string->string_type->count);
+
+  size_t total_bytes_allocated = string->byte_length + 1;
+  char * buffer = gcu_malloc(total_bytes_allocated);
+  if (!buffer) {
+    goto RENDER_ERROR;
+  }
+  size_t buffer_length = 0;
+
+  for (size_t i = 0; i < string->string_type->count; ++i) {
+    GTA_String_Type type = GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(string->string_type->data[i]);
+    size_t source_offset = GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[i]);
+    size_t next_source_offset = (i + 1 < string->string_type->count)
+      ? GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[i + 1])
+      : string->byte_length;
+    switch (type) {
+      case GTA_UNICODE_STRING_TYPE_TRUSTED: {
+        // This is a direct copy.
+        size_t bytes_to_copy = next_source_offset - source_offset;
+        if (buffer_length + bytes_to_copy + 1 > total_bytes_allocated) {
+          // The buffer is not large enough.  Resize it optimistically,
+          // assuming that the rest of the string will also be copied directly.
+          size_t bytes_remaining_in_source = string->byte_length - source_offset + 1;
+          size_t new_allocated_size = buffer_length + bytes_remaining_in_source;
+          char * new_buffer = gcu_realloc(buffer, new_allocated_size);
+          if (!new_buffer) {
+            goto RENDER_ERROR;
+          }
+          total_bytes_allocated = new_allocated_size;
+          buffer = new_buffer;
+        }
+        memcpy(buffer + buffer_length, string->buffer + source_offset, bytes_to_copy);
+        buffer_length += bytes_to_copy;
+        break;
+      }
+      case GTA_UNICODE_STRING_TYPE_HTML:
+        // Do nothing.
+        break;
+      case GTA_UNICODE_STRING_TYPE_PERCENT:
+        // Do nothing.
+        break;
+      default:
+        goto RENDER_ERROR;
+    }
+  }
+
+  buffer[buffer_length] = '\0';
+
+  return (GTA_Unicode_Rendered_String){
+    .buffer = buffer,
+    .length = buffer_length,
+  };
+
+RENDER_ERROR:
+  printf("RENDER_ERROR\n");
+  if (buffer) {
+    gcu_free(buffer);
+  }
+  return (GTA_Unicode_Rendered_String){
+    .buffer = NULL, 
+    .length = 0,
+  };
+}
+
+
+GTA_NO_DISCARD GTA_Unicode_Rendered_String gta_unicode_string_html_encode(const char * source, size_t length) {
+  assert(length ? (bool)source : true);
+
+  if (!length) {
+    return (GTA_Unicode_Rendered_String){
+      .buffer = NULL,
+      .length = 0
+    };
+  }
+
+  return (GTA_Unicode_Rendered_String){NULL, 0};
+}

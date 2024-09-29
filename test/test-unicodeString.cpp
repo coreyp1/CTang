@@ -565,6 +565,36 @@ TEST(UnicodeString, Concat) {
   ASSERT_EQ(alloc_running_count, free_running_count);
 }
 
+TEST(Render, Trusted) {
+  {
+    // Testing an empty string.
+    gcu_memory_reset_counts();
+    auto s = gta_unicode_string_create("", 0, GTA_UNICODE_STRING_TYPE_TRUSTED);
+    EXPECT_NE(nullptr, s);
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(s);
+    EXPECT_TRUE(rendered.buffer);
+    EXPECT_EQ(string{s->buffer}, string{rendered.buffer});
+    EXPECT_EQ(s->byte_length, rendered.length);
+    gcu_free(rendered.buffer);
+    gta_unicode_string_destroy(s);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // Testing a string with various characters.
+    gcu_memory_reset_counts();
+    char str[] = "<abc$\"\u00A3";
+    auto s = gta_unicode_string_create(str, strlen(str), GTA_UNICODE_STRING_TYPE_TRUSTED);
+    EXPECT_NE(nullptr, s);
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(s);
+    EXPECT_TRUE(rendered.buffer);
+    EXPECT_EQ(str, string{rendered.buffer});
+    EXPECT_EQ(s->byte_length, rendered.length);
+    gcu_free(rendered.buffer);
+    gta_unicode_string_destroy(s);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   int result = RUN_ALL_TESTS();

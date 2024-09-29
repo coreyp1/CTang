@@ -88,6 +88,14 @@ struct GTA_Unicode_String {
 };
 
 /**
+ * Simple structure for returning a Unicode string that has been rendered.
+ */
+struct GTA_Unicode_Rendered_String {
+  char * buffer;                   ///< The rendered string buffer.
+  size_t length;                   ///< Length of the rendered string in bytes.
+};
+
+/**
  * The type of the substring.
  *
  * This allows a string to be manipulated in its original form, even if it will
@@ -101,9 +109,16 @@ struct GTA_Unicode_String {
  */
 typedef enum {
   GTA_UNICODE_STRING_TYPE_TRUSTED,   ///< String is from a trusted source.
-  GTA_UNICODE_STRING_TYPE_HTML,      ///< String is to be HTML encoded.
+  GTA_UNICODE_STRING_TYPE_HTML,      ///< String is to be HTML encoded. Only
+                                     ///<   characters that need to be encoded
+                                     ///<   in order to prevent injection
+                                     ///<   attacks will actually be encoded.
+  GTA_UNICODE_STRING_TYPE_HTML_ALL,  ///< String is to be HTML encoded, with all
+                                     ///<   more aggressive encoding applied.
   GTA_UNICODE_STRING_TYPE_PERCENT,   ///< String is to be percent encoded.
                                      ///<   This is used for query strings.
+  GTA_UNICODE_STRING_TYPE_JAVASCRIPT,///< String is to be JavaScript encoded.
+                                     ///<   This is used for inline scripts.
 } GTA_String_Type;
 
 /**
@@ -162,16 +177,29 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unico
  * Render a string according to the types of the string parts.
  *
  * TRUSTED strings will be rendered as-is.
- * UNTRUSTED strings will be HTML escaped.
+ * HTML strings will be HTML escaped.
  * PERCENT strings will be percent encoded.
  *
  * The caller is responsible for the memory of the returned string.  It should
  * be freed with gcu_free().
  *
  * @param string The string to render.
- * @return A pointer to the rendered string, or NULL if there was an error.
+ * @return The object containing the encoded string.
  */
-GTA_NO_DISCARD char * gta_unicode_string_render(const GTA_Unicode_String * string);
+GTA_NO_DISCARD GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String * string);
+
+/**
+ * Encode a string according to GTA_UNICODE_STRING_TYPE_HTML.
+ *
+ * The caller is responsible for the memory of the returned string.  It should
+ * be freed with gcu_free().
+ *
+ * @param source The source string.
+ * @param length The length of the source string in bytes (not including the
+ *  null terminator).
+ * @return The object containing the encoded string.
+ */
+GTA_NO_DISCARD GTA_Unicode_Rendered_String gta_unicode_string_html_encode(const char * source, size_t length);
 
 #ifdef __cplusplus
 }
