@@ -619,6 +619,13 @@ TEST(Render, HTML_ATTRIBUTE) {
   DO_ALL_TEST("<a>b&c$'\"\u00A3", "&lt;a&gt;b&amp;c$&#39;&quot;\u00A3", GTA_UNICODE_STRING_TYPE_HTML_ATTRIBUTE);
 }
 
+TEST(Render, JAVASCRIPT) {
+  // Testing an empty string.
+  DO_ALL_TEST("", "", GTA_UNICODE_STRING_TYPE_JAVASCRIPT);
+  // Testing a string with various characters.
+  DO_ALL_TEST("Test ' \" < > \\ & \n \r \t", R"(Test \' \" \u003C \u003E \\ \u0026 \n \r \t)", GTA_UNICODE_STRING_TYPE_JAVASCRIPT);
+}
+
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

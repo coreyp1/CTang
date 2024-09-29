@@ -387,6 +387,7 @@ GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * str
 GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String * string) {
   assert(string);
 
+  // Safety check for an empty string.
   if (!string->buffer) {
     return (GTA_Unicode_Rendered_String){
       .buffer = NULL,
@@ -397,6 +398,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
   assert(string->string_type);
   assert(string->string_type->count);
 
+  // Optimistically allocate the buffer.
   size_t total_bytes_allocated = string->byte_length + 1;
   char * buffer = gcu_malloc(total_bytes_allocated);
   if (!buffer) {
@@ -404,6 +406,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
   }
   size_t buffer_length = 0;
 
+  // Loop through the string types and render the string.
   for (size_t i = 0; i < string->string_type->count; ++i) {
     GTA_String_Type type = GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(string->string_type->data[i]);
     size_t source_offset = GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[i]);
@@ -433,6 +436,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
       case GTA_UNICODE_STRING_TYPE_HTML:
       case GTA_UNICODE_STRING_TYPE_HTML_ATTRIBUTE: {
         // Encode the following characters: < > &
+        // Attribute encoding also encodes: " '
 
         // First pass, determine the length of the buffer required.
         size_t bytes_needed = 0;
@@ -522,9 +526,88 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
       case GTA_UNICODE_STRING_TYPE_PERCENT:
         // Do nothing.
         break;
-      case GTA_UNICODE_STRING_TYPE_JAVASCRIPT:
-        // Do nothing.
+      case GTA_UNICODE_STRING_TYPE_JAVASCRIPT: {
+        // Encodes the following characters: ' " \ \n \r \t < > &
+
+        // First pass, determine the length of the buffer required.
+        size_t bytes_needed = 0;
+        for (size_t i = source_offset; i < next_source_offset; ++i) {
+          switch (string->buffer[i]) {
+            case '\'':
+            case '"':
+            case '\\':
+            case '\n':
+            case '\r':
+            case '\t':
+              bytes_needed += 2; // Escape sequence is two characters.
+              break;
+            case '<':
+            case '>':
+            case '&':
+              bytes_needed += 6; // Unicode escape sequence is six characters.
+              break;
+            default:
+              ++bytes_needed;
+              break;
+          }
+        }
+
+        // Calculate the optimistic buffer size needed (assuming that the
+        // rest of the string is TRUSTED).
+        size_t bytes_remaining_in_source = string->byte_length - next_source_offset + 1;
+
+        // Resize the buffer if necessary.
+        if (buffer_length + bytes_needed + bytes_remaining_in_source > total_bytes_allocated) {
+          size_t new_allocated_size = buffer_length + bytes_needed + bytes_remaining_in_source;
+          char * new_buffer = gcu_realloc(buffer, new_allocated_size);
+          if (!new_buffer) {
+            goto RENDER_ERROR;
+          }
+          total_bytes_allocated = new_allocated_size;
+          buffer = new_buffer;
+        }
+
+        // Second pass, encode the characters.
+        for (size_t i = source_offset; i < next_source_offset; ++i) {
+          switch (string->buffer[i]) {
+            case '\'':
+            case '"':
+            case '\\':
+              buffer[buffer_length++] = '\\';
+              buffer[buffer_length++] = string->buffer[i];
+              break;
+            case '\n':
+              buffer[buffer_length++] = '\\';
+              buffer[buffer_length++] = 'n';
+              break;
+            case '\r':
+              buffer[buffer_length++] = '\\';
+              buffer[buffer_length++] = 'r';
+              break;
+            case '\t':
+              buffer[buffer_length++] = '\\';
+              buffer[buffer_length++] = 't';
+              break;
+            case '<':
+              memcpy(buffer + buffer_length, "\\u003C", 6);
+              buffer_length += 6;
+              break;
+            case '>':
+              memcpy(buffer + buffer_length, "\\u003E", 6);
+              buffer_length += 6;
+              break;
+            case '&':
+              memcpy(buffer + buffer_length, "\\u0026", 6);
+              buffer_length += 6;
+              break;
+            default:
+              buffer[buffer_length] = string->buffer[i];
+              ++buffer_length;
+              break;
+          }
+        }
         break;
+      }
       default:
         assert(false);
         goto RENDER_ERROR;
