@@ -430,7 +430,8 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
         buffer_length += bytes_to_copy;
         break;
       }
-      case GTA_UNICODE_STRING_TYPE_HTML: {
+      case GTA_UNICODE_STRING_TYPE_HTML:
+      case GTA_UNICODE_STRING_TYPE_HTML_ATTRIBUTE: {
         // Encode the following characters: < > &
 
         // First pass, determine the length of the buffer required.
@@ -445,6 +446,16 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
               break;
             case '&':
               bytes_needed += 5; // &amp;
+              break;
+            case '"':
+              bytes_needed += type == GTA_UNICODE_STRING_TYPE_HTML
+                ? 1
+                : 6; // &quot;
+              break;
+            case '\'':
+              bytes_needed += type == GTA_UNICODE_STRING_TYPE_HTML
+                ? 1
+                : 5; // &#39;
               break;
             default:
               ++bytes_needed;
@@ -482,6 +493,24 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
               memcpy(buffer + buffer_length, "&amp;", 5);
               buffer_length += 5;
               break;
+            case '"':
+              if (type == GTA_UNICODE_STRING_TYPE_HTML) {
+                buffer[buffer_length++] = '"';
+              }
+              else {
+                memcpy(buffer + buffer_length, "&quot;", 6);
+                buffer_length += 6;
+              }
+              break;
+            case '\'':
+              if (type == GTA_UNICODE_STRING_TYPE_HTML) {
+                buffer[buffer_length++] = '\'';
+              }
+              else {
+                memcpy(buffer + buffer_length, "&#39;", 5);
+                buffer_length += 5;
+              }
+              break;
             default:
               buffer[buffer_length] = string->buffer[i];
               ++buffer_length;
@@ -490,9 +519,6 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
         }
         break;
       }
-      case GTA_UNICODE_STRING_TYPE_HTML_ATTRIBUTE:
-        // Do nothing.
-        break;
       case GTA_UNICODE_STRING_TYPE_PERCENT:
         // Do nothing.
         break;

@@ -612,6 +612,13 @@ TEST(Render, HTML) {
   DO_ALL_TEST("<a>b&c$'\"\u00A3", "&lt;a&gt;b&amp;c$'\"\u00A3", GTA_UNICODE_STRING_TYPE_HTML);
 }
 
+TEST(Render, HTML_ATTRIBUTE) {
+  // Testing an empty string.
+  DO_ALL_TEST("", "", GTA_UNICODE_STRING_TYPE_HTML_ATTRIBUTE);
+  // Testing a string with various characters.
+  DO_ALL_TEST("<a>b&c$'\"\u00A3", "&lt;a&gt;b&amp;c$&#39;&quot;\u00A3", GTA_UNICODE_STRING_TYPE_HTML_ATTRIBUTE);
+}
+
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
