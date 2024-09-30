@@ -126,8 +126,11 @@ GTA_Unicode_String * GTA_CALL gta_computed_value_print(GTA_Computed_Value * self
   assert(self->vtable->print);
   GTA_Unicode_String * result = self->vtable->print(self, context);
   if (result && (context->program->flags & GTA_PROGRAM_FLAG_PRINT_TO_STDOUT)) {
-    // TODO: Escape if required.
-    printf("%s", result->buffer);
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(result);
+    if (rendered.buffer) {
+      fputs(rendered.buffer, stdout);
+      gcu_free(rendered.buffer);
+    }
   }
   return result;
 }
