@@ -1200,7 +1200,7 @@ test: \
 	@printf "### Running Language Parse tests ###\n"
 	@printf "####################################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1 --gtest_fail_fast
+	LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1
 	@printf "\033[0;30;43m\n"
 	@printf "################################\n"
 	@printf "### Running Binary JIT tests ###\n"

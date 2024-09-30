@@ -409,19 +409,24 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
 
   // Loop through the string types and render the string.
   for (size_t i = 0; i < string->string_type->count; ++i) {
+    // Compute the offsets for the current and next graphemes.
     GTA_String_Type type = GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(string->string_type->data[i]);
-    size_t source_offset = GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[i]);
-    size_t next_source_offset = (i + 1 < string->string_type->count)
+    size_t source_grapheme_offset = GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[i]);
+    size_t next_source_grapheme_offset = (i + 1 < string->string_type->count)
       ? GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[i + 1])
-      : string->byte_length;
+      : string->grapheme_length;
+    size_t source_byte_offset = string->grapheme_offsets->data[source_grapheme_offset].ui32;
+    size_t next_source_byte_offset = string->grapheme_offsets->data[next_source_grapheme_offset].ui32;
+
+    // Render the string based on the type.
     switch (type) {
       case GTA_UNICODE_STRING_TYPE_TRUSTED: {
         // This is a direct copy.
-        size_t bytes_to_copy = next_source_offset - source_offset;
+        size_t bytes_to_copy = next_source_byte_offset - source_byte_offset;
         if (buffer_length + bytes_to_copy + 1 > total_bytes_allocated) {
           // The buffer is not large enough.  Resize it optimistically,
           // assuming that the rest of the string will also be copied directly.
-          size_t bytes_remaining_in_source = string->byte_length - source_offset + 1;
+          size_t bytes_remaining_in_source = string->byte_length - source_byte_offset + 1;
           size_t new_allocated_size = buffer_length + bytes_remaining_in_source;
           char * new_buffer = gcu_realloc(buffer, new_allocated_size);
           if (!new_buffer) {
@@ -430,7 +435,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
           total_bytes_allocated = new_allocated_size;
           buffer = new_buffer;
         }
-        memcpy(buffer + buffer_length, string->buffer + source_offset, bytes_to_copy);
+        memcpy(buffer + buffer_length, string->buffer + source_byte_offset, bytes_to_copy);
         buffer_length += bytes_to_copy;
         break;
       }
@@ -441,7 +446,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
 
         // First pass, determine the length of the buffer required.
         size_t bytes_needed = 0;
-        for (size_t i = source_offset; i < next_source_offset; ++i) {
+        for (size_t i = source_byte_offset; i < next_source_byte_offset; ++i) {
           switch (string->buffer[i]) {
             case '<':
               bytes_needed += 4; // &lt;
@@ -470,7 +475,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
 
         // Calculate the optimistic buffer size needed (assuming that the
         // rest of the string is TRUSTED).
-        size_t bytes_remaining_in_source = string->byte_length - next_source_offset + 1;
+        size_t bytes_remaining_in_source = string->byte_length - next_source_byte_offset + 1;
 
         // Resize the buffer if necessary.
         if (buffer_length + bytes_needed + bytes_remaining_in_source > total_bytes_allocated) {
@@ -484,7 +489,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
         }
 
         // Second pass, encode the characters.
-        for (size_t i = source_offset; i < next_source_offset; ++i) {
+        for (size_t i = source_byte_offset; i < next_source_byte_offset; ++i) {
           switch (string->buffer[i]) {
             case '<':
               memcpy(buffer + buffer_length, "&lt;", 4);
@@ -517,8 +522,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
               }
               break;
             default:
-              buffer[buffer_length] = string->buffer[i];
-              ++buffer_length;
+              buffer[buffer_length++] = string->buffer[i];
               break;
           }
         }
@@ -529,12 +533,13 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
 
         // First pass, determine the length of the buffer required.
         size_t bytes_needed = 0;
-        for (size_t i = source_offset; i < next_source_offset; ++i) {
+        for (size_t i = source_byte_offset; i < next_source_byte_offset; ++i) {
           if (isalnum(string->buffer[i])
             || string->buffer[i] == '-'
             || string->buffer[i] == '_'
             || string->buffer[i] == '.'
-            || string->buffer[i] == '~') {
+            || string->buffer[i] == '~'
+            || string->buffer[i] == ' ') {
             ++bytes_needed;
           }
           else {
@@ -544,7 +549,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
 
         // Calculate the optimistic buffer size needed (assuming that the
         // rest of the string is TRUSTED).
-        size_t bytes_remaining_in_source = string->byte_length - next_source_offset + 1;
+        size_t bytes_remaining_in_source = string->byte_length - next_source_byte_offset + 1;
 
         // Resize the buffer if necessary.
         if (buffer_length + bytes_needed + bytes_remaining_in_source > total_bytes_allocated) {
@@ -558,14 +563,16 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
         }
 
         // Second pass, encode the characters.
-        for (size_t i = source_offset; i < next_source_offset; ++i) {
+        for (size_t i = source_byte_offset; i < next_source_byte_offset; ++i) {
           if (isalnum(string->buffer[i])
             || string->buffer[i] == '-'
             || string->buffer[i] == '_'
             || string->buffer[i] == '.'
             || string->buffer[i] == '~') {
-            buffer[buffer_length] = string->buffer[i];
-            ++buffer_length;
+            buffer[buffer_length++] = string->buffer[i];
+          }
+          else if (string->buffer[i] == ' ') {
+            buffer[buffer_length++] = '+';
           }
           else {
             buffer[buffer_length++] = '%';
@@ -580,7 +587,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
 
         // First pass, determine the length of the buffer required.
         size_t bytes_needed = 0;
-        for (size_t i = source_offset; i < next_source_offset; ++i) {
+        for (size_t i = source_byte_offset; i < next_source_byte_offset; ++i) {
           switch (string->buffer[i]) {
             case '\'':
             case '"':
@@ -603,7 +610,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
 
         // Calculate the optimistic buffer size needed (assuming that the
         // rest of the string is TRUSTED).
-        size_t bytes_remaining_in_source = string->byte_length - next_source_offset + 1;
+        size_t bytes_remaining_in_source = string->byte_length - next_source_byte_offset + 1;
 
         // Resize the buffer if necessary.
         if (buffer_length + bytes_needed + bytes_remaining_in_source > total_bytes_allocated) {
@@ -617,7 +624,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
         }
 
         // Second pass, encode the characters.
-        for (size_t i = source_offset; i < next_source_offset; ++i) {
+        for (size_t i = source_byte_offset; i < next_source_byte_offset; ++i) {
           switch (string->buffer[i]) {
             case '\'':
             case '"':
@@ -650,8 +657,7 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
               buffer_length += 6;
               break;
             default:
-              buffer[buffer_length] = string->buffer[i];
-              ++buffer_length;
+              buffer[buffer_length++] = string->buffer[i];
               break;
           }
         }
@@ -671,7 +677,6 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
   };
 
 RENDER_ERROR:
-  printf("RENDER_ERROR\n");
   if (buffer) {
     gcu_free(buffer);
   }

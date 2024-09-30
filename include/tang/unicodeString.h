@@ -85,6 +85,10 @@ struct GTA_Unicode_String {
                                    ///<   that the string can be encoded
                                    ///<   correctly, even if it has been
                                    ///<   concatenated with other strings.
+                                   ///<   The type is the upper 32 bits of the
+                                   ///<   64-bit integer, and the offset is the
+                                   ///<   lower 32 bits.  The offset is the
+                                   ///<   grapheme offset.
 };
 
 /**
@@ -126,7 +130,7 @@ typedef enum {
 /**
  * Construct a new Unicode String object and copy the source string buffer.
  *
- * @param source The source string.
+ * @param source The source string.  It is not adopted.
  * @param length The length of the source string in bytes (not including the
  *   null terminator).
  * @param type The type of string being created.
@@ -138,7 +142,7 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_create(const char * sourc
  * Construct a new Unicode String object and adopt ownership of the source
  * string buffer.
  *
- * @param source The source string.
+ * @param source The source string.  It is adopted.
  * @param length The length of the source string in bytes (not including the
  *   null terminator).
  * @param type The type of string being created.

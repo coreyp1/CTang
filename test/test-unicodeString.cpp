@@ -630,7 +630,97 @@ TEST(Render, PERCENT) {
   // Testing an empty string.
   DO_ALL_TEST("", "", GTA_UNICODE_STRING_TYPE_PERCENT);
   // Testing a string with various characters.
-  DO_ALL_TEST("Test ' \" < > \\ & \n \r \t", R"(Test%20%27%20%22%20%3C%20%3E%20%5C%20%26%20%0A%20%0D%20%09)", GTA_UNICODE_STRING_TYPE_PERCENT);
+  DO_ALL_TEST("Test ' \" < > \\ & \n \r \t", "Test+%27+%22+%3C+%3E+%5C+%26+%0A+%0D+%09", GTA_UNICODE_STRING_TYPE_PERCENT);
+}
+
+TEST(Render, Concatenated) {
+  // Source Strings.
+  char source1[] = "<a>b&c$'\"\u00A3....";
+  auto s1 = gta_unicode_string_create(source1, strlen(source1), GTA_UNICODE_STRING_TYPE_TRUSTED);
+  EXPECT_TRUE(s1);
+
+  char source2[] = "<a>b&c$'\"\u00A3----";
+  auto s2 = gta_unicode_string_create(source2, strlen(source2), GTA_UNICODE_STRING_TYPE_HTML);
+  EXPECT_TRUE(s2);
+
+  char source3[] = "<a>b&c$'\"\u00A3====";
+  auto s3 = gta_unicode_string_create(source3, strlen(source3), GTA_UNICODE_STRING_TYPE_HTML_ATTRIBUTE);
+  EXPECT_TRUE(s3);
+
+  char source4[] = "Test ' \" < > \\ & \n \r \t    ";
+  auto s4 = gta_unicode_string_create(source4, strlen(source4), GTA_UNICODE_STRING_TYPE_PERCENT);
+  EXPECT_TRUE(s4);
+
+  char source5[] = "Test ' \" < > \\ & \n \r \t^^^^";
+  auto s5 = gta_unicode_string_create(source5, strlen(source5), GTA_UNICODE_STRING_TYPE_JAVASCRIPT);
+  EXPECT_TRUE(s5);
+
+  size_t alloc_running_count = gcu_get_alloc_count();
+  size_t free_running_count = gcu_get_free_count();
+  gcu_memory_reset_counts();
+
+  {
+    // Concatenation of the same type.
+    auto c1 = gta_unicode_string_concat(s1, s1);
+    char expected[] = "<a>b&c$'\"\u00A3....<a>b&c$'\"\u00A3....";
+    EXPECT_TRUE(c1);
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(c1);
+    EXPECT_TRUE(rendered.buffer);
+    EXPECT_EQ(expected, string{rendered.buffer});
+    EXPECT_EQ(strlen(expected), rendered.length);
+    gcu_free(rendered.buffer);
+    gta_unicode_string_destroy(c1);
+    EXPECT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // Concatenation of different types.
+    auto c1 = gta_unicode_string_concat(s1, s2);
+    char expected[] = "<a>b&c$'\"\u00A3....&lt;a&gt;b&amp;c$'\"\u00A3----";
+    EXPECT_TRUE(c1);
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(c1);
+    EXPECT_TRUE(rendered.buffer);
+    EXPECT_EQ(expected, string{rendered.buffer});
+    EXPECT_EQ(strlen(expected), rendered.length);
+    gcu_free(rendered.buffer);
+    gta_unicode_string_destroy(c1);
+    EXPECT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // Concatenation of all types.
+    auto c1 = gta_unicode_string_concat(s1, s2);
+    assert(c1);
+    auto c2 = gta_unicode_string_concat(c1, s3);
+    assert(c2);
+    auto c3 = gta_unicode_string_concat(c2, s4);
+    assert(c3);
+    auto c4 = gta_unicode_string_concat(c3, s5);
+    assert(c4);
+    char expected[] = "<a>b&c$'\"\u00A3...."               // TRUSTED
+      "&lt;a&gt;b&amp;c$'\"\u00A3----"                     // HTML
+      "&lt;a&gt;b&amp;c$&#39;&quot;\u00A3===="             // HTML_ATTRIBUTE
+      "Test+%27+%22+%3C+%3E+%5C+%26+%0A+%0D+%09++++"       // PERCENT
+      R"(Test \' \" \u003C \u003E \\ \u0026 \n \r \t^^^^)" // JAVASCRIPT
+      ;
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(c4);
+    EXPECT_TRUE(rendered.buffer);
+    EXPECT_EQ(expected, string{rendered.buffer});
+    EXPECT_EQ(strlen(expected), rendered.length);
+    gcu_free(rendered.buffer);
+    gta_unicode_string_destroy(c4);
+    gta_unicode_string_destroy(c3);
+    gta_unicode_string_destroy(c2);
+    gta_unicode_string_destroy(c1);
+    EXPECT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+
+  // Cleanup.
+  gcu_memory_reset_counts();
+  gta_unicode_string_destroy(s1);
+  gta_unicode_string_destroy(s2);
+  gta_unicode_string_destroy(s3);
+  gta_unicode_string_destroy(s4);
+  gta_unicode_string_destroy(s5);
+  EXPECT_EQ(gcu_get_alloc_count() + alloc_running_count, gcu_get_free_count() + free_running_count);
 }
 
 
