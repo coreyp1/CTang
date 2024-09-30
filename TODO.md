@@ -105,11 +105,14 @@ In other words, don't do ```"abc".length()```, but ```"abc".length```.  Don't do
   * `sqrt` - Calculate the square root of the number.
   * `format(pattern)` - Convert a number to a string using the supplied pattern.  Suggest using the `printf` formatting standard.
 
-### String
-We are not currently respecting the `GTA_UNICODE_STRING_TYPE_TRUSTED`, `GTA_UNICODE_STRING_TYPE_HTML`, and `GTA_UNICODE_STRING_TYPE_PERCENT` string specifiers.  `TRUSTED` strings should output as-is (the current behavior).  `HTML` should be HTML encoded.  `PERCENT` should be URL encoded (a.k.a. percent encoded).
-  * `rendered` - Should provide a `TRUSTED` version of the string, with the proper encoding applied.
-  * `percent` - Should provide a copy of the string with the encoding set to `PERCENT`.
-  * `html` - Should provide a copy of the string with the encoding set to `HTML`.
+### ~~String~~
+
+*Done. Went with the following tyes: TRUSTED, HTML, HTML_ATTRIBUTE, PERCENT, and JAVASCRIPT.*
+
+~~We are not currently respecting the `GTA_UNICODE_STRING_TYPE_TRUSTED`, `GTA_UNICODE_STRING_TYPE_HTML`, and `GTA_UNICODE_STRING_TYPE_PERCENT` string specifiers.  `TRUSTED` strings should output as-is (the current behavior).  `HTML` should be HTML encoded.  `PERCENT` should be URL encoded (a.k.a. percent encoded).~~
+  * ~~`rendered` - Should provide a `TRUSTED` version of the string, with the proper encoding applied.~~
+  * ~~`percent` - Should provide a copy of the string with the encoding set to `PERCENT`.~~
+  * ~~`html` - Should provide a copy of the string with the encoding set to `HTML`.~~
 
 ## Language Enhancements (involves use of `flex` and `bison`)
 These are just nice-to-have, ergonomic enhancements to the language:
