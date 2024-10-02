@@ -33,11 +33,58 @@ static GTA_Computed_Value * GTA_CALL string_byte_length(GTA_Computed_Value * sel
 
 
 /**
+ * Apply all encodings to the string.
+ *
+ * This allows a string to be double-encoded, which is useful in some
+ * situations.
+ *
+ * @param self The string object.
+ * @param context The execution context.
+ * @return The encoded string computed value.
+ */
+static GTA_Computed_Value * GTA_CALL string_render(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+
+/**
+ * Helper function to change the type of a string.
+ *
+ * @param self The string object.
+ * @param context The execution context.
+ * @return The new string computed value.
+ */
+static GTA_Computed_Value * GTA_CALL string_change_type(GTA_Computed_Value * self, GTA_Execution_Context * context, GTA_String_Type new_type);
+
+
+/**
+ * Treat the entire string as raw text, without any encodings applied.
+ *
+ * @param self The string object.
+ * @param context The execution context.
+ * @return The raw string computed value.
+ */
+static GTA_Computed_Value * GTA_CALL string_raw(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+
+/**
+ * Treat the entire string as HTML text, with appropriate HTML entities
+ * encoded to prevent HTML injection.
+ *
+ * @param self The string object.
+ * @param context The execution context.
+ * @return The HTML string computed value.
+ */
+static GTA_Computed_Value * GTA_CALL string_html(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+
+/**
  * The attributes for the GTA_Computed_Value_String class.
  */
 static GTA_Computed_Value_Attribute_Pair attributes[] = {
   {"length", string_length},
   {"byte_length", string_byte_length},
+  {"render", string_render},
+  {"raw", string_raw},
+  {"html", string_html},
 };
 
 
@@ -451,4 +498,70 @@ static GTA_Computed_Value * GTA_CALL string_byte_length(GTA_Computed_Value * sel
   assert(GTA_COMPUTED_VALUE_IS_STRING(self));
   GTA_Computed_Value_String * string = (GTA_Computed_Value_String *)self;
   return (GTA_Computed_Value *)gta_computed_value_integer_create(string->value->byte_length, context);
+}
+
+
+static GTA_Computed_Value * GTA_CALL string_render(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(self));
+  GTA_Computed_Value_String * string = (GTA_Computed_Value_String *)self;
+  GTA_Unicode_Rendered_String rendered_string = gta_unicode_string_render(string->value);
+  if (!rendered_string.buffer) {
+    goto RENDER_STRING_FAILED;
+  }
+  GTA_Unicode_String * new_string = gta_unicode_string_create_and_adopt(rendered_string.buffer, rendered_string.length, GTA_UNICODE_STRING_TYPE_TRUSTED);
+  if (!new_string) {
+    goto NEW_STRING_CREATE_FAILED;
+  }
+
+  GTA_Computed_Value * result = (GTA_Computed_Value *)gta_computed_value_string_create(new_string, true, context);
+  if (!result) {
+    gta_unicode_string_destroy(new_string);
+    goto RENDER_STRING_FAILED;
+  }
+
+  return result;
+
+NEW_STRING_CREATE_FAILED:
+  gcu_free(rendered_string.buffer);
+RENDER_STRING_FAILED:
+  return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+}
+
+
+static GTA_Computed_Value * GTA_CALL string_change_type(GTA_Computed_Value * self, GTA_Execution_Context * context, GTA_String_Type new_type) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(self));
+  GTA_Computed_Value_String * string = (GTA_Computed_Value_String *)self;
+
+  if (self->is_temporary) {
+    // If the string is temporary, then we can just adjust the type.
+    assert(string->value);
+    assert(string->value->string_type);
+    string->value->string_type->data[0] = GTA_UC_MAKE_TYPE_OFFSET_PAIR(new_type, 0);
+    string->value->string_type->count = 1;
+    return self;
+  }
+
+  // If the string is not temporary, then we need to create a new string.
+  GTA_Unicode_String * new_string = gta_unicode_string_create(string->value->buffer, string->value->byte_length, new_type);
+  if (!new_string) {
+    return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+  }
+  GTA_Computed_Value * result = (GTA_Computed_Value *)gta_computed_value_string_create(new_string, true, context);
+  if (!result) {
+    gta_unicode_string_destroy(new_string);
+    return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
+  }
+  return result;
+}
+
+
+static GTA_Computed_Value * GTA_CALL string_raw(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  return string_change_type(self, context, GTA_UNICODE_STRING_TYPE_TRUSTED);
+}
+
+
+static GTA_Computed_Value * GTA_CALL string_html(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  return string_change_type(self, context, GTA_UNICODE_STRING_TYPE_HTML);
 }

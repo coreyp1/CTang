@@ -420,6 +420,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_null);
         // Get the "printed" value.
         GTA_Unicode_String * string = gta_computed_value_print(value, context);
+
         if (!string) {
           // No string was produced.
           if (!((value->vtable->print == gta_computed_value_print_not_implemented)
@@ -431,6 +432,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
           // The print function was not implemented.  Do nothing.
           break;
         }
+
         if (!(context->program->flags & GTA_PROGRAM_FLAG_PRINT_TO_STDOUT)) {
           // Concatenate the string with the output.
           if (context->output->byte_length == 0) {

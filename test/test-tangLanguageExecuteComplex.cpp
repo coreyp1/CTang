@@ -698,7 +698,21 @@ TEST(Attributes, String) {
     ASSERT_STREQ(context->output->buffer, "start 30 end");
     TEST_PROGRAM_TEARDOWN();
   }
+  {
+    // HTML encoding.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print("a&b".html);
+      print(" end");
+    )");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "start a&amp;b end");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
 }
+
 
 TEST(Attributes, Array) {
   {

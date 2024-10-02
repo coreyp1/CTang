@@ -347,7 +347,7 @@ GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * str
   GTA_String_Type newStringType = GTA_UNICODE_STRING_TYPE_TRUSTED;
   size_t first_string_type_index_to_include = 0;
   size_t iterator = 0;
-  while ((iterator < string->string_type->count) && (GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[iterator]) > grapheme_start)) {
+  while ((iterator < string->string_type->count) && (GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[iterator]) >= grapheme_start)) {
     newStringType = GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(string->string_type->data[iterator]);
     first_string_type_index_to_include = iterator;
     ++iterator;
@@ -362,7 +362,7 @@ GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * str
   // to be copied from the original string.
   size_t last_string_type_index_to_include = first_string_type_index_to_include;
   iterator = first_string_type_index_to_include;
-  while ((iterator < string->string_type->count) && (GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[iterator]) < end_grapheme)) {
+  while ((iterator < string->string_type->count) && (GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[iterator]) <= end_grapheme)) {
     last_string_type_index_to_include = iterator;
     ++iterator;
   }
