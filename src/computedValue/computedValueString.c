@@ -77,6 +77,39 @@ static GTA_Computed_Value * GTA_CALL string_html(GTA_Computed_Value * self, GTA_
 
 
 /**
+ * Treat the entire string as an HTML attribute value, with appropriate HTML
+ * entities encoded to prevent HTML injection.
+ *
+ * @param self The string object.
+ * @param context The execution context.
+ * @return The HTML attribute string computed value.
+ */
+static GTA_Computed_Value * GTA_CALL string_html_attribute(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+
+/**
+ * Treat the entire string as a percent-encoded string, with appropriate
+ * characters encoded to prevent URL injection.
+ *
+ * @param self The string object.
+ * @param context The execution context.
+ * @return The percent-encoded string computed value.
+ */
+static GTA_Computed_Value * GTA_CALL string_percent(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+
+/**
+ * Treat the entire string as a JavaScript string, with appropriate characters
+ * encoded to prevent JavaScript injection.
+ *
+ * @param self The string object.
+ * @param context The execution context.
+ * @return The JavaScript string computed value.
+ */
+static GTA_Computed_Value * GTA_CALL string_javascript(GTA_Computed_Value * self, GTA_Execution_Context * context);
+
+
+/**
  * The attributes for the GTA_Computed_Value_String class.
  */
 static GTA_Computed_Value_Attribute_Pair attributes[] = {
@@ -85,6 +118,9 @@ static GTA_Computed_Value_Attribute_Pair attributes[] = {
   {"render", string_render},
   {"raw", string_raw},
   {"html", string_html},
+  {"html_attribute", string_html_attribute},
+  {"percent", string_percent},
+  {"javascript", string_javascript},
 };
 
 
@@ -564,4 +600,19 @@ static GTA_Computed_Value * GTA_CALL string_raw(GTA_Computed_Value * self, GTA_E
 
 static GTA_Computed_Value * GTA_CALL string_html(GTA_Computed_Value * self, GTA_Execution_Context * context) {
   return string_change_type(self, context, GTA_UNICODE_STRING_TYPE_HTML);
+}
+
+
+static GTA_Computed_Value * GTA_CALL string_html_attribute(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  return string_change_type(self, context, GTA_UNICODE_STRING_TYPE_HTML_ATTRIBUTE);
+}
+
+
+static GTA_Computed_Value * GTA_CALL string_percent(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  return string_change_type(self, context, GTA_UNICODE_STRING_TYPE_PERCENT);
+}
+
+
+static GTA_Computed_Value * GTA_CALL string_javascript(GTA_Computed_Value * self, GTA_Execution_Context * context) {
+  return string_change_type(self, context, GTA_UNICODE_STRING_TYPE_JAVASCRIPT);
 }
