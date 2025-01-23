@@ -1189,7 +1189,8 @@ test: \
 				$(APP_DIR)/tang$(EXE_EXTENSION)
 #				$(APP_DIR)/libtestLibrary.so \
 #				$(APP_DIR)/test$(EXE_EXTENSION) \
-	@printf "\033[0;30;43m\n"
+
+	@printf "\033[0;30;103m\n"
 	@printf "############################\n"
 	@printf "### Running string tests ###\n"
 	@printf "############################\n"
