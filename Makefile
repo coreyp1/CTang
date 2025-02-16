@@ -1,6 +1,13 @@
 SUITE := ghoti.io
 PROJECT := tang
+
+BUILD ?= release
 BRANCH := -cdev
+# If BUILD is debug, append -debug
+ifeq ($(BUILD),debug)
+    BRANCH := $(BRANCH)-debug
+endif
+
 BASE_NAME := lib$(SUITE)-$(PROJECT)$(BRANCH).so
 BASE_NAME_PREFIX := lib$(SUITE)-$(PROJECT)$(BRANCH)
 MAJOR_VERSION := 0
@@ -71,10 +78,10 @@ CC := cc
 CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O0 -g `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
 # -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
 LDFLAGS := -L /usr/lib -lstdc++ -lm `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
-BUILD := ./build
-OBJ_DIR := $(BUILD)/objects
-GEN_DIR := $(BUILD)/generated
-APP_DIR := $(BUILD)/apps
+BUILD_DIR := ./build/$(BUILD)
+OBJ_DIR := $(BUILD_DIR)/objects
+GEN_DIR := $(BUILD_DIR)/generated
+APP_DIR := $(BUILD_DIR)/apps
 
 
 INCLUDE := -I include/tang -I include/ -I $(GEN_DIR)/
@@ -1151,7 +1158,13 @@ $(APP_DIR)/test$(EXE_EXTENSION): \
 # Commands
 ####################################################################
 
-.PHONY: all clean cloc docs docs-pdf install test test-watch watch
+# General commands
+.PHONY: clean cloc docs docs-pdf
+# Release build commands
+.PHONY: all install test test-watch uninstall watch
+# Debug build commands
+.PHONY: all-debug install-debug test-debug test-watch-debug uninstall-debug watch-debug
+
 
 watch: ## Watch the file directory for changes and compile the target
 	@while true; do \
@@ -1267,9 +1280,7 @@ test: \
 #	LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test --gtest_brief=1
 
 clean: ## Remove all contents of the build directories.
-	-@rm -rvf $(OBJ_DIR)/*
-	-@rm -rvf $(APP_DIR)/*
-	-@rm -rvf $(GEN_DIR)/*
+	-@rm -rvf ./build
 
 # Files will be as follows:
 # /usr/local/lib/(SUITE)/
@@ -1302,7 +1313,7 @@ endif
 	# Installing the headers.
 	@mkdir -p $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
 	@cp include/tang/*.h $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
-	@cp build/generated/*.h $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
+	@cp $(GEN_DIR)/*.h $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/$(PROJECT)
 	# Installing the pkg-config files.
 	@mkdir -p $(PKG_CONFIG_PATH)
 	@cat pkgconfig/$(SUITE)-$(PROJECT).pc | sed 's/(SUITE)/$(SUITE)/g; s/(PROJECT)/$(PROJECT)/g; s/(BRANCH)/$(BRANCH)/g; s/(VERSION)/$(VERSION)/g; s|(LIB)|$(LIB_INSTALL_PATH)|g; s|(INCLUDE)|$(INCLUDE_INSTALL_PATH)|g' > $(PKG_CONFIG_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).pc
@@ -1335,6 +1346,24 @@ ifeq ($(OS_NAME), Linux)
 	@ldconfig >> /dev/null 2>&1
 endif
 	@echo "Ghoti.io $(PROJECT)$(BRANCH) has been uninstalled"
+
+debug: ## Build the project in DEBUG mode
+	make all BUILD=debug
+
+install-debug: ## Install the DEBUG library globally, requires sudo
+	make install BUILD=debug
+
+uninstall-debug: ## Delete the DEBUG globally-installed files.  Requires sudo.
+	make uninstall BUILD=debug
+
+test-debug: ## Make and run the Unit tests in DEBUG mode
+	make test BUILD=debug
+
+watch-debug: ## Watch the file directory for changes and compile the target in DEBUG mode
+	make watch BUILD=debug
+
+test-watch-debug: ## Watch the file directory for changes and run the unit tests in DEBUG mode
+	make test-watch BUILD=debug
 
 docs: ## Generate the documentation in the ./docs subdirectory
 	doxygen
