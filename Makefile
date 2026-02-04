@@ -1,6 +1,13 @@
 SUITE := ghoti.io
 PROJECT := tang
+
+BUILD ?= release
 BRANCH := -cdev
+# If BUILD is debug, append -debug
+ifeq ($(BUILD),debug)
+    BRANCH := $(BRANCH)-debug
+endif
+
 BASE_NAME := lib$(SUITE)-$(PROJECT)$(BRANCH).so
 BASE_NAME_PREFIX := lib$(SUITE)-$(PROJECT)$(BRANCH)
 MAJOR_VERSION := 0
@@ -323,7 +330,13 @@ $(APP_DIR)/test$(EXE_EXTENSION): test/test.cpp | $(APP_DIR)/$(TARGET)
 # Commands
 ####################################################################
 
-.PHONY: all clean cloc docs docs-pdf install test test-watch watch
+# General commands
+.PHONY: clean cloc docs docs-pdf
+# Release build commands
+.PHONY: all install test test-watch uninstall watch
+# Debug build commands
+.PHONY: all-debug install-debug test-debug test-watch-debug uninstall-debug watch-debug
+
 
 watch: ## Watch the file directory for changes and compile the target
 	@while true; do \
@@ -361,7 +374,8 @@ test: \
 				$(APP_DIR)/tang$(EXE_EXTENSION)
 #				$(APP_DIR)/libtestLibrary.so \
 #				$(APP_DIR)/test$(EXE_EXTENSION) \
-	@printf "\033[0;30;43m\n"
+
+	@printf "\033[0;30;103m\n"
 	@printf "############################\n"
 	@printf "### Running string tests ###\n"
 	@printf "############################\n"
@@ -504,6 +518,24 @@ ifeq ($(OS_NAME), Linux)
 	@ldconfig >> /dev/null 2>&1
 endif
 	@echo "Ghoti.io $(PROJECT)$(BRANCH) has been uninstalled"
+
+debug: ## Build the project in DEBUG mode
+	make all BUILD=debug
+
+install-debug: ## Install the DEBUG library globally, requires sudo
+	make install BUILD=debug
+
+uninstall-debug: ## Delete the DEBUG globally-installed files.  Requires sudo.
+	make uninstall BUILD=debug
+
+test-debug: ## Make and run the Unit tests in DEBUG mode
+	make test BUILD=debug
+
+watch-debug: ## Watch the file directory for changes and compile the target in DEBUG mode
+	make watch BUILD=debug
+
+test-watch-debug: ## Watch the file directory for changes and run the unit tests in DEBUG mode
+	make test-watch BUILD=debug
 
 docs: ## Generate the documentation in the ./docs subdirectory
 	doxygen

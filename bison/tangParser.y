@@ -112,12 +112,25 @@
 %token SEMICOLON ";"
 %token COMMA ","
 %token PERIOD "."
+%token AT "@"
 %token QUICKPRINTBEGIN "<%="
 %token <GTA_Parser_Unicode_String> QUICKPRINTBEGINANDSTRING "template string followed by <%="
 %token QUICKPRINTEND "<%= %> closing tag"
 %token UNEXPECTEDSCRIPTEND "%>"
 %token MEMORYERROR "Out of Memory/Memory Allocation Error"
+%token SYNTAXERROR "Syntax Error"
 %token OCTAL_OUT_OF_BOUNDS "Octal literal out of bounds"
+%token <GTA_Parser_Date> DATE_CLOSE_RELATIVE "close, relative date"
+%token <GTA_Parser_Date> DATE_UNIT "relative date unit (i.e., one of: yMwdhms)"
+%token <GTA_Parser_Date> DATE_ABSOLUTE "absolute date string"
+%token <GTA_Parser_Date> DATE_TIMEZONE_T "T timezone specifier with offset"
+%token <GTA_Parser_Date> DATE_TIMEZONE "timezone descriptor (e.g., [America/Chicago])"
+%token DATE_TIMEZONE_Z "Z timezone specifier"
+%token DATE_NOW "now date specifier"
+%token DATE_TODAY "today date specifier"
+%token DATE_YESTERDAY "yesterday date specifier"
+%token DATE_TOMORROW "tomorrow date specifier"
+%token DATE_PLUS "relative date specifier (i.e., +)"
 
 // Any %type declarations of non-terminals.
 // https://www.gnu.org/software/bison/manual/bison.html#index-_0025type
@@ -192,11 +205,19 @@ typedef const char * GTA_Parser_Error;
 /**
  * For "string" expressions, we need to store the string type and the string
  */
-typedef struct {
+typedef struct GTA_Parser_Unicode_String {
   const char * str;
   size_t len;
   GTA_String_Type type;
 } GTA_Parser_Unicode_String;
+
+/**
+ * For "date" expressions, with the information available in the script.
+ */
+typedef struct GTA_Parser_Date {
+  const char * str;
+  size_t len;
+} GTA_Parser_Date;
 
 }
 

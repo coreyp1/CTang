@@ -698,7 +698,86 @@ TEST(Attributes, String) {
     ASSERT_STREQ(context->output->buffer, "start 30 end");
     TEST_PROGRAM_TEARDOWN();
   }
+  {
+    // HTML encoding.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print("a&b".html);
+      print(" end");
+    )");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "start a&amp;b end");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Undo the HTML encoding.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print("a&b\"'".html.raw);
+      print(" end");
+    )");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "start a&b\"' end");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Double-encoding.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print("a&b".html.render.html);
+      print(" end");
+    )");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "start a&amp;amp;b end");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // HTML attribute encoding.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print("a&b\"'".html_attribute);
+      print(" end");
+    )");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "start a&amp;b&quot;&#39; end");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Percent encoding.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print("a & b".percent);
+      print(" end");
+    )");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "start a+%26+b end");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // JavaScript encoding.
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print("a&b\"'\n".javascript);
+      print(" end");
+    )");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "start a\\u0026b\\\"\\'\\n end");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
 }
+
 
 TEST(Attributes, Array) {
   {

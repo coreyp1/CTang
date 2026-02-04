@@ -125,6 +125,7 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
   return false;
 }
 
+static size_t gta_flex_get_state_stack_depth(void * yyscanner);
 
 %}
 
@@ -136,7 +137,7 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
  *   (search for "C-style")
  * Also given here: https://www.cs.virginia.edu/~cr4bd/flex-manual/Start-Conditions.html
  */
-%x SCRIPT TEMPLATE QUICKPRINT doubleQuoteString singleLineComment multiLineComment
+%x SCRIPT TEMPLATE QUICKPRINT doubleQuoteString singleLineComment multiLineComment DATE DATEInsideExpression
 
 %%
   // Include any initialization code here.  These lines *must* be indented,
@@ -209,7 +210,7 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
   }
 }
 
-<INITIAL,SCRIPT,QUICKPRINT,singleLineComment,multiLineComment>{
+<INITIAL,SCRIPT,QUICKPRINT,singleLineComment,multiLineComment,DATE,DATEInsideExpression>{
   <<EOF>> {
     yyterminate();
   }
@@ -239,6 +240,55 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
 }
 
 <INITIAL,SCRIPT,QUICKPRINT>{
+  if {
+    // " This is to fix the highlighting when editing the flex file.
+    return GTA_PARSER_IF;
+  }
+  else {
+    return GTA_PARSER_ELSE;
+  }
+  do {
+    return GTA_PARSER_DO;
+  }
+  while {
+    return GTA_PARSER_WHILE;
+  }
+  for {
+    return GTA_PARSER_FOR;
+  }
+  use {
+    return GTA_PARSER_USE;
+  }
+  global {
+    return GTA_PARSER_GLOBAL;
+  }
+  function {
+    return GTA_PARSER_FUNCTION;
+  }
+  return {
+    return GTA_PARSER_RETURN;
+  }
+  break {
+    return GTA_PARSER_BREAK;
+  }
+  continue {
+    return GTA_PARSER_CONTINUE;
+  }
+  \{ {
+    return GTA_PARSER_LBRACE;
+  }
+  \} {
+    return GTA_PARSER_RBRACE;
+  }
+  as {
+    return GTA_PARSER_AS;
+  }
+  ; {
+    return GTA_PARSER_SEMICOLON;
+  }
+}
+
+<INITIAL,SCRIPT,QUICKPRINT,DATEInsideExpression>{
   \/\/ {
     // Beginning of a single line comment.
     yy_push_state(singleLineComment, yyscanner);
@@ -271,22 +321,6 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
     type = GTA_UNICODE_STRING_TYPE_TRUSTED;
     yy_push_state(doubleQuoteString, yyscanner);
   }
-  if {
-    // " This is to fix the highlighting when editing the flex file.
-    return GTA_PARSER_IF;
-  }
-  else {
-    return GTA_PARSER_ELSE;
-  }
-  do {
-    return GTA_PARSER_DO;
-  }
-  while {
-    return GTA_PARSER_WHILE;
-  }
-  for {
-    return GTA_PARSER_FOR;
-  }
   null {
     return GTA_PARSER_NULL_;
   }
@@ -309,24 +343,6 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
   false {
     yylval->GTA_PARSER_BOOLEAN = false;
     return GTA_PARSER_BOOLEAN;
-  }
-  use {
-    return GTA_PARSER_USE;
-  }
-  global {
-    return GTA_PARSER_GLOBAL;
-  }
-  function {
-    return GTA_PARSER_FUNCTION;
-  }
-  return {
-    return GTA_PARSER_RETURN;
-  }
-  break {
-    return GTA_PARSER_BREAK;
-  }
-  continue {
-    return GTA_PARSER_CONTINUE;
   }
   print {
     return GTA_PARSER_PRINT;
@@ -358,16 +374,16 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
     return GTA_PARSER_MODULO;
   }
   \( {
+    if (gta_flex_get_state_stack_depth(yyscanner) && (yy_top_state(yyscanner) == DATEInsideExpression)) {
+      yy_push_state(DATEInsideExpression, yyscanner);
+    }
     return GTA_PARSER_LPAREN;
   }
   \) {
+    if (gta_flex_get_state_stack_depth(yyscanner) && (yy_top_state(yyscanner) == DATEInsideExpression)) {
+      yy_pop_state(yyscanner);
+    }
     return GTA_PARSER_RPAREN;
-  }
-  \{ {
-    return GTA_PARSER_LBRACE;
-  }
-  \} {
-    return GTA_PARSER_RBRACE;
   }
   \[ {
     return GTA_PARSER_LBRACKET;
@@ -402,17 +418,11 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
   \|\| {
     return GTA_PARSER_OR;
   }
-  as {
-    return GTA_PARSER_AS;
-  }
   \? {
     return GTA_PARSER_QUESTIONMARK;
   }
   : {
     return GTA_PARSER_COLON;
-  }
-  ; {
-    return GTA_PARSER_SEMICOLON;
   }
   , {
     return GTA_PARSER_COMMA;
@@ -433,8 +443,84 @@ static bool add_to_string(char * * buffer, size_t * bufferLen, char const * appe
   \. {
     return GTA_PARSER_PERIOD;
   }
-  . {}
-  \n {}
+  @ {
+    yy_push_state(DATE, yyscanner);
+    return GTA_PARSER_AT;
+  }
+  [[:blank:]]+ {
+    // Ignore whitespace.
+  }
+  \n {
+    // Ignore newlines.
+  }
+  . {
+    return GTA_PARSER_SYNTAXERROR;
+  }
+}
+
+<DATE>{
+  [se][pn]?[yMwdhms] {
+    yylval->GTA_PARSER_DATE_CLOSE_RELATIVE = (GTA_Parser_Date){
+      .str = yytext,
+      .len = yyleng,
+    };
+    return GTA_PARSER_DATE_CLOSE_RELATIVE;
+  }
+  now {
+    return GTA_PARSER_DATE_NOW;
+  }
+  today {
+    return GTA_PARSER_DATE_TODAY;
+  }
+  tomorrow {
+    return GTA_PARSER_DATE_TOMORROW;
+  }
+  yesterday {
+    return GTA_PARSER_DATE_YESTERDAY;
+  }
+  \+ {
+    return GTA_PARSER_DATE_PLUS;
+  }
+  \( {
+    yy_push_state(DATEInsideExpression, yyscanner);
+  }
+  [yMwdhms] {
+    yylval->GTA_PARSER_DATE_UNIT = (GTA_Parser_Date){
+      .str = yytext,
+      .len = yyleng,
+    };
+    return GTA_PARSER_DATE_UNIT;
+  }
+  \d+(-\d+(-\d+(T\d+:\d+(:\d+)?)?)?)? {
+    yylval->GTA_PARSER_DATE_ABSOLUTE = (GTA_Parser_Date){
+      .str = yytext,
+      .len = yyleng,
+    };
+    return GTA_PARSER_DATE_ABSOLUTE;
+  }
+  Z {
+    return GTA_PARSER_DATE_TIMEZONE_Z;
+  }
+  T[+-]?\d+(:\d+(:\d+(.\d+)?)?)? {
+    yylval->GTA_PARSER_DATE_TIMEZONE_T = (GTA_Parser_Date){
+      .str = yytext,
+      .len = yyleng,
+    };
+    return GTA_PARSER_DATE_TIMEZONE_T;
+  }
+  (\[[^\]]+\]) {
+    yylval->GTA_PARSER_DATE_TIMEZONE = (GTA_Parser_Date){
+      .str = yytext,
+      .len = yyleng,
+    };
+    return GTA_PARSER_DATE_TIMEZONE;
+  }
+  . {
+    yy_pop_state(yyscanner);
+  }
+  \n {
+    yy_pop_state(yyscanner);
+  }
 }
 
 <singleLineComment>{
@@ -601,3 +687,8 @@ void gta_flex_set_state(int state, void * yyscanner) {
   yy_push_state(state, yyscanner);
 }
 
+// Tang helper function to get the depth of the state stack.
+size_t gta_flex_get_state_stack_depth(void * yyscanner) {
+  struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
+	return yyg->yy_start_stack_ptr;
+}
