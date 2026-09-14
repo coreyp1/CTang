@@ -81,9 +81,23 @@ endif
 CXX := g++
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g
 CC := cc
-CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O0 -g `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
+# cutil comes from pkg-config when installed; otherwise fall back to a sibling
+# checkout so the suite builds from a fresh clone without installing it first.
+# cutil's build tree has no release/debug component, only the OS directory.
+CUTIL_SIBLING_DIR := ../cutil/build/$(firstword $(subst /, ,$(BUILD)))
+CUTIL_CFLAGS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags ghoti.io-cutil-dev 2>/dev/null)
+CUTIL_LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs ghoti.io-cutil-dev 2>/dev/null)
+ifeq ($(strip $(CUTIL_CFLAGS)),)
+CUTIL_CFLAGS := -I../cutil/include -I$(CUTIL_SIBLING_DIR)/include
+CUTIL_LIBS := -L$(CUTIL_SIBLING_DIR)/apps -lghoti.io-cutil-dev
+endif
+ICU_CFLAGS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags icu-io icu-i18n icu-uc)
+ICU_LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs icu-io icu-i18n icu-uc)
+CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O0 -g $(ICU_CFLAGS) $(CUTIL_CFLAGS)
 # -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
-LDFLAGS := -L /usr/lib -lstdc++ -lm `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs --cflags icu-io icu-i18n icu-uc ghoti.io-cutil-dev`
+LDFLAGS := -L /usr/lib -lstdc++ -lm $(ICU_LIBS) $(CUTIL_LIBS)
+# The C++ test translation units include cutil and ICU headers too.
+CXXFLAGS += $(ICU_CFLAGS) $(CUTIL_CFLAGS)
 BUILD_DIR := ./build/$(BUILD)
 OBJ_DIR := $(BUILD_DIR)/objects
 GEN_DIR := $(BUILD_DIR)/generated
@@ -185,6 +199,13 @@ $(GEN_DIR)/tangParser.h: \
 	@echo "\n### Generating Bison TangParser ###"
 	@mkdir -p $(@D)
 	bison -v -o $(GEN_DIR)/tangParser.c -d $<
+
+# Almost every translation unit reaches tangParser.h through
+# include/tang/ast/astNode.h, but nothing ordered them after bison. A serial
+# build happened to generate the parser first; with -j the AST objects raced
+# ahead and failed with "tangParser.h: No such file or directory". Order-only
+# so a regenerated header does not force a full rebuild.
+$(LIBOBJECTS): | $(GEN_DIR)/tangParser.h
 
 # Ensure that tangParser.c is regenerated properly before
 # tangParser.o tries to use it to compile.
@@ -362,6 +383,9 @@ test-watch: ## Watch the file directory for changes and run the unit tests
 		inotifywait -qr -e modify -e create -e delete -e move src include bison flex test Makefile --exclude '/\.'; \
 		done
 
+# So tests can load the tang library and its cutil dependency.
+TEST_LD_PATH := $(APP_DIR):$(CUTIL_SIBLING_DIR)/apps
+
 test: ## Make and run the Unit tests
 test: \
 				$(APP_DIR)/$(TARGET) \
@@ -380,76 +404,76 @@ test: \
 	@printf "### Running string tests ###\n"
 	@printf "############################\n"
 	@printf "\033[0m\n\n"
-	$(APP_DIR)/testUnicodeString --gtest_brief=1
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" $(APP_DIR)/testUnicodeString --gtest_brief=1
 	@printf "\033[0;30;43m\n"
 	@printf "####################################\n"
 	@printf "### Running Language Parse tests ###\n"
 	@printf "####################################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" $(APP_DIR)/testTangLanguageParse --gtest_brief=1
 	@printf "\033[0;30;43m\n"
 	@printf "################################\n"
 	@printf "### Running Binary JIT tests ###\n"
 	@printf "################################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BINARY= $(APP_DIR)/testBinary --gtest_brief=1
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" TANG_DISABLE_BINARY= $(APP_DIR)/testBinary --gtest_brief=1
 
 	@printf "\033[0;30;104m\n"
 	@printf "########################################################\n"
 	@printf "### Running Bytecode Language Execution Simple tests ###\n"
 	@printf "########################################################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
 	@printf "\033[0;30;104m\n"
 	@printf "#########################################################\n"
 	@printf "### Running Bytecode Language Execution Complex tests ###\n"
 	@printf "#########################################################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
 	@printf "\033[0;30;104m\n"
 	@printf "################################################\n"
 	@printf "### Running Bytecode Language Library tests  ###\n"
 	@printf "################################################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" TANG_DISABLE_BINARY= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
 
 	@printf "\033[0;30;45m\n"
 	@printf "########################################################\n"
 	@printf "### Running Binary Language Execution Simple tests   ###\n"
 	@printf "########################################################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
 	@printf "\033[0;30;45m\n"
 	@printf "########################################################\n"
 	@printf "### Running Binary Language Execution Complex tests  ###\n"
 	@printf "########################################################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
 	@printf "\033[0;30;45m\n"
 	@printf "##############################################\n"
 	@printf "### Running Binary Language Library tests  ###\n"
 	@printf "##############################################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
 
 	@printf "\033[0;30;47m\n"
 	@printf "###################\n"
 	@printf "### Running CLI ###\n"
 	@printf "###################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang -s ./test/fib.tang
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" $(APP_DIR)/tang -s ./test/fib.tang
 	@printf "\033[0;30;47m\n"
 	@printf "###################\n"
 	@printf "### Running CLI ###\n"
 	@printf "###################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/tang ./test/fib.template.tang
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" $(APP_DIR)/tang ./test/fib.template.tang
 #	@printf "\033[0;32m\n"
 #	@printf "############################\n"
 #	@printf "### Running normal tests ###\n"
 #	@printf "############################\n"
 #	@printf "\033[0m\n"
-#	LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test --gtest_brief=1
+#	LD_LIBRARY_PATH="$(TEST_LD_PATH)" $(APP_DIR)/test --gtest_brief=1
 
 clean: ## Remove all contents of the build directory for this OS/build.
 	-@rm -rvf $(BUILD_DIR)
