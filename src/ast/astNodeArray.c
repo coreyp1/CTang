@@ -190,11 +190,21 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   // No memory error.
   // If we are about to process a bunch of elements, then save the array
   // pointer.  Otherwise, jump to the end.
-  //   push rax  OR  jmp end
-    && array->elements->count
-      ? gta_push_reg__x86_64(v, GTA_REG_RAX)
+  //
+  // Pushed TWICE, not once. The prologue leaves rsp 16-byte aligned, so
+  // alignment holds only while an even number of 8-byte slots are live. A
+  // single push would leave every call emitted below - including those inside
+  // the compiled element expressions - with a misaligned stack, violating the
+  // System V AMD64 ABI. The duplicate is pure padding; both slots hold the
+  // same pointer, so reading the array back through [rsp] is unchanged.
+  //   push rax
+  //   push rax   ; alignment padding
+  //   OR jmp end
+    && (array->elements->count
+      ? (gta_push_reg__x86_64(v, GTA_REG_RAX)
+        && gta_push_reg__x86_64(v, GTA_REG_RAX))
       : (gta_jmp__x86_64(v, 0xDEADBEEF)
-        && gta_compiler_context_add_label_jump(context, end, v->count - 4));
+        && gta_compiler_context_add_label_jump(context, end, v->count - 4)));
 
   // Compile the individual array elements.
   for (size_t i = 0; i < array->elements->count; ++i) {
@@ -255,10 +265,13 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   //   mov [GTA_X86_64_R1 + count_offset], GTA_X86_64_Scratch1
     && gta_mov_reg_imm__x86_64(v, GTA_X86_64_Scratch1, array->elements->count)
     && gta_mov_ind_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_NONE, 0, (GTA_Integer)count_offset, GTA_X86_64_Scratch1)
-  // Return the array.
+  // Return the array.  It occupies two stack slots (see the push above), so
+  // recover it and then discard the padding slot.
   //   pop rax
+  //   add rsp, 8
   //   jmp end
     && gta_pop_reg__x86_64(v, GTA_REG_RAX)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, end, v->count - 4)
   // return_memory_error:

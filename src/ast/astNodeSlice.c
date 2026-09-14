@@ -198,17 +198,28 @@ bool gta_ast_node_slice_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
 
   // Compile the entire slice expression.
   return true
+  // Each intermediate is saved in a PAIR of stack slots, not one.
+  // The prologue leaves rsp 16-byte aligned, so alignment holds only while an
+  // even number of 8-byte slots are live. Saving these singly left the start
+  // and skip expressions below compiled at odd parity, so any call they
+  // emitted violated the System V AMD64 ABI. The duplicate slot is padding.
   // Compile the expression and push the result.
   //   push rax
+  //   push rax   ; alignment padding
     && gta_ast_node_compile_to_binary__x86_64(slice->lhs, context)
+    && gta_push_reg__x86_64(v, GTA_REG_RAX)
     && gta_push_reg__x86_64(v, GTA_REG_RAX)
   // Compile the start index and push the result.
   //   push rax
+  //   push rax   ; alignment padding
     && gta_ast_node_compile_to_binary__x86_64(slice->start, context)
+    && gta_push_reg__x86_64(v, GTA_REG_RAX)
     && gta_push_reg__x86_64(v, GTA_REG_RAX)
   // Compile the end index and push the result.
   //   push rax
+  //   push rax   ; alignment padding
     && gta_ast_node_compile_to_binary__x86_64(slice->end, context)
+    && gta_push_reg__x86_64(v, GTA_REG_RAX)
     && gta_push_reg__x86_64(v, GTA_REG_RAX)
   // Compile the skip index.
     && (slice->skip
@@ -216,14 +227,18 @@ bool gta_ast_node_slice_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
       : gta_ast_node_null_compile_to_binary__x86_64(0, context))
   // Call the slice function.
   // gta_computed_value_slice(lhs, start, end, skip, context)
+  // Each pop takes the value and then discards its padding slot.
   //   mov GTA_X86_64_R4, rax
-  //   pop GTA_X86_64_R3
-  //   pop GTA_X86_64_R2
-  //   pop GTA_X86_64_R1
+  //   pop GTA_X86_64_R3 ; add rsp, 8
+  //   pop GTA_X86_64_R2 ; add rsp, 8
+  //   pop GTA_X86_64_R1 ; add rsp, 8
     && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R4, GTA_REG_RAX)
     && gta_pop_reg__x86_64(v, GTA_X86_64_R3)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
     && gta_pop_reg__x86_64(v, GTA_X86_64_R2)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
     && gta_pop_reg__x86_64(v, GTA_X86_64_R1)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
 #if defined(_WIN32) || defined(_WIN64)
     && gta_push_reg__x86_64(v, GTA_REG_RBP)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)

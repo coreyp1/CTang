@@ -211,11 +211,23 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
   // No memory error.
   // If we are about to process a bunch of elements, then save the map
   // pointer.  Otherwise, jump to the end.
-  //   push rax  OR  jmp end
-    && map->pairs->count
-      ? gta_push_reg__x86_64(v, GTA_REG_RAX)
+  //
+  // The map pointer is pushed TWICE, not once. The prologue leaves rsp
+  // 16-byte aligned, so alignment holds only while an even number of 8-byte
+  // slots are live. A single push would leave every call emitted below -
+  // including those inside the compiled key and value expressions - with a
+  // misaligned stack, which violates the System V AMD64 ABI and faults in any
+  // callee that uses an alignment-sensitive instruction on a stack local.
+  // The duplicate is pure padding; both slots hold the same pointer, so
+  // reading the map back through [rsp] is unchanged.
+  //   push rax
+  //   push rax   ; alignment padding
+  //   OR jmp end
+    && (map->pairs->count
+      ? (gta_push_reg__x86_64(v, GTA_REG_RAX)
+        && gta_push_reg__x86_64(v, GTA_REG_RAX))
       : (gta_jmp__x86_64(v, 0xDEADBEEF)
-        && gta_compiler_context_add_label_jump(context, end, v->count - 4));
+        && gta_compiler_context_add_label_jump(context, end, v->count - 4)));
 
   // Compile the individual key/value pairs.
   assert(map->pairs);
@@ -284,18 +296,23 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
   // then the code will jump to the end and the default values will already be
   // appropriately set.
   return error_free
-  // Return the array.
+  // Return the map.  The map occupies two stack slots (see the push above),
+  // so recover it and then discard the padding slot.
   //   pop rax
+  //   add rsp, 8
   //   jmp end
     && gta_pop_reg__x86_64(v, GTA_REG_RAX)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, end, v->count - 4)
   // pop_twice_then_return_memory_error:  ; (falls through)
+  // Discard the key, then fall through to discard the map's two slots.
     && gta_compiler_context_set_label(context, pop_twice_then_return_memory_error, v->count)
     && gta_pop_reg__x86_64(v, GTA_REG_RAX)
   // pop_once_then_return_memory_error:   ; (falls through)
     && gta_compiler_context_set_label(context, pop_once_then_return_memory_error, v->count)
     && gta_pop_reg__x86_64(v, GTA_REG_RAX)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
   // return_memory_error:
     && gta_compiler_context_set_label(context, return_memory_error, v->count)
   // return gta_computed_value_error_out_of_memory

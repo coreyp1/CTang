@@ -299,27 +299,43 @@ bool gta_ast_node_assign_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
       ? __compile_binary_lhs_is_period(assign_node->lhs, context)
       : GTA_AST_IS_INDEX(assign_node->lhs)
         ? (true
+        // Each intermediate is saved in a PAIR of stack slots, not one.
+        // The prologue leaves rsp 16-byte aligned, so alignment holds only
+        // while an even number of 8-byte slots are live. Saving these singly
+        // left the nested expression compilations below running at odd parity,
+        // so any call they emitted violated the System V AMD64 ABI. The
+        // duplicate slot is pure padding.
         // Compile the lhs expression.
         //    push rax
+        //    push rax   ; alignment padding
           && gta_ast_node_compile_to_binary__x86_64(((GTA_Ast_Node_Index *)assign_node->lhs)->lhs, context)
+          && gta_push_reg__x86_64(v, GTA_REG_RAX)
           && gta_push_reg__x86_64(v, GTA_REG_RAX)
         // Compile the lhs index.
         //    push rax
+        //    push rax   ; alignment padding
           && gta_ast_node_compile_to_binary__x86_64(((GTA_Ast_Node_Index *)assign_node->lhs)->rhs, context)
+          && gta_push_reg__x86_64(v, GTA_REG_RAX)
           && gta_push_reg__x86_64(v, GTA_REG_RAX)
         // Compile the rhs expression.
         //    push rax
+        //    push rax   ; alignment padding
           && gta_ast_node_compile_to_binary__x86_64(assign_node->rhs, context)
           && gta_push_reg__x86_64(v, GTA_REG_RAX)
+          && gta_push_reg__x86_64(v, GTA_REG_RAX)
         // gta_computed_value_assign_index(expression, index, value, context)
+        // Each pop takes the value and then discards its padding slot.
         //    mov GTA_X86_64_R2, r15
-        //    pop GTA_X86_64_R3
-        //    pop GTA_X86_64_R2
-        //    pop GTA_X86_64_R1
+        //    pop GTA_X86_64_R3 ; add rsp, 8
+        //    pop GTA_X86_64_R2 ; add rsp, 8
+        //    pop GTA_X86_64_R1 ; add rsp, 8
           && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
           && gta_pop_reg__x86_64(v, GTA_X86_64_R3)
+          && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
           && gta_pop_reg__x86_64(v, GTA_X86_64_R2)
+          && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
           && gta_pop_reg__x86_64(v, GTA_X86_64_R1)
+          && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
           && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_assign_index)
         )
         : false;

@@ -155,16 +155,24 @@ bool gta_ast_node_index_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   return true
   // Compile the collection expression.
     && gta_ast_node_compile_to_binary__x86_64(index->lhs, context)
-  // Save it for future use.
+  // Save it for future use, in a PAIR of stack slots rather than one.
+  // The prologue leaves rsp 16-byte aligned, so alignment holds only while an
+  // even number of 8-byte slots are live. A single push left the index
+  // expression below compiled at odd parity, so any call it emitted violated
+  // the System V AMD64 ABI. The duplicate slot is pure padding.
   //   push rax
+  //   push rax   ; alignment padding
+    && gta_push_reg__x86_64(v, GTA_REG_RAX)
     && gta_push_reg__x86_64(v, GTA_REG_RAX)
   // Compile the index expression.
     && gta_ast_node_compile_to_binary__x86_64(index->rhs, context)
   // gta_computed_value_index(collection, index, context)
   //   pop GTA_X86_64_R1               ; The collection, pushed earlier.
+  //   add rsp, 8                      ; Discard the padding slot.
   //   mov GTA_X86_64_R2, rax
   //   mov GTA_X86_64_R3, r15
     && gta_pop_reg__x86_64(v, GTA_X86_64_R1)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
     && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_RAX)
     && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R3, GTA_REG_R15)
     && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_index);
