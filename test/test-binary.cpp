@@ -102,6 +102,10 @@ TEST(x86_64, and_reg_imm) {
 
 
 TEST(x86_64, call_reg) {
+#ifdef GTA_JIT_CHECK_STACK_ALIGNMENT
+  GTEST_SKIP() << "gta_call_*__x86_64 prepends a stack-alignment check in this "
+                  "build, so the exact encodings asserted below do not apply.";
+#endif
   // General case. r64
   JIT(gta_call_reg__x86_64(v, GTA_REG_RBX), "\xFF\xD3");
   JIT(gta_call_reg__x86_64(v, GTA_REG_R12), "\x41\xFF\xD4");
@@ -114,6 +118,10 @@ TEST(x86_64, call_reg) {
 
 
 TEST(x86_64, call_rel) {
+#ifdef GTA_JIT_CHECK_STACK_ALIGNMENT
+  GTEST_SKIP() << "gta_call_*__x86_64 prepends a stack-alignment check in this "
+                  "build, so the exact encodings asserted below do not apply.";
+#endif
   // General case. rel32
   JIT(gta_call_rel__x86_64(v, 0x7FFFFFFF), "\xE8\xFF\xFF\xFF\x7F");
   JIT(gta_call_rel__x86_64(v, -0x7FFFFFFF), string("\xE8\x01\x00\x00\x80", 5));

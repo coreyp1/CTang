@@ -354,7 +354,7 @@ $(APP_DIR)/test$(EXE_EXTENSION): test/test.cpp | $(APP_DIR)/$(TARGET)
 # General commands
 .PHONY: clean cloc docs docs-pdf
 # Release build commands
-.PHONY: all install test test-watch uninstall watch
+.PHONY: all install test test-watch uninstall watch jit-alignment-check
 # Debug build commands
 .PHONY: all-debug install-debug test-debug test-watch-debug uninstall-debug watch-debug
 
@@ -385,6 +385,23 @@ test-watch: ## Watch the file directory for changes and run the unit tests
 
 # So tests can load the tang library and its cutil dependency.
 TEST_LD_PATH := $(APP_DIR):$(CUTIL_SIBLING_DIR)/apps
+
+jit-alignment-check: ## Rebuild with the JIT stack-alignment check and run the tests
+# The System V AMD64 ABI requires rsp to be 16-byte aligned at every call. The
+# JIT prologue establishes that, so alignment holds in the body only while an
+# even number of 8-byte slots are live. Getting it wrong is silent until some
+# callee happens to use an alignment-sensitive instruction (movdqa, say) on a
+# stack local, at which point it faults deep inside that callee with nothing
+# pointing back at the offending call.
+#
+# This target rebuilds with -DGTA_JIT_CHECK_STACK_ALIGNMENT, which makes every
+# emitted call test rsp first and execute ud2 (SIGILL) when it is misaligned.
+# A violation then traps AT the offending call. Run this after changing any
+# code that emits pushes or pops around a call.
+	$(MAKE) clean
+	$(MAKE) test \
+		CFLAGS="$(CFLAGS) -DGTA_JIT_CHECK_STACK_ALIGNMENT" \
+		CXXFLAGS="$(CXXFLAGS) -DGTA_JIT_CHECK_STACK_ALIGNMENT"
 
 test: ## Make and run the Unit tests
 test: \

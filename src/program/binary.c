@@ -24,6 +24,58 @@
 #define X86_64_GROW_SIZE 16
 
 
+#ifdef GTA_JIT_CHECK_STACK_ALIGNMENT
+/**
+ * @brief Emit a runtime assertion that RSP is 16-byte aligned.
+ *
+ * The System V AMD64 ABI requires RSP to be 16-byte aligned at every CALL.
+ * The prologue in gta_program_compile_binary__x86_64() establishes that
+ * (`and rsp, 0xFFFFFFF0`, then six 8-byte pushes, then a stack adjustment
+ * asserted to be a multiple of 16), so alignment holds inside the body
+ * exactly while an *even* number of 8-byte pushes are live.
+ *
+ * Violating it is silent until a callee happens to use an alignment-sensitive
+ * instruction on a stack local - `movdqa`, say, which GCC's SLP vectorizer
+ * emits at -O2 and above. The fault then surfaces deep inside that callee
+ * with nothing to connect it back to the offending call.
+ *
+ * Compiling with -DGTA_JIT_CHECK_STACK_ALIGNMENT makes the violation trap at
+ * the call itself instead. Only FLAGS are clobbered, which a CALL destroys
+ * anyway, so this is safe to emit after the argument registers are loaded.
+ *
+ *   test rsp, 15
+ *   jz   .ok
+ *   ud2            ; SIGILL, at the offending call site
+ * .ok:
+ *
+ * @param vector The vector in which to write the instruction.
+ * @return True on success, false on failure.
+ */
+static bool gta_emit_stack_alignment_check__x86_64(GCU_Vector8 * vector) {
+  assert(vector);
+
+  if (!gta_binary_optimistic_increase(vector, X86_64_GROW_SIZE)) {
+    return false;
+  }
+  //   test rsp, 15          ; REX.W + F7 /0 id
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x48);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0xF7);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0xC4);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x0F);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x00);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x00);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x00);
+  //   jz +2                 ; skip the ud2
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x74);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x02);
+  //   ud2
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x0F);
+  vector->data[vector->count++] = GCU_TYPE8_UI8(0x0B);
+  return true;
+}
+#endif // GTA_JIT_CHECK_STACK_ALIGNMENT
+
+
 bool gta_binary_optimistic_increase(GCU_Vector8 * vector, size_t additional) {
   assert(vector);
   return gcu_vector8_reserve(vector, vector->count + additional > vector->capacity
@@ -357,6 +409,11 @@ bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
     // Not a valid register for CALL in 64-bit mode.
     return false;
   }
+#ifdef GTA_JIT_CHECK_STACK_ALIGNMENT
+  if (!gta_emit_stack_alignment_check__x86_64(vector)) {
+    return false;
+  }
+#endif
   uint8_t code = gta_binary_get_register_code__x86_64(reg);
   if (code & 0x08) {
     // REX prefix
@@ -375,6 +432,11 @@ bool gta_call_rel__x86_64(GCU_Vector8 * vector, int32_t offset) {
   if (!gta_binary_optimistic_increase(vector, X86_64_GROW_SIZE)) {
     return false;
   }
+#ifdef GTA_JIT_CHECK_STACK_ALIGNMENT
+  if (!gta_emit_stack_alignment_check__x86_64(vector)) {
+    return false;
+  }
+#endif
   vector->data[vector->count++] = GCU_TYPE8_UI8(0xE8);
   memcpy(&vector->data[vector->count], &offset, 4);
   vector->count += 4;
