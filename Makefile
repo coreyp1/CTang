@@ -79,7 +79,7 @@ endif
 
 
 CXX := g++
-CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g
+CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g $(EXTRA_CXXFLAGS)
 CC := cc
 # cutil comes from pkg-config when installed; otherwise fall back to a sibling
 # checkout so the suite builds from a fresh clone without installing it first.
@@ -93,9 +93,9 @@ CUTIL_LIBS := -L$(CUTIL_SIBLING_DIR)/apps -lghoti.io-cutil-dev
 endif
 ICU_CFLAGS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags icu-io icu-i18n icu-uc)
 ICU_LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs icu-io icu-i18n icu-uc)
-CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O0 -g $(ICU_CFLAGS) $(CUTIL_CFLAGS)
+CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O0 -g $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(EXTRA_CFLAGS)
 # -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
-LDFLAGS := -L /usr/lib -lstdc++ -lm $(ICU_LIBS) $(CUTIL_LIBS)
+LDFLAGS := -L /usr/lib -lstdc++ -lm $(ICU_LIBS) $(CUTIL_LIBS) $(EXTRA_LDFLAGS)
 # The C++ test translation units include cutil and ICU headers too.
 CXXFLAGS += $(ICU_CFLAGS) $(CUTIL_CFLAGS)
 BUILD_DIR := ./build/$(BUILD)
@@ -352,7 +352,7 @@ $(APP_DIR)/test$(EXE_EXTENSION): test/test.cpp | $(APP_DIR)/$(TARGET)
 ####################################################################
 
 # General commands
-.PHONY: clean cloc docs docs-pdf
+.PHONY: clean cloc docs docs-pdf coverage
 # Release build commands
 .PHONY: all install test test-watch uninstall watch jit-alignment-check
 # Debug build commands
@@ -598,6 +598,20 @@ docs-pdf: docs ## Generate the documentation as a pdf, at ./docs/(SUITE)-(PROJEC
 
 cloc: ## Count the lines of code used in the project
 	cloc src include flex bison test Makefile
+
+coverage: ## Build instrumented, run the tests, and report line coverage
+# Cleans first because the object files would otherwise be reused without the
+# instrumentation, then cleans and rebuilds at the end: leaving the
+# instrumented objects behind would have a later `make` silently link them,
+# and leaving the tree cleaned would break any sibling project that links
+# this one. The cost is one extra build; coverage is not run often.
+	@$(MAKE) --no-print-directory clean > /dev/null
+	@$(MAKE) --no-print-directory test \
+		EXTRA_CFLAGS="--coverage -O0" \
+		EXTRA_LDFLAGS="--coverage" > /dev/null
+	@tools/coverage.sh $(OBJ_DIR)
+	@$(MAKE) --no-print-directory clean > /dev/null
+	@$(MAKE) --no-print-directory all > /dev/null
 
 help: ## Display this help
 # Scan only this makefile. $(MAKEFILE_LIST) grows to include every generated
