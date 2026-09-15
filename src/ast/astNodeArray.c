@@ -168,6 +168,7 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   // Jump labels.
   GTA_Integer end;
   GTA_Integer return_memory_error;
+  GTA_Integer pop_then_return_memory_error;
 
   assert(array->elements);
   assert(array->elements->count ? (bool)array->elements->data : true);
@@ -175,6 +176,7 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   // Create jump labels.
     && ((end = gta_compiler_context_get_label(context)) >= 0)
     && ((return_memory_error = gta_compiler_context_get_label(context)) >= 0)
+    && ((pop_then_return_memory_error = gta_compiler_context_get_label(context)) >= 0)
   // gta_computed_value_array_create(array->elements->count, context)
   //   mov GTA_X86_64_R1, array->elements->count
   //   mov GTA_X86_64_R2, r15
@@ -233,12 +235,15 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
       && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX)
       && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
       && gta_binary_call__x86_64(v, (size_t)gta_computed_value_deep_copy)
-    // If the array creation failed, return a memory error.
+    // If the deep copy failed, return a memory error.  The array pointer is
+    // still on the stack at this point, so jump to the variant that discards
+    // it: the epilogue restores rsp by a fixed adjustment and cannot absorb a
+    // leaked slot.
     //   test rax, rax
-    //   jz return_memory_error
+    //   jz pop_then_return_memory_error
       && gta_test_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
       && gta_jcc__x86_64(v, GTA_CC_Z, 0xDEADBEEF)
-      && gta_compiler_context_add_label_jump(context, return_memory_error, v->count - 4)
+      && gta_compiler_context_add_label_jump(context, pop_then_return_memory_error, v->count - 4)
     // mark_not_temporary:
       && gta_compiler_context_set_label(context, mark_not_temporary, v->count)
     //   mov byte ptr [rax + is_temporary_offset], 0
@@ -274,6 +279,11 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, end, v->count - 4)
+  // pop_then_return_memory_error:  ; (falls through)
+  // Discard the array pointer's two stack slots.
+  //   add rsp, 16
+    && gta_compiler_context_set_label(context, pop_then_return_memory_error, v->count)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 16)
   // return_memory_error:
     && gta_compiler_context_set_label(context, return_memory_error, v->count)
   // return gta_computed_value_error_out_of_memory
