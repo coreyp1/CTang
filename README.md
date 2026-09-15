@@ -15,6 +15,8 @@ This is the third incarnation, written in C, with a JIT, bytecode VM fallback, p
 It is intended to be compiled into a shared library.  There is a command to do so in the `Makefile`, but only for Linux.
 
 ## Syntax
+The language is specified in [documentation/language-reference.md](documentation/language-reference.md), which also lists what is not yet implemented.
+
 In Tang, code is interspersed into the literal template text (like PHP).  Quick print tags are supported.  Use `{` and `}` for code blocks.  I like semicolons, so they are here, too.  Tang has arrays, maps, a slice operator, etc.
 
 Examples are the most beneficial, so here are a few:
@@ -41,9 +43,9 @@ If this is your template:
 <ul>
 <%
 for (name : users) {
-  print!("  <li>");
+  print("  <li>");
   print(name);
-  print!("</li>\n");
+  print("</li>\n");
 }
 %>
 </ul>
