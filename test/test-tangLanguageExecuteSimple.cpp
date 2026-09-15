@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <cutil/memory.h>
 #include <iostream>
+#include <string>
 #include <unicode/uclean.h>
 
 #include <tang/tang.h>
@@ -146,6 +147,34 @@ TEST(Declare, Boolean) {
     TEST_PROGRAM_SETUP("false");
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result));
     ASSERT_FALSE(((GTA_Computed_Value_Boolean *)context->result)->value);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Declare, ManyDistinctLiterals) {
+  // Each distinct literal value is interned as a singleton, in a table
+  // created with room for 32. Inserting the 33rd grows it, and growth used to
+  // run the table's cleanup hook over the entries it was moving rather than
+  // discarding - destroying the very singletons the compiled program was
+  // about to use. A program with more than 32 distinct literals died there,
+  // as a segfault or a heap-corruption abort depending on what reused the
+  // freed block.
+  //
+  // Nothing in this suite had crossed that threshold, which is why it went
+  // unnoticed; these cases sit either side of it.
+  for (int count : {32, 33, 100}) {
+    std::string code = "a = 0;";
+    for (int i = 0; i < count; ++i) {
+      code += " a = " + std::to_string(i) + ";";
+    }
+    code += " a;";
+
+    TEST_PROGRAM_SETUP(code.c_str());
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result))
+        << count << " distinct literals";
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value,
+        count - 1)
+        << count << " distinct literals";
     TEST_PROGRAM_TEARDOWN();
   }
 }
