@@ -410,7 +410,7 @@ typedef union GTA_JIT_Function_Converter {
 
 #ifdef GTA_X86_64
 
-// TODO: Figure out the Windows ABI for x86-64 (x64).
+// TODO(windows): Figure out the Windows ABI for x86-64 (x64).
 // Although some of this is stubbed out, it is not fully working.
 // I believe the problem is with the calling convention and the extra
 // work and information that Windows requires for x64.
