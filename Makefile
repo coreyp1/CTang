@@ -354,6 +354,7 @@ $(OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c
 $(APP_DIR)/$(STATIC_TARGET): $(LIBOBJECTS)
 	@printf "\n### Archiving Tang Library ###\n"
 	@mkdir -p $(@D)
+	@rm -f $@
 	ar rcs $@ $^
 
 $(APP_DIR)/$(TARGET): \
