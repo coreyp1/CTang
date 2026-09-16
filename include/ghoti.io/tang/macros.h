@@ -9,8 +9,8 @@
  * https://sourceforge.net/p/predef/wiki/Endianness/
  */
 
-#ifndef GTA_MACROS_H
-#define GTA_MACROS_H
+#ifndef GHOTI_IO_GTA_MACROS_H
+#define GHOTI_IO_GTA_MACROS_H
 
 #include <ghoti.io/tang/namespace.h>
 
@@ -531,4 +531,4 @@ typedef union GTA_JIT_Function_Converter {
 }
 #endif //__cplusplus
 
-#endif // GTA_MACROS_H
+#endif // GHOTI_IO_GTA_MACROS_H
