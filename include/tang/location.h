@@ -7,6 +7,8 @@
 #ifndef GTA_PARSER_LOCATION_H
 #define GTA_PARSER_LOCATION_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus

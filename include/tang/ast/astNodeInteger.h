@@ -5,6 +5,8 @@
 #ifndef GTA_AST_NODE_INTEGER_H
 #define GTA_AST_NODE_INTEGER_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -14,7 +16,7 @@ extern "C" {
 /**
  * The vtable for the GTA_Ast_Node_Integer class.
  */
-extern GTA_Ast_Node_VTable gta_ast_node_integer_vtable;
+GTA_API extern GTA_Ast_Node_VTable gta_ast_node_integer_vtable;
 
 /**
  * The GTA_Ast_Node_Integer class.
@@ -37,7 +39,7 @@ struct GTA_Ast_Node_Integer {
  * @param location The location of the integer in the source code.
  * @return The new GTA_Ast_Node_Integer object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node_Integer * gta_ast_node_integer_create(int64_t integer, GTA_PARSER_LTYPE location);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node_Integer * gta_ast_node_integer_create(int64_t integer, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Integer object.
@@ -47,7 +49,7 @@ GTA_NO_DISCARD GTA_Ast_Node_Integer * gta_ast_node_integer_create(int64_t intege
  *
  * @param self The GTA_Ast_Node_Integer object to destroy.
  */
-void gta_ast_node_integer_destroy(GTA_Ast_Node * self);
+GTA_API void gta_ast_node_integer_destroy(GTA_Ast_Node * self);
 
 /**
  * Prints a GTA_Ast_Node_Integer object to stdout.
@@ -55,7 +57,7 @@ void gta_ast_node_integer_destroy(GTA_Ast_Node * self);
  * @param self The GTA_Ast_Node_Integer object.
  * @param indent The string to print before each line of output.
  */
-void gta_ast_node_integer_print(GTA_Ast_Node * self, const char * indent);
+GTA_API void gta_ast_node_integer_print(GTA_Ast_Node * self, const char * indent);
 
 /**
  * Simplifies a GTA_Ast_Node_Integer object.
@@ -67,7 +69,7 @@ void gta_ast_node_integer_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use for simplification.
  * @return The simplified GTA_Ast_Node_Integer object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_integer_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_integer_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Integer object.
@@ -77,7 +79,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_integer_simplify(GTA_Ast_Node * self,
  * @param data The user-defined data to pass to the callback function.
  * @param return_value The return value of the walk, populated by the callback.
  */
-void gta_ast_node_integer_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+GTA_API void gta_ast_node_integer_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 /**
  * Compile the AST node to binary for x86_64.
@@ -92,7 +94,7 @@ void gta_ast_node_integer_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback c
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_integer_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_integer_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compiles a GTA_Ast_Node_Integer object to bytecode.
@@ -105,7 +107,7 @@ bool gta_ast_node_integer_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Com
  * @param self The GTA_Ast_Node_Integer object.
  * @param context The compiler state to use for compilation.
  */
-bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_integer_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

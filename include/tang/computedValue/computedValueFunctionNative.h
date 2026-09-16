@@ -5,6 +5,8 @@
 #ifndef G_TANG_COMPUTED_VALUE_FUNCTION_NATIVE_H
 #define G_TANG_COMPUTED_VALUE_FUNCTION_NATIVE_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -15,7 +17,7 @@ extern "C" {
 /**
  * The vtable for the GTA_Computed_Value_Function_Native class.
  */
-extern GTA_Computed_Value_VTable gta_computed_value_function_native_vtable;
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_function_native_vtable;
 
 /**
  * The function signature required for use by the
@@ -59,7 +61,7 @@ struct GTA_Computed_Value_Function_Native {
  * @param context The execution context to create the value in.
  * @return The new computed value for the natively-compiled function.
  */
-GTA_NO_DISCARD GTA_Computed_Value_Function_Native * GTA_CALL gta_computed_value_function_native_create(GTA_Computed_Value_Function_Native_Callback * callback, GTA_Computed_Value * bound_object, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value_Function_Native * GTA_CALL gta_computed_value_function_native_create(GTA_Computed_Value_Function_Native_Callback * callback, GTA_Computed_Value * bound_object, GTA_Execution_Context * context);
 
 /**
  * Create a new computed value for a natively-compiled function in place.
@@ -71,7 +73,7 @@ GTA_NO_DISCARD GTA_Computed_Value_Function_Native * GTA_CALL gta_computed_value_
  * @param context The execution context to create the value in.
  * @return True if the operation was successful, false otherwise.
  */
-bool GTA_CALL gta_computed_value_function_native_create_in_place(GTA_Computed_Value_Function_Native * self, GTA_Computed_Value_Function_Native_Callback * callback, GTA_Computed_Value * bound_object, GTA_Execution_Context * context);
+GTA_API bool GTA_CALL gta_computed_value_function_native_create_in_place(GTA_Computed_Value_Function_Native * self, GTA_Computed_Value_Function_Native_Callback * callback, GTA_Computed_Value * bound_object, GTA_Execution_Context * context);
 
 /**
  * Destroy a computed value for a natively-compiled function.
@@ -80,7 +82,7 @@ bool GTA_CALL gta_computed_value_function_native_create_in_place(GTA_Computed_Va
  *
  * @param computed_value The computed value for the natively-compiled function.
  */
-void GTA_CALL gta_computed_value_function_native_destroy(GTA_Computed_Value * computed_value);
+GTA_API void GTA_CALL gta_computed_value_function_native_destroy(GTA_Computed_Value * computed_value);
 
 /**
  * Destroy a computed value for a natively-compiled function in place.
@@ -89,7 +91,7 @@ void GTA_CALL gta_computed_value_function_native_destroy(GTA_Computed_Value * co
  *
  * @param self The computed value for the natively-compiled function.
  */
-void GTA_CALL gta_computed_value_function_native_destroy_in_place(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_function_native_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Deep copy a computed value for a natively-compiled function.
@@ -101,7 +103,7 @@ void GTA_CALL gta_computed_value_function_native_destroy_in_place(GTA_Computed_V
  * @return The deep copy of the ComputedValueInteger or NULL if an error
  *   occurred.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_function_native_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_function_native_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
 
 /**
  * Get a string representation of the computed value for a natively-compiled
@@ -115,7 +117,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_function_native_
  * @return The string representation of the computed value for the
  *   natively-compiled function.
  */
-GTA_NO_DISCARD char * GTA_CALL gta_computed_value_function_native_to_string(GTA_Computed_Value * self);
+GTA_API GTA_NO_DISCARD char * GTA_CALL gta_computed_value_function_native_to_string(GTA_Computed_Value * self);
 
 
 #ifdef __cplusplus

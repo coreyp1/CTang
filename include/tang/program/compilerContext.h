@@ -7,6 +7,8 @@
 #ifndef TANG_COMPILER_CONTEXT_H
 #define TANG_COMPILER_CONTEXT_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -107,7 +109,7 @@ struct GTA_Compiler_Context {
  * @param program The program that the compiler is compiling.
  * @return The new compiler context or 0 on failure.
  */
-GTA_NO_DISCARD GTA_Compiler_Context * gta_compiler_context_create(GTA_Program * program);
+GTA_API GTA_NO_DISCARD GTA_Compiler_Context * gta_compiler_context_create(GTA_Program * program);
 
 /**
  * Create a new compiler context in place using the supplied memory
@@ -117,21 +119,21 @@ GTA_NO_DISCARD GTA_Compiler_Context * gta_compiler_context_create(GTA_Program * 
  * @program The program to compile.
  * @return True on success, false on failure.
  */
-bool gta_compiler_context_create_in_place(GTA_Compiler_Context * context, GTA_Program * program);
+GTA_API bool gta_compiler_context_create_in_place(GTA_Compiler_Context * context, GTA_Program * program);
 
 /**
  * Destroy a compiler context.
  *
  * @param context The compiler context to destroy.
  */
-void gta_compiler_context_destroy(GTA_Compiler_Context * context);
+GTA_API void gta_compiler_context_destroy(GTA_Compiler_Context * context);
 
 /**
  * Destroy a compiler context in place.
  *
  * @param context The compiler context to destroy.
  */
-void gta_compiler_context_destroy_in_place(GTA_Compiler_Context * context);
+GTA_API void gta_compiler_context_destroy_in_place(GTA_Compiler_Context * context);
 
 /**
  * Get a new label identifier.
@@ -145,7 +147,7 @@ void gta_compiler_context_destroy_in_place(GTA_Compiler_Context * context);
  * @param context The compiler context.
  * @return The new label id, or -1 on failure.
  */
-GTA_NO_DISCARD GTA_Integer gta_compiler_context_get_label(GTA_Compiler_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Integer gta_compiler_context_get_label(GTA_Compiler_Context * context);
 
 /**
  * Mark a byte offset as needing to be patched with the label's position, once
@@ -160,7 +162,7 @@ GTA_NO_DISCARD GTA_Integer gta_compiler_context_get_label(GTA_Compiler_Context *
  * @param byte_from_offset The byte offset to patch with the label's position.
  * @return True on success, false on failure.
  */
-bool gta_compiler_context_add_label_jump(GTA_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_from_offset);
+GTA_API bool gta_compiler_context_add_label_jump(GTA_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_from_offset);
 
 /**
  * Record the position of a label in the binary.
@@ -174,7 +176,7 @@ bool gta_compiler_context_add_label_jump(GTA_Compiler_Context * context, GTA_Int
  * @param byte_offset The target position of the label in the binary.
  * @return True on success, false on failure.
  */
-bool gta_compiler_context_set_label(GTA_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_offset);
+GTA_API bool gta_compiler_context_set_label(GTA_Compiler_Context * context, GTA_Integer label, GTA_Integer byte_offset);
 
 #ifdef __cplusplus
 }

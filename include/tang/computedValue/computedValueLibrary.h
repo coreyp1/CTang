@@ -5,6 +5,8 @@
 #ifndef G_TANG_COMPUTED_VALUE_LIBRARY_H
 #define G_TANG_COMPUTED_VALUE_LIBRARY_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -15,7 +17,7 @@ extern "C" {
 /**
  * The vtable for the GTA_Computed_Value_Library class.
  */
-extern GTA_Computed_Value_VTable gta_computed_value_library_vtable;
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_library_vtable;
 
 /**
  * This struct is used to associate a library attribute name with a function
@@ -75,7 +77,7 @@ struct GTA_Computed_Value_Library {
  * @param context The execution context in which to create the value.
  * @return The initialized object or NULL if an error occurred.
  */
-GTA_Computed_Value_Library * GTA_CALL gta_computed_value_library_create(const char * name, GTA_Computed_Value_Library_Attribute_Pair * attributes, GTA_UInteger attribute_count, GTA_Execution_Context * context);
+GTA_API GTA_Computed_Value_Library * GTA_CALL gta_computed_value_library_create(const char * name, GTA_Computed_Value_Library_Attribute_Pair * attributes, GTA_UInteger attribute_count, GTA_Execution_Context * context);
 
 /**
  * Create a computed value for a library in place.
@@ -90,7 +92,7 @@ GTA_Computed_Value_Library * GTA_CALL gta_computed_value_library_create(const ch
  * @param context The execution context in which to create the value.
  * @return True if the operation was successful, false otherwise.
  */
-bool GTA_CALL gta_computed_value_library_create_in_place(GTA_Computed_Value_Library * self, const char * name, GTA_Computed_Value_Library_Attribute_Pair * attributes, GTA_UInteger attribute_count, GTA_Execution_Context * context);
+GTA_API bool GTA_CALL gta_computed_value_library_create_in_place(GTA_Computed_Value_Library * self, const char * name, GTA_Computed_Value_Library_Attribute_Pair * attributes, GTA_UInteger attribute_count, GTA_Execution_Context * context);
 
 /**
  * Destroys a GTA_Computed_Value_Library object.
@@ -102,7 +104,7 @@ bool GTA_CALL gta_computed_value_library_create_in_place(GTA_Computed_Value_Libr
  *
  * @param self The object to destroy.
  */
-void GTA_CALL gta_computed_value_library_destroy(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_library_destroy(GTA_Computed_Value * self);
 
 /**
  * Destroy a computed value for a library in place.
@@ -111,7 +113,7 @@ void GTA_CALL gta_computed_value_library_destroy(GTA_Computed_Value * self);
  *
  * @param self The memory address of the computed value.
  */
-void GTA_CALL gta_computed_value_library_destroy_in_place(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_library_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Deep copy a computed value for a library.
@@ -122,7 +124,7 @@ void GTA_CALL gta_computed_value_library_destroy_in_place(GTA_Computed_Value * s
  * @param context The execution context of the program.
  * @return The deep copy of the GTA_Computed_Value_Library or NULL if an error occurred.
  */
-GTA_Computed_Value * GTA_CALL gta_computed_value_library_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_API GTA_Computed_Value * GTA_CALL gta_computed_value_library_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Gets a string representation of a computed value for a library.
@@ -132,7 +134,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_library_deep_copy(GTA_Computed_
  * @param self The object to convert.
  * @return A string representation of the object or NULL if the operation failed.
  */
-char * GTA_CALL gta_computed_value_library_to_string(GTA_Computed_Value * self);
+GTA_API char * GTA_CALL gta_computed_value_library_to_string(GTA_Computed_Value * self);
 
 /**
  * Gets the value of a library attribute.
@@ -142,7 +144,7 @@ char * GTA_CALL gta_computed_value_library_to_string(GTA_Computed_Value * self);
  * @param context The execution context of the program.
  * @return The value of the attribute or NULL if the operation failed.
  */
-GTA_Computed_Value * GTA_CALL gta_computed_value_library_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
+GTA_API GTA_Computed_Value * GTA_CALL gta_computed_value_library_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
 
 /**
  * Helper function to build the internal library attributes hash.
@@ -150,7 +152,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_library_period(GTA_Computed_Val
  * @param self The Library object.
  * @return True if the operation was successful, false otherwise.
  */
-bool GTA_CALL gta_computed_value_library_build_library_attributes_hash(GTA_Computed_Value_Library * self);
+GTA_API bool GTA_CALL gta_computed_value_library_build_library_attributes_hash(GTA_Computed_Value_Library * self);
 
 #ifdef __cplusplus
 }

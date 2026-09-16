@@ -7,6 +7,8 @@
 #ifndef G_TANG_COMPUTED_VALUE_BOOLEAN_H
 #define G_TANG_COMPUTED_VALUE_BOOLEAN_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -16,17 +18,17 @@ extern "C" {
 /**
  * The vtable for the GTA_Computed_Value_Boolean class.
  */
-extern GTA_Computed_Value_VTable gta_computed_value_boolean_vtable;
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_boolean_vtable;
 
 /**
  * A singleton representing a true value.
  */
-extern GTA_Computed_Value * gta_computed_value_boolean_true;
+GTA_API extern GTA_Computed_Value * gta_computed_value_boolean_true;
 
 /**
  * A singleton representing a false value.
  */
-extern GTA_Computed_Value * gta_computed_value_boolean_false;
+GTA_API extern GTA_Computed_Value * gta_computed_value_boolean_false;
 
 /**
  * The GTA_Computed_Value_Boolean class.
@@ -43,7 +45,7 @@ struct GTA_Computed_Value_Boolean {
  * @param context The execution context in which to create the value.
  * @return The initialized object or NULL if an error occurred.
  */
-GTA_Computed_Value_Boolean * GTA_CALL gta_computed_value_boolean_create(bool value, GTA_Execution_Context * context);
+GTA_API GTA_Computed_Value_Boolean * GTA_CALL gta_computed_value_boolean_create(bool value, GTA_Execution_Context * context);
 
 /**
  * Create a computed value for a boolean in place.
@@ -53,7 +55,7 @@ GTA_Computed_Value_Boolean * GTA_CALL gta_computed_value_boolean_create(bool val
  * @param context The execution context in which to create the value.
  * @return True if the operation was successful, false otherwise.
  */
-bool GTA_CALL gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * self, bool value, GTA_Execution_Context * context);
+GTA_API bool GTA_CALL gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Boolean * self, bool value, GTA_Execution_Context * context);
 
 /**
  * Destroys a GTA_Computed_Value_Boolean object.
@@ -65,7 +67,7 @@ bool GTA_CALL gta_computed_value_boolean_create_in_place(GTA_Computed_Value_Bool
  *
  * @param self The object to destroy.
  */
-void GTA_CALL gta_computed_value_boolean_destroy(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_boolean_destroy(GTA_Computed_Value * self);
 
 /**
  * Destroy a computed value for a boolean in place.
@@ -74,7 +76,7 @@ void GTA_CALL gta_computed_value_boolean_destroy(GTA_Computed_Value * self);
  *
  * @param self The memory address of the computed value.
  */
-void GTA_CALL gta_computed_value_boolean_destroy_in_place(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_boolean_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Deep copy a computed value for a boolean.
@@ -85,7 +87,7 @@ void GTA_CALL gta_computed_value_boolean_destroy_in_place(GTA_Computed_Value * s
  * @param context The execution context of the program.
  * @return The deep copy of the GTA_Computed_Value_Boolean or NULL if an error occurred.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
 
 /**
  * Get a string representation of the computed value for a boolean.
@@ -97,7 +99,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_deep_cop
  * @param self The computed value for the boolean.
  * @return The string representation of the computed value for the boolean.
  */
-GTA_NO_DISCARD char * GTA_CALL gta_computed_value_boolean_to_string(GTA_Computed_Value * self);
+GTA_API GTA_NO_DISCARD char * GTA_CALL gta_computed_value_boolean_to_string(GTA_Computed_Value * self);
 
 /**
  * Casts a computed value to a different type.
@@ -109,7 +111,7 @@ GTA_NO_DISCARD char * GTA_CALL gta_computed_value_boolean_to_string(GTA_Computed
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

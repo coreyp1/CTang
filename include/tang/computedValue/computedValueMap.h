@@ -5,6 +5,8 @@
 #ifndef TANG_COMPUTED_VALUE_MAP_H
 #define TANG_COMPUTED_VALUE_MAP_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -14,17 +16,17 @@ extern "C" {
 /**
  * The VTable for the ComputedValueMap.
  */
-extern GTA_Computed_Value_VTable gta_computed_value_map_vtable;
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_map_vtable;
 
 /**
  * A Computed Value Error for when a requested key is not found in the map.
  */
-extern GTA_Computed_Value * gta_computed_value_error_map_key_not_found;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_map_key_not_found;
 
 /**
  * A Computed Value Error for when a supplied key is not a string.
  */
-extern GTA_Computed_Value * gta_computed_value_error_map_key_not_string;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_map_key_not_string;
 
 /**
  * An object that maps identifiers to computed values.
@@ -57,7 +59,7 @@ struct GTA_Computed_Value_Map {
  * @param context The execution context to create the value in.
  * @return The new computed value for the map.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_create(size_t size, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_create(size_t size, GTA_Execution_Context * context);
 
 /**
  * Create a new computed value for a map in place.
@@ -67,7 +69,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_create(size_
  * @param context The execution context to create the value in.
  * @return True if the operation was successful, false otherwise.
  */
-bool GTA_CALL gta_computed_value_map_create_in_place(GTA_Computed_Value_Map * self, size_t size, GTA_Execution_Context * context);
+GTA_API bool GTA_CALL gta_computed_value_map_create_in_place(GTA_Computed_Value_Map * self, size_t size, GTA_Execution_Context * context);
 
 /**
  * Destroy a computed value for a map.
@@ -76,7 +78,7 @@ bool GTA_CALL gta_computed_value_map_create_in_place(GTA_Computed_Value_Map * se
  *
  * @param self The computed value for the map.
  */
-void GTA_CALL gta_computed_value_map_destroy(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_map_destroy(GTA_Computed_Value * self);
 
 /**
  * Destroy a computed value for a map in place.
@@ -85,7 +87,7 @@ void GTA_CALL gta_computed_value_map_destroy(GTA_Computed_Value * self);
  *
  * @param self The computed value for the map.
  */
-void GTA_CALL gta_computed_value_map_destroy_in_place(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_map_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Deep copy a computed value for a map.
@@ -96,7 +98,7 @@ void GTA_CALL gta_computed_value_map_destroy_in_place(GTA_Computed_Value * self)
  * @param context The execution context of the program.
  * @return The deep copy of the ComputedValueMap or NULL if an error occurred.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
 
 /**
  * Get a string representation of the computed value for a map.
@@ -108,7 +110,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_deep_copy(GT
  * @param self The computed value for the map.
  * @return The string representation of the computed value for the map.
  */
-GTA_NO_DISCARD char * GTA_CALL gta_computed_value_map_to_string(GTA_Computed_Value * self);
+GTA_API GTA_NO_DISCARD char * GTA_CALL gta_computed_value_map_to_string(GTA_Computed_Value * self);
 
 /**
  * Assigns a value to an index of the object.
@@ -119,7 +121,7 @@ GTA_NO_DISCARD char * GTA_CALL gta_computed_value_map_to_string(GTA_Computed_Val
  * @param context The execution context of the program.
  * @return The modified object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
 
 /**
  * Gets a value from the object using an index.
@@ -129,7 +131,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_assign_index
  * @param context The execution context of the program.
  * @return The value of the index or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
 
 /**
  * Get the computed value for a key in the map.
@@ -138,7 +140,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_index(GTA_Co
  * @param key A string key to look up in the map
  * @return The computed value for the key or NULL if the key is not found.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_get_from_cstring(GTA_Computed_Value_Map * self, const char * key);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_get_from_cstring(GTA_Computed_Value_Map * self, const char * key);
 
 /**
  * Add a computed value to the map using the provided key.
@@ -155,7 +157,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_get_from_cst
  * @param value The value to insert into the map.
  * @return The value of the key/value pair or NULL if an error occurred.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_set_key_val(GTA_Computed_Value_Map * self, GTA_Computed_Value * key, GTA_Computed_Value * value);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_set_key_val(GTA_Computed_Value_Map * self, GTA_Computed_Value * key, GTA_Computed_Value * value);
 
 #ifdef __cplusplus
 }

@@ -5,6 +5,8 @@
 #ifndef GTA_AST_NODE_BOOLEAN_H
 #define GTA_AST_NODE_BOOLEAN_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -14,7 +16,7 @@ extern "C" {
 /**
  * The vtable for the GTA_Ast_Node_Boolean class.
  */
-extern GTA_Ast_Node_VTable gta_ast_node_boolean_vtable;
+GTA_API extern GTA_Ast_Node_VTable gta_ast_node_boolean_vtable;
 
 /**
  * The GTA_Ast_Node_Boolean class.
@@ -37,7 +39,7 @@ struct GTA_Ast_Node_Boolean {
  * @param location The location of the boolean in the source code.
  * @return The new GTA_Ast_Node_Boolean object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node_Boolean * gta_ast_node_boolean_create(bool boolean, GTA_PARSER_LTYPE location);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node_Boolean * gta_ast_node_boolean_create(bool boolean, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Boolean object.
@@ -47,7 +49,7 @@ GTA_NO_DISCARD GTA_Ast_Node_Boolean * gta_ast_node_boolean_create(bool boolean, 
  *
  * @param self The GTA_Ast_Node_Boolean object to destroy.
  */
-void gta_ast_node_boolean_destroy(GTA_Ast_Node * self);
+GTA_API void gta_ast_node_boolean_destroy(GTA_Ast_Node * self);
 
 /**
  * Prints a GTA_Ast_Node_Boolean object to stdout.
@@ -58,7 +60,7 @@ void gta_ast_node_boolean_destroy(GTA_Ast_Node * self);
  * @param self The GTA_Ast_Node_Boolean object to print.
  * @param indent The string to print before each line of output.
  */
-void gta_ast_node_boolean_print(GTA_Ast_Node * self, const char * indent);
+GTA_API void gta_ast_node_boolean_print(GTA_Ast_Node * self, const char * indent);
 
 /**
  * Simplifies a GTA_Ast_Node_Boolean object.
@@ -70,7 +72,7 @@ void gta_ast_node_boolean_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use for simplification.
  * @return The simplified GTA_Ast_Node_Boolean object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_boolean_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_boolean_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Boolean object.
@@ -83,7 +85,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_boolean_simplify(GTA_Ast_Node * self,
  * @param data The user-defined data to pass to the callback function.
  * @param return_value The return value of the walk, populated by the callback.
  */
-void gta_ast_node_boolean_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+GTA_API void gta_ast_node_boolean_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 /**
  * Compiles a GTA_Ast_Node_Boolean object to binary for x86_64.
@@ -97,7 +99,7 @@ void gta_ast_node_boolean_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback c
  * @param context The compilation context to use.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_boolean_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_boolean_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compiles a GTA_Ast_Node_Boolean object to bytecode.
@@ -111,7 +113,7 @@ bool gta_ast_node_boolean_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Com
  * @param context The compilation context to use.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_boolean_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_boolean_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

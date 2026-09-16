@@ -5,6 +5,8 @@
 #ifndef G_TANG_PROGRAM_LANGUAGE_H
 #define G_TANG_PROGRAM_LANGUAGE_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -31,14 +33,14 @@ struct GTA_Language {
  *
  * @return A pointer to the new language structure, or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Language * gta_language_create(void);
+GTA_API GTA_NO_DISCARD GTA_Language * gta_language_create(void);
 
 /**
  * Destroy the given language.
  *
  * @param language The language to destroy.
  */
-void gta_language_destroy(GTA_Language * language);
+GTA_API void gta_language_destroy(GTA_Language * language);
 
 #ifdef __cplusplus
 }

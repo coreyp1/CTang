@@ -5,6 +5,8 @@
 #ifndef G_TANG_COMPUTED_VALUE_FUNCTION_H
 #define G_TANG_COMPUTED_VALUE_FUNCTION_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -14,7 +16,7 @@ extern "C" {
 /**
  * The vtable for the GTA_Computed_Value_Function class.
  */
-extern GTA_Computed_Value_VTable gta_computed_value_function_vtable;
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_function_vtable;
 
 /**
  * The GTA_Computed_Value_Function class.
@@ -85,7 +87,7 @@ struct GTA_Computed_Value_Function {
  * @param context The execution context to create the value in.
  * @return The new object.
  */
-GTA_Computed_Value_Function * GTA_CALL gta_computed_value_function_create(size_t num_arguments, size_t pointer, GTA_Execution_Context * context);
+GTA_API GTA_Computed_Value_Function * GTA_CALL gta_computed_value_function_create(size_t num_arguments, size_t pointer, GTA_Execution_Context * context);
 
 /**
  * Creates a new GTA_Computed_Value_Function object in place.
@@ -96,7 +98,7 @@ GTA_Computed_Value_Function * GTA_CALL gta_computed_value_function_create(size_t
  * @param context The execution context to create the value in.
  * @return True if the operation was successful, false otherwise.
  */
-bool GTA_CALL gta_computed_value_function_create_in_place(GTA_Computed_Value_Function * self, size_t num_arguments, size_t pointer, GTA_Execution_Context * context);
+GTA_API bool GTA_CALL gta_computed_value_function_create_in_place(GTA_Computed_Value_Function * self, size_t num_arguments, size_t pointer, GTA_Execution_Context * context);
 
 /**
  * Destroys a GTA_Computed_Value_Function object.
@@ -108,14 +110,14 @@ bool GTA_CALL gta_computed_value_function_create_in_place(GTA_Computed_Value_Fun
  *
  * @param self The GTA_Computed_Value_Function object to destroy.
  */
-void GTA_CALL gta_computed_value_function_destroy(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_function_destroy(GTA_Computed_Value * self);
 
 /**
  * Destroys a GTA_Computed_Value_Function object in place.
  * 
  * @param self The memory address of the object.
  */
-void GTA_CALL gta_computed_value_function_destroy_in_place(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_function_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Create a deep copy of a GTA_Computed_Value_Function object.
@@ -124,7 +126,7 @@ void GTA_CALL gta_computed_value_function_destroy_in_place(GTA_Computed_Value * 
  * @param context The execution context to create the value in.
  * @return The new object or NULL on failure.
  */
-GTA_Computed_Value * GTA_CALL gta_computed_value_function_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_API GTA_Computed_Value * GTA_CALL gta_computed_value_function_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Get a string representation of a GTA_Computed_Value_Function object.
@@ -134,7 +136,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_function_deep_copy(GTA_Computed
  * @param self The object.
  * @return The string representation or NULL on failure.
  */
-char * GTA_CALL gta_computed_value_function_to_string(GTA_Computed_Value * self);
+GTA_API char * GTA_CALL gta_computed_value_function_to_string(GTA_Computed_Value * self);
 
 /**
  * Calls the object as a function.

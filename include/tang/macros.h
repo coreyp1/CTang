@@ -12,6 +12,8 @@
 #ifndef GTA_MACROS_H
 #define GTA_MACROS_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus

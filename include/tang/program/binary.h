@@ -7,6 +7,8 @@
 #ifndef TANG_PROGRAM_BINARY_H
 #define TANG_PROGRAM_BINARY_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -200,7 +202,7 @@ typedef enum GTA_Condition_Code {
  * @param additional The number of additional bytes to be stored.
  * @return True on success, false on failure.
  */
-bool gta_binary_optimistic_increase(GCU_Vector8 * vector, size_t additional);
+GTA_API bool gta_binary_optimistic_increase(GCU_Vector8 * vector, size_t additional);
 
 /**
  * Get the register code for the given register.
@@ -210,7 +212,7 @@ bool gta_binary_optimistic_increase(GCU_Vector8 * vector, size_t additional);
  * @param reg The register to get the code for.
  * @return uint8_t The architecture-specific register code.
  */
-uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg);
+GTA_API uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg);
 
 /**
  * Helper function to call a function in the binary.
@@ -222,7 +224,7 @@ uint8_t gta_binary_get_register_code__x86_64(GTA_Register reg);
  * @param function The function to call.
  * @return True on success, false on failure.
  */
-bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function);
+GTA_API bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function);
 
 /**
  * Helper function to call a function in the binary.  This variation requires
@@ -236,7 +238,7 @@ bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function);
  * @param reg The register holding the function address.
  * @return True on success, false on failure.
  */
-bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
+GTA_API bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 
 /**
  * Helper function to add the commands to adopt a value.
@@ -250,7 +252,7 @@ bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
  * @param scratch_3 The third scratch register.
  * @return True on success, false on failure.
  */
-bool gta_binary_adopt__x86_64(GTA_Compiler_Context * context, GTA_Register target_reg, GTA_Register scratch_1, GTA_Register scratch_2, GTA_Register scratch_3);
+GTA_API bool gta_binary_adopt__x86_64(GTA_Compiler_Context * context, GTA_Register target_reg, GTA_Register scratch_1, GTA_Register scratch_2, GTA_Register scratch_3);
 
 /**
  * x86_64 instruction: ADD reg, imm
@@ -260,7 +262,7 @@ bool gta_binary_adopt__x86_64(GTA_Compiler_Context * context, GTA_Register targe
  * @param immediate The immediate value.
  * @return True on success, false on failure.
  */
-bool gta_add_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t immediate);
+GTA_API bool gta_add_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t immediate);
 
 /**
  * x86_64 instruction: AND reg, imm
@@ -270,7 +272,7 @@ bool gta_add_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t imm
  * @param immediate The immediate value.
  * @return True on success, false on failure.
  */
-bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t immediate);
+GTA_API bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t immediate);
 
 /**
  * x86_64 instruction: CALL reg
@@ -279,7 +281,7 @@ bool gta_and_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int32_t imm
  * @param reg The register to call.
  * @return True on success, false on failure.
  */
-bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
+GTA_API bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 
 /**
  * x86_64 instruction: CALL rel32
@@ -288,7 +290,7 @@ bool gta_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
  * @param offset The offset to call.
  * @return True on success, false on failure.
  */
-bool gta_call_rel__x86_64(GCU_Vector8 * vector, int32_t offset);
+GTA_API bool gta_call_rel__x86_64(GCU_Vector8 * vector, int32_t offset);
 
 /**
  * x86_64 instruction: CMOVcc reg, reg
@@ -301,7 +303,7 @@ bool gta_call_rel__x86_64(GCU_Vector8 * vector, int32_t offset);
  * @param src The source register.
  * @return True on success, false on failure.
  */
-bool gta_cmovcc_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, GTA_Register dst, GTA_Register src);
+GTA_API bool gta_cmovcc_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, GTA_Register dst, GTA_Register src);
 
 /**
  * x86_64 instruction: CMP byte ind, imm8
@@ -314,7 +316,7 @@ bool gta_cmovcc_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Condition_Code conditi
  * @param immediate The immediate value (8-bit).
  * @return True on success, false on failure.
  */
-bool gta_cmp_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, int8_t immediate);
+GTA_API bool gta_cmp_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, int8_t immediate);
 
 /**
  * x86_64 instruction: CMP reg, reg
@@ -324,7 +326,7 @@ bool gta_cmp_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regi
  * @param op2 The second operand register.
  * @return True on success, false on failure.
  */
-bool gta_cmp_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Register op2);
+GTA_API bool gta_cmp_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Register op2);
 
 /**
  * x86_64 instruction: Jcc offset
@@ -338,7 +340,7 @@ bool gta_cmp_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Registe
  * @param offset The offset to jump to.
  * @return True on success, false on failure.
  */
-bool gta_jcc__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, int32_t offset);
+GTA_API bool gta_jcc__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, int32_t offset);
 
 /**
  * x86_64 instruction: JMP offset
@@ -351,7 +353,7 @@ bool gta_jcc__x86_64(GCU_Vector8 * vector, GTA_Condition_Code condition, int32_t
  * @param offset The offset to jump to.
  * @return True on success, false on failure.
  */
-bool gta_jmp__x86_64(GCU_Vector8 * vector, int32_t offset);
+GTA_API bool gta_jmp__x86_64(GCU_Vector8 * vector, int32_t offset);
 
 /**
  * x86_64 instruction: JMP reg
@@ -362,7 +364,7 @@ bool gta_jmp__x86_64(GCU_Vector8 * vector, int32_t offset);
  * @param reg The register to jump to.
  * @return True on success, false on failure.
  */
-bool gta_jmp_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
+GTA_API bool gta_jmp_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 
 /**
  * x86_64 instruction: LEA reg, [base + index*scale + offset]
@@ -375,7 +377,7 @@ bool gta_jmp_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
  * @param offset The offset to add to the base register.
  * @return True on success, false on failure.
  */
-bool gta_lea_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset);
+GTA_API bool gta_lea_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset);
 
 /**
  * x86_64 instruction: LEAVE
@@ -385,7 +387,7 @@ bool gta_lea_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
  * @param vector The vector in which to store the instruction.
  * @return True on success, false on failure.
  */
-bool gta_leave__x86_64(GCU_Vector8 * vector);
+GTA_API bool gta_leave__x86_64(GCU_Vector8 * vector);
 
 /**
  * x86_64 instruction: MOV [base + index*scale + offset], reg
@@ -398,7 +400,7 @@ bool gta_leave__x86_64(GCU_Vector8 * vector);
  * @param src The source register.
  * @return True on success, false on failure.
  */
-bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, GTA_Register src);
+GTA_API bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, GTA_Register src);
 
 /**
  * x86_64 instruction: MOV byte ptr [base + index*scale + offset], imm8
@@ -411,7 +413,7 @@ bool gta_mov_ind_reg__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regist
  * @param immediate The immediate value (8-bit).
  * @return True on success, false on failure.
  */
-bool gta_mov_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, int8_t immediate);
+GTA_API bool gta_mov_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset, int8_t immediate);
 
 /**
  * x86_64 instruction: MOV reg, reg
@@ -421,7 +423,7 @@ bool gta_mov_ind8_imm8__x86_64(GCU_Vector8 * vector, GTA_Register base, GTA_Regi
  * @param src The source register.
  * @return True on success, false on failure.
  */
-bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
+GTA_API bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
 
 /**
  * x86_64 instruction: MOV reg, imm
@@ -434,7 +436,7 @@ bool gta_mov_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
  * @param value The immediate value.
  * @return True on success, false on failure.
  */
-bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t value);
+GTA_API bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t value);
 
 /**
  * x86_64 instruction: MOV reg, [base + index*scale + offset]
@@ -447,7 +449,7 @@ bool gta_mov_reg_imm__x86_64(GCU_Vector8 * vector, GTA_Register dst, int64_t val
  * @param offset The offset to add to the base register.
  * @return True on success, false on failure.
  */
-bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset);
+GTA_API bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register base, GTA_Register index, uint8_t scale, int32_t offset);
 
 /**
  * x86_64 instruction: MOVQ reg, reg
@@ -457,7 +459,7 @@ bool gta_mov_reg_ind__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
  * @param src The source register.
  * @return True on success, false on failure.
  */
-bool gta_movq_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
+GTA_API bool gta_movq_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
 
 /**
  * x86_64 instruction: NOP
@@ -467,7 +469,7 @@ bool gta_movq_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Regist
  * @param vector The vector in which to store the instruction.
  * @return True on success, false on failure.
  */
-bool gta_nop__x86_64(GCU_Vector8 * vector);
+GTA_API bool gta_nop__x86_64(GCU_Vector8 * vector);
 
 /**
  * x86_64 instruction: OR reg, reg
@@ -477,7 +479,7 @@ bool gta_nop__x86_64(GCU_Vector8 * vector);
  * @param src The source register.
  * @return True on success, false on failure.
  */
-bool gta_or_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
+GTA_API bool gta_or_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
 
 /**
  * x86_64 instruction: POP reg
@@ -486,7 +488,7 @@ bool gta_or_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register
  * @param reg The register to pop.
  * @return True on success, false on failure.
  */
-bool gta_pop_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
+GTA_API bool gta_pop_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 
 /**
  * x86_64 instruction: PUSH reg
@@ -495,7 +497,7 @@ bool gta_pop_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
  * @param reg The register to push.
  * @return True on success, false on failure.
  */
-bool gta_push_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
+GTA_API bool gta_push_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 
 /**
  * x86_64 instruction: RET
@@ -503,7 +505,7 @@ bool gta_push_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
  * @param vector The vector in which to store the instruction.
  * @return True on success, false on failure.
  */
-bool gta_ret__x86_64(GCU_Vector8 * vector);
+GTA_API bool gta_ret__x86_64(GCU_Vector8 * vector);
 
 /**
  * x86_64 instruction: TEST reg, reg
@@ -513,7 +515,7 @@ bool gta_ret__x86_64(GCU_Vector8 * vector);
  * @param op2 The second operand register.
  * @return True on success, false on failure.
  */
-bool gta_test_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Register op2);
+GTA_API bool gta_test_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Register op2);
 
 /**
  * x86_64 instruction: XOR reg
@@ -523,7 +525,7 @@ bool gta_test_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register op1, GTA_Regist
  * @param src The source register.
  * @return True on success, false on failure.
  */
-bool gta_xor_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
+GTA_API bool gta_xor_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Register src);
 
 /**
  * Debug helper function to push all registers to the stack.
@@ -531,7 +533,7 @@ bool gta_xor_reg_reg__x86_64(GCU_Vector8 * vector, GTA_Register dst, GTA_Registe
  * @param vector The vector in which to store the instructions.
  * @return True on success, false on failure.
  */
-bool gta_push_all_registers__x86_64(GCU_Vector8 * vector);
+GTA_API bool gta_push_all_registers__x86_64(GCU_Vector8 * vector);
 
 /**
  * Debug helper function to pop all registers from the stack.
@@ -539,7 +541,7 @@ bool gta_push_all_registers__x86_64(GCU_Vector8 * vector);
  * @param vector The vector in which to store the instructions.
  * @return True on success, false on failure.
  */
-bool gta_pop_all_registers__x86_64(GCU_Vector8 * vector);
+GTA_API bool gta_pop_all_registers__x86_64(GCU_Vector8 * vector);
 
 /**
  * Debug helper function to print the entire stack.
@@ -547,7 +549,7 @@ bool gta_pop_all_registers__x86_64(GCU_Vector8 * vector);
  * @param vector The vector to print.
  * @return True on success, false on failure.
  */
-bool gta_print_stack__x86_64(GCU_Vector8 * vector);
+GTA_API bool gta_print_stack__x86_64(GCU_Vector8 * vector);
 
 
 #ifdef __cplusplus

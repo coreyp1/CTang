@@ -10,6 +10,8 @@
 #ifndef TANG_AST_NODE_PARSE_ERROR_H
 #define TANG_AST_NODE_PARSE_ERROR_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,32 +21,32 @@ extern "C" {
 /**
  * The vtable for the GTA_Ast_Node_Parse_Error class.
  */
-extern GTA_Ast_Node_VTable gta_ast_node_parse_error_vtable;
+GTA_API extern GTA_Ast_Node_VTable gta_ast_node_parse_error_vtable;
 
 
 /**
  * An error representing the fact that an out of memory error occurred when
  * attempting to create a parse error.
  */
-extern GTA_Ast_Node * gta_ast_node_parse_error_out_of_memory;
+GTA_API extern GTA_Ast_Node * gta_ast_node_parse_error_out_of_memory;
 
 
 /**
  * An error representing the fact that a function has been redeclared.
  */
-extern GTA_Ast_Node * gta_ast_node_parse_error_function_redeclared;
+GTA_API extern GTA_Ast_Node * gta_ast_node_parse_error_function_redeclared;
 
 
 /**
  * An error representing the fact that an identifier has been redeclared.
  */
-extern GTA_Ast_Node * gta_ast_node_parse_error_identifier_redeclared;
+GTA_API extern GTA_Ast_Node * gta_ast_node_parse_error_identifier_redeclared;
 
 
 /**
  * An error representing the fact that a global identifier has been redeclared.
  */
-extern GTA_Ast_Node * gta_ast_node_parse_error_global_identifier_redeclared;
+GTA_API extern GTA_Ast_Node * gta_ast_node_parse_error_global_identifier_redeclared;
 
 
 /**
@@ -69,7 +71,7 @@ struct GTA_Ast_Node_Parse_Error {
  * @param location The location of the parse error in the source code.
  * @return The new GTA_Ast_Node_Parse_Error object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node_Parse_Error * gta_ast_node_parse_error_create(const char * message, GTA_PARSER_LTYPE location);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node_Parse_Error * gta_ast_node_parse_error_create(const char * message, GTA_PARSER_LTYPE location);
 
 
 /**
@@ -80,7 +82,7 @@ GTA_NO_DISCARD GTA_Ast_Node_Parse_Error * gta_ast_node_parse_error_create(const 
  *
  * @param parse_error The GTA_Ast_Node_Parse_Error object to destroy.
  */
-void gta_ast_node_parse_error_destroy(GTA_Ast_Node * parse_error);
+GTA_API void gta_ast_node_parse_error_destroy(GTA_Ast_Node * parse_error);
 
 
 /**
@@ -92,7 +94,7 @@ void gta_ast_node_parse_error_destroy(GTA_Ast_Node * parse_error);
  * @param parse_error The GTA_Ast_Node_Parse_Error object to print.
  * @param indent The number of spaces to indent the output.
  */
-void gta_ast_node_parse_error_print(GTA_Ast_Node * parse_error, const char * indent);
+GTA_API void gta_ast_node_parse_error_print(GTA_Ast_Node * parse_error, const char * indent);
 
 
 /**
@@ -102,7 +104,7 @@ void gta_ast_node_parse_error_print(GTA_Ast_Node * parse_error, const char * ind
  * @param variable_map The variable map to use when simplifying the parse error.
  * @return The simplified GTA_Ast_Node_Parse_Error object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_parse_error_simplify(GTA_Ast_Node * parse_error, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_parse_error_simplify(GTA_Ast_Node * parse_error, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 
 /**
@@ -113,7 +115,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_parse_error_simplify(GTA_Ast_Node * p
  * @param data The data to pass to the callback.
  * @param return_value The value to return from the walk function.
  */
-void gta_ast_node_parse_error_walk(GTA_Ast_Node * parse_error, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+GTA_API void gta_ast_node_parse_error_walk(GTA_Ast_Node * parse_error, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 
 #ifdef __cplusplus

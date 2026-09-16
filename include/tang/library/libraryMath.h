@@ -5,6 +5,8 @@
 #ifndef TANG_LIBRARY_LIBRARYMATH_H
 #define TANG_LIBRARY_LIBRARYMATH_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -15,12 +17,12 @@ extern "C" {
 /**
  * The Math library singleton.
  */
-extern GTA_Computed_Value * gta_computed_value_library_math;
+GTA_API extern GTA_Computed_Value * gta_computed_value_library_math;
 
 /**
  * A singleton representing the value of pi.
  */
-extern GTA_Computed_Value * gta_computed_value_library_math_pi;
+GTA_API extern GTA_Computed_Value * gta_computed_value_library_math_pi;
 
 /**
  * Load the Math library.
@@ -28,7 +30,7 @@ extern GTA_Computed_Value * gta_computed_value_library_math_pi;
  * @param context The context of the program being executed.
  * @return The computed value for the Math library.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_library_math_load(GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_library_math_load(GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

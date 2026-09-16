@@ -5,6 +5,8 @@
 #ifndef GTA_AST_NODE_MAP_H
 #define GTA_AST_NODE_MAP_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -14,7 +16,7 @@ extern "C" {
 /**
  * The vtable for the GTA_Ast_Node_Map class.
  */
-extern GTA_Ast_Node_VTable gta_ast_node_map_vtable;
+GTA_API extern GTA_Ast_Node_VTable gta_ast_node_map_vtable;
 
 /**
  * For "map" expressions, we need to store the key-value pairs in a vector.
@@ -47,7 +49,7 @@ struct GTA_Ast_Node_Map {
  * @param location The location of the map in the source code.
  * @return The new GTA_Ast_Node_Map object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node_Map * gta_ast_node_map_create(GTA_VectorX * pairs, GTA_PARSER_LTYPE location);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node_Map * gta_ast_node_map_create(GTA_VectorX * pairs, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Map object.
@@ -57,7 +59,7 @@ GTA_NO_DISCARD GTA_Ast_Node_Map * gta_ast_node_map_create(GTA_VectorX * pairs, G
  *
  * @param self The GTA_Ast_Node_Map object to destroy.
  */
-void gta_ast_node_map_destroy(GTA_Ast_Node * self);
+GTA_API void gta_ast_node_map_destroy(GTA_Ast_Node * self);
 
 /**
  * Prints a GTA_Ast_Node_Map object to stdout.
@@ -68,7 +70,7 @@ void gta_ast_node_map_destroy(GTA_Ast_Node * self);
  * @param self The GTA_Ast_Node_Map object to print.
  * @param indent The string to print before each line of output.
 */
-void gta_ast_node_map_print(GTA_Ast_Node * self, const char * indent);
+GTA_API void gta_ast_node_map_print(GTA_Ast_Node * self, const char * indent);
 
 /**
  * Simplifies a GTA_Ast_Node_Map object.
@@ -80,7 +82,7 @@ void gta_ast_node_map_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use when simplifying the map.
  * @return The simplified GTA_Ast_Node_Map object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_map_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_map_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Map object.
@@ -93,7 +95,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_map_simplify(GTA_Ast_Node * self, GTA
  * @param data The data to pass to the callback function.
  * @param return_value The return value of the walk, populated by the callback.
  */
-void gta_ast_node_map_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+GTA_API void gta_ast_node_map_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 /**
  * Perform pre-compilation analysis on the AST node.
@@ -108,7 +110,7 @@ void gta_ast_node_map_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callb
  * @param program The program that the node is part of.
  * @return NULL on success, otherwise return a parse error.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_map_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_map_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
 
 /**
  * Compile the AST node to binary for x86_64.
@@ -122,7 +124,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_map_analyze(GTA_Ast_Node * self, GTA_
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compiles the AST node to bytecode.
@@ -135,7 +137,7 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
  * @param self The node to compile.
  * @param context The compiler state to use for compilation.
  */
-bool gta_ast_node_map_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_map_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

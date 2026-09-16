@@ -18,6 +18,8 @@
 #ifndef G_TANG_H
 #define G_TANG_H
 
+#include <tang/namespace.h>
+
 #include <tang/macros.h>
 #include <tang/program/program.h>
 #include <tang/computedValue/computedValueAll.h>

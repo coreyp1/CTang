@@ -24,6 +24,8 @@
 #ifndef G_TANG_UNICODESTRING_H
 #define G_TANG_UNICODESTRING_H
 
+#include <tang/namespace.h>
+
 #include <stddef.h>
 #include <cutil/vector.h>
 #include <tang/libver.h>
@@ -136,7 +138,7 @@ typedef enum {
  * @param type The type of string being created.
  * @return A pointer to the Unicode String object, or NULL if there was an error.
  */
-GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_create(const char * source, size_t length, GTA_String_Type type);
+GTA_API GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_create(const char * source, size_t length, GTA_String_Type type);
 
 /**
  * Construct a new Unicode String object and adopt ownership of the source
@@ -148,13 +150,13 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_create(const char * sourc
  * @param type The type of string being created.
  * @return A pointer to the Unicode String object, or NULL if there was an error.
  */
-GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_create_and_adopt(const char * source, size_t length, GTA_String_Type type);
+GTA_API GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_create_and_adopt(const char * source, size_t length, GTA_String_Type type);
 
 /**
  * Destroy a Unicode String object.
  * @param string The string to destroy.
  */
-void gta_unicode_string_destroy(GTA_Unicode_String * string);
+GTA_API void gta_unicode_string_destroy(GTA_Unicode_String * string);
 
 /**
  * Concatenate two Unicode Strings.
@@ -165,7 +167,7 @@ void gta_unicode_string_destroy(GTA_Unicode_String * string);
  * @param string2 The second string.
  * @return A pointer to the new string, or NULL if there was an error.
  */
-GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_concat(const GTA_Unicode_String * string1, const GTA_Unicode_String * string2);
+GTA_API GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_concat(const GTA_Unicode_String * string1, const GTA_Unicode_String * string2);
 
 /**
  * Get the substring of a Unicode String.
@@ -177,7 +179,7 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_concat(const GTA_Unicode_
  * @param grapheme_count The number of graphemes in the substring.
  * @return A pointer to the new string, or NULL if there was an error.
  */
-GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * string, size_t grapheme_start, size_t grapheme_count);
+GTA_API GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * string, size_t grapheme_start, size_t grapheme_count);
 
 /**
  * Render a string according to the types of the string parts.
@@ -192,7 +194,7 @@ GTA_NO_DISCARD GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unico
  * @param string The string to render.
  * @return The object containing the encoded string.
  */
-GTA_NO_DISCARD GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String * string);
+GTA_API GTA_NO_DISCARD GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String * string);
 
 /**
  * Encode a string according to GTA_UNICODE_STRING_TYPE_HTML.
@@ -205,7 +207,7 @@ GTA_NO_DISCARD GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_U
  *  null terminator).
  * @return The object containing the encoded string.
  */
-GTA_NO_DISCARD GTA_Unicode_Rendered_String gta_unicode_string_html_encode(const char * source, size_t length);
+GTA_API GTA_NO_DISCARD GTA_Unicode_Rendered_String gta_unicode_string_html_encode(const char * source, size_t length);
 
 #ifdef __cplusplus
 }

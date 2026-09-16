@@ -5,6 +5,8 @@
 #ifndef TANG_COMPUTEDVALUEITERATOR_H
 #define TANG_COMPUTEDVALUEITERATOR_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -14,13 +16,13 @@ extern "C" {
 /**
  * The VTable for the ComputedValueIterator.
  */
-extern GTA_Computed_Value_VTable gta_computed_value_iterator_vtable;
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_iterator_vtable;
 
 /**
  * A Computed Value Error for when an iterator has reached the end of the
  * collection.
  */
-extern GTA_Computed_Value * gta_computed_value_error_iterator_end;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_iterator_end;
 
 /**
  * A user-defined function to be called when the iterator is advanced.
@@ -115,7 +117,7 @@ struct GTA_Computed_Value_Iterator {
  * @param context The execution context to create the value in.
  * @return The new computed value for the integer.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_create(GTA_Computed_Value * collection, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_create(GTA_Computed_Value * collection, GTA_Execution_Context * context);
 
 /**
  * Create a new iterator object in place.
@@ -125,7 +127,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_create(
  * @param context The execution context to create the value in.
  * @return True if the operation was successful, false otherwise.
  */
-bool GTA_CALL gta_computed_value_iterator_create_in_place(GTA_Computed_Value_Iterator * self, GTA_Computed_Value * collection, GTA_Execution_Context * context);
+GTA_API bool GTA_CALL gta_computed_value_iterator_create_in_place(GTA_Computed_Value_Iterator * self, GTA_Computed_Value * collection, GTA_Execution_Context * context);
 
 /**
  * Destroy an iterator object.
@@ -134,7 +136,7 @@ bool GTA_CALL gta_computed_value_iterator_create_in_place(GTA_Computed_Value_Ite
  *
  * @param computed_value The computed value for the integer.
  */
-void GTA_CALL gta_computed_value_iterator_destroy(GTA_Computed_Value * computed_value);
+GTA_API void GTA_CALL gta_computed_value_iterator_destroy(GTA_Computed_Value * computed_value);
 
 /**
  * Destroy an iterator object in place.
@@ -143,7 +145,7 @@ void GTA_CALL gta_computed_value_iterator_destroy(GTA_Computed_Value * computed_
  *
  * @param self The computed value for the integer.
  */
-void GTA_CALL gta_computed_value_iterator_destroy_in_place(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_iterator_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Advance an iterator to the next value.
@@ -152,7 +154,7 @@ void GTA_CALL gta_computed_value_iterator_destroy_in_place(GTA_Computed_Value * 
  * @param context The execution context of the program.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_iterator_next(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_iterator_iterator_next(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

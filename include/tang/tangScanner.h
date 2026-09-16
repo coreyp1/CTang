@@ -6,6 +6,8 @@
 #ifndef GTA_TANGSCANNER_H
 #define GTA_TANGSCANNER_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus

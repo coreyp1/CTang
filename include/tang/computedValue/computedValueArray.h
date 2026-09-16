@@ -7,6 +7,8 @@
 #ifndef TANG_COMPUTED_VALUE_ARRAY_H
 #define TANG_COMPUTED_VALUE_ARRAY_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -16,7 +18,7 @@ extern "C" {
 /**
  * The VTable for the ComputedValueArray class.
  */
-extern GTA_Computed_Value_VTable gta_computed_value_array_vtable;
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_array_vtable;
 
 /**
  * The computed value for an array.
@@ -39,7 +41,7 @@ struct GTA_Computed_Value_Array {
  * @param context The execution context to create the value in.
  * @return The new computed value for the array.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_create(size_t size, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_create(size_t size, GTA_Execution_Context * context);
 
 /**
  * Create a new computed value for an array in place.
@@ -49,7 +51,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_create(siz
  * @param context The execution context to create the value in.
  * @return True if the operation was successful, false otherwise.
  */
-bool GTA_CALL gta_computed_value_array_create_in_place(GTA_Computed_Value_Array * self, size_t size, GTA_Execution_Context * context);
+GTA_API bool GTA_CALL gta_computed_value_array_create_in_place(GTA_Computed_Value_Array * self, size_t size, GTA_Execution_Context * context);
 
 /**
  * Destroy a computed value for an array.
@@ -58,7 +60,7 @@ bool GTA_CALL gta_computed_value_array_create_in_place(GTA_Computed_Value_Array 
  *
  * @param self The computed value for the array.
  */
-void GTA_CALL gta_computed_value_array_destroy(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_array_destroy(GTA_Computed_Value * self);
 
 /**
  * Destroy a computed value for an array in place.
@@ -67,7 +69,7 @@ void GTA_CALL gta_computed_value_array_destroy(GTA_Computed_Value * self);
  *
  * @param self The computed value for the array.
  */
-void GTA_CALL gta_computed_value_array_destroy_in_place(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_array_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Deep copy a computed value for an array.
@@ -78,7 +80,7 @@ void GTA_CALL gta_computed_value_array_destroy_in_place(GTA_Computed_Value * sel
  * @param context The execution context of the program.
  * @return The deep copy of the ComputedValueArray or NULL if an error occurred.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
 
 /**
  * Get a string representation of the computed value for an array.
@@ -90,7 +92,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_deep_copy(
  * @param self The computed value for the array.
  * @return The string representation of the computed value for the array.
  */
-GTA_NO_DISCARD char * GTA_CALL gta_computed_value_array_to_string(GTA_Computed_Value * self);
+GTA_API GTA_NO_DISCARD char * GTA_CALL gta_computed_value_array_to_string(GTA_Computed_Value * self);
 
 /**
  * Adds two values together.
@@ -105,7 +107,7 @@ GTA_NO_DISCARD char * GTA_CALL gta_computed_value_array_to_string(GTA_Computed_V
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Multiplies two values together.
@@ -120,7 +122,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_add(GTA_Co
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if they are equal.
@@ -134,7 +136,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_multiply(G
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if they are not equal.
@@ -148,7 +150,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_equal(GTA_
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Assigns a value to an index of the object.
@@ -159,7 +161,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_not_equal(
  * @param context The execution context of the program.
  * @return The modified object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_index_assign(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_index_assign(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context);
 
 /**
  * Gets a value from the object using an index.
@@ -169,7 +171,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_index_assi
  * @param context The execution context of the program.
  * @return The value of the index or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
 
 /**
  * Append a value to the array.
@@ -179,7 +181,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_
  * @param context The execution context of the program.
  * @return The Computed Value that resulted from the expression.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_append(GTA_Computed_Value_Array * self, GTA_Computed_Value * value, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_append(GTA_Computed_Value_Array * self, GTA_Computed_Value * value, GTA_Execution_Context * context);
 
 /**
  * Gets a slice of the object.
@@ -191,7 +193,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_append(GTA
  * @param context The execution context of the program.
  * @return The slice of the object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
 
 /**
  * Gets an iterator from a computed value.
@@ -200,7 +202,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_
  * @param context The execution context of the program.
  * @return The value of the iterator or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_iterator_get(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

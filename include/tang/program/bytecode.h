@@ -6,6 +6,8 @@
 #ifndef G_TANG_BYTECODE_H
 #define G_TANG_BYTECODE_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -95,7 +97,7 @@ typedef enum GTA_Bytecode {
  *
  * @param bytecode The bytecode to print.
  */
-void gta_bytecode_print(GTA_VectorX * bytecode);
+GTA_API void gta_bytecode_print(GTA_VectorX * bytecode);
 
 #ifdef __cplusplus
 }

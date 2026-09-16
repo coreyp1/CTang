@@ -7,6 +7,8 @@
 #ifndef G_TANG_LIBRARY_ALL_H
 #define G_TANG_LIBRARY_ALL_H
 
+#include <tang/namespace.h>
+
 #include <tang/library/library.h>
 #include <tang/library/libraryMath.h>
 #include <tang/library/libraryRandom.h>

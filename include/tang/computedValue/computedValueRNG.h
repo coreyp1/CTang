@@ -7,6 +7,8 @@
 #ifndef TANG_COMPUTEDVALUE_COMPUTEDVALUERNG_H
 #define TANG_COMPUTEDVALUE_COMPUTEDVALUERNG_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -14,12 +16,12 @@ extern "C" {
 /**
  * A singleton representing the global random number generator.
  */
-extern GTA_Computed_Value * gta_computed_value_random_global;
+GTA_API extern GTA_Computed_Value * gta_computed_value_random_global;
 
 /**
  * The VTable for the ComputedValueRNG class.
  */
-extern GTA_Computed_Value_VTable gta_computed_value_rng_vtable;
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_rng_vtable;
 
 /**
  * The computed value for a random number generator.
@@ -47,7 +49,7 @@ struct GTA_Computed_Value_RNG {
  * @param context The execution context to create the value in.
  * @return The new computed value for the random number generator.
  */
-GTA_NO_DISCARD GTA_Computed_Value_RNG * GTA_CALL gta_computed_value_rng_create_seeded(GTA_UInteger seed, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value_RNG * GTA_CALL gta_computed_value_rng_create_seeded(GTA_UInteger seed, GTA_Execution_Context * context);
 
 /**
  * Create a new computed value for a random number generator with a default
@@ -58,7 +60,7 @@ GTA_NO_DISCARD GTA_Computed_Value_RNG * GTA_CALL gta_computed_value_rng_create_s
  * @param context The execution context to create the value in.
  * @return The new computed value for the random number generator.
  */
-GTA_NO_DISCARD GTA_Computed_Value_RNG * GTA_CALL gta_computed_value_rng_create(GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value_RNG * GTA_CALL gta_computed_value_rng_create(GTA_Execution_Context * context);
 
 /**
  * Create a new computed value for a random number generator in place with the
@@ -69,7 +71,7 @@ GTA_NO_DISCARD GTA_Computed_Value_RNG * GTA_CALL gta_computed_value_rng_create(G
  * @param context The execution context to create the value in.
  * @return True if the operation was successful, false otherwise.
  */
-bool GTA_CALL gta_computed_value_rng_create_seeded_in_place(GTA_Computed_Value_RNG * self, GTA_UInteger seed, GTA_Execution_Context * context);
+GTA_API bool GTA_CALL gta_computed_value_rng_create_seeded_in_place(GTA_Computed_Value_RNG * self, GTA_UInteger seed, GTA_Execution_Context * context);
 
 /**
  * Destroy a computed value for a random number generator.
@@ -78,7 +80,7 @@ bool GTA_CALL gta_computed_value_rng_create_seeded_in_place(GTA_Computed_Value_R
  *
  * @param self The computed value to be destroyed.
  */
-void GTA_CALL gta_computed_value_rng_destroy(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_rng_destroy(GTA_Computed_Value * self);
 
 /**
  * Destroy a computed value for a random number generator in place.
@@ -87,7 +89,7 @@ void GTA_CALL gta_computed_value_rng_destroy(GTA_Computed_Value * self);
  *
  * @param self The computed value to be destroyed.
  */
-void GTA_CALL gta_computed_value_rng_destroy_in_place(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_rng_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Deep copy a computed value for a random number generator.
@@ -98,7 +100,7 @@ void GTA_CALL gta_computed_value_rng_destroy_in_place(GTA_Computed_Value * self)
  * @param context The execution context to create the value in.
  * @return The deep copy of the computed value.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_rng_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_rng_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Get a string representation of the computed value for a random number
@@ -112,7 +114,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_rng_deep_copy(GT
  * @return The string representation of the computed value for the random number
  *   generator.
  */
-GTA_NO_DISCARD char * GTA_CALL gta_computed_value_rng_to_string(GTA_Computed_Value * self);
+GTA_API GTA_NO_DISCARD char * GTA_CALL gta_computed_value_rng_to_string(GTA_Computed_Value * self);
 
 #ifdef __cplusplus
 }

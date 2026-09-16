@@ -5,6 +5,8 @@
 #ifndef GTA_AST_NODE_H
 #define GTA_AST_NODE_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -170,7 +172,7 @@ struct GTA_Ast_Node_VTable {
  *
  * A basic AST node of this type is used to represent the NULL value.
  */
-extern GTA_Ast_Node_VTable gta_ast_node_null_vtable;
+GTA_API extern GTA_Ast_Node_VTable gta_ast_node_null_vtable;
 
 /**
  * The base class for all AST nodes.
@@ -200,7 +202,7 @@ struct GTA_Ast_Node {
  * @param location The location of the node in the source code.
  * @return The new AST node or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node * GTA_CALL gta_ast_node_create(GTA_PARSER_LTYPE location);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * GTA_CALL gta_ast_node_create(GTA_PARSER_LTYPE location);
 
 /**
  * Destroy the AST node and all of its children.
@@ -211,7 +213,7 @@ GTA_NO_DISCARD GTA_Ast_Node * GTA_CALL gta_ast_node_create(GTA_PARSER_LTYPE loca
  *
  * @param self The node to destroy.
  */
-void GTA_CALL gta_ast_node_destroy(GTA_Ast_Node * self);
+GTA_API void GTA_CALL gta_ast_node_destroy(GTA_Ast_Node * self);
 
 /**
  * Compile the AST node to binary for x86_64.
@@ -225,7 +227,7 @@ void GTA_CALL gta_ast_node_destroy(GTA_Ast_Node * self);
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compile the AST node to binary for arm_64.
@@ -280,7 +282,7 @@ bool gta_ast_node_compile_to_binary__arm_32(GTA_Ast_Node * self, GTA_Compiler_Co
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Print the AST node and all of its children to stdout.
@@ -292,7 +294,7 @@ bool gta_ast_node_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context 
  * @param self The node to print.
  * @param indent The string to print before each line of output.
  */
-void gta_ast_node_print(GTA_Ast_Node * self, const char * indent);
+GTA_API void gta_ast_node_print(GTA_Ast_Node * self, const char * indent);
 
 /**
  * Simplify the AST node and all of its children.
@@ -320,7 +322,7 @@ void gta_ast_node_print(GTA_Ast_Node * self, const char * indent);
  *   The calling function should destroy the original node if it is no longer
  *   needed.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Generalized function to walk the AST.  The callback function is called for
@@ -337,7 +339,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_simplify(GTA_Ast_Node * self, GTA_Ast
  * @param return_value A pointer to user-defined return value that is passed to
  *   the callback function.  This value can be modified by the callback.
  */
-void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+GTA_API void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 /**
  * Compile a NULL node to binary for x86_64.
@@ -346,7 +348,7 @@ void gta_ast_node_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback,
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_null_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_null_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compile a NULL node to bytecode.
@@ -355,14 +357,14 @@ bool gta_ast_node_null_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compil
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_null_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_null_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * The destroy function for the GTA_Ast_Node class when the node is a null.
  *
  * @param self The node to destroy.
  */
-void GTA_CALL gta_ast_node_null_destroy(GTA_Ast_Node * self);
+GTA_API void GTA_CALL gta_ast_node_null_destroy(GTA_Ast_Node * self);
 
 /**
  * The print function for the GTA_Ast_Node class when the node is a null.
@@ -370,7 +372,7 @@ void GTA_CALL gta_ast_node_null_destroy(GTA_Ast_Node * self);
  * @param self The node to print.
  * @param indent The string to print before each line of output.
  */
-void gta_ast_node_null_print(GTA_Ast_Node * self, const char * indent);
+GTA_API void gta_ast_node_null_print(GTA_Ast_Node * self, const char * indent);
 
 /**
  * The simplify function for the GTA_Ast_Node class when the node is a null.
@@ -382,7 +384,7 @@ void gta_ast_node_null_print(GTA_Ast_Node * self, const char * indent);
  *   The calling function should destroy the original node if it is no longer
  *   needed.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_null_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_null_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * The walk function for the GTA_Ast_Node class when the node is a null.
@@ -394,7 +396,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_null_simplify(GTA_Ast_Node * self, GT
  * @param return_value A pointer to user-defined return value that is passed to
  *   the callback function.  This value can be modified by the callback.
  */
-void gta_ast_node_null_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+GTA_API void gta_ast_node_null_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 /**
  * Invaliates all variables in the variable map.
@@ -406,7 +408,7 @@ void gta_ast_node_null_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback call
  *
  * @param variable_map The variable map to invalidate.
  */
-void gta_ast_simplify_variable_map_invalidate(GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_API void gta_ast_simplify_variable_map_invalidate(GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Remove any entry in target that is not in source.
@@ -419,7 +421,7 @@ void gta_ast_simplify_variable_map_invalidate(GTA_Ast_Simplify_Variable_Map * va
  *   source.
  * @param source The variable map whose elements will be tested.
  */
-void gta_ast_simplify_variable_map_synchronize(GTA_Ast_Simplify_Variable_Map * target, GTA_Ast_Simplify_Variable_Map * source);
+GTA_API void gta_ast_simplify_variable_map_synchronize(GTA_Ast_Simplify_Variable_Map * target, GTA_Ast_Simplify_Variable_Map * source);
 
 /**
  * Perform pre-compilation analysis on the AST node.
@@ -434,7 +436,7 @@ void gta_ast_simplify_variable_map_synchronize(GTA_Ast_Simplify_Variable_Map * t
  * @param program The program that the node is part of.
  * @return NULL on success, otherwise return a parse error.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
 
 #ifdef __cplusplus
 }

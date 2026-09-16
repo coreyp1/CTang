@@ -10,6 +10,8 @@
 #ifndef G_TANG_EXECUTION_CONTEXT_H
 #define G_TANG_EXECUTION_CONTEXT_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -88,7 +90,7 @@ struct GTA_Execution_Context {
  * @param program The program associated with the execution.
  * @return The new Context object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Execution_Context * gta_execution_context_create(GTA_Program * program);
+GTA_API GTA_NO_DISCARD GTA_Execution_Context * gta_execution_context_create(GTA_Program * program);
 
 /**
  * Creates a new Context object using the supplied memory location.
@@ -101,7 +103,7 @@ GTA_NO_DISCARD GTA_Execution_Context * gta_execution_context_create(GTA_Program 
  * @param program The program associated with the execution.
  * @return true on success, false on failure.
  */
-bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_Program * program);
+GTA_API bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_Program * program);
 
 /**
  * Destroys a Context object.
@@ -112,7 +114,7 @@ bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_
  *
  * @param context The Context object to destroy.
  */
-void gta_execution_context_destroy(GTA_Execution_Context * context);
+GTA_API void gta_execution_context_destroy(GTA_Execution_Context * context);
 
 /**
  * Destroys a Context object using the supplied memory location.
@@ -126,7 +128,7 @@ void gta_execution_context_destroy(GTA_Execution_Context * context);
  *
  * @param context The Context object to destroy.
  */
-void gta_execution_context_destroy_in_place(GTA_Execution_Context * context);
+GTA_API void gta_execution_context_destroy_in_place(GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

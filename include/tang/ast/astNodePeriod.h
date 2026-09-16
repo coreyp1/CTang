@@ -5,6 +5,8 @@
 #ifndef GTA_AST_NODE_PERIOD_H
 #define GTA_AST_NODE_PERIOD_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -14,7 +16,7 @@ extern "C" {
 /**
  * The vtable for the GTA_Ast_Node_Period class.
  */
-extern GTA_Ast_Node_VTable gta_ast_node_period_vtable;
+GTA_API extern GTA_Ast_Node_VTable gta_ast_node_period_vtable;
 
 /**
  * The GTA_Ast_Node_Period class.
@@ -45,7 +47,7 @@ struct GTA_Ast_Node_Period {
  * @param location The location of the period operation in the source code.
  * @return The new GTA_Ast_Node_Period object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node_Period * gta_ast_node_period_create(GTA_Ast_Node * lhs, const char * rhs, GTA_PARSER_LTYPE location);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node_Period * gta_ast_node_period_create(GTA_Ast_Node * lhs, const char * rhs, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Period object.
@@ -55,7 +57,7 @@ GTA_NO_DISCARD GTA_Ast_Node_Period * gta_ast_node_period_create(GTA_Ast_Node * l
  *
  * @param self The GTA_Ast_Node_Period object to destroy.
  */
-void gta_ast_node_period_destroy(GTA_Ast_Node * self);
+GTA_API void gta_ast_node_period_destroy(GTA_Ast_Node * self);
 
 /**
  * Prints a GTA_Ast_Node_Period object to stdout.
@@ -66,7 +68,7 @@ void gta_ast_node_period_destroy(GTA_Ast_Node * self);
  * @param self The GTA_Ast_Node_Period object to print.
  * @param indent The string to print before each line of output.
  */
-void gta_ast_node_period_print(GTA_Ast_Node * self, const char * indent);
+GTA_API void gta_ast_node_period_print(GTA_Ast_Node * self, const char * indent);
 
 /**
  * Simplifies a GTA_Ast_Node_Period object.
@@ -78,7 +80,7 @@ void gta_ast_node_period_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use when simplifying the node.
  * @return The simplified node or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_period_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_period_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Walks a GTA_Ast_Node_Period object.
@@ -91,7 +93,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_period_simplify(GTA_Ast_Node * self, 
  * @param data The user-defined data to pass to the callback function.
  * @param return_value The return value of the walk, populated by the callback.
  */
-void gta_ast_node_period_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+GTA_API void gta_ast_node_period_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 /**
  * Perform pre-compilation analysis on the AST node.
@@ -106,7 +108,7 @@ void gta_ast_node_period_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback ca
  * @param program The program that the node is part of.
  * @return NULL on success, otherwise return a parse error.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_period_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_period_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
 
 /**
  * Compile the AST node to binary for x86_64.
@@ -120,7 +122,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_period_analyze(GTA_Ast_Node * self, G
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_period_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_period_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compiles the AST node to bytecode.
@@ -133,7 +135,7 @@ bool gta_ast_node_period_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
  * @param self The node to compile.
  * @param context The compiler state to use for compilation.
  */
-bool gta_ast_node_period_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_period_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

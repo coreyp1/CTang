@@ -7,6 +7,8 @@
 #ifndef G_TANG_COMPUTED_VALUE_STRING_H
 #define G_TANG_COMPUTED_VALUE_STRING_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -17,7 +19,7 @@ extern "C" {
 /**
  * The vtable for the GTA_Computed_Value_String class.
  */
-extern GTA_Computed_Value_VTable gta_computed_value_string_vtable;
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_string_vtable;
 
 /**
  * The GTA_Computed_Value_String class.
@@ -47,7 +49,7 @@ struct GTA_Computed_Value_String {
 /**
  * Singleton for an empty Computed_Value_String object.
  */
-extern GTA_Computed_Value * gta_computed_value_string_empty;
+GTA_API extern GTA_Computed_Value * gta_computed_value_string_empty;
 
 /**
  * Creates a new GTA_Computed_Value_String object.
@@ -58,7 +60,7 @@ extern GTA_Computed_Value * gta_computed_value_string_empty;
  * @param context The execution context to create the value in.
  * @return The new object.
  */
-GTA_Computed_Value_String * GTA_CALL gta_computed_value_string_create(GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context);
+GTA_API GTA_Computed_Value_String * GTA_CALL gta_computed_value_string_create(GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context);
 
 /**
  * Creates a new GTA_Computed_Value_String object in place.
@@ -70,7 +72,7 @@ GTA_Computed_Value_String * GTA_CALL gta_computed_value_string_create(GTA_Unicod
  * @param context The execution context to create the value in.
  * @return True if the operation was successful, false otherwise.
  */
-bool GTA_CALL gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self, GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context);
+GTA_API bool GTA_CALL gta_computed_value_string_create_in_place(GTA_Computed_Value_String * self, GTA_Unicode_String * value, bool adopt, GTA_Execution_Context * context);
 
 /**
  * Destroys a GTA_Computed_Value_String object.
@@ -82,7 +84,7 @@ bool GTA_CALL gta_computed_value_string_create_in_place(GTA_Computed_Value_Strin
  *
  * @param object The object.
  */
-void GTA_CALL gta_computed_value_string_destroy(GTA_Computed_Value * object);
+GTA_API void GTA_CALL gta_computed_value_string_destroy(GTA_Computed_Value * object);
 
 /**
  * Destroys a GTA_Computed_Value_String object in place.
@@ -94,7 +96,7 @@ void GTA_CALL gta_computed_value_string_destroy(GTA_Computed_Value * object);
  *
  * @param self The object.
  */
-void GTA_CALL gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_string_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Creates a deep copy of a GTA_Computed_Value_String object.
@@ -105,7 +107,7 @@ void GTA_CALL gta_computed_value_string_destroy_in_place(GTA_Computed_Value * se
  * @param context The execution context of the program.
  * @return The new object or NULL on failure.
  */
-GTA_Computed_Value * GTA_CALL gta_computed_value_string_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_API GTA_Computed_Value * GTA_CALL gta_computed_value_string_deep_copy(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Get a string representation of a GTA_Computed_Value_String object.
@@ -118,7 +120,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_deep_copy(GTA_Computed_V
  * @param self The object.
  * @return The string or NULL on failure.
  */
-char * GTA_CALL gta_computed_value_string_to_string(GTA_Computed_Value * self);
+GTA_API char * GTA_CALL gta_computed_value_string_to_string(GTA_Computed_Value * self);
 
 /**
  * Prints a computed value.
@@ -130,7 +132,7 @@ char * GTA_CALL gta_computed_value_string_to_string(GTA_Computed_Value * self);
  * @return A string representation of the object or NULL if the operation
  *  failed.
  */
-GTA_NO_DISCARD GTA_Unicode_String * GTA_CALL gta_computed_value_string_print(GTA_Computed_Value * self, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Unicode_String * GTA_CALL gta_computed_value_string_print(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
  * Casts a computed value to a different type.
@@ -142,7 +144,7 @@ GTA_NO_DISCARD GTA_Unicode_String * GTA_CALL gta_computed_value_string_print(GTA
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
  * Gets a value from the object using an index.
@@ -152,7 +154,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_cast(GTA_
  * @param context The execution context of the program.
  * @return The value of the index or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Execution_Context * context);
 
 /**
  * Gets a slice of the object.
@@ -164,7 +166,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_index(GTA
  * @param context The execution context of the program.
  * @return The slice of the object or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

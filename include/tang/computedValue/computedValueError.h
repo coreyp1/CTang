@@ -9,6 +9,8 @@
 #ifndef G_TANG_COMPUTED_VALUE_ERROR_H
 #define G_TANG_COMPUTED_VALUE_ERROR_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -18,32 +20,32 @@ extern "C" {
 /**
  * The vtable for the GTA_Computed_Value_Error class.
  */
-extern GTA_Computed_Value_VTable gta_computed_value_error_vtable;
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_error_vtable;
 
 /**
  * Generic "Not implemented" singleton error value.
  */
-extern GTA_Computed_Value * gta_computed_value_error_not_implemented;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_not_implemented;
 
 /**
  * Generic "Out of memory" singleton error value.
  */
-extern GTA_Computed_Value * gta_computed_value_error_out_of_memory;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_out_of_memory;
 
 /**
  * Generic "invalid bytecode" singleton error value.
  */
-extern GTA_Computed_Value * gta_computed_value_error_invalid_bytecode;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_invalid_bytecode;
 
 /**
  * Generic "Divide by zero" singleton error value.
  */
-extern GTA_Computed_Value * gta_computed_value_error_divide_by_zero;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_divide_by_zero;
 
 /**
  * Generic "Modulo by zero" singleton error value.
  */
-extern GTA_Computed_Value * gta_computed_value_error_modulo_by_zero;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_modulo_by_zero;
 
 /**
  * Generic "not supported" singleton error value.
@@ -57,32 +59,32 @@ extern GTA_Computed_Value * gta_computed_value_error_modulo_by_zero;
  * operation should be retried with the operands swapped and the reversed flag
  * set.
  */
-extern GTA_Computed_Value * gta_computed_value_error_not_supported;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_not_supported;
 
 /**
  * Indicates that the supplied index is not valid.  Only integer indexes are
  * supported.
  */
-extern GTA_Computed_Value * gta_computed_value_error_invalid_index;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_invalid_index;
 
 /**
  * Indicates that the attempted function call could not be executed, because
  * the object was not a function.
  */
-extern GTA_Computed_Value * gta_computed_value_error_invalid_function_call;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_invalid_function_call;
 
 /**
  * Indicates that the attempted function call could not be executed, because
  * the number of arguments supplied did not match the number of parameters
  * expected by the function.
  */
-extern GTA_Computed_Value * gta_computed_value_error_argument_count_mismatch;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_argument_count_mismatch;
 
 /**
  * Error resulting from trying to set the seed of the global random number
  * generator.
  */
-extern GTA_Computed_Value * gta_computed_value_error_global_rng_seed_not_changeable;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_global_rng_seed_not_changeable;
 
 /**
  * Represents an error value.
@@ -113,7 +115,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_error_create(con
  * @param self The GTA_Computed_Value_Error object.
  * @return The string representation of the error.
  */
-GTA_NO_DISCARD char * GTA_CALL gta_computed_value_error_to_string(GTA_Computed_Value * self);
+GTA_API GTA_NO_DISCARD char * GTA_CALL gta_computed_value_error_to_string(GTA_Computed_Value * self);
 
 #ifdef __cplusplus
 }

@@ -9,6 +9,8 @@
 #ifndef G_TANG_PROGRAM_H
 #define G_TANG_PROGRAM_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -182,7 +184,7 @@ struct GTA_Program {
  * @param code The code to create the program from.
  * @return The new program or null if the program could not be created.
  */
-GTA_NO_DISCARD GTA_Program * gta_program_create(GTA_Language * language, const char * code);
+GTA_API GTA_NO_DISCARD GTA_Program * gta_program_create(GTA_Language * language, const char * code);
 
 /**
  * Create a new program from the given code in the memory location provided.
@@ -200,7 +202,7 @@ GTA_NO_DISCARD GTA_Program * gta_program_create(GTA_Language * language, const c
  * @param code The code to create the program from.
  * @return True if the program was created successfully, false otherwise.
  */
-bool gta_program_create_in_place(GTA_Program * program, GTA_Language * language, const char * code);
+GTA_API bool gta_program_create_in_place(GTA_Program * program, GTA_Language * language, const char * code);
 
 /**
  * Create a new program from the given code with the given flags.
@@ -210,7 +212,7 @@ bool gta_program_create_in_place(GTA_Program * program, GTA_Language * language,
  * @param flags The flags to create the program with.
  * @return The new program or null if the program could not be created.
  */
-GTA_NO_DISCARD GTA_Program * gta_program_create_with_flags(GTA_Language * language, const char * code, GTA_Program_Flags flags);
+GTA_API GTA_NO_DISCARD GTA_Program * gta_program_create_with_flags(GTA_Language * language, const char * code, GTA_Program_Flags flags);
 
 /**
  * Create a new program from the given code with the given flags in the memory
@@ -227,14 +229,14 @@ GTA_NO_DISCARD GTA_Program * gta_program_create_with_flags(GTA_Language * langua
  * @param flags The flags to create the program with.
  * @return True if the program was created successfully, false otherwise.
  */
-bool gta_program_create_in_place_with_flags(GTA_Program * program, GTA_Language * language, const char * code, GTA_Program_Flags flags);
+GTA_API bool gta_program_create_in_place_with_flags(GTA_Program * program, GTA_Language * language, const char * code, GTA_Program_Flags flags);
 
 /**
  * Destroy the given program.
  *
  * @param program The program to destroy.
 */
-void gta_program_destroy(GTA_Program * program);
+GTA_API void gta_program_destroy(GTA_Program * program);
 
 /**
  * Destroy the given program, except for the program container.
@@ -246,7 +248,7 @@ void gta_program_destroy(GTA_Program * program);
  *
  * @param program The program to destroy.
  */
-void gta_program_destroy_in_place(GTA_Program * program);
+GTA_API void gta_program_destroy_in_place(GTA_Program * program);
 
 /**
  * Execute the given program with the given context.
@@ -258,7 +260,7 @@ void gta_program_destroy_in_place(GTA_Program * program);
  * @param context The initialized context with which to execute the program.
  * @return True if the program executed successfully, false otherwise.
  */
-bool gta_program_execute(GTA_Execution_Context * context);
+GTA_API bool gta_program_execute(GTA_Execution_Context * context);
 
 /**
  * Execute the given program with the given context using the bytecode.
@@ -266,7 +268,7 @@ bool gta_program_execute(GTA_Execution_Context * context);
  * @param context The initialized context with which to execute the program.
  * @return True if the program executed successfully, false otherwise.
  */
-bool gta_program_execute_bytecode(GTA_Execution_Context * context);
+GTA_API bool gta_program_execute_bytecode(GTA_Execution_Context * context);
 
 /**
  * Execute the given program with the given context using the binary.
@@ -274,14 +276,14 @@ bool gta_program_execute_bytecode(GTA_Execution_Context * context);
  * @param context The initialized context with which to execute the program.
  * @return True if the program executed successfully, false otherwise.
  */
-bool gta_program_execute_binary(GTA_Execution_Context * context);
+GTA_API bool gta_program_execute_binary(GTA_Execution_Context * context);
 
 /**
  * Print the bytecode for the given program.
  *
  * @param program The program to print the bytecode for.
  */
-void gta_program_bytecode_print(GTA_Program * program);
+GTA_API void gta_program_bytecode_print(GTA_Program * program);
 
 /**
  * Attempt to JIT compile the given program to binary for x86_64.
@@ -291,7 +293,7 @@ void gta_program_bytecode_print(GTA_Program * program);
  *
  * @param program The program to be compiled.
  */
-void gta_program_compile_binary__x86_64(GTA_Program * program);
+GTA_API void gta_program_compile_binary__x86_64(GTA_Program * program);
 
 /**
  * Attempt to JIT compile the given program to binary for arm_64.
@@ -301,7 +303,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program);
  *
  * @param program The program to be compiled.
  */
-void gta_program_compile_binary__arm_64(GTA_Program * program);
+GTA_API void gta_program_compile_binary__arm_64(GTA_Program * program);
 
 /**
  * Attempt to JIT compile the given program to binary for x86_32.
@@ -311,7 +313,7 @@ void gta_program_compile_binary__arm_64(GTA_Program * program);
  *
  * @param program The program to be compiled.
  */
-void gta_program_compile_binary__x86_32(GTA_Program * program);
+GTA_API void gta_program_compile_binary__x86_32(GTA_Program * program);
 
 /**
  * Attempt to JIT compile the given program to binary for arm_32.
@@ -321,14 +323,14 @@ void gta_program_compile_binary__x86_32(GTA_Program * program);
  *
  * @param program The program to be compiled.
  */
-void gta_program_compile_binary__arm_32(GTA_Program * program);
+GTA_API void gta_program_compile_binary__arm_32(GTA_Program * program);
 
 /**
  * The JIT compilation is not supported for the given architecture.
  *
  * @param program The program to be compiled.
  */
-void gta_program_compile_binary__unsupported(GTA_Program * program);
+GTA_API void gta_program_compile_binary__unsupported(GTA_Program * program);
 
 /**
  * Get the type attribute function for the given type and identifier.
@@ -342,7 +344,7 @@ void gta_program_compile_binary__unsupported(GTA_Program * program);
  * @return The function that will be called to fulfill the attribute value
  *   request.
  */
-GTA_Computed_Value_Attribute_Callback gta_program_get_type_attribute(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger identifier_hash);
+GTA_API GTA_Computed_Value_Attribute_Callback gta_program_get_type_attribute(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger identifier_hash);
 
 /**
  * Set an attribute function for a given type and identifier.
@@ -355,7 +357,7 @@ GTA_Computed_Value_Attribute_Callback gta_program_get_type_attribute(GTA_Program
  * @return True if the attribute function was set successfully, false
  *   otherwise.
  */
-bool gta_program_set_type_attribute(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger identifier_hash, GTA_Computed_Value_Attribute_Callback callback);
+GTA_API bool gta_program_set_type_attribute(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger identifier_hash, GTA_Computed_Value_Attribute_Callback callback);
 
 /**
  * Get a singleton for a given type and value hash, if it exists.
@@ -365,7 +367,7 @@ bool gta_program_set_type_attribute(GTA_Program * program, GTA_Computed_Value_VT
  * @param value_hash The hash of the value.
  * @return The singleton object or null if it does not exist.
  */
-GTA_Computed_Value * gta_program_get_singleton(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger value_hash);
+GTA_API GTA_Computed_Value * gta_program_get_singleton(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger value_hash);
 
 /**
  * Set a singleton for a given type and value hash.
@@ -376,7 +378,7 @@ GTA_Computed_Value * gta_program_get_singleton(GTA_Program * program, GTA_Comput
  * @param singleton The singleton object to set.
  * @return True if the singleton was set successfully, false otherwise.
  */
-bool gta_program_set_singleton(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger value_hash, GTA_Computed_Value * singleton);
+GTA_API bool gta_program_set_singleton(GTA_Program * program, GTA_Computed_Value_VTable * type_vtable, GTA_UInteger value_hash, GTA_Computed_Value * singleton);
 
 #ifdef __cplusplus
 }

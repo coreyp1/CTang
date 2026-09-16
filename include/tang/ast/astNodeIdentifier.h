@@ -5,6 +5,8 @@
 #ifndef GTA_AST_NODE_IDENTIFIER_H
 #define GTA_AST_NODE_IDENTIFIER_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -14,7 +16,7 @@ extern "C" {
 /**
  * The vtable for the GTA_Ast_Node_Identifier class.
  */
-extern GTA_Ast_Node_VTable gta_ast_node_identifier_vtable;
+GTA_API extern GTA_Ast_Node_VTable gta_ast_node_identifier_vtable;
 
 /**
  * The type of the identifier in the scope.
@@ -109,7 +111,7 @@ struct GTA_Ast_Node_Identifier {
  * @param location The location of the identifier in the source code.
  * @return The new GTA_Ast_Node_Identifier object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node_Identifier * gta_ast_node_identifier_create(const char * identifier, GTA_PARSER_LTYPE location);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node_Identifier * gta_ast_node_identifier_create(const char * identifier, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Identifier object.
@@ -119,7 +121,7 @@ GTA_NO_DISCARD GTA_Ast_Node_Identifier * gta_ast_node_identifier_create(const ch
  *
  * @param self The GTA_Ast_Node_Identifier object to destroy.
  */
-void gta_ast_node_identifier_destroy(GTA_Ast_Node * self);
+GTA_API void gta_ast_node_identifier_destroy(GTA_Ast_Node * self);
 
 /**
  * Prints a GTA_Ast_Node_Identifier object to stdout.
@@ -130,7 +132,7 @@ void gta_ast_node_identifier_destroy(GTA_Ast_Node * self);
  * @param self The GTA_Ast_Node_Identifier object to print.
  * @param indent The string to print before each line of output.
  */
-void gta_ast_node_identifier_print(GTA_Ast_Node * self, const char * indent);
+GTA_API void gta_ast_node_identifier_print(GTA_Ast_Node * self, const char * indent);
 
 /**
  * Simplifies a GTA_Ast_Node_Identifier object.
@@ -142,7 +144,7 @@ void gta_ast_node_identifier_print(GTA_Ast_Node * self, const char * indent);
  * @param variable_map The variable map to use for simplification.
  * @return The simplified GTA_Ast_Node_Identifier object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_identifier_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_identifier_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Perform pre-compilation analysis on the AST node.
@@ -160,7 +162,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_identifier_simplify(GTA_Ast_Node * se
  * @param scope The current variable scope.
  * @return NULL on success, otherwise return a parse error.
  */
-GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+GTA_API GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
 
 /**
  * Walks a GTA_Ast_Node_Identifier object.
@@ -173,7 +175,7 @@ GTA_Ast_Node * gta_ast_node_identifier_analyze(GTA_Ast_Node * self, GTA_Program 
  * @param data The user-defined data to pass to the callback function.
  * @param return_value The return value of the walk, populated by the callback.
  */
-void gta_ast_node_identifier_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+GTA_API void gta_ast_node_identifier_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 /**
  * Compiles a GTA_Ast_Node_Identifier object to binary for x86_64.
@@ -187,7 +189,7 @@ void gta_ast_node_identifier_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callbac
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compiles a GTA_Ast_Node_Identifier object to bytecode.
@@ -200,7 +202,7 @@ bool gta_ast_node_identifier_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
  * @param self The GTA_Ast_Node_Identifier object.
  * @param context The compiler state to use for compilation.
  */
-bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_identifier_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

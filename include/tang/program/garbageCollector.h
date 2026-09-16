@@ -7,6 +7,8 @@
 #ifndef G_TANG_GARBAGECOLLECTOR_H
 #define G_TANG_GARBAGECOLLECTOR_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus

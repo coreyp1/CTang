@@ -7,6 +7,8 @@
 #ifndef G_TANG_COMPUTEDVALUEFLOAT_H
 #define G_TANG_COMPUTEDVALUEFLOAT_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -16,7 +18,7 @@ extern "C" {
 /**
  * The VTable for the ComputedValueFloat class.
  */
-extern GTA_Computed_Value_VTable gta_computed_value_float_vtable;
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_float_vtable;
 
 /**
  * The Computed Value Float class.
@@ -39,7 +41,7 @@ struct GTA_Computed_Value_Float {
  * @param context The execution context to create the value in.
  * @return The new Computed Value Float or NULL on failure.
  */
-GTA_Computed_Value_Float * GTA_CALL gta_computed_value_float_create(GTA_Float value, GTA_Execution_Context * context);
+GTA_API GTA_Computed_Value_Float * GTA_CALL gta_computed_value_float_create(GTA_Float value, GTA_Execution_Context * context);
 
 /**
  * Create a new computed value for a float in place.
@@ -49,14 +51,14 @@ GTA_Computed_Value_Float * GTA_CALL gta_computed_value_float_create(GTA_Float va
  * @param context The execution context to create the value in.
  * @return True if the operation was successful, false otherwise.
  */
-bool GTA_CALL gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, GTA_Float value, GTA_Execution_Context * context);
+GTA_API bool GTA_CALL gta_computed_value_float_create_in_place(GTA_Computed_Value_Float * self, GTA_Float value, GTA_Execution_Context * context);
 
 /**
  * Destroy a Computed Value Float.
  *
  * @param computed_value The Computed Value Float.
  */
-void GTA_CALL gta_computed_value_float_destroy(GTA_Computed_Value * computed_value);
+GTA_API void GTA_CALL gta_computed_value_float_destroy(GTA_Computed_Value * computed_value);
 
 /**
  * Destroy a computed value for a float in place.
@@ -65,7 +67,7 @@ void GTA_CALL gta_computed_value_float_destroy(GTA_Computed_Value * computed_val
  *
  * @param self The computed value for the float.
  */
-void GTA_CALL gta_computed_value_float_destroy_in_place(GTA_Computed_Value * self);
+GTA_API void GTA_CALL gta_computed_value_float_destroy_in_place(GTA_Computed_Value * self);
 
 /**
  * Deep copy a computed value for an float.
@@ -76,7 +78,7 @@ void GTA_CALL gta_computed_value_float_destroy_in_place(GTA_Computed_Value * sel
  * @param context The execution context of the program.
  * @return The deep copy of the ComputedValueInteger or NULL if an error occurred.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_deep_copy(GTA_Computed_Value * value, GTA_Execution_Context * context);
 
 /**
  * Get a string representation of the computed value for a float.
@@ -88,7 +90,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_deep_copy(
  * @param self The computed value for the float.
  * @return The string representation of the computed value for the float.
  */
-GTA_NO_DISCARD char * GTA_CALL gta_computed_value_float_to_string(GTA_Computed_Value * self);
+GTA_API GTA_NO_DISCARD char * GTA_CALL gta_computed_value_float_to_string(GTA_Computed_Value * self);
 
 /**
  * Adds two values together.
@@ -103,7 +105,7 @@ GTA_NO_DISCARD char * GTA_CALL gta_computed_value_float_to_string(GTA_Computed_V
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Subtracts two values.
@@ -118,7 +120,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_add(GTA_Co
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_subtract(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Multiplies two values together.
@@ -133,7 +135,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_subtract(G
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_multiply(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Divides two values.
@@ -148,7 +150,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_multiply(G
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_divide(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Computes the modulo of two values.
@@ -163,7 +165,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_divide(GTA
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_modulo(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Computes the negative of a value.
@@ -175,7 +177,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_modulo(GTA
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_negative(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_negative(GTA_Computed_Value * self, bool is_assignment, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is less than the second.
@@ -189,7 +191,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_negative(G
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is less than or equal to the second.
@@ -203,7 +205,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_less_than(
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is greater than the second.
@@ -217,7 +219,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_less_than_
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value *GTA_CALL  gta_computed_value_float_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value *GTA_CALL  gta_computed_value_float_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if the first is greater than or equal to the
@@ -232,7 +234,7 @@ GTA_NO_DISCARD GTA_Computed_Value *GTA_CALL  gta_computed_value_float_greater_th
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if they are equal.
@@ -246,7 +248,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_greater_th
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Compares two values to see if they are not equal.
@@ -260,7 +262,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_equal(GTA_
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
 
 /**
  * Casts a computed value to a different type.
@@ -272,7 +274,7 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_not_equal(
  * @param context The execution context of the program.
  * @return The result of the operation or NULL if the operation failed.
  */
-GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_float_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 #ifdef __cplusplus
 }

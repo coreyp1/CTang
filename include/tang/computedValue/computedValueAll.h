@@ -7,6 +7,8 @@
 #ifndef G_TANG_COMPUTED_VALUE_ALL_H
 #define G_TANG_COMPUTED_VALUE_ALL_H
 
+#include <tang/namespace.h>
+
 #include <tang/computedValue/computedValue.h>
 #include <tang/computedValue/computedValueArray.h>
 #include <tang/computedValue/computedValueBoolean.h>

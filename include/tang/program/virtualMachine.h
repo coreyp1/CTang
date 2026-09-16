@@ -8,6 +8,8 @@
 #ifndef G_TANG_VIRTUAL_MACHINE_H
 #define G_TANG_VIRTUAL_MACHINE_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -16,7 +18,7 @@ extern "C" {
 #include <tang/computedValue/computedValue.h>
 #include <tang/program/program.h>
 
-bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context);
+GTA_API bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context);
 
 #ifdef __cplusplus
 }

@@ -5,6 +5,8 @@
 #ifndef TANG_PROGRAM_VARIABLE_H
 #define TANG_PROGRAM_VARIABLE_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -113,14 +115,14 @@ struct GTA_Variable_Scope {
  * @param parent_scope The parent scope.
  * @return The new scope, or NULL if an error occurred.
  */
-GTA_NO_DISCARD GTA_Variable_Scope * gta_variable_scope_create(char * name, GTA_Ast_Node * ast_node, GTA_Variable_Scope * parent_scope);
+GTA_API GTA_NO_DISCARD GTA_Variable_Scope * gta_variable_scope_create(char * name, GTA_Ast_Node * ast_node, GTA_Variable_Scope * parent_scope);
 
 /**
  * Destroy a variable scope.
  *
  * @param scope The scope to destroy.
  */
-void gta_variable_scope_destroy(GTA_Variable_Scope * scope);
+GTA_API void gta_variable_scope_destroy(GTA_Variable_Scope * scope);
 
 /**
  * Print a variable scope.
@@ -128,7 +130,7 @@ void gta_variable_scope_destroy(GTA_Variable_Scope * scope);
  * @param scope The variable scope to be printed.
  * @param indent The string to print before each line of output.
  */
-void gta_variable_scope_print(GTA_Variable_Scope * scope, const char * indent);
+GTA_API void gta_variable_scope_print(GTA_Variable_Scope * scope, const char * indent);
 
 #ifdef __cplusplus
 }

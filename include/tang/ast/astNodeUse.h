@@ -5,6 +5,8 @@
 #ifndef GTA_AST_NODE_USE_H
 #define GTA_AST_NODE_USE_H
 
+#include <tang/namespace.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -14,7 +16,7 @@ extern "C" {
 /**
  * The vtable for the GTA_Ast_Node_Use class.
  */
-extern GTA_Ast_Node_VTable gta_ast_node_use_vtable;
+GTA_API extern GTA_Ast_Node_VTable gta_ast_node_use_vtable;
 
 /**
  * The GTA_Ast_Node_Use class.
@@ -46,7 +48,7 @@ struct GTA_Ast_Node_Use {
  * @param location The location of the use statement in the source code.
  * @return The new GTA_Ast_Node_Use object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node_Use * gta_ast_node_use_create(const char * identifier, GTA_Ast_Node * expression, GTA_PARSER_LTYPE location);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node_Use * gta_ast_node_use_create(const char * identifier, GTA_Ast_Node * expression, GTA_PARSER_LTYPE location);
 
 /**
  * Destroys a GTA_Ast_Node_Use object.
@@ -56,7 +58,7 @@ GTA_NO_DISCARD GTA_Ast_Node_Use * gta_ast_node_use_create(const char * identifie
  *
  * @param self The GTA_Ast_Node_Use object to destroy.
  */
-void gta_ast_node_use_destroy(GTA_Ast_Node * self);
+GTA_API void gta_ast_node_use_destroy(GTA_Ast_Node * self);
 
 /**
  * Prints a GTA_Ast_Node_Use object to stdout.
@@ -67,7 +69,7 @@ void gta_ast_node_use_destroy(GTA_Ast_Node * self);
  * @param self The GTA_Ast_Node_Use object to print.
  * @param indent The string to print before each line of output.
  */
-void gta_ast_node_use_print(GTA_Ast_Node * self, const char * indent);
+GTA_API void gta_ast_node_use_print(GTA_Ast_Node * self, const char * indent);
 
 /**
  * Simplifies a GTA_Ast_Node_Use object.
@@ -80,7 +82,7 @@ void gta_ast_node_use_print(GTA_Ast_Node * self, const char * indent);
  *   statement.
  * @return The simplified GTA_Ast_Node_Use object or NULL on failure.
  */
-GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_use_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
+GTA_API GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_use_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_Variable_Map * variable_map);
 
 /**
  * Perform pre-compilation analysis on the AST node.
@@ -98,7 +100,7 @@ GTA_NO_DISCARD GTA_Ast_Node * gta_ast_node_use_simplify(GTA_Ast_Node * self, GTA
  * @param scope The current variable scope.
  * @return NULL on success, otherwise return a parse error.
  */
-GTA_Ast_Node * gta_ast_node_use_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
+GTA_API GTA_Ast_Node * gta_ast_node_use_analyze(GTA_Ast_Node * self, GTA_Program * program, GTA_Variable_Scope * scope);
 
 /**
  * Walks a GTA_Ast_Node_Use object.
@@ -111,7 +113,7 @@ GTA_Ast_Node * gta_ast_node_use_analyze(GTA_Ast_Node * self, GTA_Program * progr
  * @param data The user-defined data to pass to the callback.
  * @param return_value The return value of the walk, populated by the callback.
  */
-void gta_ast_node_use_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
+GTA_API void gta_ast_node_use_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callback, void * data, void * return_value);
 
 /**
  * Compiles a GTA_Ast_Node_Use object to binary for x86_64.
@@ -125,7 +127,7 @@ void gta_ast_node_use_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback callb
  * @param context Contextual information for the compile process.
  * @return True on success, false on failure.
  */
-bool gta_ast_node_use_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_use_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 /**
  * Compiles a GTA_Ast_Node_Use object to bytecode.
@@ -138,7 +140,7 @@ bool gta_ast_node_use_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
  * @param self The GTA_Ast_Node_Use object.
  * @param context The compiler state to use for compilation.
  */
-bool gta_ast_node_use_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
+GTA_API bool gta_ast_node_use_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context);
 
 #ifdef __cplusplus
 }

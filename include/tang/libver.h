@@ -13,13 +13,13 @@
  * Used in conjunction with the G_TANG... macros to produce a namespaced
  * function name for use by all exported functions in this library.
  */
-#define G_TANG_NAME ghotiio_tang_dev
+#include <tang/libver_gen.h>
 
 /**
  * String representation of the version, provided as a convenience to the
  * programmer.
  */
-#define G_TANG_VERSION "dev"
+
 
 /**
  * Macro to generate a "namespaced" version of an identifier.
@@ -30,6 +30,24 @@
  * @param NAME The name which will be prepended with the `G_TANG_NAME`.
  */
 #define G_TANG(NAME) G_TANG_RENAME(G_TANG_NAME, _ ## NAME)
+
+/**
+ * Marks a declaration as part of the public API.
+ *
+ * The library is built with -fvisibility=hidden, so a symbol without this is
+ * not exported at all: it cannot collide with another version of this library
+ * and it does not appear in the dynamic symbol table.  See CONVENTIONS.md
+ * section 4.
+ */
+#if defined(_WIN32) || defined(__CYGWIN__)
+#ifdef G_TANG_BUILD
+#define GTA_API __declspec(dllexport)
+#else
+#define GTA_API __declspec(dllimport)
+#endif
+#else
+#define GTA_API __attribute__((visibility("default")))
+#endif
 
 /**
  * Helper macro to concatenate the `#define`s properly.  It requires two levels
@@ -113,9 +131,6 @@
 // Type-Related Definitions
 //-----------------------------------------------------------------------------
 
-/// @cond HIDDEN_SYMBOLS
-#define GTA_Unicode_String G_TANG(GTA_Unicode_String)
-/// @endcond HIDDEN_SYMBOLS
 
 
 
