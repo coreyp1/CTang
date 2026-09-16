@@ -4,5 +4,5 @@ Version: (VERSION)
 URL: https://github.com/Ghoti-io
 Libs: -L(LIB)/(SUITE) -l(SUITE)-(PROJECT)(BRANCH)
 CFlags: -I(INCLUDE)/(SUITE)/(PROJECT)(BRANCH)
-Requires: ghoti.io-cutil-dev icu-io icu-i18n icu-uc
+Requires: (REQUIRES)
 
