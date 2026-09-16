@@ -1,11 +1,11 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
-#include <cutil/memory.h>
+#include <ghoti.io/cutil/memory.h>
 
-#include <tang/macros.h>
-#include <tang/ast/astNodeAll.h>
-#include <tang/tangLanguage.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeAll.h>
+#include <ghoti.io/tang/tangLanguage.h>
 
 using namespace std;
 

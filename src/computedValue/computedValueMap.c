@@ -2,12 +2,13 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include <cutil/hash.h>
-#include <cutil/memory.h>
-#include <tang/computedValue/computedValueError.h>
-#include <tang/computedValue/computedValueMap.h>
-#include <tang/computedValue/computedValueString.h>
-#include <tang/program/executionContext.h>
+#include <ghoti.io/cutil/hash.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/computedValue/computedValueError.h>
+#include <ghoti.io/tang/computedValue/computedValueMap.h>
+#include <ghoti.io/tang/computedValue/computedValueString.h>
+#include <ghoti.io/tang/program/executionContext.h>
 
 
 GTA_Computed_Value_VTable gta_computed_value_map_vtable = {

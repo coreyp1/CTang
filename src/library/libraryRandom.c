@@ -1,12 +1,13 @@
 
 #include <assert.h>
-#include <cutil/random.h>
-#include <tang/library/libraryRandom.h>
-#include <tang/computedValue/computedValueError.h>
-#include <tang/computedValue/computedValueInteger.h>
-#include <tang/computedValue/computedValueLibrary.h>
-#include <tang/computedValue/computedValueRNG.h>
-#include <tang/computedValue/computedValueFunctionNative.h>
+#include <ghoti.io/cutil/random.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/library/libraryRandom.h>
+#include <ghoti.io/tang/computedValue/computedValueError.h>
+#include <ghoti.io/tang/computedValue/computedValueInteger.h>
+#include <ghoti.io/tang/computedValue/computedValueLibrary.h>
+#include <ghoti.io/tang/computedValue/computedValueRNG.h>
+#include <ghoti.io/tang/computedValue/computedValueFunctionNative.h>
 
 /**
  * Random library attribute to get the global random number generator.

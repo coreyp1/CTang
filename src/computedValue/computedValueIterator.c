@@ -2,10 +2,11 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <cutil/memory.h>
-#include <tang/computedValue/computedValueError.h>
-#include <tang/computedValue/computedValueIterator.h>
-#include <tang/program/executionContext.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/computedValue/computedValueError.h>
+#include <ghoti.io/tang/computedValue/computedValueIterator.h>
+#include <ghoti.io/tang/program/executionContext.h>
 
 GTA_Computed_Value_VTable gta_computed_value_iterator_vtable = {
   .name = "Iterator",

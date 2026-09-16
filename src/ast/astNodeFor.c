@@ -2,13 +2,14 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <cutil/string.h>
-#include <tang/ast/astNodeAssign.h>
-#include <tang/ast/astNodeBinary.h>
-#include <tang/ast/astNodeFor.h>
-#include <tang/ast/astNodeIdentifier.h>
-#include <tang/program/binary.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/cutil/string.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeAssign.h>
+#include <ghoti.io/tang/ast/astNodeBinary.h>
+#include <ghoti.io/tang/ast/astNodeFor.h>
+#include <ghoti.io/tang/ast/astNodeIdentifier.h>
+#include <ghoti.io/tang/program/binary.h>
 
 
 // Helper macro to determine if a location indicates that the node was

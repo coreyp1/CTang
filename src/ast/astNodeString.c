@@ -2,10 +2,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/ast/astNodeString.h>
-#include <tang/program/binary.h>
-#include <tang/computedValue/computedValueString.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeString.h>
+#include <ghoti.io/tang/program/binary.h>
+#include <ghoti.io/tang/computedValue/computedValueString.h>
 
 GTA_Ast_Node_VTable gta_ast_node_string_vtable = {
   .name = "String",

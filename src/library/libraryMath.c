@@ -1,8 +1,9 @@
 
-#include <tang/library/libraryMath.h>
-#include <tang/computedValue/computedValueInteger.h>
-#include <tang/computedValue/computedValueFloat.h>
-#include <tang/computedValue/computedValueLibrary.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/library/libraryMath.h>
+#include <ghoti.io/tang/computedValue/computedValueInteger.h>
+#include <ghoti.io/tang/computedValue/computedValueFloat.h>
+#include <ghoti.io/tang/computedValue/computedValueLibrary.h>
 
 /**
  * Math library attribute to get the value of pi.

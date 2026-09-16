@@ -2,11 +2,12 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/ast/astNodeArray.h>
-#include <tang/computedValue/computedValueArray.h>
-#include <tang/computedValue/computedValueError.h>
-#include <tang/program/binary.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeArray.h>
+#include <ghoti.io/tang/computedValue/computedValueArray.h>
+#include <ghoti.io/tang/computedValue/computedValueError.h>
+#include <ghoti.io/tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_array_vtable = {
   .name = "Array",

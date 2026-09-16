@@ -2,11 +2,12 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/ast/astNodeFloat.h>
-#include <tang/computedValue/computedValueFloat.h>
-#include <tang/program/binary.h>
-#include <tang/program/bytecode.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeFloat.h>
+#include <ghoti.io/tang/computedValue/computedValueFloat.h>
+#include <ghoti.io/tang/program/binary.h>
+#include <ghoti.io/tang/program/bytecode.h>
 
 GTA_Ast_Node_VTable gta_ast_node_float_vtable = {
   .name = "Float",

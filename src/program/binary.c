@@ -3,9 +3,10 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <tang/program/binary.h>
-#include <tang/program/compilerContext.h>
-#include <tang/computedValue/computedValue.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/program/binary.h>
+#include <ghoti.io/tang/program/compilerContext.h>
+#include <ghoti.io/tang/computedValue/computedValue.h>
 
 #define VECTOR_GROWTH_FACTOR ((double)1.5)
 

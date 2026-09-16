@@ -2,12 +2,13 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/ast/astNodeAssign.h>
-#include <tang/ast/astNodeGlobal.h>
-#include <tang/ast/astNodeIdentifier.h>
-#include <tang/ast/astNodeParseError.h>
-#include <tang/program/variable.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeAssign.h>
+#include <ghoti.io/tang/ast/astNodeGlobal.h>
+#include <ghoti.io/tang/ast/astNodeIdentifier.h>
+#include <ghoti.io/tang/ast/astNodeParseError.h>
+#include <ghoti.io/tang/program/variable.h>
 
 GTA_Ast_Node_VTable gta_ast_node_global_vtable = {
   .name = "Global",

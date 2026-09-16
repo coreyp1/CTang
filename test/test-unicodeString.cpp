@@ -5,10 +5,10 @@
  */
 
 #include <gtest/gtest.h>
-#include <cutil/memory.h>
+#include <ghoti.io/cutil/memory.h>
 #include <unicode/uclean.h>
 #include <iostream>
-#include <tang/unicodeString.h>
+#include <ghoti.io/tang/unicodeString.h>
 
 using namespace std;
 

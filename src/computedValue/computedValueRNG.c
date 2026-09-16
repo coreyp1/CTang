@@ -1,18 +1,19 @@
 
 #include <assert.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <cutil/semaphore.h>
-#include <cutil/random.h>
-#include <tang/library/libraryRandom.h>
-#include <tang/computedValue/computedValue.h>
-#include <tang/computedValue/computedValueBoolean.h>
-#include <tang/computedValue/computedValueError.h>
-#include <tang/computedValue/computedValueInteger.h>
-#include <tang/computedValue/computedValueFloat.h>
-#include <tang/computedValue/computedValueFunctionNative.h>
-#include <tang/computedValue/computedValueRNG.h>
-#include <tang/program/executionContext.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/cutil/semaphore.h>
+#include <ghoti.io/cutil/random.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/library/libraryRandom.h>
+#include <ghoti.io/tang/computedValue/computedValue.h>
+#include <ghoti.io/tang/computedValue/computedValueBoolean.h>
+#include <ghoti.io/tang/computedValue/computedValueError.h>
+#include <ghoti.io/tang/computedValue/computedValueInteger.h>
+#include <ghoti.io/tang/computedValue/computedValueFloat.h>
+#include <ghoti.io/tang/computedValue/computedValueFunctionNative.h>
+#include <ghoti.io/tang/computedValue/computedValueRNG.h>
+#include <ghoti.io/tang/program/executionContext.h>
 
 #ifdef _WIN32
 #include <windows.h>

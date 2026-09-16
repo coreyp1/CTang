@@ -2,8 +2,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/ast/astNodeParseError.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeParseError.h>
 
 GTA_Ast_Node_VTable gta_ast_node_parse_error_vtable = {
   .name = "Parse Error",

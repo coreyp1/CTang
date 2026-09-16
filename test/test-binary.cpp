@@ -7,8 +7,8 @@
 #include <stdint.h>
 #include <string>
 #include <gtest/gtest.h>
-#include <cutil/vector.h>
-#include <tang/program/binary.h>
+#include <ghoti.io/cutil/vector.h>
+#include <ghoti.io/tang/program/binary.h>
 #include <iostream>
 
 using namespace std;

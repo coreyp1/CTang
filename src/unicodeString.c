@@ -2,11 +2,12 @@
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>
-#include <cutil/memory.h>
+#include <ghoti.io/cutil/memory.h>
 #include <unicode/uconfig.h>
 #include <unicode/ustring.h>
 #include <unicode/ubrk.h>
-#include <tang/unicodeString.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/unicodeString.h>
 
 #include <stdio.h>
 

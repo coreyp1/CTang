@@ -1,10 +1,11 @@
 
 #include <assert.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/computedValue/computedValue.h>
-#include <tang/library/library.h>
-#include <tang/program/executionContext.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/computedValue/computedValue.h>
+#include <ghoti.io/tang/library/library.h>
+#include <ghoti.io/tang/program/executionContext.h>
 
 GTA_Execution_Context * gta_execution_context_create(GTA_Program * program) {
   GTA_Execution_Context * context = gcu_malloc(sizeof(GTA_Execution_Context));

@@ -2,12 +2,13 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/computedValue/computedValueBoolean.h>
-#include <tang/computedValue/computedValueError.h>
-#include <tang/computedValue/computedValueInteger.h>
-#include <tang/computedValue/computedValueFloat.h>
-#include <tang/computedValue/computedValueString.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/computedValue/computedValueBoolean.h>
+#include <ghoti.io/tang/computedValue/computedValueError.h>
+#include <ghoti.io/tang/computedValue/computedValueInteger.h>
+#include <ghoti.io/tang/computedValue/computedValueFloat.h>
+#include <ghoti.io/tang/computedValue/computedValueString.h>
 
 GTA_Computed_Value_VTable gta_computed_value_boolean_vtable = {
   .name = "Boolean",

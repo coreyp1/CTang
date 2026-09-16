@@ -2,10 +2,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/hash.h>
-#include <cutil/memory.h>
-#include <tang/ast/astNode.h>
-#include <tang/program/variable.h>
+#include <ghoti.io/cutil/hash.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNode.h>
+#include <ghoti.io/tang/program/variable.h>
 
 /**
  * Helper function that will recursively clean up all function scopes in a

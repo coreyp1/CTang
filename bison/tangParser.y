@@ -186,11 +186,11 @@
 // `requires` will be included in the .h file.
 %code requires {
 #include <stdint.h>
-#include <cutil/hash.h>
-#include <tang/macros.h>
-#include <tang/ast/astNode.h>
-#include <tang/location.h>
-#include <tang/unicodeString.h>
+#include <ghoti.io/cutil/hash.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNode.h>
+#include <ghoti.io/tang/location.h>
+#include <ghoti.io/tang/unicodeString.h>
 
 /* An opaque pointer. */
 #ifndef YY_TYPEDEF_YY_SCANNER_T
@@ -226,11 +226,11 @@ typedef struct GTA_Parser_Date {
 #include <limits.h>
 #include <string.h>
 #include <stdio.h>
-#include <cutil/memory.h>
+#include <ghoti.io/cutil/memory.h>
 #include "tangParser.h"
-#include <tang/macros.h>
-#include <tang/tangScanner.h>
-#include <tang/ast/astNodeAll.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/tangScanner.h>
+#include <ghoti.io/tang/ast/astNodeAll.h>
 
 static GTA_Parser_Error ErrorOutOfMemory = "Out of memory/Memory allocation error";
 // static GTA_Parser_Error ErrorOctalOutOfBounds = true;

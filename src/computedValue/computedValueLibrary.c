@@ -2,10 +2,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/computedValue/computedValueError.h>
-#include <tang/computedValue/computedValueLibrary.h>
-#include <tang/program/executionContext.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/computedValue/computedValueError.h>
+#include <ghoti.io/tang/computedValue/computedValueLibrary.h>
+#include <ghoti.io/tang/program/executionContext.h>
 
 GTA_Computed_Value_VTable gta_computed_value_library_vtable = {
   .name = "Library",

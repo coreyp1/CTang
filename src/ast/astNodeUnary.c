@@ -2,14 +2,15 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/ast/astNodeBoolean.h>
-#include <tang/ast/astNodeFloat.h>
-#include <tang/ast/astNodeInteger.h>
-#include <tang/ast/astNodeString.h>
-#include <tang/ast/astNodeUnary.h>
-#include <tang/computedValue/computedValueBoolean.h>
-#include <tang/program/binary.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeBoolean.h>
+#include <ghoti.io/tang/ast/astNodeFloat.h>
+#include <ghoti.io/tang/ast/astNodeInteger.h>
+#include <ghoti.io/tang/ast/astNodeString.h>
+#include <ghoti.io/tang/ast/astNodeUnary.h>
+#include <ghoti.io/tang/computedValue/computedValueBoolean.h>
+#include <ghoti.io/tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_unary_vtable = {
   .name = "Unary",

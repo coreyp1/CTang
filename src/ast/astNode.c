@@ -2,13 +2,14 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <cutil/type.h>
-#include <tang/ast/astNode.h>
-#include <tang/computedValue/computedValue.h>
-#include <tang/program/binary.h>
-#include <tang/program/bytecode.h>
-#include <tang/program/program.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/cutil/type.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNode.h>
+#include <ghoti.io/tang/computedValue/computedValue.h>
+#include <ghoti.io/tang/program/binary.h>
+#include <ghoti.io/tang/program/bytecode.h>
+#include <ghoti.io/tang/program/program.h>
 
 GTA_Ast_Node_VTable gta_ast_node_null_vtable = {
   .name = "Null",

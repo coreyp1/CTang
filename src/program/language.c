@@ -1,11 +1,12 @@
 
 #include <assert.h>
-#include <cutil/memory.h>
-#include <tang/computedValue/computedValueLibrary.h>
-#include <tang/library/library.h>
-#include <tang/library/libraryMath.h>
-#include <tang/library/libraryRandom.h>
-#include <tang/program/language.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/computedValue/computedValueLibrary.h>
+#include <ghoti.io/tang/library/library.h>
+#include <ghoti.io/tang/library/libraryMath.h>
+#include <ghoti.io/tang/library/libraryRandom.h>
+#include <ghoti.io/tang/program/language.h>
 
 GTA_Language * gta_language_create(void) {
   GTA_Language * language = gcu_malloc(sizeof(GTA_Language));

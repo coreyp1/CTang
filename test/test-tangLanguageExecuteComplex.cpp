@@ -1,16 +1,16 @@
 #include <gtest/gtest.h>
-#include <cutil/memory.h>
+#include <ghoti.io/cutil/memory.h>
 #include <iostream>
 #include <unicode/uclean.h>
 
-#include <tang/tang.h>
-#include <tang/macros.h>
-#include <tang/computedValue/computedValueAll.h>
-#include <tang/program/program.h>
-#include <tang/program/bytecode.h>
-#include <tang/program/executionContext.h>
-#include <tang/program/variable.h>
-#include <tang/unicodeString.h>
+#include <ghoti.io/tang/tang.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/computedValue/computedValueAll.h>
+#include <ghoti.io/tang/program/program.h>
+#include <ghoti.io/tang/program/bytecode.h>
+#include <ghoti.io/tang/program/executionContext.h>
+#include <ghoti.io/tang/program/variable.h>
+#include <ghoti.io/tang/unicodeString.h>
 
 using namespace std;
 

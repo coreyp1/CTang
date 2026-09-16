@@ -2,10 +2,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/ast/astNodeBoolean.h>
-#include <tang/computedValue/computedValueBoolean.h>
-#include <tang/program/binary.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeBoolean.h>
+#include <ghoti.io/tang/computedValue/computedValueBoolean.h>
+#include <ghoti.io/tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_boolean_vtable = {
   .name = "Boolean",

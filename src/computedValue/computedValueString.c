@@ -2,14 +2,15 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/computedValue/computedValue.h>
-#include <tang/computedValue/computedValueBoolean.h>
-#include <tang/computedValue/computedValueError.h>
-#include <tang/computedValue/computedValueFloat.h>
-#include <tang/computedValue/computedValueInteger.h>
-#include <tang/computedValue/computedValueString.h>
-#include <tang/program/executionContext.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/computedValue/computedValue.h>
+#include <ghoti.io/tang/computedValue/computedValueBoolean.h>
+#include <ghoti.io/tang/computedValue/computedValueError.h>
+#include <ghoti.io/tang/computedValue/computedValueFloat.h>
+#include <ghoti.io/tang/computedValue/computedValueInteger.h>
+#include <ghoti.io/tang/computedValue/computedValueString.h>
+#include <ghoti.io/tang/program/executionContext.h>
 
 
 /**

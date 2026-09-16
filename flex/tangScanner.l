@@ -46,11 +46,11 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include <cutil/memory.h>
+#include <ghoti.io/cutil/memory.h>
 
-#include "tang/tangScanner.h"
+#include "ghoti.io/tang/tangScanner.h"
 #include "tangParser.h"
-#include "tang/unicodeString.h"
+#include "ghoti.io/tang/unicodeString.h"
 
 // yyterminate() is not a function, but a macro.
 // The macro does not return the correct type.  It returns an int,

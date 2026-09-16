@@ -7,8 +7,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
-#include <cutil/memory.h>
-#include <tang/tang.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/tang.h>
 
 void print_help_text() {
   int width = 15;

@@ -1,14 +1,15 @@
 
 #include <assert.h>
 #include <string.h>
-#include <cutil/hash.h>
-#include <cutil/memory.h>
-#include <cutil/string.h>
-#include <tang/library/library.h>
-#include <tang/program/program.h>
-#include <tang/program/executionContext.h>
-#include <tang/computedValue/computedValue.h>
-#include <tang/computedValue/computedValueError.h>
+#include <ghoti.io/cutil/hash.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/cutil/string.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/library/library.h>
+#include <ghoti.io/tang/program/program.h>
+#include <ghoti.io/tang/program/executionContext.h>
+#include <ghoti.io/tang/computedValue/computedValue.h>
+#include <ghoti.io/tang/computedValue/computedValueError.h>
 
 /**
  * Helper class, only existing to aid in the transform a function pointer to a

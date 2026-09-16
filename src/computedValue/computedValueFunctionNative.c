@@ -2,10 +2,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/computedValue/computedValueError.h>
-#include <tang/computedValue/computedValueFunctionNative.h>
-#include <tang/program/compilerContext.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/computedValue/computedValueError.h>
+#include <ghoti.io/tang/computedValue/computedValueFunctionNative.h>
+#include <ghoti.io/tang/program/compilerContext.h>
 
 /**
  * The vtable for the GTA_Computed_Value_Function_Native class.

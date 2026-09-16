@@ -2,18 +2,19 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <tang/ast/astNodeBoolean.h>
-#include <tang/ast/astNodeCast.h>
-#include <tang/ast/astNodeFloat.h>
-#include <tang/ast/astNodeInteger.h>
-#include <tang/ast/astNodeString.h>
-#include <tang/computedValue/computedValue.h>
-#include <tang/computedValue/computedValueBoolean.h>
-#include <tang/computedValue/computedValueFloat.h>
-#include <tang/computedValue/computedValueInteger.h>
-#include <tang/computedValue/computedValueString.h>
-#include <tang/program/binary.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeBoolean.h>
+#include <ghoti.io/tang/ast/astNodeCast.h>
+#include <ghoti.io/tang/ast/astNodeFloat.h>
+#include <ghoti.io/tang/ast/astNodeInteger.h>
+#include <ghoti.io/tang/ast/astNodeString.h>
+#include <ghoti.io/tang/computedValue/computedValue.h>
+#include <ghoti.io/tang/computedValue/computedValueBoolean.h>
+#include <ghoti.io/tang/computedValue/computedValueFloat.h>
+#include <ghoti.io/tang/computedValue/computedValueInteger.h>
+#include <ghoti.io/tang/computedValue/computedValueString.h>
+#include <ghoti.io/tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_cast_vtable = {
   .name = "Cast",

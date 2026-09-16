@@ -2,10 +2,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <cutil/string.h>
-#include <tang/ast/astNodePeriod.h>
-#include <tang/program/binary.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/cutil/string.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodePeriod.h>
+#include <ghoti.io/tang/program/binary.h>
 
 GTA_Ast_Node_VTable gta_ast_node_period_vtable = {
   .name = "Period",

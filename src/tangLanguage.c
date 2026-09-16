@@ -1,15 +1,15 @@
 
 #include <assert.h>
-#include <tang/tangLanguage.h>
-#include <tang/tangScanner.h>
+#include <ghoti.io/tang/tangLanguage.h>
+#include <ghoti.io/tang/tangScanner.h>
 
 #define YY_HEADER_EXPORT_START_CONDITIONS
 #include "flexTangScanner.h"
 #undef YY_HEADER_EXPORT_START_CONDITIONS
 
-#include <tang/macros.h>
-#include <tang/ast/astNodeIdentifier.h>
-#include <tang/ast/astNodeParseError.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeIdentifier.h>
+#include <ghoti.io/tang/ast/astNodeParseError.h>
 
 GTA_Ast_Node * gta_tang_parse(const char * source, bool is_template) {
   GTA_Ast_Node * primary = gta_tang_primary_parse(source, is_template);

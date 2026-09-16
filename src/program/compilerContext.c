@@ -1,7 +1,8 @@
 
 #include <assert.h>
-#include <cutil/memory.h>
-#include <tang/program/compilerContext.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/program/compilerContext.h>
 
 GTA_Compiler_Context * gta_compiler_context_create(GTA_Program * program) {
   GTA_Compiler_Context * context = gcu_malloc(sizeof(GTA_Compiler_Context));

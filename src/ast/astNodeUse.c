@@ -2,11 +2,12 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <cutil/hash.h>
-#include <tang/ast/astNodeParseError.h>
-#include <tang/ast/astNodeUse.h>
-#include <tang/program/variable.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/cutil/hash.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeParseError.h>
+#include <ghoti.io/tang/ast/astNodeUse.h>
+#include <ghoti.io/tang/program/variable.h>
 
 
 GTA_Ast_Node_VTable gta_ast_node_use_vtable = {

@@ -1,10 +1,11 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <cutil/vector.h>
-#include <cutil/memory.h>
-#include <tang/program/bytecode.h>
-#include <tang/computedValue/computedValue.h>
+#include <ghoti.io/cutil/vector.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/program/bytecode.h>
+#include <ghoti.io/tang/computedValue/computedValue.h>
 
 void gta_bytecode_print(GTA_VectorX * bytecode) {
   assert(bytecode);

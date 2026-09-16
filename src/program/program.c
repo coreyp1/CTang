@@ -15,16 +15,17 @@
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
-#include <cutil/memory.h>
-#include <tang/ast/astNodeAll.h>
-#include <tang/computedValue/computedValueAll.h>
-#include <tang/program/compilerContext.h>
-#include <tang/program/executionContext.h>
-#include <tang/program/binary.h>
-#include <tang/program/program.h>
-#include <tang/program/variable.h>
-#include <tang/program/virtualMachine.h>
-#include <tang/tangLanguage.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/ast/astNodeAll.h>
+#include <ghoti.io/tang/computedValue/computedValueAll.h>
+#include <ghoti.io/tang/program/compilerContext.h>
+#include <ghoti.io/tang/program/executionContext.h>
+#include <ghoti.io/tang/program/binary.h>
+#include <ghoti.io/tang/program/program.h>
+#include <ghoti.io/tang/program/variable.h>
+#include <ghoti.io/tang/program/virtualMachine.h>
+#include <ghoti.io/tang/tangLanguage.h>
 
 
 /**

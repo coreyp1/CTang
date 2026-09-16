@@ -2,12 +2,13 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <cutil/string.h>
-#include <tang/computedValue/computedValueAll.h>
-#include <tang/library/library.h>
-#include <tang/program/bytecode.h>
-#include <tang/program/virtualMachine.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/cutil/string.h>
+#include <ghoti.io/tang/macros.h>
+#include <ghoti.io/tang/computedValue/computedValueAll.h>
+#include <ghoti.io/tang/library/library.h>
+#include <ghoti.io/tang/program/bytecode.h>
+#include <ghoti.io/tang/program/virtualMachine.h>
 
 bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
   if (!context || !context->program || !context->program->bytecode) {
