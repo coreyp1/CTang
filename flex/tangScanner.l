@@ -540,6 +540,12 @@ static size_t gta_flex_get_state_stack_depth(void * yyscanner);
 
 <doubleQuoteString>{
   <<EOF>> {
+    // CLEANUP_BUFFER, as the other two STRINGERROR returns below do. Input
+    // that ends inside a string literal - `x = "abc` - otherwise leaks
+    // whatever the literal had accumulated so far, because nothing downstream
+    // ever sees this buffer to free it. Found by the parse fuzzer in 30
+    // executions.
+    CLEANUP_BUFFER
     return GTA_PARSER_STRINGERROR;
   }
   \" {

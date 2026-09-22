@@ -638,6 +638,45 @@ TEST(Cast, FromInteger) {
   }
 }
 
+TEST(Parse, UnterminatedStringDoesNotLeak) {
+  // The scanner accumulates a string literal into a heap buffer. Every error
+  // return in tangScanner.l frees it with CLEANUP_BUFFER except the one for
+  // end-of-input inside a literal, which simply returned STRINGERROR - so
+  // input ending mid-string leaked whatever had been accumulated. Nothing
+  // downstream ever sees that buffer, so it could not be freed later.
+  //
+  // Found by the parse fuzzer within 30 executions; this is the minimised
+  // case. The empty literal does not leak, because nothing was accumulated,
+  // so a test using only `"` would have passed against the bug.
+  {
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script("x = \"abc");
+    if (ast) {
+      gta_ast_node_destroy(ast);
+    }
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // Longer, to be sure this is the accumulated literal and not a fixed
+    // allocation that happens to be the same size.
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script("x = \"abcdefghijklmnopqrstuvwxyz0123456789");
+    if (ast) {
+      gta_ast_node_destroy(ast);
+    }
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // The terminated form must still parse and still balance.
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script("x = \"abc\";");
+    ASSERT_NE(ast, nullptr);
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
+
 TEST(Cast, FromFloat) {
   {
     // Cast from float to integer.

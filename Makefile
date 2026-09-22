@@ -179,7 +179,7 @@ CC := cc
 # clear message into a clean that removes the wrong tree and an uninstall that
 # silently removes nothing. That is this fix's own defect, reintroduced by
 # over-applying it.
-DEPLESS_GOALS := clean cloc docs docs-pdf help uninstall uninstall-debug
+DEPLESS_GOALS := clean cloc docs docs-pdf help uninstall uninstall-debug fuzz-clean
 ifeq ($(filter-out $(DEPLESS_GOALS),$(or $(MAKECMDGOALS),all)),)
 SKIP_DEP_CHECK := 1
 endif
@@ -699,6 +699,108 @@ sanitizer-selftest: ## Prove the sanitizer flags actually catch what they claim
 	printf "\nAll three fault kinds are reported and exit non-zero.\n"
 
 ####################################################################
+# Fuzzing (libFuzzer, requires clang)
+####################################################################
+#
+# The library objects are rebuilt with -fsanitize=fuzzer-no-link so libFuzzer
+# can steer by the coverage it observes inside ctang. Against an uninstrumented
+# library it would see only the harness and degrade into random byte
+# generation, which for a grammar this size finds nothing.
+#
+# ASan and UBSan are on: a parser reading one byte past a buffer is exactly the
+# bug being hunted and will not usually crash on its own. float-cast-overflow
+# is named for the reason given in the sanitizer section, and
+# -fno-sanitize-recover because a finding that only prints is an input
+# libFuzzer never saves as an artifact - the campaign would run past the bug
+# and report nothing.
+#
+# .d files here for the same reason as everywhere else: without them a header
+# change rebuilds nothing, and objects that disagree about a struct's layout
+# produce "findings" in correct code.
+FUZZ_CC ?= clang
+FUZZ_CXX ?= clang++
+FUZZ_CC_OK := $(shell which $(FUZZ_CXX) 2>/dev/null)
+FUZZ_SAN := -fsanitize=address,$(SAN_CHECKS) -fno-sanitize-recover=$(SAN_CHECKS) \
+            -fno-omit-frame-pointer -g -O1
+FUZZ_LIB_FLAGS := $(FUZZ_SAN) -fsanitize=fuzzer-no-link
+FUZZ_BIN_FLAGS := $(FUZZ_SAN) -fsanitize=fuzzer
+
+FUZZ_DIR := $(BUILD_DIR)-fuzz
+FUZZ_OBJ_DIR := $(FUZZ_DIR)/objects
+FUZZ_APP_DIR := $(FUZZ_DIR)/apps
+# The corpus a run grows is working state: coverage-guided, hundreds of files,
+# and regenerated from the seeds. Only the seeds are tracked, and they are
+# copied in rather than fuzzed in place so a run never rewrites them.
+FUZZ_SEEDS := test/fuzz/seeds
+FUZZ_CORPUS := build/fuzz-corpus
+# Crash and leak artifacts. libFuzzer writes these to the working directory
+# unless told otherwise, which for a `make` run is the repository root - a
+# reproducer for a real bug, dropped as an untracked file where the next
+# `git add` sweeps it up or a `git clean` deletes it.
+FUZZ_ARTIFACTS := test/fuzz/artifacts
+# Long enough to be worth running, short enough to sit through. Override for a
+# real campaign: make fuzz FUZZ_TIME=3600
+FUZZ_TIME ?= 60
+
+FUZZ_OBJECTS := $(patsubst $(OBJ_DIR)/%,$(FUZZ_OBJ_DIR)/%,$(LIBOBJECTS))
+-include $(FUZZ_OBJECTS:.o=.d)
+
+ifdef PREFIX
+FUZZ_RPATH := -Wl,-rpath,$(LIB_INSTALL_PATH)/$(SUITE)
+endif
+
+# -w because the harnesses are built by a different compiler than the library
+# is warned for; ctang's -Werror set is tuned for gcc and clang disagrees about
+# several of them in the generated parser.
+$(FUZZ_OBJ_DIR)/%.o: src/%.c | $(LIBVER_GEN)
+	@mkdir -p $(@D)
+	@$(FUZZ_CC) $(FUZZ_LIB_FLAGS) -std=c17 -w -DGHOTIIO_TANG_BUILD $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
+
+$(FUZZ_OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c | $(LIBVER_GEN)
+	@mkdir -p $(@D)
+	@$(FUZZ_CC) $(FUZZ_LIB_FLAGS) -std=c17 -w -DGHOTIIO_TANG_BUILD $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
+
+$(FUZZ_OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c | $(LIBVER_GEN)
+	@mkdir -p $(@D)
+	@$(FUZZ_CC) $(FUZZ_LIB_FLAGS) -std=c17 -w -DGHOTIIO_TANG_BUILD $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
+
+# $1 = harness basename, $2 = target suffix
+define fuzz-rule
+fuzz-$2: ## Build the $2 fuzz harness (requires clang)
+fuzz-$2: $$(FUZZ_APP_DIR)/$1
+
+$$(FUZZ_APP_DIR)/$1: test/fuzz/$1.c $$(FUZZ_OBJECTS)
+	@if [ -z "$$(FUZZ_CC_OK)" ]; then \
+		echo "fuzzing requires $$(FUZZ_CXX); install clang or set FUZZ_CC/FUZZ_CXX" >&2; \
+		exit 1; \
+	fi
+	@mkdir -p $$(@D) $$(FUZZ_CORPUS)/$2
+	@printf "\n### Building $1 ###\n"
+	$$(FUZZ_CC) $$(FUZZ_BIN_FLAGS) -std=c17 -w $$(ICU_CFLAGS) $$(CUTIL_CFLAGS) $$(INCLUDE) \
+		-o $$@ $$< $$(FUZZ_OBJECTS) $$(ICU_LIBS) $$(CUTIL_LIBS) -lstdc++ -lm $$(FUZZ_RPATH)
+
+fuzz-run-$2: ## Run the $2 fuzzer for $$(FUZZ_TIME) seconds
+fuzz-run-$2: $$(FUZZ_APP_DIR)/$1
+	@mkdir -p $$(FUZZ_CORPUS)/$2
+	@cp -n $$(FUZZ_SEEDS)/$2/* $$(FUZZ_CORPUS)/$2/ 2>/dev/null || true
+	@printf "\n### Fuzzing $2 for $$(FUZZ_TIME)s ###\n"
+	@mkdir -p $$(FUZZ_ARTIFACTS)
+	@$$(FUZZ_APP_DIR)/$1 $$(FUZZ_CORPUS)/$2 -max_total_time=$$(FUZZ_TIME) \
+		-timeout=10 -rss_limit_mb=4096 -print_final_stats=1 \
+		-artifact_prefix=$$(FUZZ_ARTIFACTS)/$2-
+endef
+
+$(eval $(call fuzz-rule,fuzz_parse,parse))
+$(eval $(call fuzz-rule,fuzz_template,template))
+
+fuzz: ## Build and run every fuzzer for $(FUZZ_TIME) seconds each
+fuzz: fuzz-run-parse fuzz-run-template
+
+fuzz-clean: ## Remove the fuzz build (keeps the corpus)
+fuzz-clean:
+	-@rm -rf $(FUZZ_DIR)
+
+####################################################################
 # Commands
 ####################################################################
 
@@ -708,6 +810,8 @@ sanitizer-selftest: ## Prove the sanitizer flags actually catch what they claim
 .PHONY: all install test test-watch uninstall watch jit-alignment-check check-symbols
 # Sanitizer build commands
 .PHONY: test-asan sanitizer-selftest
+# Fuzzing commands
+.PHONY: fuzz fuzz-clean
 # Debug build commands
 .PHONY: all-debug install-debug test-debug test-watch-debug uninstall-debug watch-debug
 
@@ -931,7 +1035,7 @@ clean: ## Remove all contents of the build directory for this OS/build.
 # dependency's headers survive the command whose whole purpose is to remove
 # them, and get linked into the next run. Every directory this Makefile
 # creates under build/ belongs on this line.
-	-@rm -rvf $(BUILD_DIR) $(SAN_BUILD_DIR)
+	-@rm -rvf $(BUILD_DIR) $(SAN_BUILD_DIR) $(FUZZ_DIR)
 
 # Files will be as follows:
 # /usr/local/lib/(SUITE)/
