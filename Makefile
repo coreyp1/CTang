@@ -166,7 +166,20 @@ CC := cc
 # must be treated as `all` so that it still gets checked. Reading it as "no
 # goals, therefore nothing outside the list" would skip the check in exactly
 # the case it exists for.
-DEPLESS_GOALS := clean cloc docs docs-pdf help
+# uninstall is here because it finds what it removes through PREFIX and asks
+# pkg-config nothing: needing the dependencies present in order to REMOVE the
+# library is the same defect as needing them in order to clean, and the likely
+# reason anyone is uninstalling is that something is already broken.
+# uninstall-debug recurses into uninstall, and the outer goal is tested before
+# the inner one runs, so both names have to be here.
+#
+# The `Unsupported OS:` error further up is deliberately NOT guarded this way.
+# Each OS branch sets BUILD, BUILD_DIR derives from it, and uninstall's recipe
+# switches on OS_NAME - so on an unrecognised OS a guarded error would turn a
+# clear message into a clean that removes the wrong tree and an uninstall that
+# silently removes nothing. That is this fix's own defect, reintroduced by
+# over-applying it.
+DEPLESS_GOALS := clean cloc docs docs-pdf help uninstall uninstall-debug
 ifeq ($(filter-out $(DEPLESS_GOALS),$(or $(MAKECMDGOALS),all)),)
 SKIP_DEP_CHECK := 1
 endif
