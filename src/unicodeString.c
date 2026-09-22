@@ -577,12 +577,17 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
         // First pass, determine the length of the buffer required.
         size_t bytes_needed = 0;
         for (size_t i = source_byte_offset; i < next_source_byte_offset; ++i) {
-          if (isalnum(string->buffer[i])
-            || string->buffer[i] == '-'
-            || string->buffer[i] == '_'
-            || string->buffer[i] == '.'
-            || string->buffer[i] == '~'
-            || string->buffer[i] == ' ') {
+          // As an unsigned char throughout. char is signed here, and every
+          // byte of a non-ASCII character is negative as one: isalnum() is
+          // undefined for a negative argument other than EOF, and the hex
+          // lookup below indexes off the front of its table.
+          unsigned char byte = (unsigned char)string->buffer[i];
+          if (isalnum(byte)
+            || byte == '-'
+            || byte == '_'
+            || byte == '.'
+            || byte == '~'
+            || byte == ' ') {
             ++bytes_needed;
           }
           else {
@@ -599,20 +604,21 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
         // Second pass, encode the characters.
         size_t offset = 0;
         for (size_t i = source_byte_offset; i < next_source_byte_offset; ++i) {
-          if (isalnum(string->buffer[i])
-            || string->buffer[i] == '-'
-            || string->buffer[i] == '_'
-            || string->buffer[i] == '.'
-            || string->buffer[i] == '~') {
-            dest[offset++] = string->buffer[i];
+          unsigned char byte = (unsigned char)string->buffer[i];
+          if (isalnum(byte)
+            || byte == '-'
+            || byte == '_'
+            || byte == '.'
+            || byte == '~') {
+            dest[offset++] = (char)byte;
           }
-          else if (string->buffer[i] == ' ') {
+          else if (byte == ' ') {
             dest[offset++] = '+';
           }
           else {
             dest[offset++] = '%';
-            dest[offset++] = "0123456789ABCDEF"[string->buffer[i] >> 4];
-            dest[offset++] = "0123456789ABCDEF"[string->buffer[i] & 0x0F];
+            dest[offset++] = "0123456789ABCDEF"[byte >> 4];
+            dest[offset++] = "0123456789ABCDEF"[byte & 0x0F];
           }
         }
         assert(offset == bytes_needed);

@@ -631,6 +631,16 @@ TEST(Render, PERCENT) {
   DO_ALL_TEST("", "", GTA_UNICODE_STRING_TYPE_PERCENT);
   // Testing a string with various characters.
   DO_ALL_TEST("Test ' \" < > \\ & \n \r \t", "Test+%27+%22+%3C+%3E+%5C+%26+%0A+%0D+%09", GTA_UNICODE_STRING_TYPE_PERCENT);
+
+  // Bytes outside ASCII.  Every one of them is negative as a char, which is
+  // what this encoder used to hand to isalnum() and to index its hex table
+  // with: "caf\xC3\xA9" came out as "caf%l3%f9", and a string of Japanese
+  // came out with NUL bytes in the middle of it.  Nothing above caught it
+  // because every case here was ASCII.
+  DO_ALL_TEST("caf\xC3\xA9", "caf%C3%A9", GTA_UNICODE_STRING_TYPE_PERCENT);
+  DO_ALL_TEST("\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E",
+    "%E6%97%A5%E6%9C%AC%E8%AA%9E", GTA_UNICODE_STRING_TYPE_PERCENT);
+  DO_ALL_TEST("a \xF0\x9F\x98\x80 b", "a+%F0%9F%98%80+b", GTA_UNICODE_STRING_TYPE_PERCENT);
 }
 
 TEST(Render, Concatenated) {
