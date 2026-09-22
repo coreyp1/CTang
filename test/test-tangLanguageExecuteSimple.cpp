@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <gtest/gtest.h>
 #include <ghoti.io/cutil/memory.h>
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <unicode/uclean.h>
@@ -2561,6 +2562,70 @@ TEST(Print, Simple) {
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
     ASSERT_STREQ("423.5hello-42", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Print, Map) {
+  {
+    // The empty map.
+    TEST_PROGRAM_SETUP("print({:});");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ("{}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A single entry.  The key is quoted; the value is rendered the way
+    // print would show it, as the array does with its elements.
+    TEST_PROGRAM_SETUP("print({a: 1});");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ("{\"a\": 1}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A nested array renders recursively.
+    TEST_PROGRAM_SETUP("print({k: [1, 2]});");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    ASSERT_STREQ("{\"k\": [1, 2]}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Two entries.  Iteration order is the hash table's, so either order is
+    // correct; what matters is the separator between them and the absence of
+    // one before the closing brace.
+    TEST_PROGRAM_SETUP("print({a: 1, b: 2});");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    std::string out{context->output->buffer};
+    ASSERT_TRUE(out == "{\"a\": 1, \"b\": 2}" || out == "{\"b\": 2, \"a\": 1}") << out;
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Enough entries to grow the buffer several times over.  The hand
+    // written builder this replaced never wrote the reallocated pointer
+    // back, so the first growth left the caller holding a freed block and
+    // every entry was written over the one before it; a single short map
+    // never grew and so never showed it.
+    TEST_PROGRAM_SETUP(
+      "print({k00: 0, k01: 1, k02: 2, k03: 3, k04: 4, k05: 5, k06: 6,"
+      " k07: 7, k08: 8, k09: 9, k10: 10, k11: 11, k12: 12, k13: 13,"
+      " k14: 14, k15: 15, k16: 16, k17: 17, k18: 18, k19: 19});");
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result));
+    std::string out{context->output->buffer};
+
+    ASSERT_EQ('{', out.front());
+    ASSERT_EQ('}', out.back());
+    ASSERT_EQ(std::string::npos, out.find(",}"));
+    ASSERT_EQ(19u, std::count(out.begin(), out.end(), ','));
+    for (int i = 0; i < 20; ++i) {
+      char entry[32];
+      snprintf(entry, sizeof(entry), "\"k%02d\": %d", i, i);
+      ASSERT_NE(std::string::npos, out.find(entry)) << entry << " missing from " << out;
+    }
     TEST_PROGRAM_TEARDOWN();
   }
 }

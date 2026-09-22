@@ -22,8 +22,10 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <ghoti.io/cutil/array.h>
 #include <ghoti.io/cutil/hash.h>
 #include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/allocator.h>
 #include <ghoti.io/tang/macros.h>
 #include <ghoti.io/tang/computedValue/computedValueError.h>
 #include <ghoti.io/tang/computedValue/computedValueMap.h>
@@ -32,11 +34,11 @@
 
 
 GTA_Computed_Value_VTable gta_computed_value_map_vtable = {
-  .name = "Iterator",
+  .name = "Map",
   .destroy = gta_computed_value_map_destroy,
   .destroy_in_place = gta_computed_value_map_destroy_in_place,
   .deep_copy = gta_computed_value_map_deep_copy,
-  .to_string = gta_computed_value_null_to_string,
+  .to_string = gta_computed_value_map_to_string,
   .print = gta_computed_value_generic_print_from_to_string,
   .assign_index = gta_computed_value_map_assign_index,
   .add = gta_computed_value_add_not_supported,
@@ -240,20 +242,15 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_index(GTA_Computed_Value * 
 
 
 /*
- * Helper function to expand and add to the provided string.
+ * Append a NUL-terminated string to the array of bytes being built.
+ *
+ * The NUL is not appended: the terminator is added once, at the end.
  */
-static bool GTA_CALL expand_and_concat(char * * buffer, size_t * len, const char * string) {
-  assert(buffer);
-  assert(len);
+static bool GTA_CALL append_cstring(GCU_Array * out, const char * string) {
+  assert(out);
   assert(string);
 
-  size_t string_length = strlen(string);
-  char * new_buffer = gcu_realloc(*buffer, *len + string_length + 1);
-  if (!new_buffer) {
-    return false;
-  }
-  strcpy(new_buffer + *len, string);
-  return new_buffer;
+  return gcu_array_append_n(out, string, strlen(string));
 }
 
 
@@ -262,57 +259,65 @@ char * GTA_CALL gta_computed_value_map_to_string(GTA_Computed_Value * self) {
   assert(GTA_COMPUTED_VALUE_IS_MAP(self));
   GTA_Computed_Value_Map * map = (GTA_Computed_Value_Map *)self;
 
-  char * buffer = gcu_malloc(3);
-  if (!buffer) {
+  // The result is built in a growable array rather than by hand.  The hand
+  // written version this replaces took the buffer and its length by pointer
+  // and updated neither, so the caller's pointer dangled the moment a resize
+  // moved the block and every append landed at offset zero.  Length tracking
+  // and the resize are the array's job here, and gcu_array_append_n() reports
+  // an overflowing total rather than wrapping it.
+  GCU_Array * out = gcu_array_create(1, 32, gta_allocator());
+  if (!out) {
     return NULL;
   }
-  buffer[0] = '{';
-  buffer[1] = '}';
-  buffer[2] = '\0';
-  size_t len = 0;
-  if (map->key_hash->entries == 0) {
-    return buffer;
+  if (!append_cstring(out, "{")) {
+    goto ARRAY_ERROR;
   }
-  buffer[1] = '\n';
-  
+
   GTA_HashX_Iterator key_iterator = GTA_HASHX_ITERATOR_GET(map->key_hash);
   GTA_HashX_Iterator value_iterator = GTA_HASHX_ITERATOR_GET(map->value_hash);
+  bool first = true;
   while (key_iterator.exists && value_iterator.exists) {
     char * key_str = gta_computed_value_to_string((GTA_Computed_Value *)GTA_TYPEX_P(key_iterator.value));
     if (!key_str) {
-      gcu_free(buffer);
-      return NULL;
+      goto ARRAY_ERROR;
     }
-
     char * value_str = gta_computed_value_to_string((GTA_Computed_Value *)GTA_TYPEX_P(value_iterator.value));
     if (!value_str) {
       gcu_free(key_str);
-      gcu_free(buffer);
-      return NULL;
+      goto ARRAY_ERROR;
     }
 
-    if (!expand_and_concat(&buffer, &len, "  \"")
-      || !expand_and_concat(&buffer, &len, key_str)
-      || !expand_and_concat(&buffer, &len, "\": ")
-      || !expand_and_concat(&buffer, &len, value_str)
-      || !expand_and_concat(&buffer, &len, ",\n")) {
-      gcu_free(key_str);
-      gcu_free(value_str);
-      gcu_free(buffer);
-      return NULL;
-    }
-
+    // The separator goes before every entry but the first, so that the
+    // closing brace is not preceded by a dangling comma.
+    bool ok = (first || append_cstring(out, ", "))
+      && append_cstring(out, "\"")
+      && append_cstring(out, key_str)
+      && append_cstring(out, "\": ")
+      && append_cstring(out, value_str);
     gcu_free(key_str);
     gcu_free(value_str);
+    if (!ok) {
+      goto ARRAY_ERROR;
+    }
+    first = false;
+
     key_iterator = GTA_HASHX_ITERATOR_NEXT(key_iterator);
     value_iterator = GTA_HASHX_ITERATOR_NEXT(value_iterator);
   }
 
-  if (!expand_and_concat(&buffer, &len, "}")) {
-    gcu_free(buffer);
-    return NULL;
+  // The terminator is part of the buffer but not part of the string, which is
+  // what lets the caller treat what it is handed as an ordinary C string.
+  if (!append_cstring(out, "}") || !gcu_array_append(out, "")) {
+    goto ARRAY_ERROR;
   }
-  return buffer;
+
+  char * result = (char *)gcu_array_steal(out, NULL);
+  gcu_array_destroy(out);
+  return result;
+
+ARRAY_ERROR:
+  gcu_array_destroy(out);
+  return NULL;
 }
 
 

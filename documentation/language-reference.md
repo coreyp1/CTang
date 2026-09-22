@@ -362,7 +362,7 @@ the output and yields `null`. What each type appends:
 | null | nothing |
 | array | `[` elements separated by `, ` `]`, each element as `print` would show it, recursively: `[1, [2, 3], x]` |
 | boolean | **intended:** `true` / `false`. **Currently:** nothing (13.8) |
-| map | **intended:** unspecified, see 14. **Currently:** `null` (13.8) |
+| map | `{` entries separated by `, ` `}`, each entry a quoted key, `": "`, and the value as `print` would show it, recursively: `{"a": 1, "b": [2, 3]}` |
 | function, library, rng, error | nothing |
 
 `as string` on a float uses the same formatting, so `3.0 as string` is `"3."`.
@@ -892,7 +892,7 @@ priority - except that 13.1 comes first.
    `m.name = v` writes one. `m["name"]` works.
 
 8. **`print(true)` prints nothing** - the boolean vtable's `print` is
-   `not_supported` - and **`print({a: 1})` prints `null`**.
+   `not_supported`.
 
 9. **Assigning through a string index is silently ignored.**
    `s = "abc"; s[0] = "z"; s;` is `"abc"`. Should be an error, since strings
