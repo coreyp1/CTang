@@ -30,6 +30,9 @@
  * Copyright (C) 2026 Corey Pennycuff
  */
 
+// First, before any system header: it sets a feature test macro.
+#include "lastInput.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -39,6 +42,10 @@
 #include <ghoti.io/tang/ast/astNode.h>
 
 int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size) {
+  // Record the input before touching it. A crash the sanitizer cannot
+  // report takes libFuzzer's artifact with it; see lastInput.h.
+  gta_fuzz_record_last_input("build/last-input-parse.bin", data, size);
+
   // The API takes a NUL-terminated string, so that is the contract being
   // tested: a copy with a terminator, and an embedded NUL legitimately ends
   // the source. Passing the raw buffer would be testing an API that does not
