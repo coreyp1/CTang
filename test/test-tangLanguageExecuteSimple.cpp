@@ -1953,6 +1953,75 @@ TEST(Syntax, IntegerDivisionOverflowDoesNotKillTheProcess) {
 }
 
 
+TEST(Syntax, NegatingTheMostNegativeIntegerIsDefined) {
+  // -GTA_INTEGER_MIN has no representable result, so `-value` on it was signed
+  // overflow: undefined behaviour in both the constant folder and the runtime.
+  // It did not produce a wrong answer in practice - both wrapped back to
+  // GTA_INTEGER_MIN - but under -fno-sanitize-recover it aborts, which is how
+  // the fuzzer met it, and an abort inside libFuzzer's death handling collides
+  // with ASan's reporter and leaves no artifact at all.
+  //
+  // No test reached this value before, which is why `make test-san` was green
+  // against it. The literal cannot express it - 9223372036854775808 saturates
+  // to GTA_INTEGER_MAX - so it has to be built by arithmetic.
+  {
+    TEST_PROGRAM_SETUP(R"(
+      print(0 - (0 - 9223372036854775807 - 1));
+    )");
+    ASSERT_STREQ(context->output->buffer, "-9223372036854775808");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The unary operator, which is the folded path rather than the subtraction.
+    TEST_PROGRAM_SETUP(R"(
+      print(-(0 - 9223372036854775807 - 1));
+    )");
+    ASSERT_STREQ(context->output->buffer, "-9223372036854775808");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Ordinary negation must be untouched.
+    TEST_PROGRAM_SETUP(R"(
+      print(-5); print(","); print(-(0 - 5)); print(","); print(-9223372036854775807);
+    )");
+    ASSERT_STREQ(context->output->buffer, "-5,5,-9223372036854775807");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Add, subtract and multiply overflow the same way and were undefined for
+    // the same reason. The constant folder already declines to fold these
+    // (they overflow), so what runs here is the runtime path in both engines.
+    TEST_PROGRAM_SETUP(R"(
+      print(9223372036854775807 + 1);
+    )");
+    ASSERT_STREQ(context->output->buffer, "-9223372036854775808");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    TEST_PROGRAM_SETUP(R"(
+      print((0 - 9223372036854775807 - 1) - 1);
+    )");
+    ASSERT_STREQ(context->output->buffer, "9223372036854775807");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    TEST_PROGRAM_SETUP(R"(
+      print(9223372036854775807 * 2);
+    )");
+    ASSERT_STREQ(context->output->buffer, "-2");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Ordinary arithmetic must be untouched.
+    TEST_PROGRAM_SETUP(R"(
+      print(2 + 3); print(","); print(10 - 4); print(","); print(6 * 7);
+    )");
+    ASSERT_STREQ(context->output->buffer, "5,6,42");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 TEST(Declare, FloatLiteralsDoNotShareASingleton) {
   // Literals are interned in the program's singleton pool, which is keyed by a
   // GTA_UInteger. The float node passed its GTA_Float straight into that

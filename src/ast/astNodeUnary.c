@@ -121,7 +121,20 @@ GTA_Ast_Node * gta_ast_node_unary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify
   if (GTA_AST_IS_INTEGER(unary->expression)) {
     GTA_Ast_Node_Integer * integer = (GTA_Ast_Node_Integer *) unary->expression;
     if (unary->operator_type == GTA_UNARY_TYPE_NEGATIVE) {
-      return (GTA_Ast_Node *)gta_ast_node_integer_create(-integer->value, self->location);
+      // Negate through the unsigned type. GTA_INTEGER_MIN has no positive
+      // counterpart, so `-value` on it is signed overflow - undefined
+      // behaviour, which aborts a sanitizer build rather than wrapping
+      // quietly. Unsigned arithmetic wraps by definition, and the conversion
+      // back is the same modulo result the compiler was already producing, so
+      // this is the behaviour that was always observed, now guaranteed.
+      //
+      // Wrapping rather than refusing deliberately: add, subtract and
+      // multiply all wrap on overflow today, and negation belongs with them.
+      // Divide and modulo refuse only because GTA_INTEGER_MIN / -1 traps, and
+      // there was no behaviour to preserve. If overflow should become an
+      // error, these five move together - it is one decision, not five.
+      return (GTA_Ast_Node *)gta_ast_node_integer_create(
+        (GTA_Integer)(0 - (GTA_UInteger)integer->value), self->location);
     }
     return (GTA_Ast_Node *)gta_ast_node_boolean_create(!integer->value, self->location);
   }

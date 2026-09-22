@@ -122,11 +122,20 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_negative(GTA_Computed_V
   assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)self;
 
+  // Negate through the unsigned type. GTA_INTEGER_MIN has no positive
+  // counterpart, so `-value` on it is signed overflow, which is undefined
+  // behaviour and aborts a sanitizer build. Unsigned arithmetic wraps by
+  // definition and gives the same answer the compiler already produced, so
+  // this preserves what both engines did and only makes it defined. See the
+  // matching comment in gta_ast_node_unary_simplify: the constant folder has
+  // to agree with this, or the two disagree on the same expression.
+  GTA_Integer negated = (GTA_Integer)(0 - (GTA_UInteger)integer->value);
+
   if (integer->base.is_temporary) {
-    integer->value = -integer->value;
+    integer->value = negated;
     return self;
   }
-  return (GTA_Computed_Value *)gta_computed_value_integer_create(-integer->value, context);
+  return (GTA_Computed_Value *)gta_computed_value_integer_create(negated, context);
 }
 
 
@@ -137,17 +146,31 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_add(GTA_Computed_Value 
 
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
+    // Add through the unsigned type. Signed overflow is undefined behaviour,
+    // and while every compiler here wrapped, a sanitizer build aborts on it -
+    // so the operator that looked like it worked was one `make test-asan`
+    // away from stopping the suite, and the only reason it never did is that
+    // no test added two large integers. Unsigned arithmetic wraps by
+    // definition and gives exactly the value that was produced before.
+    //
+    // Wrapping rather than refusing is the existing behaviour of this
+    // operator, kept deliberately. Divide and modulo refuse instead, but only
+    // because GTA_INTEGER_MIN / -1 traps on x86-64 and there was no behaviour
+    // to preserve. Whether overflow should become an error is one decision
+    // across add, subtract, multiply and negate, not four.
+    GTA_Integer result = (GTA_Integer)((GTA_UInteger)number->value
+      + (GTA_UInteger)other_number_integer->value);
     if (number->base.is_temporary) {
-      number->value += other_number_integer->value;
+      number->value = result;
       number->base.is_true = (bool)number->value;
       return (GTA_Computed_Value *)number;
     }
     if (other_number_integer->base.is_temporary) {
-      other_number_integer->value += number->value;
+      other_number_integer->value = result;
       other_number_integer->base.is_true = (bool)other_number_integer->value;
       return (GTA_Computed_Value *)other_number_integer;
     }
-    return (GTA_Computed_Value *)gta_computed_value_integer_create(number->value + other_number_integer->value, context);
+    return (GTA_Computed_Value *)gta_computed_value_integer_create(result, context);
   }
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
@@ -169,9 +192,12 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_subtract(GTA_Computed_V
 
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
+    // Unsigned for the same reason as the add above.
     GTA_Integer result = self_is_lhs
-      ? number->value - other_number_integer->value
-      : other_number_integer->value - number->value;
+      ? (GTA_Integer)((GTA_UInteger)number->value
+        - (GTA_UInteger)other_number_integer->value)
+      : (GTA_Integer)((GTA_UInteger)other_number_integer->value
+        - (GTA_UInteger)number->value);
     if (number->base.is_temporary) {
       number->value = result;
       number->base.is_true = (bool)number->value;
@@ -207,17 +233,20 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_multiply(GTA_Computed_V
 
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
+    // Unsigned for the same reason as the add above.
+    GTA_Integer result = (GTA_Integer)((GTA_UInteger)number->value
+      * (GTA_UInteger)other_number_integer->value);
     if (number->base.is_temporary) {
-      number->value *= other_number_integer->value;
+      number->value = result;
       number->base.is_true = (bool)number->value;
       return (GTA_Computed_Value *)number;
     }
     if (other_number_integer->base.is_temporary) {
-      other_number_integer->value *= number->value;
+      other_number_integer->value = result;
       other_number_integer->base.is_true = (bool)other_number_integer->value;
       return (GTA_Computed_Value *)other_number_integer;
     }
-    return (GTA_Computed_Value *)gta_computed_value_integer_create(number->value * other_number_integer->value, context);
+    return (GTA_Computed_Value *)gta_computed_value_integer_create(result, context);
   }
   if (GTA_COMPUTED_VALUE_IS_FLOAT(other)) {
     GTA_Computed_Value_Float * other_number_float = (GTA_Computed_Value_Float *)other;
