@@ -285,6 +285,74 @@ static void vector64_map_pair_cleanup(GCU_Vector64 * vector) {
     .last_column = B.last_column,   \
   }
 
+
+// Discarding a semantic value that a failing rule will not use.
+//
+// bison will not do this for us. Its %destructor runs for symbols discarded
+// during error recovery, but by the time a rule action executes, the RHS has
+// already been popped off the value stack into $1..$n - from bison's point of
+// view the reduction consumed them. So a rule that detects an error and bails
+// is the last owner of everything it was handed, and dropping $$ on the floor
+// leaks all of it. `s = "\xc8"` leaked the identifier node and its buffer
+// exactly this way.
+//
+// _Generic rather than one macro per type combination: the VERIFY macros are
+// used with nodes, vectors and token strings in every mix, and naming the
+// type at 67 call sites is how the two lists drift apart. A type that turns up
+// here without a case below is a compile error, which is the right outcome -
+// it means a new kind of value needs a decision about who frees it.
+static inline void gta_parser_discard_node(GTA_Ast_Node * value) {
+  if (value) {
+    gta_ast_node_destroy(value);
+  }
+}
+
+static inline void gta_parser_discard_vector(GCU_Vector64 * value) {
+  if (value) {
+    gcu_vector64_destroy(value);
+  }
+}
+
+static inline void gta_parser_discard_token_string(GTA_Parser_Unicode_String value) {
+  // The scanner hands ownership of .str to the parser with the token.
+  gcu_free((void *)value.str);
+}
+
+static inline void gta_parser_discard_nothing_i(int64_t value) { (void)value; }
+static inline void gta_parser_discard_nothing_f(long double value) { (void)value; }
+static inline void gta_parser_discard_nothing_b(bool value) { (void)value; }
+
+// Whether a semantic value is "missing". Pointer values carry failure as null;
+// a token struct cannot be null and never signals failure this way, so it
+// always answers false. This exists so VERIFY1..4 accept every value type -
+// `!A` does not compile for a struct, which is why arms holding only a token
+// used the zero-argument VERIFY, and that is exactly the form that forgets to
+// free what it is discarding.
+static inline bool gta_parser_missing_node(GTA_Ast_Node * value) { return !value; }
+static inline bool gta_parser_missing_vector(GCU_Vector64 * value) { return !value; }
+static inline bool gta_parser_missing_token(GTA_Parser_Unicode_String value) { (void)value; return false; }
+static inline bool gta_parser_missing_i(int64_t value) { (void)value; return false; }
+static inline bool gta_parser_missing_f(long double value) { (void)value; return false; }
+static inline bool gta_parser_missing_b(bool value) { (void)value; return false; }
+
+#define MISSING(X) _Generic((X),                                  \
+  GTA_Ast_Node *: gta_parser_missing_node,                        \
+  GCU_Vector64 *: gta_parser_missing_vector,                      \
+  GTA_Parser_Unicode_String: gta_parser_missing_token,            \
+  int64_t: gta_parser_missing_i,                                  \
+  long double: gta_parser_missing_f,                              \
+  bool: gta_parser_missing_b                                      \
+)(X)
+
+#define DISCARD(X) _Generic((X),                                  \
+  GTA_Ast_Node *: gta_parser_discard_node,                        \
+  GCU_Vector64 *: gta_parser_discard_vector,                      \
+  GTA_Parser_Unicode_String: gta_parser_discard_token_string,     \
+  int64_t: gta_parser_discard_nothing_i,                          \
+  long double: gta_parser_discard_nothing_f,                      \
+  bool: gta_parser_discard_nothing_b                              \
+)(X)
+
 #define VERIFY(Z)   \
   if (*parseError) { \
     Z = 0;          \
@@ -292,25 +360,35 @@ static void vector64_map_pair_cleanup(GCU_Vector64 * vector) {
   }
 
 #define VERIFY1(A,Z)      \
-  if (*parseError || !A) { \
+  if (*parseError || MISSING(A)) { \
+    DISCARD(A);           \
     Z = 0;                \
     break;                \
   }
 
 #define VERIFY2(A,B,Z)          \
-  if (*parseError || !A || !B) { \
+  if (*parseError || MISSING(A) || MISSING(B)) { \
+    DISCARD(A);                 \
+    DISCARD(B);                 \
     Z = 0;                      \
     break;                      \
   }
 
 #define VERIFY3(A,B,C,Z)              \
-  if (*parseError || !A || !B || !C) { \
+  if (*parseError || MISSING(A) || MISSING(B) || MISSING(C)) { \
+    DISCARD(A);                       \
+    DISCARD(B);                       \
+    DISCARD(C);                       \
     Z = 0;                            \
     break;                            \
   }
 
 #define VERIFY4(A,B,C,D,Z)                  \
-  if (*parseError || !A || !B || !C || !D) { \
+  if (*parseError || MISSING(A) || MISSING(B) || MISSING(C) || MISSING(D)) { \
+    DISCARD(A);                             \
+    DISCARD(B);                             \
+    DISCARD(C);                             \
+    DISCARD(D);                             \
     Z = 0;                                  \
     break;                                  \
   }
@@ -399,7 +477,7 @@ functionDeclarationArguments
   | IDENTIFIER
     {
       // Verify that there have been no memory errors.
-      VERIFY($$);
+      VERIFY1($1,$$);
 
       // Create the identifier object.
       const char * identifier = $1.str;
@@ -424,7 +502,7 @@ functionDeclarationArguments
   | functionDeclarationArguments "," IDENTIFIER
     {
       // Verify that there have been no memory errors.
-      VERIFY1($1,$$);
+      VERIFY2($1,$3,$$);
 
       const char * identifier = $3.str;
       GTA_Ast_Node * parameter = (GTA_Ast_Node *)gta_ast_node_identifier_create(identifier, @3);
@@ -492,7 +570,7 @@ mapList
   : IDENTIFIER ":" expression
     {
       // Verify that there have been no memory errors.
-      VERIFY1($3,$$);
+      VERIFY2($1,$3,$$);
 
       GTA_Unicode_String * key_unicode_string = gta_unicode_string_create_and_adopt($1.str, $1.len, $1.type);
       if (!key_unicode_string) {
@@ -542,7 +620,7 @@ mapList
   | mapList "," IDENTIFIER ":" expression
     {
       // Verify that there have been no memory errors.
-      VERIFY2($1,$5,$$)
+      VERIFY3($1,$3,$5,$$)
 
       GTA_Unicode_String * key_unicode_string = gta_unicode_string_create_and_adopt($3.str, $3.len, $3.type);
       if (!key_unicode_string) {
@@ -677,7 +755,7 @@ closedStatement
   | "for" "(" IDENTIFIER ":" expression ")" closedStatement
     {
       // Verify that there have been no memory errors.
-      VERIFY2($5,$7,$$);
+      VERIFY3($3,$5,$7,$$);
 
       const char * identifier = $3.str;
 
@@ -692,7 +770,7 @@ closedStatement
   | "function" IDENTIFIER "(" functionDeclarationArguments ")" codeBlock
     {
       // Verify that there have been no memory errors.
-      VERIFY2($4,$6,$$);
+      VERIFY3($2,$4,$6,$$);
 
       const char * identifier = $2.str;
 
@@ -754,7 +832,7 @@ closedStatement
   | TEMPLATESTRING
     {
       // Verify that there have been no memory errors.
-      VERIFY($$);
+      VERIFY1($1,$$);
 
       GTA_Unicode_String * string = gta_unicode_string_create_and_adopt($1.str, $1.len, $1.type);
       if (!string) {
@@ -784,7 +862,7 @@ closedStatement
     {
       // This rule is for when a template string is followed by a quick print.
       // Verify that there have been no memory errors.
-      VERIFY1($2,$$);
+      VERIFY2($1,$2,$$);
 
       LOCATION(@1, @3);
 
@@ -855,7 +933,7 @@ closedStatement
   | "use" IDENTIFIER ";"
     {
       // Verify that there have been no memory errors.
-      VERIFY($$);
+      VERIFY1($2,$$);
 
       const char * identifier = $2.str;
 
@@ -885,7 +963,7 @@ closedStatement
   | "use" libraryExpression "as" IDENTIFIER ";"
     {
       // Verify that there have been no memory errors.
-      VERIFY1($2,$$);
+      VERIFY2($2,$4,$$);
 
       const char * identifier = $4.str;
 
@@ -899,7 +977,7 @@ closedStatement
   | "global" IDENTIFIER ";"
     {
       // Verify that there have been no memory errors.
-      VERIFY($$);
+      VERIFY1($2,$$);
 
       const char * identifier = $2.str;
 
@@ -946,7 +1024,7 @@ libraryExpression
   : IDENTIFIER
     {
       // Verify that there have been no memory errors.
-      VERIFY($$);
+      VERIFY1($1,$$);
 
       const char * identifier = $1.str;
 
@@ -959,7 +1037,7 @@ libraryExpression
   | libraryExpression "." IDENTIFIER
     {
       // Verify that there have been no memory errors.
-      VERIFY1($1,$$);
+      VERIFY2($1,$3,$$);
 
       const char * identifier = $3.str;
 
@@ -1044,7 +1122,7 @@ openStatement
   | "for" "(" IDENTIFIER ":" expression ")" openStatement
     {
       // Verify that there have been no memory errors.
-      VERIFY2($5,$7,$$);
+      VERIFY3($3,$5,$7,$$);
 
       // Copy the identifier.
       const char * identifier = $3.str;
@@ -1166,7 +1244,7 @@ expression
   | IDENTIFIER
     {
       // Verify that there have been no memory errors.
-      VERIFY($$);
+      VERIFY1($1,$$);
 
       // Copy the identifier.
       const char * identifier = $1.str;
@@ -1213,7 +1291,7 @@ expression
   | STRING
     {
       // Verify that there have been no memory errors.
-      VERIFY($$);
+      VERIFY1($1,$$);
 
       GTA_Unicode_String * string = gta_unicode_string_create_and_adopt((const char * const)$1.str, $1.len, $1.type);
       if (!string) {
@@ -1343,7 +1421,7 @@ expression
   | expression "." IDENTIFIER
     {
       // Verify that there have been no memory errors.
-      VERIFY1($1,$$);
+      VERIFY2($1,$3,$$);
 
       const char * identifier = $3.str;
 

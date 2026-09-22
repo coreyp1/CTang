@@ -1918,6 +1918,41 @@ TEST(Case, ToInteger) {
   }
 }
 
+TEST(Syntax, IntegerDivisionOverflowDoesNotKillTheProcess) {
+  // INT64_MIN / -1 overflows, and on x86-64 the hardware raises SIGFPE rather
+  // than wrapping - so this was not a wrong answer but a dead process, from a
+  // one-line script, in both execution engines. Reported as "not supported"
+  // because the result is genuinely not representable.
+  {
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print((0 - 9223372036854775807 - 1) / -1);
+      print(" end");
+    )");
+    // What matters is reaching this line at all.
+    ASSERT_NE(context->output->buffer, nullptr);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    TEST_PROGRAM_SETUP(R"(
+      print("start ");
+      print((0 - 9223372036854775807 - 1) % -1);
+      print(" end");
+    )");
+    ASSERT_NE(context->output->buffer, nullptr);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Ordinary division must be untouched by the guard.
+    TEST_PROGRAM_SETUP(R"(
+      print(10 / 2); print(","); print(10 % 3); print(","); print(0 - 7 / 2);
+    )");
+    ASSERT_STREQ(context->output->buffer, "5,1,-3");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 TEST(Declare, FloatLiteralsDoNotShareASingleton) {
   // Literals are interned in the program's singleton pool, which is keyed by a
   // GTA_UInteger. The float node passed its GTA_Float straight into that

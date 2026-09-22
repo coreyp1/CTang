@@ -175,21 +175,48 @@ GTA_Ast_Node * gta_ast_node_binary_simplify(GTA_Ast_Node * self, GTA_Ast_Simplif
   if (GTA_AST_IS_INTEGER(binary->lhs) && GTA_AST_IS_INTEGER(binary->rhs)) {
     GTA_Ast_Node_Integer * lhs = (GTA_Ast_Node_Integer *) binary->lhs;
     GTA_Ast_Node_Integer * rhs = (GTA_Ast_Node_Integer *) binary->rhs;
+    // Folding must not compute what the expression itself could not. Signed
+    // overflow is undefined behaviour, so `9223372036854775807 * 2` was UB in
+    // the compiler rather than a wrong answer in the program - and the folded
+    // constant is whatever the optimiser decided it meant.
+    //
+    // Declining to fold is the existing answer here: division by zero already
+    // does it two cases below, with the same reasoning. Whatever tang should
+    // ultimately do about integer overflow at run time is a language decision
+    // and unchanged by this; what changes is that the decision is no longer
+    // pre-empted by undefined behaviour at compile time.
+    GTA_Integer folded;
     switch (binary->operator_type) {
       case GTA_BINARY_TYPE_ADD:
-        return (GTA_Ast_Node *)gta_ast_node_integer_create(lhs->value + rhs->value, self->location);
+        if (__builtin_add_overflow(lhs->value, rhs->value, &folded)) {
+          // Let the Run-time generate the result.
+          return 0;
+        }
+        return (GTA_Ast_Node *)gta_ast_node_integer_create(folded, self->location);
       case GTA_BINARY_TYPE_SUBTRACT:
-        return (GTA_Ast_Node *)gta_ast_node_integer_create(lhs->value - rhs->value, self->location);
+        if (__builtin_sub_overflow(lhs->value, rhs->value, &folded)) {
+          return 0;
+        }
+        return (GTA_Ast_Node *)gta_ast_node_integer_create(folded, self->location);
       case GTA_BINARY_TYPE_MULTIPLY:
-        return (GTA_Ast_Node *)gta_ast_node_integer_create(lhs->value * rhs->value, self->location);
+        if (__builtin_mul_overflow(lhs->value, rhs->value, &folded)) {
+          return 0;
+        }
+        return (GTA_Ast_Node *)gta_ast_node_integer_create(folded, self->location);
       case GTA_BINARY_TYPE_DIVIDE:
-        if (rhs->value == 0) {
+        // INT64_MIN / -1 overflows as surely as the cases above: the quotient
+        // is one past the maximum. On x86-64 it raises SIGFPE rather than
+        // wrapping, so this guard is what keeps a two-token program from
+        // killing the process.
+        if ((rhs->value == 0)
+          || ((lhs->value == GTA_INTEGER_MIN) && (rhs->value == -1))) {
           // Let the Run-time generate an error.
           return 0;
         }
         return (GTA_Ast_Node *)gta_ast_node_integer_create(lhs->value / rhs->value, self->location);
       case GTA_BINARY_TYPE_MODULO:
-        if (rhs->value == 0) {
+        if ((rhs->value == 0)
+          || ((lhs->value == GTA_INTEGER_MIN) && (rhs->value == -1))) {
           // Let the Run-time generate an error.
           return 0;
         }

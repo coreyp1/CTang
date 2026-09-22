@@ -243,6 +243,20 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_divide(GTA_Computed_Val
       || (!self_is_lhs && number->value == 0)) {
       return gta_computed_value_error_divide_by_zero;
     }
+    // INT64_MIN / -1 and INT64_MIN % -1 overflow: the quotient is one past
+    // the maximum. On x86-64 the hardware raises SIGFPE rather than wrapping,
+    // so this is not a wrong answer but a killed process - `(0-9223372036854775807-1) / -1`
+    // in a script was enough. Reported as "not supported" because the result
+    // genuinely is not representable; if tang grows a dedicated overflow value
+    // (see the "[OVERFLOW]" question in notes/ctang/FLOAT-DEFECTS.md), this is
+    // one of the places that should return it.
+    {
+      GTA_Integer numerator = self_is_lhs ? number->value : other_number_integer->value;
+      GTA_Integer denominator = self_is_lhs ? other_number_integer->value : number->value;
+      if ((numerator == GTA_INTEGER_MIN) && (denominator == -1)) {
+        return gta_computed_value_error_not_supported;
+      }
+    }
     GTA_Integer result = self_is_lhs
       ? number->value / other_number_integer->value
       : other_number_integer->value / number->value;
@@ -288,6 +302,20 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_modulo(GTA_Computed_Val
     if ((self_is_lhs && other_number_integer->value == 0)
       || (!self_is_lhs && number->value == 0)) {
       return gta_computed_value_error_modulo_by_zero;
+    }
+    // INT64_MIN / -1 and INT64_MIN % -1 overflow: the quotient is one past
+    // the maximum. On x86-64 the hardware raises SIGFPE rather than wrapping,
+    // so this is not a wrong answer but a killed process - `(0-9223372036854775807-1) / -1`
+    // in a script was enough. Reported as "not supported" because the result
+    // genuinely is not representable; if tang grows a dedicated overflow value
+    // (see the "[OVERFLOW]" question in notes/ctang/FLOAT-DEFECTS.md), this is
+    // one of the places that should return it.
+    {
+      GTA_Integer numerator = self_is_lhs ? number->value : other_number_integer->value;
+      GTA_Integer denominator = self_is_lhs ? other_number_integer->value : number->value;
+      if ((numerator == GTA_INTEGER_MIN) && (denominator == -1)) {
+        return gta_computed_value_error_not_supported;
+      }
     }
     GTA_Integer result = self_is_lhs
       ? number->value % other_number_integer->value

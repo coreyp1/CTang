@@ -638,6 +638,82 @@ TEST(Cast, FromInteger) {
   }
 }
 
+TEST(Parse, FailingRuleFreesWhatItWasHanded) {
+  // A rule action that bails is the last owner of everything it was handed:
+  // bison has already popped the RHS into $1..$n, so the %destructor will not
+  // run for those. VERIFY1..4 therefore have to destroy what they discard, and
+  // every owning token in a rule's RHS has to be passed to them - ten arms
+  // named an expression but not the IDENTIFIER beside it.
+  //
+  // Each case below leaked before that change. They are short because the
+  // fuzzer minimised them; each is the smallest input reaching its arm.
+  for (const char * src : {
+      "s=\"\xc8\"",     // assignment: VERIFY2 discarded $1 and $3 without freeing
+      "\"\xa0\";r",     // trailing identifier, never consumed by a rule
+      "\"\xff\".g",     // member access: the IDENTIFIER was not passed to VERIFY
+      "f(\"\xff\")",    // call argument list
+      "[\"\xff\"]",     // array literal
+      "{a:\"\xff\"}",   // map literal, key and value
+      "for(i:\"\xff\"){}",
+      "function f(\"\xff\"){}",
+      // Scanner side, same shape: an error return that skipped CLEANUP_BUFFER.
+      // An octal escape above 255, with characters already accumulated - the
+      // shortest case, "\\421 with nothing before it, does not leak, which is
+      // how this survived a first look.
+      "\"1\\421",
+      "\"abc\\777def\"",
+      }) {
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script(src);
+    if (ast) {
+      gta_ast_node_destroy(ast);
+    }
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << "leaked on: " << src;
+  }
+}
+
+
+TEST(Parse, ConstantFoldingDoesNotOverflow) {
+  // Folding must not compute what the expression could not. Signed overflow is
+  // undefined behaviour, so these were UB in the compiler rather than a wrong
+  // answer in the program, and the folded constant was whatever the optimiser
+  // decided. The folder now declines, exactly as it already did for division
+  // by zero, and leaves the operation to run time.
+  //
+  // UBSan is what catches the overflow itself; `make test-asan` runs this file.
+  // These assertions check the part visible in any build: it still parses, it
+  // does not crash, and it balances.
+  for (const char * src : {
+      "9223372036854775807 * 9223372036854775807;",
+      "9223372036854775807 + 1;",
+      "0 - 9223372036854775807 - 2;",
+      "(0 - 9223372036854775807 - 1) / -1;",   // quotient is one past the max
+      "(0 - 9223372036854775807 - 1) % -1;",
+      "10 / 0;",
+      "7 % 0;",
+      }) {
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script(src);
+    ASSERT_NE(ast, nullptr) << "failed to parse: " << src;
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << "leaked on: " << src;
+  }
+  {
+    // And folding that cannot overflow must still happen, or the guard has
+    // simply turned constant folding off.
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script("2 * 3");
+    ASSERT_NE(ast, nullptr);
+    ast = gta_tang_simplify(ast);
+    ASSERT_NE(ast, nullptr);
+    ASSERT_TRUE(GTA_AST_IS_INTEGER(ast));
+    ASSERT_EQ(6, ((GTA_Ast_Node_Integer *)ast)->value);
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
+
 TEST(Parse, InvalidUtf8InAStringLiteral) {
   // A string literal whose bytes are not valid UTF-8 makes
   // gta_unicode_string_create_and_adopt fail. That arm freed the token's

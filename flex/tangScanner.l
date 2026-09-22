@@ -582,6 +582,11 @@ static size_t gta_flex_get_state_stack_depth(void * yyscanner);
     }
     if (result > 255) {
       // Generate Error - Bad escape sequence.
+      // CLEANUP_BUFFER, as every other error return in this file does. The
+      // literal may already have accumulated characters - `"1\421` leaks,
+      // `"\421` does not - which is why testing only the shortest case reads
+      // as clean. The same shape as the end-of-input leak fixed in b12ebe1.
+      CLEANUP_BUFFER
       return GTA_PARSER_OCTAL_OUT_OF_BOUNDS;
     }
     char buff[2] = {(unsigned char)result, 0};
