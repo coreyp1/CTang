@@ -27,7 +27,10 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <ghoti.io/cutil/array.h>
+#include <ghoti.io/cutil/file.h>
 #include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/tang/allocator.h>
 #include <ghoti.io/tang/macros.h>
 #include <ghoti.io/tang/tang.h>
 
@@ -103,55 +106,65 @@ int main(int argc, const char * argv[]) {
 
   // If a file name was provided, read the file into the buffer.
   if (file_name) {
-    FILE * file = fopen(file_name, "r");
-    if (!file) {
-      // Error: failed to open the file.
-      fprintf(stderr, "Error, failed to open the file %s\n", file_name);
-      // Print the current directory.
-      system("pwd");
+    // cutil reads the whole file, in chunks rather than by seeking to the
+    // end first, so this works on a pipe or a character device as well as on
+    // an ordinary file - and it puts a NUL one past the end, which is what
+    // lets the result be handed straight to the compiler as a C string.
+    //
+    // What it replaces sized the file with ftell(), never checked what
+    // fread() actually returned, and leaked the FILE * if the allocation
+    // failed. Opened in text mode, as it was, ftell() over-reports on
+    // Windows by the number of line endings, so the tail of the buffer was
+    // whatever the allocator last left there.
+    void * contents = NULL;
+    size_t length = 0;
+    GCU_File_Result result = gcu_file_read(file_name, GCU_FILE_UNLIMITED,
+      gta_allocator(), &contents, &length);
+    if (result != GCU_FILE_OK) {
+      fprintf(stderr, "Error, failed to read the file %s: %s\n", file_name,
+        gcu_file_result_string(result));
       return -3;
     }
-    fseek(file, 0, SEEK_END);
-    long length = ftell(file);
-    fseek(file, 0, SEEK_SET);
-    buffer = gcu_malloc(length + 1);
-    if (!buffer) {
-      // Error: failed to allocate memory.
-      fprintf(stderr, "Error, failed to allocate memory\n");
-      return -4;
-    }
-    fread(buffer, 1, length, file);
-    buffer[length] = '\0';
-    fclose(file);
+    buffer = contents;
     eval = buffer;
   }
   // If no code was provided, read from stdin.
   else if (!eval) {
-    size_t size = 0;
-    size_t capacity = 1024;
-    buffer = gcu_malloc(capacity);
-    if (!buffer) {
-      // Error: failed to allocate memory.
+    // The array owns the length and the growth. The loop this replaces read
+    // one character at a time into a char, and `c == EOF` is false for every
+    // char value on a platform where char is unsigned, so it never
+    // terminated there; where char is signed, a 0xFF byte ended the input
+    // early. It also doubled its capacity without checking for overflow, and
+    // dropped the old pointer on a failed realloc.
+    GCU_Array * input = gcu_array_create(1, 1024, gta_allocator());
+    if (!input) {
       fprintf(stderr, "Error, failed to allocate memory\n");
       return -5;
     }
-    while (true) {
-      if (size + 1 >= capacity) {
-        capacity *= 2;
-        buffer = gcu_realloc(buffer, capacity);
-        if (!buffer) {
-          // Error: failed to allocate memory.
-          fprintf(stderr, "Error, failed to allocate memory\n");
-          return -6;
-        }
+    char chunk[4096];
+    size_t read_count;
+    while ((read_count = fread(chunk, 1, sizeof(chunk), stdin)) > 0) {
+      if (!gcu_array_append_n(input, chunk, read_count)) {
+        gcu_array_destroy(input);
+        fprintf(stderr, "Error, failed to allocate memory\n");
+        return -6;
       }
-      char c = fgetc(stdin);
-      if (c == EOF) {
-        break;
-      }
-      buffer[size++] = c;
     }
-    buffer[size] = '\0';
+    if (ferror(stdin)) {
+      gcu_array_destroy(input);
+      fprintf(stderr, "Error, failed to read from stdin\n");
+      return -7;
+    }
+    // The terminator is in the buffer but not in the code, which is what
+    // lets an empty stdin compile as an empty program rather than as
+    // whatever follows it in memory.
+    if (!gcu_array_append(input, "")) {
+      gcu_array_destroy(input);
+      fprintf(stderr, "Error, failed to allocate memory\n");
+      return -6;
+    }
+    buffer = gcu_array_steal(input, NULL);
+    gcu_array_destroy(input);
     eval = buffer;
   }
 
@@ -200,5 +213,11 @@ COMPILE_FAILED:
     gta_language_destroy(language);
   }
 LANGUAGE_CREATE_FAILED:
+  if (cleanup) {
+    // Only under --cleanup, as with everything else here: the point of the
+    // flag is a run that valgrind can read, and the buffer holding the code
+    // is as much a part of that as the library objects are.
+    gcu_free(buffer);
+  }
   return error;
 }

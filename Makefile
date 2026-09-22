@@ -706,17 +706,11 @@ test: \
 	LD_LIBRARY_PATH="$(TEST_LD_PATH)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
 
 	@printf "\033[0;30;47m\n"
-	@printf "###################\n"
-	@printf "### Running CLI ###\n"
-	@printf "###################\n"
+	@printf "#########################\n"
+	@printf "### Running CLI tests ###\n"
+	@printf "#########################\n"
 	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(TEST_LD_PATH)" $(APP_DIR)/tang -s ./test/fib.tang
-	@printf "\033[0;30;47m\n"
-	@printf "###################\n"
-	@printf "### Running CLI ###\n"
-	@printf "###################\n"
-	@printf "\033[0m\n\n"
-	LD_LIBRARY_PATH="$(TEST_LD_PATH)" $(APP_DIR)/tang ./test/fib.template.tang
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" $(SHELL) ./test/cli-test.sh $(APP_DIR)/tang$(EXE_EXTENSION)
 #	@printf "\033[0;32m\n"
 #	@printf "############################\n"
 #	@printf "### Running normal tests ###\n"
