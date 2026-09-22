@@ -156,11 +156,28 @@ CC := cc
 # cutil, found through pkg-config. The name carries the branch, which is how a
 # consumer picks a version; CUTIL_PC is overridable so this library can be
 # built against a cutil on a different branch from its own.
+# Targets that neither compile nor link can run without the suite installed.
+# The dependency check below is evaluated while this file is read, not when a
+# target is considered, so without this guard it fires for every goal - and
+# `make clean`, the one thing you reach for when a tree is in a bad state,
+# exits non-zero having removed nothing.
+#
+# $(or $(MAKECMDGOALS),all) is load-bearing: a bare `make` names no goal, and
+# must be treated as `all` so that it still gets checked. Reading it as "no
+# goals, therefore nothing outside the list" would skip the check in exactly
+# the case it exists for.
+DEPLESS_GOALS := clean cloc docs docs-pdf help
+ifeq ($(filter-out $(DEPLESS_GOALS),$(or $(MAKECMDGOALS),all)),)
+SKIP_DEP_CHECK := 1
+endif
+
 CUTIL_PC ?= ghoti.io-cutil$(BRANCH)
 CUTIL_CFLAGS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --cflags $(CUTIL_PC) 2>/dev/null)
 CUTIL_LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs $(CUTIL_PC) 2>/dev/null)
+ifndef SKIP_DEP_CHECK
 ifeq ($(strip $(CUTIL_CFLAGS)),)
 $(error ghoti.io-cutil was not found by pkg-config. Run ./bootstrap.sh in the parent folder to build and install the suite into a local prefix, then pass the same PREFIX here - or point PKG_CONFIG_PATH at the directory holding its .pc file. There is deliberately no sibling-checkout fallback: a second resolution path that only in-tree builds exercise is one that silently rots.)
+endif
 endif
 ICU_CFLAGS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --cflags icu-io icu-i18n icu-uc)
 ICU_LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs icu-io icu-i18n icu-uc)
