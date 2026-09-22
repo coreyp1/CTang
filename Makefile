@@ -194,7 +194,11 @@ endif
 endif
 ICU_CFLAGS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --cflags icu-io icu-i18n icu-uc)
 ICU_LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs icu-io icu-i18n icu-uc)
-CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O0 -g $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(EXTRA_CFLAGS)
+# -O2 rather than -O3: measured across five workloads and both execution paths,
+# -O3 came out slower than -O2, and -O2 captures essentially the whole win over
+# -O0 (6-9%). -g costs nothing at run time - it emits DWARF, not different code
+# - and a JIT is worth having readable backtraces for.
+CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O2 -g $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(EXTRA_CFLAGS)
 
 # The shipped library exports its public API and nothing else. Tests reach the
 # internals by linking the static archive, which a static link can do even for
