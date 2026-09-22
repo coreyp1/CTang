@@ -208,15 +208,13 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
   // Jump labels.
   GTA_Integer end;
   GTA_Integer return_memory_error;
-  GTA_Integer pop_once_then_return_memory_error;
-  GTA_Integer pop_twice_then_return_memory_error;
+  GTA_Integer discard_key_then_return_memory_error;
 
   bool error_free = true
   // Create jump labels.
     && ((end = gta_compiler_context_get_label(context)) >= 0)
     && ((return_memory_error = gta_compiler_context_get_label(context)) >= 0)
-    && ((pop_once_then_return_memory_error = gta_compiler_context_get_label(context)) >= 0)
-    && ((pop_twice_then_return_memory_error = gta_compiler_context_get_label(context)) >= 0)
+    && ((discard_key_then_return_memory_error = gta_compiler_context_get_label(context)) >= 0)
   // gta_computed_value_map_create(map->pairs->count, context)
   //   mov GTA_X86_64_R1, array->elements->count
   //   mov GTA_X86_64_R2, r15
@@ -266,7 +264,17 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
     //   mov byte ptr [rax + is_temporary_offset], 0
       && gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
     // Save the key to the stack.
+    //
+    // Twice, for the same reason the map pointer above is pushed twice: the
+    // value expression compiled next emits calls of its own, and they are
+    // only ABI-correct while rsp stays 16-byte aligned. A single push here
+    // left every one of them off by eight. It survived a value that is a
+    // literal, and faulted on one that is another map, because the nested
+    // map reaches gcu_string_hash_64() - which holds its murmur3 state in a
+    // stack local that the compiler loads with movdqa, an aligned move.
     //   push rax
+    //   push rax   ; alignment padding
+      && gta_push_reg__x86_64(v, GTA_REG_RAX)
       && gta_push_reg__x86_64(v, GTA_REG_RAX)
 
     // Compile the value.
@@ -291,10 +299,10 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
       && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_deep_copy)
     // If the deep copy failed, return a memory error.
     //   test rax, rax
-    //   jz pop_twice_then_return_memory_error
+    //   jz discard_key_then_return_memory_error
       && gta_test_reg_reg__x86_64(v, GTA_REG_RAX, GTA_REG_RAX)
       && gta_jcc__x86_64(v, GTA_CC_Z, 0xDEADBEEF)
-      && gta_compiler_context_add_label_jump(context, pop_twice_then_return_memory_error, v->count - 4)
+      && gta_compiler_context_add_label_jump(context, discard_key_then_return_memory_error, v->count - 4)
     // mark_not_temporary:
       && gta_compiler_context_set_label(context, mark_not_temporary, v->count)
     //   mov byte ptr [rax + is_temporary_offset], 0
@@ -304,9 +312,11 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
     // gta_computed_value_map_set_key_val(map, key, value)
     //   mov GTA_X86_64_R3, rax                     ; GTA_X86_64_R3 = value
     //   pop GTA_X86_64_R2                          ; GTA_X86_64_R2 = key
+    //   add rsp, 8                                 ; discard the padding
     //   mov GTA_X86_64_R1, [rsp]                   ; GTA_X86_64_R1 = map
       && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R3, GTA_REG_RAX)
       && gta_pop_reg__x86_64(v, GTA_X86_64_R2)
+      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
       && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RSP, GTA_REG_NONE, 0, 0)
       && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_map_set_key_val);
   }
@@ -326,12 +336,13 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
     && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, end, v->count - 4)
-  // pop_twice_then_return_memory_error:  ; (falls through)
-  // Discard the key, then fall through to discard the map's two slots.
-    && gta_compiler_context_set_label(context, pop_twice_then_return_memory_error, v->count)
-    && gta_pop_reg__x86_64(v, GTA_REG_RAX)
-  // pop_once_then_return_memory_error:   ; (falls through)
-    && gta_compiler_context_set_label(context, pop_once_then_return_memory_error, v->count)
+  // discard_key_then_return_memory_error:  ; (falls through)
+  // Discard the key's two slots, then fall through to discard the map's two.
+  //   add rsp, 16
+    && gta_compiler_context_set_label(context, discard_key_then_return_memory_error, v->count)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 16)
+  //   pop rax
+  //   add rsp, 8
     && gta_pop_reg__x86_64(v, GTA_REG_RAX)
     && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
   // return_memory_error:

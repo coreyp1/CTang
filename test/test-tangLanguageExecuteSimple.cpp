@@ -2566,6 +2566,76 @@ TEST(Print, Simple) {
   }
 }
 
+TEST(Map, NestedLiteral) {
+  // A map literal whose value is another map literal used to segfault under
+  // the JIT while it was being built, printed or not.
+  //
+  // The map compiler saved the key across the value expression with a single
+  // push, which left rsp eight bytes out for everything the value compiled
+  // to. A literal value survived that; a nested map did not, because
+  // building one reaches gcu_string_hash_64(), whose murmur3 state is a
+  // stack local the compiler loads with movdqa - an aligned move, which
+  // faults on a stack that is not.
+  //
+  // This file runs twice, once with the JIT disabled and once with the
+  // bytecode disabled, so these cover the path that crashed as well as the
+  // one that never did.
+  {
+    TEST_PROGRAM_SETUP("print({a: {b: 1}});");
+    ASSERT_TRUE(context->result);
+    ASSERT_STREQ("{\"a\": {\"b\": 1}}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Nested two deep.
+    TEST_PROGRAM_SETUP("print({a: {b: {c: 2}}});");
+    ASSERT_TRUE(context->result);
+    ASSERT_STREQ("{\"a\": {\"b\": {\"c\": 2}}}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Reached through an array, which also crashed.
+    TEST_PROGRAM_SETUP("print({a: [1, {b: 2}]});");
+    ASSERT_TRUE(context->result);
+    ASSERT_STREQ("{\"a\": [1, {\"b\": 2}]}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // An empty nested map never crashed - it adds no key and so never
+    // hashes one - which is what made the first report look like it was
+    // about maps rather than about the stack.
+    TEST_PROGRAM_SETUP("print({a: {:}});");
+    ASSERT_TRUE(context->result);
+    ASSERT_STREQ("{\"a\": {}}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A nested map that is not the first entry, so that the pairs before it
+    // have already pushed and popped.
+    TEST_PROGRAM_SETUP("m = {a: 1, b: {c: 2}, d: 3}; print(m[\"b\"]);");
+    ASSERT_TRUE(context->result);
+    ASSERT_STREQ("{\"c\": 2}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Two nested maps in one literal.
+    TEST_PROGRAM_SETUP("print({a: {b: 1}, c: {d: 2}});");
+    ASSERT_TRUE(context->result);
+    std::string out{context->output->buffer};
+    ASSERT_TRUE(out == "{\"a\": {\"b\": 1}, \"c\": {\"d\": 2}}"
+      || out == "{\"c\": {\"d\": 2}, \"a\": {\"b\": 1}}") << out;
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The value is still reachable afterwards, so the pair really was
+    // stored rather than merely surviving construction.
+    TEST_PROGRAM_SETUP("m = {a: {b: 42}}; print(m[\"a\"][\"b\"]);");
+    ASSERT_TRUE(context->result);
+    ASSERT_STREQ("42", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(Print, Map) {
   {
     // The empty map.
