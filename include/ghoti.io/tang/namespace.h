@@ -142,6 +142,7 @@
 #define GTA_VectorX GHOTIIO_TANG(GTA_VectorX)
 
 #define gta_add_reg_imm__x86_64 GHOTIIO_TANG(gta_add_reg_imm__x86_64)
+#define gta_allocator GHOTIIO_TANG(gta_allocator)
 #define gta_and_reg_imm__x86_64 GHOTIIO_TANG(gta_and_reg_imm__x86_64)
 #define gta_ast_node_analyze GHOTIIO_TANG(gta_ast_node_analyze)
 #define gta_ast_node_array_analyze GHOTIIO_TANG(gta_ast_node_array_analyze)

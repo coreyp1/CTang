@@ -188,6 +188,7 @@ APP_DIR := $(BUILD_DIR)/apps
 
 INCLUDE := -I include/ -I $(GEN_DIR)/
 LIBOBJECTS := \
+	$(OBJ_DIR)/allocator.o \
 	$(OBJ_DIR)/tangParser.o \
 	$(OBJ_DIR)/tangScanner.o \
 	$(OBJ_DIR)/unicodeString.o \
@@ -274,7 +275,7 @@ all: $(APP_DIR)/$(TARGET) $(APP_DIR)/$(STATIC_TARGET) $(APP_DIR)/tang$(EXE_EXTEN
 # Dependency Inclusion
 ####################################################################
 # Compiler-generated .d files (see -MMD -MP -MF in compile commands).
-TEST_EXE_NAMES := testUnicodeString testTangLanguageParse testTangLanguageExecuteSimple testTangLanguageExecuteComplex testTangLanguageLibrary testBinary test
+TEST_EXE_NAMES := testAllocator testUnicodeString testTangLanguageParse testTangLanguageExecuteSimple testTangLanguageExecuteComplex testTangLanguageLibrary testBinary test
 TEST_DEPFILES := $(addprefix $(APP_DIR)/,$(TEST_EXE_NAMES:%=%.d))
 TANG_CLI_DEP := $(APP_DIR)/tang.d
 DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES) $(TANG_CLI_DEP)
@@ -455,6 +456,11 @@ $(APP_DIR)/libtestLibrary.so: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -shared -o $@ $< $(LDFLAGS) -fPIC
 
+$(APP_DIR)/testAllocator$(EXE_EXTENSION): test/test-allocator.cpp $(OBJ_DIR)/allocator.o
+	@printf "\n### Compiling Allocator Test ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testAllocator.d -o $@ $^ $(LDFLAGS) $(TESTFLAGS)
+
 $(APP_DIR)/testUnicodeString$(EXE_EXTENSION): test/test-unicodeString.cpp $(OBJ_DIR)/unicodeString.o
 	@printf "\n### Compiling UnicodeString Test ###\n"
 	@mkdir -p $(@D)
@@ -624,6 +630,7 @@ endif
 test: ## Make and run the Unit tests
 test: \
 				$(APP_DIR)/$(TARGET) \
+				$(APP_DIR)/testAllocator$(EXE_EXTENSION) \
 				$(APP_DIR)/testUnicodeString$(EXE_EXTENSION) \
 				$(APP_DIR)/testTangLanguageParse$(EXE_EXTENSION) \
 				$(APP_DIR)/testTangLanguageExecuteSimple$(EXE_EXTENSION) \
@@ -635,6 +642,12 @@ test: \
 #				$(APP_DIR)/libtestLibrary.so \
 #				$(APP_DIR)/test$(EXE_EXTENSION) \
 
+	@printf "\033[0;30;103m\n"
+	@printf "###############################\n"
+	@printf "### Running allocator tests ###\n"
+	@printf "###############################\n"
+	@printf "\033[0m\n\n"
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" $(APP_DIR)/testAllocator --gtest_brief=1
 	@printf "\033[0;30;103m\n"
 	@printf "############################\n"
 	@printf "### Running string tests ###\n"
