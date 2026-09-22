@@ -638,6 +638,71 @@ TEST(Cast, FromInteger) {
   }
 }
 
+TEST(Parse, InvalidUtf8InAStringLiteral) {
+  // A string literal whose bytes are not valid UTF-8 makes
+  // gta_unicode_string_create_and_adopt fail. That arm freed the token's
+  // buffer and broke without assigning $$, so the value union still held the
+  // token - whose first member is the pointer just freed - and the start rule
+  // took it as the AST. Walking it was a use-after-free, from three bytes of
+  // input.
+  //
+  // Three separate defects had to line up: the arm not clearing $$, the start
+  // rule not running VERIFY1, and ~86 sites assigning `parseError` (the
+  // parameter) instead of `*parseError`, so nothing downstream ever learned an
+  // error had occurred.
+  //
+  // These assertions catch the leak half in any build. The use-after-free half
+  // needs `make test-asan`, which runs this file under ASan.
+  {
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script("\"\xff\"");
+    ASSERT_EQ(ast, nullptr);
+    ASSERT_EQ(0, gta_tang_node_count(ast));
+    if (ast) { gta_ast_node_destroy(ast); }
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // With a trailing token, so error recovery discards a symbol and runs its
+    // %destructor. That destructor was not null-safe, and once the arm above
+    // started clearing $$ correctly it received null and aborted on an assert.
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script("\"\xff\"<");
+    ASSERT_EQ(ast, nullptr);
+    ASSERT_EQ(0, gta_tang_node_count(ast));
+    if (ast) { gta_ast_node_destroy(ast); }
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // A lone continuation byte, and a lead byte with no continuation.
+    for (const char * src : {"\"\x80\"", "\"\xc3\"", "\"\xf0\x9f\""}) {
+      gcu_memory_reset_counts();
+      GTA_Ast_Node * ast = gta_tang_parse_script(src);
+      ASSERT_EQ(ast, nullptr);
+      if (ast) { gta_ast_node_destroy(ast); }
+      ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+    }
+  }
+  {
+    // Valid UTF-8 must still parse, or the fix is just "reject everything".
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script("\"caf\xc3\xa9\";");
+    ASSERT_NE(ast, nullptr);
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // And a syntax error must still yield a parse-error node rather than null:
+    // gta_program_create distinguishes the two, so returning null here would
+    // make an invalid program look like an empty one.
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script("invalid syntax :(");
+    ASSERT_NE(ast, nullptr);
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
+
 TEST(Parse, UnterminatedStringDoesNotLeak) {
   // The scanner accumulates a string literal into a heap buffer. Every error
   // return in tangScanner.l frees it with CLEANUP_BUFFER except the one for

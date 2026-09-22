@@ -173,11 +173,20 @@
 %destructor {
   gcu_free((void *)$$.str);
 } IDENTIFIER STRING TEMPLATESTRING QUICKPRINTBEGINANDSTRING
+// Both guard against a null value. A rule action that detects an error assigns
+// $$ = 0 and breaks, and error recovery then discards that symbol and runs its
+// destructor - so a destructor that cannot accept null turns a handled error
+// into an abort. gta_ast_node_destroy asserts on null, and this is a build
+// with asserts live.
 %destructor {
-  gcu_vector64_destroy($$);
+  if ($$) {
+    gcu_vector64_destroy($$);
+  }
 } statements functionDeclarationArguments expressionList mapList
 %destructor {
-  gta_ast_node_destroy($$);
+  if ($$) {
+    gta_ast_node_destroy($$);
+  }
 } expression libraryExpression statement codeBlock openStatement closedStatement optionalExpression slice
 
 
@@ -311,7 +320,7 @@ static void vector64_map_pair_cleanup(GCU_Vector64 * vector) {
   LOCATION(AA, BB);                        \
   Z = (GTA_Ast_Node *)gta_ast_node_binary_create(A, B, X, location); \
   if (!Z) {                                \
-    parseError = &ErrorOutOfMemory;        \
+    *parseError = ErrorOutOfMemory;        \
     break;                                 \
   }
 
@@ -320,7 +329,7 @@ static void vector64_map_pair_cleanup(GCU_Vector64 * vector) {
   LOCATION(AA, BB);                        \
   Z = (GTA_Ast_Node *)gta_ast_node_unary_create(B, X, location); \
   if (!Z) {                                \
-    parseError = &ErrorOutOfMemory;        \
+    *parseError = ErrorOutOfMemory;        \
   }
 
 #define CAST_TEMPLATE(X,A,AA,BB,Z)         \
@@ -328,7 +337,7 @@ static void vector64_map_pair_cleanup(GCU_Vector64 * vector) {
   LOCATION(AA, BB);                        \
   Z = (GTA_Ast_Node *)gta_ast_node_cast_create(A, X, location); \
   if (!Z) {                                \
-    parseError = &ErrorOutOfMemory;        \
+    *parseError = ErrorOutOfMemory;        \
     break;                                 \
   }
 
@@ -349,6 +358,13 @@ static void vector64_map_pair_cleanup(GCU_Vector64 * vector) {
 program
   : expression
     {
+      // VERIFY1 as every other rule does. Without it this took $1 even when
+      // the expression's action had bailed without assigning $$, so *ast
+      // became whatever the value union happened to hold - for a STRING that
+      // is the token's .str, which the same action had just freed. Three
+      // bytes of input reached a use-after-free that way.
+      VERIFY1($1, *ast);
+
       *ast = (GTA_Ast_Node *)$1;
     }
   | statements
@@ -358,7 +374,7 @@ program
 
       *ast = (GTA_Ast_Node *)gta_ast_node_block_create($1, @1);
       if (!*ast) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | EOF_
@@ -375,7 +391,7 @@ functionDeclarationArguments
 
       $$ = gcu_vector64_create(0);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       $$->cleanup = vector64_ast_node_cleanup;
@@ -390,7 +406,7 @@ functionDeclarationArguments
       GTA_Ast_Node * parameter = (GTA_Ast_Node *)gta_ast_node_identifier_create(identifier, @1);
       if (!parameter) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
 
@@ -398,7 +414,7 @@ functionDeclarationArguments
       $$ = gcu_vector64_create(1);
       if (!$$) {
         gta_ast_node_destroy(parameter);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       $$->cleanup = vector64_ast_node_cleanup;
@@ -414,14 +430,14 @@ functionDeclarationArguments
       GTA_Ast_Node * parameter = (GTA_Ast_Node *)gta_ast_node_identifier_create(identifier, @3);
       if (!parameter) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
 
       if (!gcu_vector64_append($1, GCU_TYPE64_P(parameter))) {
         gta_ast_node_destroy(parameter);
         $$ = 0;
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       $$ = $1;
@@ -438,7 +454,7 @@ expressionList
 
       $$ = gcu_vector64_create(0);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       $$->cleanup = vector64_ast_node_cleanup;
@@ -450,7 +466,7 @@ expressionList
 
       $$ = gcu_vector64_create(1);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       $$->cleanup = vector64_ast_node_cleanup;
@@ -463,7 +479,7 @@ expressionList
 
       if (!gcu_vector64_append($1, GCU_TYPE64_P($3))) {
         $$ = 0;
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       $$ = $1;
@@ -480,7 +496,7 @@ mapList
 
       GTA_Unicode_String * key_unicode_string = gta_unicode_string_create_and_adopt($1.str, $1.len, $1.type);
       if (!key_unicode_string) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         gcu_free((void *)$1.str);
         break;
       }
@@ -488,7 +504,7 @@ mapList
       GTA_Ast_Node * key = (GTA_Ast_Node *)gta_ast_node_string_create(key_unicode_string, @1);
       if (!key) {
         gta_unicode_string_destroy(key_unicode_string);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
 
@@ -496,7 +512,7 @@ mapList
       $$ = gcu_vector64_create(32);
       if (!$$) {
         gta_ast_node_destroy(key);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       $$->cleanup = vector64_map_pair_cleanup;
@@ -506,7 +522,7 @@ mapList
       if (!pair) {
         gta_ast_node_destroy(key);
         gcu_vector64_destroy($$);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         $$ = 0;
         break;
       }
@@ -518,7 +534,7 @@ mapList
         gcu_free(pair);
         gta_ast_node_destroy(key);
         gcu_vector64_destroy($$);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         $$ = 0;
         break;
       }
@@ -530,7 +546,7 @@ mapList
 
       GTA_Unicode_String * key_unicode_string = gta_unicode_string_create_and_adopt($3.str, $3.len, $3.type);
       if (!key_unicode_string) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         gcu_free((void *)$3.str);
         break;
       }
@@ -538,7 +554,7 @@ mapList
       GTA_Ast_Node * key = (GTA_Ast_Node *)gta_ast_node_string_create(key_unicode_string, @3);
       if (!key) {
         gta_unicode_string_destroy(key_unicode_string);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
 
@@ -546,7 +562,7 @@ mapList
       GTA_Ast_Node_Map_Pair * pair = gcu_malloc(sizeof(GTA_Ast_Node_Map_Pair));
       if (!pair) {
         gta_ast_node_destroy(key);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         $$ = 0;
         break;
       }
@@ -557,7 +573,7 @@ mapList
       if (!gcu_vector64_append($1, GCU_TYPE64_P(pair))) {
         gta_ast_node_destroy(key);
         gcu_free(pair);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         $$ = 0;
         break;
       }
@@ -577,7 +593,7 @@ statements
       // Base case.  Create a vector to hold additional entries.
       $$ = gcu_vector64_create(1);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       $$->cleanup = vector64_ast_node_cleanup;
@@ -591,7 +607,7 @@ statements
       VERIFY2($1,$2,$$)
 
       if (!gcu_vector64_append($1, GCU_TYPE64_P($2))) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         $$ = 0;
         break;
       }
@@ -618,7 +634,7 @@ closedStatement
       LOCATION(@1, @7);
       $$ = (GTA_Ast_Node *)gta_ast_node_if_else_create($3, $5, $7, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -630,7 +646,7 @@ closedStatement
       LOCATION(@1, @5);
       $$ = (GTA_Ast_Node *)gta_ast_node_while_create($3, $5, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -642,7 +658,7 @@ closedStatement
       LOCATION(@1, @7);
       $$ = (GTA_Ast_Node *)gta_ast_node_do_while_create($5, $2, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -654,7 +670,7 @@ closedStatement
       LOCATION(@1, @9);
       $$ = (GTA_Ast_Node *)gta_ast_node_for_create($3, $5, $7, $9, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -669,7 +685,7 @@ closedStatement
       $$ = (GTA_Ast_Node *)gta_ast_node_ranged_for_create(identifier, $5, $7, location);
       if (!$$) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -684,7 +700,7 @@ closedStatement
       $$ = (GTA_Ast_Node *)gta_ast_node_function_create(identifier, $4, $6, location);
       if (!$$) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -696,7 +712,7 @@ closedStatement
 
       $$ = (GTA_Ast_Node *)gta_ast_node_return_create(0, @1);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -708,7 +724,7 @@ closedStatement
       LOCATION(@1, @3);
       $$ = (GTA_Ast_Node *)gta_ast_node_return_create($2, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -719,7 +735,7 @@ closedStatement
 
       $$ = (GTA_Ast_Node *)gta_ast_node_break_create(@1);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -730,7 +746,7 @@ closedStatement
 
       $$ = (GTA_Ast_Node *)gta_ast_node_continue_create(@1);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -742,7 +758,7 @@ closedStatement
 
       GTA_Unicode_String * string = gta_unicode_string_create_and_adopt($1.str, $1.len, $1.type);
       if (!string) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         gcu_free((void *)$1.str);
         break;
       }
@@ -750,7 +766,7 @@ closedStatement
       GTA_Ast_Node * template_string = (GTA_Ast_Node *)gta_ast_node_string_create(string, @1);
       if (!$$) {
         gta_unicode_string_destroy(string);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
 
@@ -758,7 +774,7 @@ closedStatement
       if (!print_template_string) {
         gta_ast_node_destroy(template_string);
         $$ = 0;
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
 
@@ -774,7 +790,7 @@ closedStatement
 
       GTA_Unicode_String * string = gta_unicode_string_create_and_adopt($1.str, $1.len, $1.type);
       if (!string) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         gcu_free((void *)$1.str);
         $$ = 0;
         break;
@@ -784,7 +800,7 @@ closedStatement
       if (!preceding) {
         gta_unicode_string_destroy(string);
         $$ = 0;
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
 
@@ -792,7 +808,7 @@ closedStatement
       if (!print_preceding) {
         gta_ast_node_destroy(preceding);
         $$ = 0;
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
 
@@ -800,7 +816,7 @@ closedStatement
       if (!print_expression) {
         gta_ast_node_destroy(print_preceding);
         $$ = 0;
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
 
@@ -809,7 +825,7 @@ closedStatement
         gta_ast_node_destroy(print_preceding);
         gta_ast_node_destroy(print_expression);
         $$ = 0;
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       block->cleanup = vector64_ast_node_cleanup;
@@ -819,7 +835,7 @@ closedStatement
       $$ = (GTA_Ast_Node *)gta_ast_node_block_create(block, location);
       if (!$$) {
         gcu_vector64_destroy(block);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -832,7 +848,7 @@ closedStatement
       LOCATION(@1, @3);
       $$ = (GTA_Ast_Node *)gta_ast_node_print_create($2, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -847,7 +863,7 @@ closedStatement
       GTA_Ast_Node * library = (GTA_Ast_Node *)gta_ast_node_library_create(identifier, location);
       if (!library) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       // Copy the identifier.
@@ -855,14 +871,14 @@ closedStatement
       if (!identifier_copy) {
         gcu_free((void *)identifier);
         gta_ast_node_destroy(library);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       strcpy((char *)identifier_copy, identifier);
       $$ = (GTA_Ast_Node *)gta_ast_node_use_create(identifier_copy, library, location);
       if (!$$) {
         gta_ast_node_destroy(library);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -877,7 +893,7 @@ closedStatement
       $$ = (GTA_Ast_Node *)gta_ast_node_use_create(identifier, $2, location);
       if (!$$) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | "global" IDENTIFIER ";"
@@ -890,7 +906,7 @@ closedStatement
       GTA_Ast_Node * name = (GTA_Ast_Node *)gta_ast_node_identifier_create(identifier, @2);
       if (!name) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
 
@@ -898,7 +914,7 @@ closedStatement
       $$ = (GTA_Ast_Node *)gta_ast_node_global_create(name, 0, location);
       if (!$$) {
         gta_ast_node_destroy(name);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -912,7 +928,7 @@ closedStatement
       GTA_Ast_Node * name = (GTA_Ast_Node *)gta_ast_node_identifier_create(identifier, @2);
       if (!name) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
 
@@ -920,7 +936,7 @@ closedStatement
       $$ = (GTA_Ast_Node *)gta_ast_node_global_create(name, $4, location);
       if (!$$) {
         gta_ast_node_destroy(name);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -937,7 +953,7 @@ libraryExpression
       $$ = (GTA_Ast_Node *)gta_ast_node_library_create(identifier, @1);
       if (!$$) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | libraryExpression "." IDENTIFIER
@@ -951,7 +967,7 @@ libraryExpression
       $$ = (GTA_Ast_Node *)gta_ast_node_period_create($1, identifier, location);
       if (!$$) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | libraryExpression "." "global"
@@ -961,7 +977,7 @@ libraryExpression
 
       char * identifier = gcu_calloc(7, sizeof(char));
       if (!identifier) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       strcpy(identifier, "global");
@@ -970,7 +986,7 @@ libraryExpression
       $$ = (GTA_Ast_Node *)gta_ast_node_period_create($1, identifier, location);
       if (!$$) {
         gcu_free(identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   ;
@@ -985,7 +1001,7 @@ openStatement
       LOCATION(@1, @5);
       $$ = (GTA_Ast_Node *)gta_ast_node_if_else_create($3, $5, 0, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -997,7 +1013,7 @@ openStatement
       LOCATION(@1, @7);
       $$ = (GTA_Ast_Node *)gta_ast_node_if_else_create($3, $5, $7, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1009,7 +1025,7 @@ openStatement
       LOCATION(@1, @5);
       $$ = (GTA_Ast_Node *)gta_ast_node_while_create($3, $5, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1021,7 +1037,7 @@ openStatement
       LOCATION(@1, @9);
       $$ = (GTA_Ast_Node *)gta_ast_node_for_create($3, $5, $7, $9, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1037,7 +1053,7 @@ openStatement
       $$ = (GTA_Ast_Node *)gta_ast_node_ranged_for_create(identifier, $5, $7, location);
       if (!$$) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1059,7 +1075,7 @@ optionalExpression
       };
       $$ = gta_ast_node_create(location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | expression
@@ -1075,7 +1091,7 @@ slice
       LOCATION(@1, @8);
       $$ = (GTA_Ast_Node *)gta_ast_node_slice_create($1, $3, $5, $7, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1087,7 +1103,7 @@ slice
       LOCATION(@1, @6);
       $$ = (GTA_Ast_Node *)gta_ast_node_slice_create($1, $3, $5, 0, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1103,13 +1119,13 @@ codeBlock
       LOCATION(@1, @2);
       GTA_Ast_Node * null_val = gta_ast_node_create(location);
       if (!null_val) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       GCU_Vector64 * vector = gcu_vector64_create(1);
       if (!vector) {
         gta_ast_node_destroy(null_val);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       vector->cleanup = vector64_ast_node_cleanup;
@@ -1117,7 +1133,7 @@ codeBlock
       $$ = (GTA_Ast_Node *)gta_ast_node_block_create(vector, location);
       if (!$$) {
         gcu_vector64_destroy(vector);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | "{" statements "}"
@@ -1128,7 +1144,7 @@ codeBlock
       LOCATION(@1, @3);
       $$ = (GTA_Ast_Node *)gta_ast_node_block_create($2, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1143,7 +1159,7 @@ expression
 
       $$ = (GTA_Ast_Node *)gta_ast_node_create(@1);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1158,7 +1174,7 @@ expression
       $$ = (GTA_Ast_Node *)gta_ast_node_identifier_create(identifier, @1);
       if (!$$) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1169,7 +1185,7 @@ expression
 
       $$ = (GTA_Ast_Node *)gta_ast_node_integer_create($1, @1);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1180,7 +1196,7 @@ expression
 
       $$ = (GTA_Ast_Node *)gta_ast_node_float_create($1, @1);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1191,7 +1207,7 @@ expression
 
       $$ = (GTA_Ast_Node *)gta_ast_node_boolean_create($1, @1);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | STRING
@@ -1201,7 +1217,13 @@ expression
 
       GTA_Unicode_String * string = gta_unicode_string_create_and_adopt((const char * const)$1.str, $1.len, $1.type);
       if (!string) {
-        parseError = &ErrorOutOfMemory;
+        // $$ must be cleared before breaking. Leaving it unset leaves the
+        // value union holding $1, whose first member is the .str freed on the
+        // next line, and every consumer of this rule then treats that freed
+        // pointer as a GTA_Ast_Node *. Note this arm is reached for invalid
+        // UTF-8, not only for allocation failure, so it is ordinary input.
+        $$ = 0;
+        *parseError = ErrorOutOfMemory;
         gcu_free((void *)$1.str);
         break;
       }
@@ -1209,7 +1231,7 @@ expression
       $$ = (GTA_Ast_Node *)gta_ast_node_string_create(string, @1);
       if (!$$) {
         gta_unicode_string_destroy(string);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | expression "=" expression
@@ -1220,7 +1242,7 @@ expression
       LOCATION(@1, @3);
       $$ = (GTA_Ast_Node *)gta_ast_node_assign_create($1, $3, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | expression "+" expression
@@ -1315,7 +1337,7 @@ expression
       LOCATION(@1, @4);
       $$ = (GTA_Ast_Node *)gta_ast_node_print_create($3, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | expression "." IDENTIFIER
@@ -1329,7 +1351,7 @@ expression
       $$ = (GTA_Ast_Node *)gta_ast_node_period_create($1, identifier, location);
       if (!$$) {
         gcu_free((void *)identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | expression "." "global"
@@ -1339,7 +1361,7 @@ expression
 
       char * identifier = gcu_calloc(7, sizeof(char));
       if (!identifier) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       strcpy(identifier, "global");
@@ -1348,7 +1370,7 @@ expression
       $$ = (GTA_Ast_Node *)gta_ast_node_period_create($1, identifier, location);
       if (!$$) {
         gcu_free(identifier);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   |  "[" expressionList "]"
@@ -1359,7 +1381,7 @@ expression
       LOCATION(@1, @3);
       $$ = (GTA_Ast_Node *)gta_ast_node_array_create($2, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1371,14 +1393,14 @@ expression
       LOCATION(@1, @3);
       GCU_Vector64 * vector = gcu_vector64_create(0);
       if (!vector) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
       vector->cleanup = vector64_map_pair_cleanup;
       $$ = (GTA_Ast_Node *)gta_ast_node_map_create(vector, location);
       if (!$$) {
         gcu_vector64_destroy(vector);
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | "{" mapList "}"
@@ -1389,7 +1411,7 @@ expression
       LOCATION(@1, @3);
       $$ = (GTA_Ast_Node *)gta_ast_node_map_create($2, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
       }
     }
   | expression "[" expression "]"
@@ -1400,7 +1422,7 @@ expression
       LOCATION(@1, @4);
       $$ = (GTA_Ast_Node *)gta_ast_node_index_create($1, $3, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1412,7 +1434,7 @@ expression
       LOCATION(@1, @4);
       $$ = (GTA_Ast_Node *)gta_ast_node_function_call_create($1, $3, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
@@ -1424,7 +1446,7 @@ expression
       LOCATION(@1, @5);
       $$ = (GTA_Ast_Node *)gta_ast_node_ternary_create($1, $3, $5, location);
       if (!$$) {
-        parseError = &ErrorOutOfMemory;
+        *parseError = ErrorOutOfMemory;
         break;
       }
     }
