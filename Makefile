@@ -562,8 +562,10 @@ test-watch: ## Watch the file directory for changes and run the unit tests
 		inotifywait -qr -e modify -e create -e delete -e move src include bison flex test Makefile --exclude '/\.'; \
 		done
 
-# So tests can load the tang library and its cutil dependency.
-TEST_LD_PATH := $(APP_DIR):$(CUTIL_SIBLING_DIR)/apps
+# So tests can load the tang library and its cutil dependency. cutil is found
+# where it was installed, which is the only way one library here finds
+# another; the second entry is the same one every sibling Makefile uses.
+TEST_LD_PATH := $(APP_DIR):$(LIB_INSTALL_PATH)/$(SUITE)
 
 jit-alignment-check: ## Rebuild with the JIT stack-alignment check and run the tests
 # The System V AMD64 ABI requires rsp to be 16-byte aligned at every call. The
