@@ -439,7 +439,7 @@ endif
 # Command Line Utility
 ####################################################################
 
-$(APP_DIR)/tang$(EXE_EXTENSION): src/tang.c | $(APP_DIR)/$(TARGET) $(APP_DIR)/$(STATIC_TARGET)
+$(APP_DIR)/tang$(EXE_EXTENSION): src/tang.c $(APP_DIR)/$(STATIC_TARGET) | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Tang Command Line Utility ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/tang.d -o $@ $< $(LDFLAGS) $(TANGLIBRARY)
@@ -466,32 +466,32 @@ $(APP_DIR)/testUnicodeString$(EXE_EXTENSION): test/test-unicodeString.cpp $(OBJ_
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testUnicodeString.d -o $@ $^ $(LDFLAGS) $(TESTFLAGS)
 
-$(APP_DIR)/testTangLanguageParse$(EXE_EXTENSION): test/test-tangLanguageParse.cpp | $(APP_DIR)/$(TARGET) $(APP_DIR)/$(STATIC_TARGET)
+$(APP_DIR)/testTangLanguageParse$(EXE_EXTENSION): test/test-tangLanguageParse.cpp $(APP_DIR)/$(STATIC_TARGET) | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Tang Language Parse Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testTangLanguageParse.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
-$(APP_DIR)/testTangLanguageExecuteSimple$(EXE_EXTENSION): test/test-tangLanguageExecuteSimple.cpp | $(APP_DIR)/$(TARGET) $(APP_DIR)/$(STATIC_TARGET)
+$(APP_DIR)/testTangLanguageExecuteSimple$(EXE_EXTENSION): test/test-tangLanguageExecuteSimple.cpp $(APP_DIR)/$(STATIC_TARGET) | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Tang Language Execution Simple Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testTangLanguageExecuteSimple.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
-$(APP_DIR)/testTangLanguageExecuteComplex$(EXE_EXTENSION): test/test-tangLanguageExecuteComplex.cpp | $(APP_DIR)/$(TARGET) $(APP_DIR)/$(STATIC_TARGET)
+$(APP_DIR)/testTangLanguageExecuteComplex$(EXE_EXTENSION): test/test-tangLanguageExecuteComplex.cpp $(APP_DIR)/$(STATIC_TARGET) | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Tang Language Execution Complex Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testTangLanguageExecuteComplex.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
-$(APP_DIR)/testTangLanguageLibrary$(EXE_EXTENSION): test/test-tangLanguageLibrary.cpp | $(APP_DIR)/$(TARGET) $(APP_DIR)/$(STATIC_TARGET)
+$(APP_DIR)/testTangLanguageLibrary$(EXE_EXTENSION): test/test-tangLanguageLibrary.cpp $(APP_DIR)/$(STATIC_TARGET) | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Tang Language Library Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testTangLanguageLibrary.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
-$(APP_DIR)/testBinary$(EXE_EXTENSION): test/test-binary.cpp | $(APP_DIR)/$(TARGET) $(APP_DIR)/$(STATIC_TARGET)
+$(APP_DIR)/testBinary$(EXE_EXTENSION): test/test-binary.cpp $(APP_DIR)/$(STATIC_TARGET) | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Binary JIT functions Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testBinary.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
-$(APP_DIR)/test$(EXE_EXTENSION): test/test.cpp | $(APP_DIR)/$(TARGET) $(APP_DIR)/$(STATIC_TARGET)
+$(APP_DIR)/test$(EXE_EXTENSION): test/test.cpp $(APP_DIR)/$(STATIC_TARGET) | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Tang Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
