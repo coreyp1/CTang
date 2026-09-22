@@ -55,7 +55,7 @@ ADD_LIBRARY_FAILED:
   gta_library_destroy(language->library);
   language->library = NULL;
 LIBRARY_HASH_CREATE_FAILED:
-  free(language);
+  gcu_free(language);
 LANGUAGE_CREATE_FAILED:
   return NULL;
 }
