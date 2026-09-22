@@ -531,6 +531,174 @@ $(APP_DIR)/test$(EXE_EXTENSION): test/test.cpp $(APP_DIR)/$(STATIC_TARGET) | $(A
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
 ####################################################################
+# Sanitizer build (ASan + UBSan)
+####################################################################
+#
+# A second, separately-instrumented build of the whole library and every test.
+# Five things here are deliberate, and each of them is a mistake some library
+# in this suite has already made:
+#
+# 1. Its own build directory. Sanitizer objects and release objects must never
+#    be linked together, and sharing $(OBJ_DIR) makes that a matter of which
+#    target ran last.
+#
+# 2. Every compile writes a .d file and every one of them is included below.
+#    Without that this build tracks source timestamps only: edit a header and
+#    the objects including it are not rebuilt, so the run links objects
+#    compiled against different versions of the same struct. compress hit
+#    exactly this - one object sized a struct at 56 bytes and another at 64,
+#    and ASan reported a heap-buffer-overflow in correct code. A sanitizer
+#    build that can be assembled from mismatched objects is worse than none:
+#    it can invent a failure and it can just as easily hide a real one.
+#
+# 3. float-cast-overflow is named explicitly. It is in *clang's*
+#    -fsanitize=undefined group and NOT in GCC's, and -fno-sanitize-recover
+#    names the same group, so it does not cover the check either. A gate that
+#    says only "undefined" will print this class of bug and still exit 0.
+#    Measured on gcc 14.2 by the model session; ctang has a live instance
+#    (`x as int` for a large float), so this is not hypothetical here.
+#
+# 4. -fno-sanitize-recover at compile time, as well as halt_on_error=1 in the
+#    environment. UBSan recovers by default: it prints the diagnostic, carries
+#    on, and exits 0. The environment variable closes that too, but only for
+#    runs that go through this target - the compile-time flag is what still
+#    holds when someone runs one of these binaries by hand.
+#
+# 5. LD_PRELOAD names the ASan runtime. The runtime insists on being
+#    initialised before anything it intercepts; any LD_PRELOAD inherited from
+#    the environment loads ahead of it and it then refuses to start at all.
+#    Desktop sessions here set LD_PRELOAD for unrelated reasons, so this is
+#    not hypothetical either.
+#
+# There is deliberately no TSan target: ctang creates no threads (pthread_create
+# appears in no source file), so a ThreadSanitizer run could not fail, and a
+# gate that cannot fail is worse than an absent one because it reads as
+# coverage. Add one with the first thread.
+
+SAN_CHECKS := undefined,float-cast-overflow
+SAN_FLAGS := -fsanitize=address,$(SAN_CHECKS) \
+             -fno-sanitize-recover=$(SAN_CHECKS) \
+             -fno-omit-frame-pointer -g
+
+SAN_BUILD_DIR := ./build/$(BUILD)-san
+SAN_OBJ_DIR := $(SAN_BUILD_DIR)/objects
+SAN_APP_DIR := $(SAN_BUILD_DIR)/apps
+
+SAN_CFLAGS := $(CFLAGS) $(SAN_FLAGS)
+SAN_CXXFLAGS := $(CXXFLAGS) $(SAN_FLAGS)
+SAN_LDFLAGS := $(LDFLAGS) $(SAN_FLAGS)
+
+SAN_LIBOBJECTS := $(patsubst $(OBJ_DIR)/%,$(SAN_OBJ_DIR)/%,$(LIBOBJECTS))
+SAN_STATIC_TARGET := $(SAN_APP_DIR)/$(STATIC_TARGET)
+SAN_TANGLIBRARY := -Wl,--whole-archive $(SAN_STATIC_TARGET) -Wl,--no-whole-archive $(ICU_LIBS) $(CUTIL_LIBS)
+
+# name|source, so one rule template covers them all.
+SAN_TEST_PAIRS := \
+	testAllocator|test/test-allocator.cpp \
+	testUnicodeString|test/test-unicodeString.cpp \
+	testTangLanguageParse|test/test-tangLanguageParse.cpp \
+	testTangLanguageExecuteSimple|test/test-tangLanguageExecuteSimple.cpp \
+	testTangLanguageExecuteComplex|test/test-tangLanguageExecuteComplex.cpp \
+	testTangLanguageLibrary|test/test-tangLanguageLibrary.cpp \
+	testBinary|test/test-binary.cpp
+
+SAN_TEST_EXES := $(foreach p,$(SAN_TEST_PAIRS),$(SAN_APP_DIR)/$(word 1,$(subst |, ,$(p)))$(EXE_EXTENSION))
+
+# See note 5.
+SAN_ASAN_RUNTIME := $(shell $(CC) -print-file-name=libasan.so)
+SAN_RUN_ENV := LD_LIBRARY_PATH="$(SAN_APP_DIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
+               LD_PRELOAD="$(SAN_ASAN_RUNTIME)" \
+               ASAN_OPTIONS=detect_leaks=1:halt_on_error=1:abort_on_error=0 \
+               UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1
+
+$(SAN_OBJ_DIR)/%.o: src/%.c | $(LIBVER_GEN)
+	@mkdir -p $(@D)
+	$(CC) $(SAN_CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
+
+$(SAN_OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c | $(LIBVER_GEN)
+	@mkdir -p $(@D)
+	$(CC) $(SAN_CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
+
+$(SAN_OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c | $(LIBVER_GEN)
+	@mkdir -p $(@D)
+	$(CC) $(SAN_CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ -Wno-unused-function
+
+$(SAN_STATIC_TARGET): $(SAN_LIBOBJECTS)
+	@printf "\n### Archiving instrumented library ###\n"
+	@mkdir -p $(@D)
+	@rm -f $@
+	ar rcs $@ $^
+
+# See note 2. Both the library objects and the test objects.
+-include $(SAN_LIBOBJECTS:.o=.d)
+-include $(SAN_TEST_EXES:$(EXE_EXTENSION)=.d)
+
+define san-test-rule
+$(SAN_APP_DIR)/$1$(EXE_EXTENSION): $2 $(SAN_STATIC_TARGET)
+	@printf "\n### Compiling instrumented $1 ###\n"
+	@mkdir -p $$(@D)
+	$$(CXX) $$(SAN_CXXFLAGS) $$(INCLUDE) -MMD -MP -MF $(SAN_APP_DIR)/$1.d -o $$@ $2 $$(SAN_LDFLAGS) $$(TESTFLAGS) $$(SAN_TANGLIBRARY)
+endef
+$(foreach p,$(SAN_TEST_PAIRS),$(eval $(call san-test-rule,$(word 1,$(subst |, ,$(p))),$(word 2,$(subst |, ,$(p))))))
+
+# The three language suites are run once per execution engine, exactly as the
+# release `test` target does. Running each binary once would instrument only
+# whichever engine is the default, and the two do not share a code path - the
+# assignment defect fixed in e993ae2 was present in one and absent in the
+# other. A single run also silently reports 125 assertions where `make test`
+# reports 192, which is the kind of shortfall that reads as "it passed".
+SAN_SINGLE_RUN := testAllocator testUnicodeString testTangLanguageParse
+SAN_DUAL_RUN := testTangLanguageExecuteSimple testTangLanguageExecuteComplex testTangLanguageLibrary
+
+test-asan: ## Run the tests under AddressSanitizer + UndefinedBehaviorSanitizer
+test-asan: $(SAN_TEST_EXES)
+ifeq ($(OS_NAME), Linux)
+	@printf "\033[0;36m\n### Running tests under ASan + UBSan ###\033[0m\n\n"
+	@for t in $(SAN_SINGLE_RUN); do \
+		printf "\033[0;30;43m\n### %s ###\033[0m\n\n" "$$t"; \
+		$(SAN_RUN_ENV) $(SAN_APP_DIR)/$$t$(EXE_EXTENSION) --gtest_brief=1 || exit 1; \
+	done
+	@printf "\033[0;30;43m\n### testBinary (JIT) ###\033[0m\n\n"
+	@$(SAN_RUN_ENV) TANG_DISABLE_BINARY= $(SAN_APP_DIR)/testBinary$(EXE_EXTENSION) --gtest_brief=1 || exit 1
+	@for t in $(SAN_DUAL_RUN); do \
+		printf "\033[0;30;43m\n### %s (bytecode) ###\033[0m\n\n" "$$t"; \
+		$(SAN_RUN_ENV) TANG_DISABLE_BINARY= $(SAN_APP_DIR)/$$t$(EXE_EXTENSION) --gtest_brief=1 || exit 1; \
+		printf "\033[0;30;43m\n### %s (JIT) ###\033[0m\n\n" "$$t"; \
+		$(SAN_RUN_ENV) TANG_DISABLE_BYTECODE= $(SAN_APP_DIR)/$$t$(EXE_EXTENSION) --gtest_brief=1 || exit 1; \
+	done
+	@printf "\033[0;32m\n### All tests passed under ASan + UBSan ###\033[0m\n"
+else
+	@printf "\033[0;31m\nSanitizer builds are only supported on Linux\n\033[0m\n"
+	@exit 1
+endif
+
+# An instrumented build is worth nothing if it cannot be seen to fail, and the
+# ways it silently cannot are the whole subject of the comment at the top of
+# this section. This target plants one fault of each kind, in a scratch file
+# outside the tree, and fails if the toolchain does not report it.
+sanitizer-selftest: ## Prove the sanitizer flags actually catch what they claim
+	@set -e; d=$$(mktemp -d); trap 'rm -rf $$d' EXIT; \
+	printf '#include <stdlib.h>\nint main(void){char*p=malloc(4);p[5]=1;return p[5];}\n' > $$d/a.c; \
+	printf '#include <limits.h>\nvolatile int a=INT_MAX;\nint main(void){return a+1;}\n' > $$d/b.c; \
+	printf 'volatile double d=1e30;\nint main(void){return (int)d;}\n' > $$d/c.c; \
+	fail=0; \
+	for c in a:heap-overflow b:signed-overflow c:float-cast-overflow; do \
+		src=$${c%%:*}; name=$${c##*:}; \
+		$(CC) $(SAN_FLAGS) -o $$d/$$src $$d/$$src.c 2>/dev/null; \
+		if env -u LD_PRELOAD ASAN_OPTIONS=halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 \
+		   $$d/$$src >/dev/null 2>&1; then \
+			printf "  \033[0;31mNOT CAUGHT\033[0m  %s (exited 0)\n" "$$name"; fail=1; \
+		else \
+			printf "  caught      %s\n" "$$name"; \
+		fi; \
+	done; \
+	if [ $$fail -ne 0 ]; then \
+		printf "\n\033[0;31mThe sanitizer flags do not catch what they claim.\033[0m\n" >&2; \
+		exit 1; \
+	fi; \
+	printf "\nAll three fault kinds are reported and exit non-zero.\n"
+
+####################################################################
 # Commands
 ####################################################################
 
@@ -538,6 +706,8 @@ $(APP_DIR)/test$(EXE_EXTENSION): test/test.cpp $(APP_DIR)/$(STATIC_TARGET) | $(A
 .PHONY: clean cloc docs docs-pdf coverage
 # Release build commands
 .PHONY: all install test test-watch uninstall watch jit-alignment-check check-symbols
+# Sanitizer build commands
+.PHONY: test-asan sanitizer-selftest
 # Debug build commands
 .PHONY: all-debug install-debug test-debug test-watch-debug uninstall-debug watch-debug
 
@@ -755,7 +925,13 @@ test: \
 #	LD_LIBRARY_PATH="$(TEST_LD_PATH)" $(APP_DIR)/test --gtest_brief=1
 
 clean: ## Remove all contents of the build directory for this OS/build.
-	-@rm -rvf $(BUILD_DIR)
+# Both trees. The sanitizer build lives beside the release one rather than
+# inside it, so a clean that names only $(BUILD_DIR) leaves it behind - which
+# is how instrumented objects compiled against a previous version of a
+# dependency's headers survive the command whose whole purpose is to remove
+# them, and get linked into the next run. Every directory this Makefile
+# creates under build/ belongs on this line.
+	-@rm -rvf $(BUILD_DIR) $(SAN_BUILD_DIR)
 
 # Files will be as follows:
 # /usr/local/lib/(SUITE)/
