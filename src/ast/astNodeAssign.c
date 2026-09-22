@@ -200,7 +200,18 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
         printf("Error: Identifier %s not found in global positions.\n", name);
         return false;
       }
+      // Clear is_temporary before storing. A stored value that is still marked
+      // temporary is fair game for the in-place fast path in the arithmetic
+      // operators, which mutates an operand rather than allocating a result -
+      // so `a = a + 1; b = a + 3;` left a equal to 9 instead of 6.
+      //
+      // SET_NOT_TEMP rather than ADOPT deliberately: ADOPT also deep-copies a
+      // non-temporary, which would give assignment value semantics for arrays
+      // and maps. Both engines alias them today, so that is a language design
+      // question and not this fix's to answer.
       return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SET_NOT_TEMP))
+        && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
         && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POKE_GLOBAL))
         && GTA_VECTORX_APPEND(context->program->bytecode, val.value);
     }
@@ -210,7 +221,10 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
         printf("Error: Identifier %s not found in local positions.\n", identifier->mangled_name);
         return false;
       }
+      // Clear is_temporary before storing; see the global case above.
       return GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+        && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SET_NOT_TEMP))
+        && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
         && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POKE_LOCAL))
         && GTA_VECTORX_APPEND(context->program->bytecode, val.value);
     }

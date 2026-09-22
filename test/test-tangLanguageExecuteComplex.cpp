@@ -835,6 +835,103 @@ TEST(Recursion, Fibonacci) {
   }
 }
 
+TEST(Assignment, StoredValueIsNotTemporary) {
+  // The arithmetic operators have an in-place fast path: when an operand is
+  // still marked temporary they mutate it rather than allocating a result.
+  // A value that has been stored in a variable must therefore not be marked
+  // temporary, or the next expression that reads the variable rewrites it.
+  //
+  // The bytecode compiler emitted no SET_NOT_TEMP before its POKE, so `a` below
+  // came back as 9 instead of 6. The x86_64 path was always correct, which is
+  // why this file must keep asserting under both engines - it is run twice,
+  // once with TANG_DISABLE_BINARY and once with TANG_DISABLE_BYTECODE, and a
+  // single-engine assertion would have passed throughout.
+  {
+    // Reading a self-assigned variable must not modify it.
+    TEST_PROGRAM_SETUP(R"(
+      a = 5;
+      a = a + 1;
+      b = a + 3;
+      print(a); print(","); print(b);
+    )");
+    ASSERT_STREQ(context->output->buffer, "6,9");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The step is the constant, so a wrong answer here is not off-by-one.
+    TEST_PROGRAM_SETUP(R"(
+      a = 5;
+      a = a * 2;
+      b = a + 3;
+      print(a); print(","); print(b);
+    )");
+    ASSERT_STREQ(context->output->buffer, "10,13");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The case that makes it matter: `i = i + 1` advances every loop, so a
+    // body that reads the counter arithmetically used to corrupt it. This
+    // printed "0 2 " before the fix.
+    TEST_PROGRAM_SETUP(R"(
+      for (i = 0; i < 3; i = i + 1) {
+        x = i + 1;
+        print(i); print(" ");
+      }
+    )");
+    ASSERT_STREQ(context->output->buffer, "0 1 2 ");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Same defect, opposite sign: this one did not terminate at all, because
+    // the body decremented the counter by exactly what the loop added.
+    TEST_PROGRAM_SETUP(R"(
+      for (i = 0; i < 4; i = i + 1) {
+        x = i - 1;
+        print(i); print(" ");
+      }
+    )");
+    ASSERT_STREQ(context->output->buffer, "0 1 2 3 ");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // while and do-while advance by the same self-assignment.
+    TEST_PROGRAM_SETUP(R"(
+      i = 0;
+      while (i < 3) {
+        x = i + 1;
+        print(i); print(" ");
+        i = i + 1;
+      }
+    )");
+    ASSERT_STREQ(context->output->buffer, "0 1 2 ");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    TEST_PROGRAM_SETUP(R"(
+      i = 0;
+      do {
+        x = i + 1;
+        print(i); print(" ");
+        i = i + 1;
+      } while (i < 3);
+    )");
+    ASSERT_STREQ(context->output->buffer, "0 1 2 ");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Assigning a variable to another must still not alias a scalar.
+    TEST_PROGRAM_SETUP(R"(
+      a = 5;
+      b = a;
+      b = b + 1;
+      print(a); print(","); print(b);
+    )");
+    ASSERT_STREQ(context->output->buffer, "5,6");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 TEST(Execute, Template) {
   {
     // Fibonacci sequence.
