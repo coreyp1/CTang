@@ -428,7 +428,7 @@ static char * gta_unicode_render_claim(GCU_Array * out, size_t bytes_needed, siz
     || !gcu_array_reserve(out, optimistic)) {
     return NULL;
   }
-  return gcu_array_emplace_n(out, bytes_needed);
+  return gcu_array_extend_n(out, bytes_needed);
 }
 
 
