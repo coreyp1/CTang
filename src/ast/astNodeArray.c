@@ -187,9 +187,9 @@ bool gta_ast_node_array_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   size_t * count_offset = &((GTA_VectorX *)0)->count;
 
   // Jump labels.
-  GTA_Integer end;
-  GTA_Integer return_memory_error;
-  GTA_Integer pop_then_return_memory_error;
+  GTA_Integer end = -1;
+  GTA_Integer return_memory_error = -1;
+  GTA_Integer pop_then_return_memory_error = -1;
 
   assert(array->elements);
   assert(array->elements->count ? (bool)array->elements->data : true);

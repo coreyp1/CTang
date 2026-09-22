@@ -230,11 +230,11 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
 
   // Jump Labels
-  GTA_Integer not_a_native_function;
-  GTA_Integer not_a_function;
-  GTA_Integer argument_count_mismatch;
-  GTA_Integer cleanup;
-  GTA_Integer restore_frame_pointer;
+  GTA_Integer not_a_native_function = -1;
+  GTA_Integer not_a_function = -1;
+  GTA_Integer argument_count_mismatch = -1;
+  GTA_Integer cleanup = -1;
+  GTA_Integer restore_frame_pointer = -1;
 
   assert(function_call->arguments);
   assert(function_call->arguments->count ? (bool)function_call->arguments->data : true);

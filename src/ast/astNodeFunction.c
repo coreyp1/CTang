@@ -341,7 +341,7 @@ bool gta_ast_node_function_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
   GTA_VectorX * o = context->bytecode_offsets;
 
   // Jump labels.
-  GTA_Integer after_function;
+  GTA_Integer after_function = -1;
   GTA_Integer old_continue_label = context->continue_label;
   GTA_Integer old_break_label = context->break_label;
   GTA_Integer old_return_label = context->return_label;
@@ -408,7 +408,7 @@ bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   GCU_Vector8 * v = context->binary_vector;
 
   // Jump labels.
-  GTA_Integer after_function;
+  GTA_Integer after_function = -1;
   GTA_Integer old_continue_label = context->continue_label;
   GTA_Integer old_break_label = context->break_label;
   GTA_Integer old_return_label = context->return_label;

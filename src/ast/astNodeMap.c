@@ -206,9 +206,9 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
   bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
 
   // Jump labels.
-  GTA_Integer end;
-  GTA_Integer return_memory_error;
-  GTA_Integer discard_key_then_return_memory_error;
+  GTA_Integer end = -1;
+  GTA_Integer return_memory_error = -1;
+  GTA_Integer discard_key_then_return_memory_error = -1;
 
   bool error_free = true
   // Create jump labels.

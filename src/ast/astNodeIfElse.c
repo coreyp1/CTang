@@ -218,8 +218,8 @@ bool gta_ast_node_if_else_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_
   GTA_Ast_Node_If_Else * if_else = (GTA_Ast_Node_If_Else *) self;
 
   // Jump labels.
-  GTA_Integer else_block;
-  GTA_Integer end;
+  GTA_Integer else_block = -1;
+  GTA_Integer end = -1;
 
   // Compile the if-else statement.
   assert(context);
@@ -276,8 +276,8 @@ bool gta_ast_node_if_else_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Com
   GCU_Vector8 * v = context->binary_vector;
 
   // Jump labels.
-  GTA_Integer else_block;
-  GTA_Integer end;
+  GTA_Integer else_block = -1;
+  GTA_Integer end = -1;
 
   // Offsets.
   bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;

@@ -212,8 +212,8 @@ bool gta_ast_node_ternary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_
   GTA_Ast_Node_Ternary * ternary = (GTA_Ast_Node_Ternary *)self;
 
   // Jump labels.
-  GTA_Integer false_label;
-  GTA_Integer end_label;
+  GTA_Integer false_label = -1;
+  GTA_Integer end_label = -1;
 
   // Compile the expression.
   assert(context);
@@ -266,8 +266,8 @@ bool gta_ast_node_ternary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Com
   bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
 
   // Jump labels.
-  GTA_Integer false_label;
-  GTA_Integer end_label;
+  GTA_Integer false_label = -1;
+  GTA_Integer end_label = -1;
 
   // Compile the expression.
   return true

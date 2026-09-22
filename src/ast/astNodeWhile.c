@@ -228,8 +228,8 @@ bool gta_ast_node_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Co
   assert(context->bytecode_offsets);
 
   // Jump labels.
-  GTA_Integer condition_start;
-  GTA_Integer block_end;
+  GTA_Integer condition_start = -1;
+  GTA_Integer block_end = -1;
   GTA_Integer original_break_label = context->break_label;
   GTA_Integer original_continue_label = context->continue_label;
 
@@ -279,8 +279,8 @@ bool gta_ast_node_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   GCU_Vector8 * v = context->binary_vector;
 
   // Jump labels.
-  GTA_Integer condition_start;
-  GTA_Integer block_end;
+  GTA_Integer condition_start = -1;
+  GTA_Integer block_end = -1;
   GTA_Integer original_break_label = context->break_label;
   GTA_Integer original_continue_label = context->continue_label;
 

@@ -295,8 +295,8 @@ bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
   }
 
   // Jump labels.
-  GTA_Integer get_next_iterator_value;
-  GTA_Integer end_of_loop;
+  GTA_Integer get_next_iterator_value = -1;
+  GTA_Integer end_of_loop = -1;
   GTA_Integer original_break_label = context->break_label;
   GTA_Integer original_continue_label = context->continue_label;
 
@@ -425,9 +425,9 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
   int32_t identifier_stack_location_offset = ((int32_t)GTA_TYPEX_UI(identifier_stack_location.value) + 1) * -8;
 
   // Jump labels.
-  GTA_Integer top_of_loop;
-  GTA_Integer get_next_iterator_value;
-  GTA_Integer end_of_loop;
+  GTA_Integer top_of_loop = -1;
+  GTA_Integer get_next_iterator_value = -1;
+  GTA_Integer end_of_loop = -1;
   GTA_Integer original_break_label = context->break_label;
   GTA_Integer original_continue_label = context->continue_label;
 

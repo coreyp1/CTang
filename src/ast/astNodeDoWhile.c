@@ -222,7 +222,7 @@ bool gta_ast_node_do_while_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
   GTA_Ast_Node_Do_While * do_while = (GTA_Ast_Node_Do_While *) self;
 
   // Jump labels.
-  GTA_Integer start_label;
+  GTA_Integer start_label = -1;
   GTA_Integer original_break_label = context->break_label;
   GTA_Integer original_continue_label = context->continue_label;
 
@@ -281,7 +281,7 @@ bool gta_ast_node_do_while_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   GCU_Vector8 * v = context->binary_vector;
 
   // Jump labels.
-  GTA_Integer block_start;
+  GTA_Integer block_start = -1;
   GTA_Integer original_break_label = context->break_label;
   GTA_Integer original_continue_label = context->continue_label;
 

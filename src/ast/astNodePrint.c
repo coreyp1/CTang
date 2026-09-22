@@ -169,11 +169,11 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   int32_t concatenated_string_stack_offset = GTA_SHADOW_SIZE__X86_64;
 
   // Jump labels.
-  GTA_Integer success_return_null;
-  GTA_Integer no_string_created_by_print;
-  GTA_Integer output_string_not_empty;
-  GTA_Integer error_out_of_memory;
-  GTA_Integer print_return;
+  GTA_Integer success_return_null = -1;
+  GTA_Integer no_string_created_by_print = -1;
+  GTA_Integer output_string_not_empty = -1;
+  GTA_Integer error_out_of_memory = -1;
+  GTA_Integer print_return = -1;
 
   // JIT the print(<expression>) function.
   return true
