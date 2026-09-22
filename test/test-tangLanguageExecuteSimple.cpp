@@ -1918,6 +1918,88 @@ TEST(Case, ToInteger) {
   }
 }
 
+TEST(Declare, FloatLiteralsDoNotShareASingleton) {
+  // Literals are interned in the program's singleton pool, which is keyed by a
+  // GTA_UInteger. The float node passed its GTA_Float straight into that
+  // parameter, which converts rather than reinterprets, so the key was the
+  // truncated integer part and every literal sharing one collapsed onto a
+  // single value. `print(1.5); print(1.0);` printed 1.5 twice.
+  //
+  // Both engines were affected, because the defect is in the shared front end.
+  {
+    // Same integer part, different values: the case that collided.
+    TEST_PROGRAM_SETUP(R"(
+      print(1.5); print(","); print(1.0); print(","); print(1.25);
+    )");
+    ASSERT_STREQ(context->output->buffer, "1.5,1.,1.25");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Integer part 0 collided too, which the 1.x cases alone would not catch.
+    TEST_PROGRAM_SETUP(R"(
+      print(0.5); print(","); print(0.25);
+    )");
+    ASSERT_STREQ(context->output->buffer, "0.5,0.25");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Arithmetic on two such literals produced the wrong sum, because the
+    // second operand was the first literal's value.
+    TEST_PROGRAM_SETUP(R"(
+      print(1.5 + 1.0); print(","); print(0.5 + 0.25);
+    )");
+    ASSERT_STREQ(context->output->buffer, "2.5,0.75");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Interning must still work: one value used twice is still one singleton,
+    // and a fix that simply stopped sharing would pass every case above.
+    TEST_PROGRAM_SETUP(R"(
+      a = 2.75;
+      b = 2.75;
+      print(a == b);
+      print(a); print(","); print(b);
+    )");
+    ASSERT_STREQ(context->output->buffer, "2.75,2.75");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
+TEST(Declare, LargeFloatRendersWithoutOverflowingItsBuffer) {
+  // to_string rendered with %f into a fixed 32-byte allocation. %f writes a
+  // large magnitude in full rather than in exponent form, so this overflowed
+  // the heap - the first case below aborted inside glibc with a corrupted
+  // heap before the buffer was sized from the value.
+  {
+    TEST_PROGRAM_SETUP(R"(
+      a = 1.0;
+      for (i = 0; i < 40; i = i + 1) {
+        a = a * 10.0;
+      }
+      print(a);
+    )");
+    // The exact digits are the double nearest 1e40; what matters is that it
+    // renders in full and does not overrun.
+    ASSERT_GT(strlen(context->output->buffer), (size_t)32);
+    ASSERT_EQ(context->output->buffer[0], '9');
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Far past the old buffer: DBL_MAX needs 316 characters.
+    TEST_PROGRAM_SETUP(R"(
+      a = 1.0;
+      for (i = 0; i < 300; i = i + 1) {
+        a = a * 10.0;
+      }
+      print(a);
+    )");
+    ASSERT_GT(strlen(context->output->buffer), (size_t)300);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 TEST(Cast, ToFloat) {
   {
     TEST_REUSABLE_PROGRAM("use a; a as float;");

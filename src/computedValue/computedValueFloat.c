@@ -122,11 +122,28 @@ char * GTA_CALL gta_computed_value_float_to_string(GTA_Computed_Value * self) {
   assert(GTA_COMPUTED_VALUE_IS_FLOAT(self));
   GTA_Computed_Value_Float * float_value = (GTA_Computed_Value_Float *)self;
 
-  char * str = (char *)gcu_malloc(32);
+  // Ask for the length before allocating. %f renders a large magnitude in
+  // full rather than in exponent form, so the result is not bounded by
+  // anything small: DBL_MAX needs 316 characters. The fixed 32-byte buffer
+  // this replaces was a heap overflow that an ordinary program reached -
+  // `a = 1.0; for (i = 0; i < 40; i = i + 1) { a = a * 10.0; } print(a);`
+  // aborted inside glibc with a corrupted heap.
+  //
+  // The format is plain "%f" with an explicit promotion to double. The
+  // previous "%lf" was chosen by sizeof(GTA_Integer), which is unrelated to
+  // the float type; in printf the two conversions are identical anyway,
+  // because a float argument is promoted to double by the call itself.
+  int length = snprintf(NULL, 0, "%f", (double)float_value->value);
+  if (length < 0) {
+    return 0;
+  }
+
+  char * str = (char *)gcu_malloc((size_t)length + 1);
   if (!str) {
     return 0;
   }
-  sprintf(str, sizeof(GTA_Integer) == 8 ? "%lf" : "%f", float_value->value);
+  snprintf(str, (size_t)length + 1, "%f", (double)float_value->value);
+
   for (size_t i = strlen(str); (i > 2) && (str[i-1] == '0'); i--) {
     str[i-1] = '\0';
   }
@@ -164,7 +181,13 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_float_add(GTA_Computed_Value * 
       other_number_float->base.is_true = (bool)other_number_float->value;
       return (GTA_Computed_Value *)other_number_float;
     }
-    return (GTA_Computed_Value *)gta_computed_value_float_create(number->value + other_number_float->value, number->base.context);
+    // context, not number->base.context. number is whichever operand was not
+    // temporary, which for `1.5 + 2.5` is a compile-time literal singleton
+    // built with a NULL context - so the result was never added to the
+    // execution context's garbage collection list and leaked, one allocation
+    // per float addition. Every other branch here, and all of
+    // computedValueInteger.c, passes the parameter.
+    return (GTA_Computed_Value *)gta_computed_value_float_create(number->value + other_number_float->value, context);
   }
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;

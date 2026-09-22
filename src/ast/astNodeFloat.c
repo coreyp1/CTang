@@ -91,18 +91,46 @@ void gta_ast_node_float_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback cal
 }
 
 
+/**
+ * Key a float literal in the program's singleton pool by its bit pattern.
+ *
+ * The pool is keyed by a GTA_UInteger. Passing a GTA_Float straight into that
+ * parameter is a floating-point to integer conversion, which discards the
+ * fraction, so every literal sharing an integer part collapsed onto one
+ * singleton: `print(1.5); print(1.0);` printed 1.5 twice, and 0.5 and 0.25
+ * both keyed on 0. It is also undefined behaviour for any value too large for
+ * the integer type, which a literal can easily be.
+ *
+ * The bit pattern is exact, is defined for every value including infinities
+ * and NaN, and cannot trap. GTA_Float and GTA_UInteger are defined as a
+ * matched pair for each architecture, so the widths agree.
+ *
+ * -0.0 and 0.0 have different bit patterns and so get separate singletons.
+ * That costs one extra entry and keeps both values correct, which is the right
+ * way round: the pool exists to share identical literals, not to merge
+ * distinguishable ones.
+ */
+static GTA_UInteger float_singleton_key(GTA_Float value) {
+  _Static_assert(sizeof(GTA_Float) == sizeof(GTA_UInteger),
+    "GTA_Float and GTA_UInteger must be the same width for a bit-pattern key");
+  GTA_UInteger key;
+  memcpy(&key, &value, sizeof(key));
+  return key;
+}
+
+
 bool gta_ast_node_float_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   assert(self);
   assert(GTA_AST_IS_FLOAT(self));
   GTA_Ast_Node_Float * float_node = (GTA_Ast_Node_Float *) self;
 
-  GTA_Computed_Value * singleton = gta_program_get_singleton(context->program, &gta_computed_value_float_vtable, float_node->value);
+  GTA_Computed_Value * singleton = gta_program_get_singleton(context->program, &gta_computed_value_float_vtable, float_singleton_key(float_node->value));
   if (!singleton) {
     singleton = (GTA_Computed_Value *)gta_computed_value_float_create(float_node->value, NULL);
     if (!singleton) {
       return false;
     }
-    if (!gta_program_set_singleton(context->program, &gta_computed_value_float_vtable, float_node->value, singleton)) {
+    if (!gta_program_set_singleton(context->program, &gta_computed_value_float_vtable, float_singleton_key(float_node->value), singleton)) {
       gta_computed_value_destroy(singleton);
       return false;
     }
@@ -129,13 +157,13 @@ bool gta_ast_node_float_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
-  GTA_Computed_Value * singleton = gta_program_get_singleton(context->program, &gta_computed_value_float_vtable, float_node->value);
+  GTA_Computed_Value * singleton = gta_program_get_singleton(context->program, &gta_computed_value_float_vtable, float_singleton_key(float_node->value));
   if (!singleton) {
     singleton = (GTA_Computed_Value *)gta_computed_value_float_create(float_node->value, NULL);
     if (!singleton) {
       return false;
     }
-    if (!gta_program_set_singleton(context->program, &gta_computed_value_float_vtable, float_node->value, singleton)) {
+    if (!gta_program_set_singleton(context->program, &gta_computed_value_float_vtable, float_singleton_key(float_node->value), singleton)) {
       gta_computed_value_destroy(singleton);
       return false;
     }
