@@ -720,6 +720,17 @@ sanitizer-selftest: ## Prove the sanitizer flags actually catch what they claim
 FUZZ_CC ?= clang
 FUZZ_CXX ?= clang++
 FUZZ_CC_OK := $(shell which $(FUZZ_CXX) 2>/dev/null)
+# These flags instrument ctang's own objects and nothing else. cutil and ICU
+# are linked as ordinary shared libraries, so ASan cannot see a bad access that
+# happens inside them - it only notices once the damage reaches memory ctang
+# owns, if it ever does. compress learned the same thing the same way.
+#
+# To see into cutil, build it with clang+ASan into a prefix of your own and
+# link against that instead of the installed .so. Doing exactly that turned up
+# two real null-pointer defects in cutil's hash template within seconds, both
+# reached from ctang's simplify pass and neither visible to this target. The
+# zero-setup version of the same question is to replay the corpus under
+# valgrind, which instruments every library without rebuilding any of them.
 FUZZ_SAN := -fsanitize=address,$(SAN_CHECKS) -fno-sanitize-recover=$(SAN_CHECKS) \
             -fno-omit-frame-pointer -g -O1
 FUZZ_LIB_FLAGS := $(FUZZ_SAN) -fsanitize=fuzzer-no-link
@@ -741,6 +752,13 @@ FUZZ_ARTIFACTS := test/fuzz/artifacts
 # Long enough to be worth running, short enough to sit through. Override for a
 # real campaign: make fuzz FUZZ_TIME=3600
 FUZZ_TIME ?= 60
+# Below what the machine can spare, not at libFuzzer's default. This is a
+# shared workstation that runs several sanitizer campaigns at once and has no
+# swap; a limit set above the free memory means the kernel reaches its limit
+# before libFuzzer reaches this one, and a death by memory pressure is
+# unattributable - no report, no artifact, nothing to reproduce. Raise it for a
+# machine with room: make fuzz FUZZ_RSS_MB=4096
+FUZZ_RSS_MB ?= 2048
 
 FUZZ_OBJECTS := $(patsubst $(OBJ_DIR)/%,$(FUZZ_OBJ_DIR)/%,$(LIBOBJECTS))
 -include $(FUZZ_OBJECTS:.o=.d)
@@ -779,14 +797,23 @@ $$(FUZZ_APP_DIR)/$1: test/fuzz/$1.c $$(FUZZ_OBJECTS)
 	$$(FUZZ_CC) $$(FUZZ_BIN_FLAGS) -std=c17 -w $$(ICU_CFLAGS) $$(CUTIL_CFLAGS) $$(INCLUDE) \
 		-o $$@ $$< $$(FUZZ_OBJECTS) $$(ICU_LIBS) $$(CUTIL_LIBS) -lstdc++ -lm $$(FUZZ_RPATH)
 
+# env -u LD_PRELOAD for the same reason the sanitizer target does it: desktop
+# sessions here set LD_PRELOAD for unrelated reasons and a sanitizer runtime
+# insists on loading first. It is belt and braces under clang, which links the
+# ASan runtime statically into the binary where nothing can displace it - a run
+# with the desktop's LD_PRELOAD in place was measured clean over a million
+# executions. That safety is an accident of the compiler, though: set FUZZ_CC
+# to gcc and the runtime becomes a shared libasan.so, which does refuse to
+# start behind another preloaded library.
 fuzz-run-$2: ## Run the $2 fuzzer for $$(FUZZ_TIME) seconds
 fuzz-run-$2: $$(FUZZ_APP_DIR)/$1
 	@mkdir -p $$(FUZZ_CORPUS)/$2
 	@cp -n $$(FUZZ_SEEDS)/$2/* $$(FUZZ_CORPUS)/$2/ 2>/dev/null || true
 	@printf "\n### Fuzzing $2 for $$(FUZZ_TIME)s ###\n"
 	@mkdir -p $$(FUZZ_ARTIFACTS)
-	@$$(FUZZ_APP_DIR)/$1 $$(FUZZ_CORPUS)/$2 -max_total_time=$$(FUZZ_TIME) \
-		-timeout=10 -rss_limit_mb=4096 -print_final_stats=1 \
+	@env -u LD_PRELOAD $$(FUZZ_APP_DIR)/$1 $$(FUZZ_CORPUS)/$2 \
+		-max_total_time=$$(FUZZ_TIME) \
+		-timeout=10 -rss_limit_mb=$$(FUZZ_RSS_MB) -print_final_stats=1 \
 		-artifact_prefix=$$(FUZZ_ARTIFACTS)/$2-
 endef
 
