@@ -461,7 +461,7 @@ $(APP_DIR)/testAllocator$(EXE_EXTENSION): test/test-allocator.cpp $(OBJ_DIR)/all
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testAllocator.d -o $@ $^ $(LDFLAGS) $(TESTFLAGS)
 
-$(APP_DIR)/testUnicodeString$(EXE_EXTENSION): test/test-unicodeString.cpp $(OBJ_DIR)/unicodeString.o
+$(APP_DIR)/testUnicodeString$(EXE_EXTENSION): test/test-unicodeString.cpp $(OBJ_DIR)/unicodeString.o $(OBJ_DIR)/allocator.o
 	@printf "\n### Compiling UnicodeString Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testUnicodeString.d -o $@ $^ $(LDFLAGS) $(TESTFLAGS)

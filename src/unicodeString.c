@@ -22,7 +22,10 @@
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>
+#include <ghoti.io/cutil/array.h>
 #include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/cutil/safemath.h>
+#include <ghoti.io/tang/allocator.h>
 #include <unicode/uconfig.h>
 #include <unicode/ustring.h>
 #include <unicode/ubrk.h>
@@ -406,6 +409,29 @@ GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * str
 }
 
 
+/*
+ * Claim room for one rendered segment and return where to write it.
+ *
+ * `bytes_needed` is what this segment encodes to; `bytes_after` is what is
+ * left of the source once it ends.  Both are reserved, so that a string
+ * whose remainder is TRUSTED - which is the common case - is sized once and
+ * never grown, exactly as the hand written resize this replaces did.
+ *
+ * The caller writes `bytes_needed` bytes into the returned pointer and must
+ * not hold it across another call: the next claim may move the storage.
+ */
+static char * gta_unicode_render_claim(GCU_Array * out, size_t bytes_needed, size_t bytes_after) {
+  assert(out);
+
+  size_t optimistic;
+  if (!gcu_safe_add3_size(gcu_array_count(out), bytes_needed, bytes_after, &optimistic)
+    || !gcu_array_reserve(out, optimistic)) {
+    return NULL;
+  }
+  return gcu_array_emplace_n(out, bytes_needed);
+}
+
+
 GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String * string) {
   assert(string);
 
@@ -420,13 +446,22 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
   assert(string->string_type);
   assert(string->string_type->count);
 
-  // Optimistically allocate the buffer.
-  size_t total_bytes_allocated = string->byte_length + 1;
-  char * buffer = gcu_malloc(total_bytes_allocated);
-  if (!buffer) {
+  // The output is a growable array of bytes.  Each of the four encodings
+  // below used to carry its own copy of the same resize - the identical
+  // eight lines, written out four times - and each tracked the length and
+  // the capacity in locals of its own.  That bookkeeping is the array's now,
+  // and gcu_array_reserve() reports an overflowing total rather than
+  // wrapping it.
+  //
+  // The optimistic sizing is kept: every segment reserves room for its own
+  // encoded bytes plus the whole of the rest of the source, on the
+  // assumption that the remainder is TRUSTED and will be copied straight
+  // through.  A string of one type - which is almost all of them - is
+  // therefore allocated once and never grown.
+  GCU_Array * out = gcu_array_create(1, string->byte_length + 1, gta_allocator());
+  if (!out) {
     goto RENDER_ERROR;
   }
-  size_t buffer_length = 0;
 
   // Loop through the string types and render the string.
   for (size_t i = 0; i < string->string_type->count; ++i) {
@@ -444,20 +479,11 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
       case GTA_UNICODE_STRING_TYPE_TRUSTED: {
         // This is a direct copy.
         size_t bytes_to_copy = next_source_byte_offset - source_byte_offset;
-        if (buffer_length + bytes_to_copy + 1 > total_bytes_allocated) {
-          // The buffer is not large enough.  Resize it optimistically,
-          // assuming that the rest of the string will also be copied directly.
-          size_t bytes_remaining_in_source = string->byte_length - source_byte_offset + 1;
-          size_t new_allocated_size = buffer_length + bytes_remaining_in_source;
-          char * new_buffer = gcu_realloc(buffer, new_allocated_size);
-          if (!new_buffer) {
-            goto RENDER_ERROR;
-          }
-          total_bytes_allocated = new_allocated_size;
-          buffer = new_buffer;
+        size_t bytes_remaining_in_source = string->byte_length - source_byte_offset + 1;
+        if (!gcu_array_reserve(out, gcu_array_count(out) + bytes_remaining_in_source)
+          || !gcu_array_append_n(out, string->buffer + source_byte_offset, bytes_to_copy)) {
+          goto RENDER_ERROR;
         }
-        memcpy(buffer + buffer_length, string->buffer + source_byte_offset, bytes_to_copy);
-        buffer_length += bytes_to_copy;
         break;
       }
       case GTA_UNICODE_STRING_TYPE_HTML:
@@ -494,59 +520,55 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
           }
         }
 
-        // Calculate the optimistic buffer size needed (assuming that the
-        // rest of the string is TRUSTED).
-        size_t bytes_remaining_in_source = string->byte_length - next_source_byte_offset + 1;
-
-        // Resize the buffer if necessary.
-        if (buffer_length + bytes_needed + bytes_remaining_in_source > total_bytes_allocated) {
-          size_t new_allocated_size = buffer_length + bytes_needed + bytes_remaining_in_source;
-          char * new_buffer = gcu_realloc(buffer, new_allocated_size);
-          if (!new_buffer) {
-            goto RENDER_ERROR;
-          }
-          total_bytes_allocated = new_allocated_size;
-          buffer = new_buffer;
+        // Claim the space for this segment in one call, then write into it
+        // directly.  Appending a byte at a time would be a function call per
+        // character on the hot path.
+        char * dest = gta_unicode_render_claim(out, bytes_needed,
+          string->byte_length - next_source_byte_offset + 1);
+        if (!dest) {
+          goto RENDER_ERROR;
         }
 
         // Second pass, encode the characters.
+        size_t offset = 0;
         for (size_t i = source_byte_offset; i < next_source_byte_offset; ++i) {
           switch (string->buffer[i]) {
             case '<':
-              memcpy(buffer + buffer_length, "&lt;", 4);
-              buffer_length += 4;
+              memcpy(dest + offset, "&lt;", 4);
+              offset += 4;
               break;
             case '>':
-              memcpy(buffer + buffer_length, "&gt;", 4);
-              buffer_length += 4;
+              memcpy(dest + offset, "&gt;", 4);
+              offset += 4;
               break;
             case '&':
-              memcpy(buffer + buffer_length, "&amp;", 5);
-              buffer_length += 5;
+              memcpy(dest + offset, "&amp;", 5);
+              offset += 5;
               break;
             case '"':
               if (type == GTA_UNICODE_STRING_TYPE_HTML) {
-                buffer[buffer_length++] = '"';
+                dest[offset++] = '"';
               }
               else {
-                memcpy(buffer + buffer_length, "&quot;", 6);
-                buffer_length += 6;
+                memcpy(dest + offset, "&quot;", 6);
+                offset += 6;
               }
               break;
             case '\'':
               if (type == GTA_UNICODE_STRING_TYPE_HTML) {
-                buffer[buffer_length++] = '\'';
+                dest[offset++] = '\'';
               }
               else {
-                memcpy(buffer + buffer_length, "&#39;", 5);
-                buffer_length += 5;
+                memcpy(dest + offset, "&#39;", 5);
+                offset += 5;
               }
               break;
             default:
-              buffer[buffer_length++] = string->buffer[i];
+              dest[offset++] = string->buffer[i];
               break;
           }
         }
+        assert(offset == bytes_needed);
         break;
       }
       case GTA_UNICODE_STRING_TYPE_PERCENT: {
@@ -568,39 +590,32 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
           }
         }
 
-        // Calculate the optimistic buffer size needed (assuming that the
-        // rest of the string is TRUSTED).
-        size_t bytes_remaining_in_source = string->byte_length - next_source_byte_offset + 1;
-
-        // Resize the buffer if necessary.
-        if (buffer_length + bytes_needed + bytes_remaining_in_source > total_bytes_allocated) {
-          size_t new_allocated_size = buffer_length + bytes_needed + bytes_remaining_in_source;
-          char * new_buffer = gcu_realloc(buffer, new_allocated_size);
-          if (!new_buffer) {
-            goto RENDER_ERROR;
-          }
-          total_bytes_allocated = new_allocated_size;
-          buffer = new_buffer;
+        char * dest = gta_unicode_render_claim(out, bytes_needed,
+          string->byte_length - next_source_byte_offset + 1);
+        if (!dest) {
+          goto RENDER_ERROR;
         }
 
         // Second pass, encode the characters.
+        size_t offset = 0;
         for (size_t i = source_byte_offset; i < next_source_byte_offset; ++i) {
           if (isalnum(string->buffer[i])
             || string->buffer[i] == '-'
             || string->buffer[i] == '_'
             || string->buffer[i] == '.'
             || string->buffer[i] == '~') {
-            buffer[buffer_length++] = string->buffer[i];
+            dest[offset++] = string->buffer[i];
           }
           else if (string->buffer[i] == ' ') {
-            buffer[buffer_length++] = '+';
+            dest[offset++] = '+';
           }
           else {
-            buffer[buffer_length++] = '%';
-            buffer[buffer_length++] = "0123456789ABCDEF"[string->buffer[i] >> 4];
-            buffer[buffer_length++] = "0123456789ABCDEF"[string->buffer[i] & 0x0F];
+            dest[offset++] = '%';
+            dest[offset++] = "0123456789ABCDEF"[string->buffer[i] >> 4];
+            dest[offset++] = "0123456789ABCDEF"[string->buffer[i] & 0x0F];
           }
         }
+        assert(offset == bytes_needed);
         break;
       }
       case GTA_UNICODE_STRING_TYPE_JAVASCRIPT: {
@@ -629,59 +644,52 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
           }
         }
 
-        // Calculate the optimistic buffer size needed (assuming that the
-        // rest of the string is TRUSTED).
-        size_t bytes_remaining_in_source = string->byte_length - next_source_byte_offset + 1;
-
-        // Resize the buffer if necessary.
-        if (buffer_length + bytes_needed + bytes_remaining_in_source > total_bytes_allocated) {
-          size_t new_allocated_size = buffer_length + bytes_needed + bytes_remaining_in_source;
-          char * new_buffer = gcu_realloc(buffer, new_allocated_size);
-          if (!new_buffer) {
-            goto RENDER_ERROR;
-          }
-          total_bytes_allocated = new_allocated_size;
-          buffer = new_buffer;
+        char * dest = gta_unicode_render_claim(out, bytes_needed,
+          string->byte_length - next_source_byte_offset + 1);
+        if (!dest) {
+          goto RENDER_ERROR;
         }
 
         // Second pass, encode the characters.
+        size_t offset = 0;
         for (size_t i = source_byte_offset; i < next_source_byte_offset; ++i) {
           switch (string->buffer[i]) {
             case '\'':
             case '"':
             case '\\':
-              buffer[buffer_length++] = '\\';
-              buffer[buffer_length++] = string->buffer[i];
+              dest[offset++] = '\\';
+              dest[offset++] = string->buffer[i];
               break;
             case '\n':
-              buffer[buffer_length++] = '\\';
-              buffer[buffer_length++] = 'n';
+              dest[offset++] = '\\';
+              dest[offset++] = 'n';
               break;
             case '\r':
-              buffer[buffer_length++] = '\\';
-              buffer[buffer_length++] = 'r';
+              dest[offset++] = '\\';
+              dest[offset++] = 'r';
               break;
             case '\t':
-              buffer[buffer_length++] = '\\';
-              buffer[buffer_length++] = 't';
+              dest[offset++] = '\\';
+              dest[offset++] = 't';
               break;
             case '<':
-              memcpy(buffer + buffer_length, "\\u003C", 6);
-              buffer_length += 6;
+              memcpy(dest + offset, "\\u003C", 6);
+              offset += 6;
               break;
             case '>':
-              memcpy(buffer + buffer_length, "\\u003E", 6);
-              buffer_length += 6;
+              memcpy(dest + offset, "\\u003E", 6);
+              offset += 6;
               break;
             case '&':
-              memcpy(buffer + buffer_length, "\\u0026", 6);
-              buffer_length += 6;
+              memcpy(dest + offset, "\\u0026", 6);
+              offset += 6;
               break;
             default:
-              buffer[buffer_length++] = string->buffer[i];
+              dest[offset++] = string->buffer[i];
               break;
           }
         }
+        assert(offset == bytes_needed);
         break;
       }
       default:
@@ -690,19 +698,23 @@ GTA_Unicode_Rendered_String gta_unicode_string_render(const GTA_Unicode_String *
     }
   }
 
-  buffer[buffer_length] = '\0';
-
+  // The terminator is in the buffer but not in the length, which is the
+  // contract the callers of this function already relied on.
+  if (!gcu_array_append(out, "")) {
+    goto RENDER_ERROR;
+  }
+  size_t count = 0;
+  char * buffer = gcu_array_steal(out, &count);
+  gcu_array_destroy(out);
   return (GTA_Unicode_Rendered_String){
     .buffer = buffer,
-    .length = buffer_length,
+    .length = count - 1,
   };
 
 RENDER_ERROR:
-  if (buffer) {
-    gcu_free(buffer);
-  }
+  gcu_array_destroy(out);
   return (GTA_Unicode_Rendered_String){
-    .buffer = NULL, 
+    .buffer = NULL,
     .length = 0,
   };
 }
