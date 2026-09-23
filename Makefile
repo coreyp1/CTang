@@ -59,12 +59,21 @@ PKG_CONFIG_PATH_ENV := $(PKG_CONFIG_PATH)
 # uses. The platform segment exists to keep linux/mac/win builds apart.
 
 # Detect OS
+#
+# OS_SPECIFIC_OBJECT_FLAGS holds what a *compile* needs, because the three
+# recipes that use it all compile with -c and nothing links with it. It was
+# spelled `-shared -fPIC` (and `-shared` alone on the other three platforms)
+# until 2026-09-23, and the -shared half had never done anything: it is a
+# linker flag, and the shared-library rule spells its own -shared literally.
+# gcc ignores unused arguments, so nothing here ever said so; clang makes it
+# `argument unused during compilation` and, under ctang's -Werror, refuses to
+# build the library at all. Dropping it changes no gcc build on any platform.
 UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S), Linux)
 	OS_NAME := Linux
 	LIB_EXTENSION := so
-	OS_SPECIFIC_CXX_FLAGS := -shared -fPIC
+	OS_SPECIFIC_OBJECT_FLAGS := -fPIC
 	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-soname,$(SO_NAME)
 	TARGET := $(SO_NAME).$(MINOR_VERSION)
 	EXE_EXTENSION :=
@@ -77,7 +86,7 @@ ifeq ($(UNAME_S), Linux)
 else ifeq ($(UNAME_S), Darwin)
 	OS_NAME := Mac
 	LIB_EXTENSION := dylib
-	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_OBJECT_FLAGS :=
 	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-install_name,$(BASE_NAME_PREFIX).dylib
 	TARGET := $(BASE_NAME_PREFIX).dylib
 	EXE_EXTENSION :=
@@ -87,7 +96,7 @@ else ifeq ($(UNAME_S), Darwin)
 else ifeq ($(findstring MINGW32_NT,$(UNAME_S)),MINGW32_NT)  # 32-bit Windows
 	OS_NAME := Windows
 	LIB_EXTENSION := dll
-	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_OBJECT_FLAGS :=
 	OS_SPECIFIC_LIBRARY_NAME_FLAG = -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
 	TARGET := $(BASE_NAME_PREFIX).dll
 	EXE_EXTENSION := .exe
@@ -102,7 +111,7 @@ else ifeq ($(findstring MINGW32_NT,$(UNAME_S)),MINGW32_NT)  # 32-bit Windows
 else ifeq ($(findstring MINGW64_NT,$(UNAME_S)),MINGW64_NT)  # 64-bit Windows
 	OS_NAME := Windows
 	LIB_EXTENSION := dll
-	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_OBJECT_FLAGS :=
 	OS_SPECIFIC_LIBRARY_NAME_FLAG = -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
 	TARGET := $(BASE_NAME_PREFIX).dll
 	EXE_EXTENSION := .exe
@@ -317,6 +326,15 @@ CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfa
 # internals by linking the static archive, which a static link can do even for
 # hidden symbols.
 LIB_CFLAGS := $(CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD
+
+# The bison and flex output is not ours to edit - a regeneration would discard
+# any fix - and gcc and clang disagree about which parts of it to complain
+# about. gcc wants -Wno-unused-function for the scanner; clang additionally
+# reports an unused-but-set GTA_Parser_nerrs in the parser and an unneeded
+# internal declaration in the scanner. Each compiler silently accepts the
+# other's -Wno- spelling, so one list serves both.
+GENERATED_CFLAGS := -Wno-unused-function -Wno-unused-but-set-variable \
+                    -Wno-unneeded-internal-declaration
 # -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
 LDFLAGS := -L /usr/lib -lstdc++ -lm $(ICU_LIBS) $(CUTIL_LIBS) $(EXTRA_LDFLAGS)
 ifdef PREFIX
@@ -540,7 +558,7 @@ $(LIBVER_GEN): force-libver
 $(OBJ_DIR)/%.o: src/%.c $(FLAGS_STAMP) | $(LIBVER_GEN)
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_CXX_FLAGS)
+	$(CC) $(LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_OBJECT_FLAGS)
 	@sed -i 's|\([A-Za-z]\):\([\\/]\)|\1\\:\2|g' $(@:.o=.d) 2>/dev/null || true
 
 # Generated sources (bison/flex): same flags, output .d next to .o.
@@ -562,13 +580,13 @@ $(OBJ_DIR)/%.o: src/%.c $(FLAGS_STAMP) | $(LIBVER_GEN)
 $(OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c $(FLAGS_STAMP) | $(LIBVER_GEN)
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_CXX_FLAGS)
+	$(CC) $(LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_OBJECT_FLAGS) $(GENERATED_CFLAGS)
 	@sed -i 's|\([A-Za-z]\):\([\\/]\)|\1\\:\2|g' $(@:.o=.d) 2>/dev/null || true
 
 $(OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c $(FLAGS_STAMP) | $(LIBVER_GEN)
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_CXX_FLAGS) -Wno-unused-function
+	$(CC) $(LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_OBJECT_FLAGS) $(GENERATED_CFLAGS)
 	@sed -i 's|\([A-Za-z]\):\([\\/]\)|\1\\:\2|g' $(@:.o=.d) 2>/dev/null || true
 
 ####################################################################
@@ -745,11 +763,11 @@ $(SAN_OBJ_DIR)/%.o: src/%.c $(SAN_FLAGS_STAMP) | $(LIBVER_GEN)
 
 $(SAN_OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c $(SAN_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
-	$(CC) $(SAN_LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
+	$(CC) $(SAN_LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(GENERATED_CFLAGS)
 
 $(SAN_OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c $(SAN_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
-	$(CC) $(SAN_LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ -Wno-unused-function
+	$(CC) $(SAN_LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(GENERATED_CFLAGS)
 
 $(SAN_STATIC_TARGET): $(SAN_LIBOBJECTS)
 	@printf "\n### Archiving instrumented library ###\n"
@@ -1396,7 +1414,7 @@ help: ## Display this help
 
 $(FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(CC) $(CXX) $(LIB_CFLAGS) $(CXXFLAGS) $(LDFLAGS) $(TESTFLAGS) $(INCLUDE) $(OS_SPECIFIC_CXX_FLAGS)' > $@.new
+	@printf '%s\n' '$(CC) $(CXX) $(LIB_CFLAGS) $(CXXFLAGS) $(LDFLAGS) $(TESTFLAGS) $(INCLUDE) $(OS_SPECIFIC_OBJECT_FLAGS) $(GENERATED_CFLAGS)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
 
 $(FUZZ_FLAGS_STAMP): force-flags
@@ -1406,5 +1424,5 @@ $(FUZZ_FLAGS_STAMP): force-flags
 
 $(SAN_FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(CC) $(CXX) $(SAN_LIB_CFLAGS) $(SAN_CXXFLAGS) $(SAN_LDFLAGS) $(TESTFLAGS) $(INCLUDE)' > $@.new
+	@printf '%s\n' '$(CC) $(CXX) $(SAN_LIB_CFLAGS) $(SAN_CXXFLAGS) $(SAN_LDFLAGS) $(TESTFLAGS) $(INCLUDE) $(GENERATED_CFLAGS)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@

@@ -34,7 +34,7 @@
 #include <ghoti.io/tang/macros.h>
 #include <ghoti.io/tang/tang.h>
 
-void print_help_text() {
+void print_help_text(void) {
   int width = 15;
   int indent = 20;
   printf(

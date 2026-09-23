@@ -44,7 +44,7 @@ GTA_Ast_Node_VTable gta_ast_node_parse_error_vtable = {
 static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_out_of_memory_singleton = {
   .base = {
     .vtable = &gta_ast_node_parse_error_vtable,
-    .location = {0, 0, 0},
+    .location = {0, 0, 0, 0},
     .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
     .is_singleton = true,
   },
@@ -56,7 +56,7 @@ GTA_Ast_Node * gta_ast_node_parse_error_out_of_memory = (GTA_Ast_Node *) &gta_as
 static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_function_redeclared_singleton = {
   .base = {
     .vtable = &gta_ast_node_parse_error_vtable,
-    .location = {0, 0, 0},
+    .location = {0, 0, 0, 0},
     .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
     .is_singleton = true,
   },
@@ -68,7 +68,7 @@ GTA_Ast_Node * gta_ast_node_parse_error_function_redeclared = (GTA_Ast_Node *) &
 static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_identifier_redeclared_singleton = {
   .base = {
     .vtable = &gta_ast_node_parse_error_vtable,
-    .location = {0, 0, 0},
+    .location = {0, 0, 0, 0},
     .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
     .is_singleton = true,
   },
@@ -80,7 +80,7 @@ GTA_Ast_Node * gta_ast_node_parse_error_identifier_redeclared = (GTA_Ast_Node *)
 static GTA_Ast_Node_Parse_Error gta_ast_node_parse_error_global_identifier_redeclared_singleton = {
   .base = {
     .vtable = &gta_ast_node_parse_error_vtable,
-    .location = {0, 0, 0},
+    .location = {0, 0, 0, 0},
     .possible_type = GTA_AST_POSSIBLE_TYPE_UNKNOWN,
     .is_singleton = true,
   },
