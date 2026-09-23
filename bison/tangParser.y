@@ -485,6 +485,10 @@ functionDeclarationArguments
       if (!parameter) {
         gcu_free((void *)identifier);
         *parseError = ErrorOutOfMemory;
+        // $$ = 0 before breaking: bison initialises $$ to $1, and $1 here is
+        // not a value of this rule's type, so leaving it makes the cleanup
+        // path destroy the wrong thing. See the STRING arm for the full note.
+        $$ = 0;
         break;
       }
 
@@ -576,13 +580,19 @@ mapList
       if (!key_unicode_string) {
         *parseError = ErrorOutOfMemory;
         gcu_free((void *)$1.str);
+        // $$ = 0 before breaking: bison initialises $$ to $1, and $1 here is
+        // not a value of this rule's type, so leaving it makes the cleanup
+        // path destroy the wrong thing. See the STRING arm for the full note.
+        $$ = 0;
         break;
       }
 
       GTA_Ast_Node * key = (GTA_Ast_Node *)gta_ast_node_string_create(key_unicode_string, @1);
       if (!key) {
+        // Destroying key_unicode_string frees $1.str, which it adopted.
         gta_unicode_string_destroy(key_unicode_string);
         *parseError = ErrorOutOfMemory;
+        $$ = 0;
         break;
       }
 
@@ -836,15 +846,28 @@ closedStatement
 
       GTA_Unicode_String * string = gta_unicode_string_create_and_adopt($1.str, $1.len, $1.type);
       if (!string) {
+        // $$ must be cleared before breaking, for the same reason as the
+        // STRING arm below: leaving it unset leaves the value union holding
+        // $1, whose first member is the .str freed on the next line, and every
+        // consumer then treats that freed pointer as a GTA_Ast_Node *. This
+        // arm is reached for invalid UTF-8, not only for allocation failure,
+        // so it is ordinary input - a single byte 0xC7 as a template was a
+        // use-after-free.
+        $$ = 0;
         *parseError = ErrorOutOfMemory;
         gcu_free((void *)$1.str);
         break;
       }
 
       GTA_Ast_Node * template_string = (GTA_Ast_Node *)gta_ast_node_string_create(string, @1);
-      if (!$$) {
+      // template_string, not $$: $$ still holds the token here, so testing it
+      // asked whether the input had a string rather than whether the node was
+      // allocated. The guard could never fire, and a real failure fell through
+      // into gta_ast_node_print_create(NULL).
+      if (!template_string) {
         gta_unicode_string_destroy(string);
         *parseError = ErrorOutOfMemory;
+        $$ = 0;
         break;
       }
 
@@ -942,6 +965,10 @@ closedStatement
       if (!library) {
         gcu_free((void *)identifier);
         *parseError = ErrorOutOfMemory;
+        // $$ = 0 before breaking: bison initialises $$ to $1, and $1 here is
+        // not a value of this rule's type, so leaving it makes the cleanup
+        // path destroy the wrong thing. See the STRING arm for the full note.
+        $$ = 0;
         break;
       }
       // Copy the identifier.
@@ -950,6 +977,7 @@ closedStatement
         gcu_free((void *)identifier);
         gta_ast_node_destroy(library);
         *parseError = ErrorOutOfMemory;
+        $$ = 0;
         break;
       }
       strcpy((char *)identifier_copy, identifier);
@@ -985,6 +1013,10 @@ closedStatement
       if (!name) {
         gcu_free((void *)identifier);
         *parseError = ErrorOutOfMemory;
+        // $$ = 0 before breaking: bison initialises $$ to $1, and $1 here is
+        // not a value of this rule's type, so leaving it makes the cleanup
+        // path destroy the wrong thing. See the STRING arm for the full note.
+        $$ = 0;
         break;
       }
 
@@ -1007,6 +1039,10 @@ closedStatement
       if (!name) {
         gcu_free((void *)identifier);
         *parseError = ErrorOutOfMemory;
+        // $$ = 0 before breaking: bison initialises $$ to $1, and $1 here is
+        // not a value of this rule's type, so leaving it makes the cleanup
+        // path destroy the wrong thing. See the STRING arm for the full note.
+        $$ = 0;
         break;
       }
 
@@ -1198,12 +1234,17 @@ codeBlock
       GTA_Ast_Node * null_val = gta_ast_node_create(location);
       if (!null_val) {
         *parseError = ErrorOutOfMemory;
+        // $$ = 0 before breaking: bison initialises $$ to $1, and $1 here is
+        // not a value of this rule's type, so leaving it makes the cleanup
+        // path destroy the wrong thing. See the STRING arm for the full note.
+        $$ = 0;
         break;
       }
       GCU_Vector64 * vector = gcu_vector64_create(1);
       if (!vector) {
         gta_ast_node_destroy(null_val);
         *parseError = ErrorOutOfMemory;
+        $$ = 0;
         break;
       }
       vector->cleanup = vector64_ast_node_cleanup;
@@ -1472,6 +1513,10 @@ expression
       GCU_Vector64 * vector = gcu_vector64_create(0);
       if (!vector) {
         *parseError = ErrorOutOfMemory;
+        // $$ = 0 before breaking: bison initialises $$ to $1, and $1 here is
+        // not a value of this rule's type, so leaving it makes the cleanup
+        // path destroy the wrong thing. See the STRING arm for the full note.
+        $$ = 0;
         break;
       }
       vector->cleanup = vector64_map_pair_cleanup;

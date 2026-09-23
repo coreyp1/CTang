@@ -714,6 +714,48 @@ TEST(Parse, ConstantFoldingDoesNotOverflow) {
 }
 
 
+TEST(Parse, InvalidUtf8InATemplateDoesNotLeaveAFreedPointer) {
+  // One byte. `\xc7` as a whole template was a heap-use-after-free.
+  //
+  // The TEMPLATESTRING arm calls gta_unicode_string_create_and_adopt, which
+  // fails on invalid UTF-8 - ordinary input, not an allocation failure. It
+  // freed the token's buffer and broke without clearing $$. Bison initialises
+  // $$ to $1, and $1 here is the token, whose first union member is the .str
+  // just freed, so the cleanup path then ran gta_ast_node_destroy on a freed
+  // buffer.
+  //
+  // This is the identical defect that was fixed in the STRING arm, in the
+  // sibling arm the parse-only fuzzer cannot reach. The template fuzzer found
+  // it in 16 executions the first time it was ever run.
+  //
+  // The same arm also tested `if (!$$)` where it meant `if (!template_string)`,
+  // so that guard could never fire.
+  for (const char * src : {
+      "\xc7",
+      "<%= \"\xc7" "a\" %>",   // split: \xc7a would be one over-long hex escape
+      "\xdb\xdf plain text \xc7",
+      }) {
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_template(src);
+    // Rejected or accepted are both fine; not crashing and not leaking is the
+    // property. ASan is what catches the use-after-free half; `make test-asan`
+    // runs this file.
+    if (ast) {
+      gta_ast_node_destroy(ast);
+    }
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << "leaked on: " << src;
+  }
+  {
+    // A valid template must still parse, or the guard has broken templates.
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_template("a <%= \"b\" %> c");
+    ASSERT_NE(ast, nullptr);
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
+
 TEST(Parse, OutOfRangeCastDoesNotFold) {
   // Converting a float that does not fit into an integer is undefined
   // behaviour, and the folder did it at compile time. That is the site the
