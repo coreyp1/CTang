@@ -43,8 +43,10 @@
 %option stack
 
 %{
+#include <errno.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ghoti.io/cutil/memory.h>
 
@@ -348,7 +350,36 @@ static size_t gta_flex_get_state_stack_depth(void * yyscanner);
     return GTA_PARSER_PRINT;
   }
   [0-9]+ {
-    yylval->GTA_PARSER_INTEGER = strtoll(yytext, 0, 10);
+    // An integer literal that does not fit is rejected, not saturated.
+    // strtoll clamps to the maximum and reports it through errno, and that
+    // clamp used to be handed back as though the author had written it:
+    // `9223372036854775808` became `9223372036854775807`, and because tang has
+    // no negative literals, `-9223372036854775808` became
+    // `-9223372036854775807` - the wrong number, silently, for the one value
+    // the range makes awkward.
+    //
+    // A literal is the one case where there is nothing to wait for: it has no
+    // operands and cannot vary, so the earliest possible report is the right
+    // one. That is a parse error rather than a run-time marker.
+    errno = 0;
+    char * end = 0;
+    long long value = strtoll(yytext, &end, 10);
+    if ((errno == ERANGE) || (value > (long long)GTA_INTEGER_MAX)) {
+      // Except for exactly the magnitude of the most negative integer, which
+      // is one past the maximum and so is not a literal in its own right - but
+      // is the only way to write GTA_INTEGER_MIN. It is returned as its own
+      // token, which the grammar accepts only directly after unary minus.
+      // Java has the same carve-out, for the same reason.
+      errno = 0;
+      unsigned long long magnitude = strtoull(yytext, 0, 10);
+      if ((errno != ERANGE)
+        && (magnitude == (unsigned long long)GTA_INTEGER_MAX + 1)) {
+        yylval->GTA_PARSER_INTEGER = GTA_INTEGER_MIN;
+        return GTA_PARSER_INTEGER_MIN_MAGNITUDE;
+      }
+      return GTA_PARSER_INTEGER_OUT_OF_BOUNDS;
+    }
+    yylval->GTA_PARSER_INTEGER = value;
     return GTA_PARSER_INTEGER;
   }
   ([0-9]+\.[0-9]*)|(\.[0-9]+) {

@@ -2103,6 +2103,69 @@ TEST(Cast, OutOfRangeFloatToIntegerSaysSo) {
 }
 
 
+TEST(Syntax, IntegerLiteralOutOfRangeIsRejected) {
+  // A literal that does not fit used to saturate, so `9223372036854775808`
+  // silently became `9223372036854775807`. A literal has no operands and
+  // cannot vary, so there is nothing to wait for: it is refused at parse time
+  // rather than answered with a run-time marker.
+  for (const char * src : {
+      "9223372036854775808;",
+      "99999999999999999999999;",
+      "9223372036854775808 - 1;",
+      "x = 9223372036854775808;",
+      "-99999999999999999999999;",
+      }) {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(language, src);
+    ASSERT_FALSE(program) << "accepted: " << src;
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << "leaked on: " << src;
+  }
+  {
+    // The bounds themselves must still be accepted.
+    TEST_PROGRAM_SETUP(R"(print(9223372036854775807);)");
+    ASSERT_STREQ(context->output->buffer, "9223372036854775807");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
+TEST(Syntax, TheMostNegativeIntegerCanBeWritten) {
+  // Tang has no negative literals - unary minus is an operator - and the
+  // signed range is asymmetric, so the most negative integer can only be
+  // written as minus applied to a magnitude that is itself one past the
+  // maximum. That made it unwritable twice over: the literal saturated, so
+  // `-9223372036854775808` evaluated to `-9223372036854775807`, off by one and
+  // silently; and refusing out-of-range literals outright would have left no
+  // way to write it at all.
+  //
+  // So that magnitude is accepted in exactly one position, directly after
+  // unary minus, and is a syntax error anywhere else. Java has the same
+  // carve-out for the same reason.
+  {
+    TEST_PROGRAM_SETUP(R"(print(-9223372036854775808);)");
+    ASSERT_STREQ(context->output->buffer, "-9223372036854775808");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Whitespace between the operator and the literal is still fine, and the
+    // value is exact rather than a negation that would itself overflow - so it
+    // matches the arithmetic spelling of the same number. Compared by printing
+    // both rather than by printing the comparison, because printing a boolean
+    // produces nothing (13.8).
+    TEST_PROGRAM_SETUP(R"(print(- 9223372036854775808); print(","); print(0 - 9223372036854775807 - 1);)");
+    ASSERT_STREQ(context->output->buffer, "-9223372036854775808,-9223372036854775808");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // But only there. Without the minus it is the out-of-range literal again.
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(language, "9223372036854775808;");
+    ASSERT_FALSE(program);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
+
 TEST(Syntax, IntegerOverflowIsReportedNotWrapped) {
   // Arithmetic that cannot produce a representable answer says so, rather than
   // wrapping. Wrapping was the worst of the three options: a clamp is wrong by

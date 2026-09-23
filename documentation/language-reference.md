@@ -101,7 +101,19 @@ everywhere, not only after `as`.
 
 **Integer**: one or more decimal digits. No sign (unary minus is an
 operator), no separators, no hexadecimal, octal or exponent forms. A literal
-that does not fit in 64 bits saturates to `9223372036854775807`.
+that does not fit in 64 bits is a **syntax error** - it is refused rather than
+saturated, since a literal cannot vary and so has nothing to wait for.
+
+Because there are no negative literals and the signed range is asymmetric, the
+most negative integer can only be written as unary minus applied to
+`9223372036854775808`, which is itself one past the maximum. That magnitude is
+therefore accepted in exactly one place - directly after unary minus - and is
+a syntax error anywhere else:
+
+```
+-9223372036854775808     is the most negative integer
+ 9223372036854775808     is a syntax error
+```
 
 **Float**: digits with a decimal point on at least one side: `3.14`, `1.`,
 `.5`. No exponent form; `1e5` is the integer `1` followed by the identifier

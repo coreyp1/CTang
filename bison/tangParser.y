@@ -120,6 +120,11 @@
 %token MEMORYERROR "Out of Memory/Memory Allocation Error"
 %token SYNTAXERROR "Syntax Error"
 %token OCTAL_OUT_OF_BOUNDS "Octal literal out of bounds"
+%token INTEGER_OUT_OF_BOUNDS "integer literal too large"
+// Exactly the magnitude of GTA_INTEGER_MIN. Its own token because it is legal
+// in one position only - directly after unary minus - and a syntax error
+// everywhere else.
+%token <int64_t> INTEGER_MIN_MAGNITUDE "integer literal 9223372036854775808"
 %token <GTA_Parser_Date> DATE_CLOSE_RELATIVE "close, relative date"
 %token <GTA_Parser_Date> DATE_UNIT "relative date unit (i.e., one of: yMwdhms)"
 %token <GTA_Parser_Date> DATE_ABSOLUTE "absolute date string"
@@ -1406,6 +1411,24 @@ expression
   | "-" expression %prec UMINUS
     {
       UNARY_TEMPLATE(GTA_UNARY_TYPE_NEGATIVE,@1,$2,@2,$$);
+    }
+  | "-" INTEGER_MIN_MAGNITUDE %prec UMINUS
+    {
+      // Verify that there have been no memory errors.
+      VERIFY($$);
+
+      // The magnitude of the most negative integer is one past the maximum, so
+      // it is not a valid literal by itself and the scanner refuses it
+      // everywhere else. It is accepted here because tang has no negative
+      // literals - unary minus is an operator - so this is the only way to
+      // write GTA_INTEGER_MIN at all. The value is produced whole rather than
+      // by negating, which would itself overflow.
+      LOCATION(@1, @2);
+      $$ = (GTA_Ast_Node *)gta_ast_node_integer_create($2, location);
+      if (!$$) {
+        *parseError = ErrorOutOfMemory;
+        break;
+      }
     }
   | "!" expression
     {
