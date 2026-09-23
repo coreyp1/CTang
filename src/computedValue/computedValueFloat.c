@@ -471,10 +471,10 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_float_cast(GTA_Computed_Value *
   // would compare against 2^63 after rounding and let 2^63 itself through,
   // which is the value that does not fit.
     if (value >= -(GTA_Float)GTA_INTEGER_MIN) {
-      return gta_computed_value_error_overflow;
+      return gta_computed_value_error_integer_too_large;
     }
     if (value < (GTA_Float)GTA_INTEGER_MIN) {
-      return gta_computed_value_error_underflow;
+      return gta_computed_value_error_integer_too_small;
     }
     return (GTA_Computed_Value *)gta_computed_value_integer_create((GTA_Integer)value, context);
   }

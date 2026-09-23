@@ -244,7 +244,7 @@ GTA_Computed_Value_VTable gta_computed_value_error_marker_vtable = {
 };
 
 
-static GTA_Computed_Value_Error gta_computed_value_error_overflow_singleton = {
+static GTA_Computed_Value_Error gta_computed_value_error_integer_too_large_singleton = {
   .base = {
     .vtable = &gta_computed_value_error_marker_vtable,
     .context = 0,
@@ -255,11 +255,11 @@ static GTA_Computed_Value_Error gta_computed_value_error_overflow_singleton = {
     .is_singleton = true,
     .is_a_reference = false,
   },
-  .message = "[OVERFLOW]",
+  .message = "[INTEGER TOO LARGE]",
 };
 
 
-static GTA_Computed_Value_Error gta_computed_value_error_underflow_singleton = {
+static GTA_Computed_Value_Error gta_computed_value_error_integer_too_small_singleton = {
   .base = {
     .vtable = &gta_computed_value_error_marker_vtable,
     .context = 0,
@@ -270,7 +270,7 @@ static GTA_Computed_Value_Error gta_computed_value_error_underflow_singleton = {
     .is_singleton = true,
     .is_a_reference = false,
   },
-  .message = "[UNDERFLOW]",
+  .message = "[INTEGER TOO SMALL]",
 };
 
 
@@ -299,8 +299,8 @@ GTA_Computed_Value * gta_computed_value_error_invalid_index = (GTA_Computed_Valu
 GTA_Computed_Value * gta_computed_value_error_invalid_function_call = (GTA_Computed_Value *)&gta_computed_value_error_invalid_function_call_singleton;
 GTA_Computed_Value * gta_computed_value_error_argument_count_mismatch = (GTA_Computed_Value *)&gta_computed_value_error_argument_count_mismatch_singleton;
 GTA_Computed_Value * gta_computed_value_error_global_rng_seed_not_changeable = (GTA_Computed_Value *)&gta_computed_value_error_global_rng_seed_not_changeable_singleton;
-GTA_Computed_Value * gta_computed_value_error_overflow = (GTA_Computed_Value *)&gta_computed_value_error_overflow_singleton;
-GTA_Computed_Value * gta_computed_value_error_underflow = (GTA_Computed_Value *)&gta_computed_value_error_underflow_singleton;
+GTA_Computed_Value * gta_computed_value_error_integer_too_large = (GTA_Computed_Value *)&gta_computed_value_error_integer_too_large_singleton;
+GTA_Computed_Value * gta_computed_value_error_integer_too_small = (GTA_Computed_Value *)&gta_computed_value_error_integer_too_small_singleton;
 GTA_Computed_Value * gta_computed_value_error_not_a_number = (GTA_Computed_Value *)&gta_computed_value_error_not_a_number_singleton;
 
 

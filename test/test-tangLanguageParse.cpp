@@ -794,6 +794,45 @@ TEST(Parse, QuickPrintFreesTheExpressionItWasHanded) {
 }
 
 
+TEST(Parse, StringToIntegerIsNotFolded) {
+  // The folder used to convert a constant string to an integer by parsing it
+  // as a FLOAT and truncating. That disagreed with the runtime conversion,
+  // which parses an integer as the language reference specifies - `"1e3" as
+  // int` folded to 1000 and executed as 1 - and the truncation was the same
+  // out-of-range undefined behaviour as the float cast, for any string naming
+  // a number too large to fit.
+  //
+  // It now declines, so run time is the only place the rule lives. Nothing in
+  // the library calls gta_tang_simplify today (the call in gta_tang_primary_parse
+  // is commented out), so the divergence was latent rather than visible - but
+  // it is a public API, and the fuzzer reaches it.
+  for (const char * src : {
+      "\"99999999999999999999999\" as int;",
+      "\"-99999999999999999999999\" as int;",
+      "\"1e3\" as int;",
+      }) {
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script(src);
+    ASSERT_NE(ast, nullptr) << "failed to parse: " << src;
+    ast = gta_tang_simplify(ast);
+    ASSERT_NE(ast, nullptr) << src;
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << "leaked on: " << src;
+  }
+  {
+    // The cast survives simplification rather than becoming an integer.
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script("\"42\" as int");
+    ASSERT_NE(ast, nullptr);
+    ast = gta_tang_simplify(ast);
+    ASSERT_NE(ast, nullptr);
+    ASSERT_TRUE(GTA_AST_IS_CAST(ast));
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
+
 TEST(Parse, OutOfRangeCastDoesNotFold) {
   // Converting a float that does not fit into an integer is undefined
   // behaviour, and the folder did it at compile time. That is the site the
@@ -802,7 +841,7 @@ TEST(Parse, OutOfRangeCastDoesNotFold) {
   // no artifact at all.
   //
   // The folder now declines, leaving the cast node for run time to answer with
-  // [OVERFLOW], [UNDERFLOW] or [NOT A NUMBER]. Declining rather than folding
+  // [INTEGER TOO LARGE], [INTEGER TOO SMALL] or [NOT A NUMBER]. Declining rather than folding
   // to a marker is deliberate: there is no AST node that could carry one, and
   // it means the two engines and the folder cannot drift apart, because only
   // one of them decides.
@@ -1137,15 +1176,20 @@ TEST(Cast, FromBoolean) {
 
 TEST(Cast, FromString) {
   {
-    // Cast from string to integer.
+    // Cast from string to integer is deliberately NOT folded any more, so the
+    // cast node survives. It used to fold by parsing the string as a float and
+    // truncating, which disagreed with the runtime conversion and was
+    // undefined behaviour for a string naming a number too large to fit. The
+    // conversion is not reimplemented here: duplicating a parsing rule is what
+    // let the two drift apart, and run time is the only thing that can produce
+    // [INTEGER TOO LARGE] anyway. See Parse.StringToIntegerIsNotFolded.
     gcu_memory_reset_counts();
     GTA_Ast_Node * ast = gta_tang_parse_script(R"("3" as int)");
     ASSERT_NE(ast, nullptr);
     ASSERT_EQ(2, gta_tang_node_count(ast));
     ast = gta_tang_simplify(ast);
-    ASSERT_EQ(1, gta_tang_node_count(ast));
-    ASSERT_TRUE(GTA_AST_IS_INTEGER(ast));
-    ASSERT_EQ(3, ((GTA_Ast_Node_Integer *)ast)->value);
+    ASSERT_EQ(2, gta_tang_node_count(ast));
+    ASSERT_TRUE(GTA_AST_IS_CAST(ast));
     gta_ast_node_destroy(ast);
     ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
   }

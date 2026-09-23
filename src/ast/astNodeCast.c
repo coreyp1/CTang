@@ -183,7 +183,7 @@ GTA_Ast_Node * gta_ast_node_cast_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_
       case GTA_CAST_TYPE_INTEGER: {
         GTA_Float value = ((GTA_Ast_Node_Float *)cast->expression)->value;
         // Decline to fold what does not fit, and let the runtime answer it
-        // with [OVERFLOW], [UNDERFLOW] or [NOT A NUMBER]. There is no AST node
+        // with [INTEGER TOO LARGE], [INTEGER TOO SMALL] or [NOT A NUMBER]. There is no AST node
         // that could carry those, and declining is how this file already
         // handles a fold it cannot perform - it also keeps the two answers
         // identical by construction rather than by keeping two tables in step.
@@ -259,15 +259,19 @@ GTA_Ast_Node * gta_ast_node_cast_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_
     GTA_Ast_Node_String * string = (GTA_Ast_Node_String *)cast->expression;
     switch(cast->type) {
       case GTA_CAST_TYPE_INTEGER: {
-        // Convert the string to an integer.
-        // First, optimistically parse the string as a float.
-        // Only accept it if the entire string was parsed as a float.
-        char * tailptr = 0;
-        GCU_float64_t float_value = strtold(string->string->buffer, &tailptr);
-        if (tailptr && tailptr == string->string->buffer + string->string->byte_length) {
-          // The entire string was parsed as a float.
-          return (GTA_Ast_Node *)gta_ast_node_integer_create((int64_t)float_value, cast->base.location);
-        }
+        // Do not fold a string to an integer at all; let run time answer it.
+        //
+        // This used to parse the string as a *float* and truncate, which was
+        // two defects at once. It disagreed with the runtime conversion, which
+        // parses an integer as the language reference specifies - `"1e3" as
+        // int` folded to 1000 and executed as 1 - and the truncation was the
+        // same out-of-range undefined behaviour as the float cast above, for
+        // any string naming a number too big to fit.
+        //
+        // Declining is the same answer used for the float cast: run time is
+        // then the only place the rule lives, so the folder cannot drift from
+        // it, and it is the only place that can produce [INTEGER TOO LARGE]
+        // and [INTEGER TOO SMALL], which no AST node could carry.
         break;
       }
       case GTA_CAST_TYPE_FLOAT: {

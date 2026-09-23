@@ -1953,6 +1953,48 @@ TEST(Syntax, IntegerDivisionOverflowDoesNotKillTheProcess) {
 }
 
 
+TEST(Cast, OutOfRangeStringToIntegerSaysSo) {
+  // `"99999999999999999999999" as int` was 9223372036854775807 - the clamp to
+  // INT_MAX that the markers exist to remove - and it got there through atoll,
+  // whose behaviour when the value does not fit is undefined. glibc happens to
+  // saturate; nothing promises it.
+  //
+  // The marker text is the same as the float cast's deliberately. Both mean
+  // "this value does not fit in an integer", and spelling them differently by
+  // source type would invite a reader to think they were different conditions.
+  {
+    TEST_PROGRAM_SETUP(R"(print("99999999999999999999999" as int);)");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    TEST_PROGRAM_SETUP(R"(print("-99999999999999999999999" as int);)");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO SMALL]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The boundaries themselves convert; one past does not.
+    TEST_PROGRAM_SETUP(R"(print("9223372036854775807" as int); print(","); print("-9223372036854775808" as int);)");
+    ASSERT_STREQ(context->output->buffer, "9223372036854775807,-9223372036854775808");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    TEST_PROGRAM_SETUP(R"(print("9223372036854775808" as int);)");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Ordinary conversions are untouched, including the documented rule that a
+    // string which is not a number is 0 rather than a marker. That is a
+    // different question - not out of range, not a number at all - and is left
+    // as it was.
+    TEST_PROGRAM_SETUP(R"(print("42" as int); print(","); print("12abc" as int); print(","); print("abc" as int);)");
+    ASSERT_STREQ(context->output->buffer, "42,12,0");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 TEST(Cast, OutOfRangeFloatToIntegerSaysSo) {
   // Casting a float that does not fit in an integer used to be undefined
   // behaviour, and on x86-64 the conversion instruction answers with the
@@ -1978,25 +2020,25 @@ TEST(Cast, OutOfRangeFloatToIntegerSaysSo) {
   {
     // Finite, but far outside the range.
     TEST_PROGRAM_SETUP(R"(print(77777777777777777777777.9 as int);)");
-    ASSERT_STREQ(context->output->buffer, "[OVERFLOW]");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
     TEST_PROGRAM_TEARDOWN();
   }
   {
     TEST_PROGRAM_SETUP(R"(print((0.0 - 77777777777777777777777.9) as int);)");
-    ASSERT_STREQ(context->output->buffer, "[UNDERFLOW]");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO SMALL]");
     TEST_PROGRAM_TEARDOWN();
   }
   {
     // Infinity.
     std::string src = "print(" + huge + " as int);";
     TEST_PROGRAM_SETUP(src.c_str());
-    ASSERT_STREQ(context->output->buffer, "[OVERFLOW]");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
     TEST_PROGRAM_TEARDOWN();
   }
   {
     std::string src = "print((0.0 - " + huge + ") as int);";
     TEST_PROGRAM_SETUP(src.c_str());
-    ASSERT_STREQ(context->output->buffer, "[UNDERFLOW]");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO SMALL]");
     TEST_PROGRAM_TEARDOWN();
   }
   {
@@ -2013,7 +2055,7 @@ TEST(Cast, OutOfRangeFloatToIntegerSaysSo) {
     // is not representable as a double and rounds UP to 2^63, so the literal
     // spelling of the maximum does not fit and must be refused...
     TEST_PROGRAM_SETUP(R"(print(9223372036854775807.0 as int);)");
-    ASSERT_STREQ(context->output->buffer, "[OVERFLOW]");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
     TEST_PROGRAM_TEARDOWN();
   }
   {
@@ -2027,14 +2069,14 @@ TEST(Cast, OutOfRangeFloatToIntegerSaysSo) {
     // The marker prints where the number would have gone, and execution
     // carries on - it is a value, not a halt.
     TEST_PROGRAM_SETUP(R"(print("A"); print(77777777777777777777777.9 as int); print("B");)");
-    ASSERT_STREQ(context->output->buffer, "A[OVERFLOW]B");
+    ASSERT_STREQ(context->output->buffer, "A[INTEGER TOO LARGE]B");
     TEST_PROGRAM_TEARDOWN();
   }
   {
     // It survives assignment, so it cannot be laundered into a number by
     // storing it first.
     TEST_PROGRAM_SETUP(R"(x = 77777777777777777777777.9 as int; print(x);)");
-    ASSERT_STREQ(context->output->buffer, "[OVERFLOW]");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
     TEST_PROGRAM_TEARDOWN();
   }
   {

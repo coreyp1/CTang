@@ -125,17 +125,17 @@ GTA_API extern GTA_Computed_Value_VTable gta_computed_value_error_marker_vtable;
 /**
  * Singleton for a value too large to represent in the target type.
  *
- * Prints as `[OVERFLOW]`.
+ * Prints as `[INTEGER TOO LARGE]`.
  */
-GTA_API extern GTA_Computed_Value * gta_computed_value_error_overflow;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_integer_too_large;
 
 /**
  * Singleton for a value too small (too negative) to represent in the target
  * type.
  *
- * Prints as `[UNDERFLOW]`.
+ * Prints as `[INTEGER TOO SMALL]`.
  */
-GTA_API extern GTA_Computed_Value * gta_computed_value_error_underflow;
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_integer_too_small;
 
 /**
  * Singleton for a value that is not a number at all, and so is neither an

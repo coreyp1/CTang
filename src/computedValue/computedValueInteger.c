@@ -276,9 +276,13 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_divide(GTA_Computed_Val
     // the maximum. On x86-64 the hardware raises SIGFPE rather than wrapping,
     // so this is not a wrong answer but a killed process - `(0-9223372036854775807-1) / -1`
     // in a script was enough. Reported as "not supported" because the result
-    // genuinely is not representable; if tang grows a dedicated overflow value
-    // (see the "[OVERFLOW]" question in notes/ctang/FLOAT-DEFECTS.md), this is
-    // one of the places that should return it.
+    // genuinely is not representable.
+    //
+    // That dedicated value now exists: gta_computed_value_error_integer_too_large,
+    // which the casts return. The quotient here is exactly 2^63, so it would
+    // be the more informative answer, and this is one of the places to change
+    // if integer overflow should report rather than wrap. That is one decision
+    // across add, subtract, multiply, negate and this, so it is not made here.
     {
       GTA_Integer numerator = self_is_lhs ? number->value : other_number_integer->value;
       GTA_Integer denominator = self_is_lhs ? other_number_integer->value : number->value;
@@ -336,9 +340,13 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_modulo(GTA_Computed_Val
     // the maximum. On x86-64 the hardware raises SIGFPE rather than wrapping,
     // so this is not a wrong answer but a killed process - `(0-9223372036854775807-1) / -1`
     // in a script was enough. Reported as "not supported" because the result
-    // genuinely is not representable; if tang grows a dedicated overflow value
-    // (see the "[OVERFLOW]" question in notes/ctang/FLOAT-DEFECTS.md), this is
-    // one of the places that should return it.
+    // genuinely is not representable.
+    //
+    // That dedicated value now exists: gta_computed_value_error_integer_too_large,
+    // which the casts return. The quotient here is exactly 2^63, so it would
+    // be the more informative answer, and this is one of the places to change
+    // if integer overflow should report rather than wrap. That is one decision
+    // across add, subtract, multiply, negate and this, so it is not made here.
     {
       GTA_Integer numerator = self_is_lhs ? number->value : other_number_integer->value;
       GTA_Integer denominator = self_is_lhs ? other_number_integer->value : number->value;

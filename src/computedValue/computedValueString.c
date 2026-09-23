@@ -20,7 +20,9 @@
 
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ghoti.io/cutil/memory.h>
 #include <ghoti.io/tang/macros.h>
@@ -363,7 +365,32 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_cast(GTA_Computed_Value 
     return (GTA_Computed_Value *)gta_computed_value_float_create(atof(string->value->buffer), context);
   }
   if (type == &gta_computed_value_integer_vtable) {
-    return (GTA_Computed_Value *)gta_computed_value_integer_create(atoll(string->value->buffer), context);
+    // strtoll rather than atoll. atoll's behaviour when the value does not fit
+    // is undefined - glibc happens to saturate, so "99999999999999999999999"
+    // became 9223372036854775807, which is exactly the clamp these markers
+    // exist to remove, and it was undefined behaviour into the bargain.
+    //
+    // A string that is not a number at all still converts to 0. That is this
+    // cast's documented behaviour ("12abc" is 12, "abc" is 0) and a different
+    // question from the one asked here, which is only about values that do not
+    // fit.
+    errno = 0;
+    char * end = 0;
+    long long parsed = strtoll(string->value->buffer, &end, 10);
+    if (errno == ERANGE) {
+      return parsed > 0
+        ? gta_computed_value_error_integer_too_large
+        : gta_computed_value_error_integer_too_small;
+    }
+    // GTA_Integer is narrower than long long in the 32-bit build, so the
+    // bounds still have to be checked when strtoll itself succeeded.
+    if (parsed > (long long)GTA_INTEGER_MAX) {
+      return gta_computed_value_error_integer_too_large;
+    }
+    if (parsed < (long long)GTA_INTEGER_MIN) {
+      return gta_computed_value_error_integer_too_small;
+    }
+    return (GTA_Computed_Value *)gta_computed_value_integer_create((GTA_Integer)parsed, context);
   }
   return (GTA_Computed_Value *)gta_computed_value_error_not_supported;
 }
