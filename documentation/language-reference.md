@@ -306,7 +306,7 @@ Evaluates `c` for truthiness and yields `a` or `b`. Right-associative:
 | boolean | itself | `1` / `0` | `1.0` / `0.0` | `"true"` / `"false"` |
 | integer | `!= 0` | itself | exact | decimal digits |
 | float | `!= 0.0` | truncate toward zero, or a marker if it does not fit (below) | itself | see 4.12 |
-| string | non-empty | leading decimal integer, else `0` (`"12abc"` is `12`, `"abc"` is `0`), or a marker if it does not fit (below) | leading decimal, else `0.0` | itself |
+| string | non-empty | leading decimal integer (`"12abc"` is `12`), or a marker if there is none or it does not fit (below) | leading decimal, same rule | itself |
 | array | crash (13.6) | crash | crash | crash |
 | map | crash (13.6) | `Not supported` | `Not supported` | `Not supported` |
 | error | - | - | - | `Not implemented` |
@@ -327,9 +327,12 @@ thing. Integer arithmetic that overflows reports with the same two markers
 (4.2). `99999999999999999999999.0 as int` and `"99999999999999999999999" as
 int` are both `[INTEGER TOO LARGE]`.
 
-A string that is not a number at all is still `0`, not a marker: `"abc" as
-int` is `0`. That is a different question from this one, which is only about
-values that do not fit.
+A string with **no** leading number is `[NOT A NUMBER]`, for `as int` and
+`as float` alike: `"abc" as int` and `"" as int` are both `[NOT A NUMBER]`,
+while `"0" as int` is `0`. Those are two different situations and used to give
+the same answer. A string that merely *continues* past its number is
+unaffected - `"12abc" as int` is still `12`, and leading whitespace is still
+skipped.
 
 These are error values, so they are false in a condition and arithmetic on
 them yields an error, but unlike other errors they print as the marker rather

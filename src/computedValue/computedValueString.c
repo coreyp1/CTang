@@ -362,7 +362,20 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_cast(GTA_Computed_Value 
     return string->value->byte_length > 0 ? gta_computed_value_boolean_true : gta_computed_value_boolean_false;
   }
   if (type == &gta_computed_value_float_vtable) {
-    return (GTA_Computed_Value *)gta_computed_value_float_create(atof(string->value->buffer), context);
+    // strtod rather than atof, for the endptr. atof also has undefined
+    // behaviour when the value does not fit, where strtod is defined to
+    // return an infinity - which is what a float literal too large to
+    // represent already produces, so the two agree.
+    char * end = 0;
+    double parsed = strtod(string->value->buffer, &end);
+    if (end == string->value->buffer) {
+      // Nothing was consumed, so there was no number here at all. Returning 0
+      // made `"abc" as float` and `"0" as float` the same answer, with no way
+      // to tell them apart - the same collapse the range markers exist to
+      // undo.
+      return gta_computed_value_error_not_a_number;
+    }
+    return (GTA_Computed_Value *)gta_computed_value_float_create((GTA_Float)parsed, context);
   }
   if (type == &gta_computed_value_integer_vtable) {
     // strtoll rather than atoll. atoll's behaviour when the value does not fit
@@ -370,13 +383,17 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_cast(GTA_Computed_Value 
     // became 9223372036854775807, which is exactly the clamp these markers
     // exist to remove, and it was undefined behaviour into the bargain.
     //
-    // A string that is not a number at all still converts to 0. That is this
-    // cast's documented behaviour ("12abc" is 12, "abc" is 0) and a different
-    // question from the one asked here, which is only about values that do not
-    // fit.
+    // A leading number is still taken from a string that continues past it,
+    // so "12abc" is 12. But a string with no leading number at all is not 0:
+    // that made `"abc" as int` and `"0" as int` indistinguishable, which is
+    // the same collapse of two different situations into one plausible answer
+    // that the range markers exist to undo.
     errno = 0;
     char * end = 0;
     long long parsed = strtoll(string->value->buffer, &end, 10);
+    if (end == string->value->buffer) {
+      return gta_computed_value_error_not_a_number;
+    }
     if (errno == ERANGE) {
       return parsed > 0
         ? gta_computed_value_error_integer_too_large

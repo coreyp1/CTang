@@ -1986,12 +1986,24 @@ TEST(Cast, OutOfRangeStringToIntegerSaysSo) {
     TEST_PROGRAM_TEARDOWN();
   }
   {
-    // Ordinary conversions are untouched, including the documented rule that a
-    // string which is not a number is 0 rather than a marker. That is a
-    // different question - not out of range, not a number at all - and is left
-    // as it was.
-    TEST_PROGRAM_SETUP(R"(print("42" as int); print(","); print("12abc" as int); print(","); print("abc" as int);)");
-    ASSERT_STREQ(context->output->buffer, "42,12,0");
+    // The leading-number rule is untouched: a string that continues past its
+    // number still converts, and leading whitespace is still skipped.
+    TEST_PROGRAM_SETUP(R"(print("42" as int); print(","); print("12abc" as int); print(","); print("  7" as int);)");
+    ASSERT_STREQ(context->output->buffer, "42,12,7");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A string with no leading number is not 0. It used to be, which made it
+    // indistinguishable from the string "0" - two different situations giving
+    // one plausible answer, which is the collapse these markers undo.
+    TEST_PROGRAM_SETUP(R"(print("abc" as int); print(","); print("" as int); print(","); print("0" as int);)");
+    ASSERT_STREQ(context->output->buffer, "[NOT A NUMBER],[NOT A NUMBER],0");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The float cast answers the same way, and for the same reason.
+    TEST_PROGRAM_SETUP(R"(print("abc" as float); print(","); print("" as float); print(","); print("3.3" as float); print(","); print("12abc" as float);)");
+    ASSERT_STREQ(context->output->buffer, "[NOT A NUMBER],[NOT A NUMBER],3.3,12.");
     TEST_PROGRAM_TEARDOWN();
   }
 }
