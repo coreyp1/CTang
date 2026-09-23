@@ -366,12 +366,23 @@ GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * str
     ? string->grapheme_length
     : grapheme_start + grapheme_count;
 
-  // Determine the type of the substring by finding the first index whose range
-  // includes the start grapheme.
+  // Determine the type of the substring by finding the last segment that
+  // begins at or before the start grapheme - that is the segment the start
+  // grapheme falls inside.
+  //
+  // The comparison used to be `>=`, which is the test for a segment that
+  // begins at or after the start, and every segment satisfies it when the
+  // start is 0.  The loop therefore ran to the end of the list and left the
+  // *last* segment's type as the type of the whole substring.  A whole-string
+  // substring is what print() takes, so `!"<i>" + "<b>"` rendered as
+  // `<i><b>`: the untrusted half inherited the trusted tag of the half after
+  // it and reached the page unescaped.  It was only unreachable from the
+  // language because nothing but the (uncalled) simplifier built a
+  // multi-segment string.
   GTA_String_Type newStringType = GTA_UNICODE_STRING_TYPE_TRUSTED;
   size_t first_string_type_index_to_include = 0;
   size_t iterator = 0;
-  while ((iterator < string->string_type->count) && (GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[iterator]) >= grapheme_start)) {
+  while ((iterator < string->string_type->count) && (GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[iterator]) <= grapheme_start)) {
     newStringType = GTA_UC_GET_TYPE_FROM_TYPE_OFFSET_PAIR(string->string_type->data[iterator]);
     first_string_type_index_to_include = iterator;
     ++iterator;
@@ -383,10 +394,12 @@ GTA_Unicode_String * gta_unicode_string_substring(const GTA_Unicode_String * str
   }
 
   // Determine the last string type offset that is less than the last grapheme
-  // to be copied from the original string.
+  // to be copied from the original string.  `end_grapheme` is one past the
+  // last grapheme kept, so a segment beginning exactly there belongs to the
+  // text after the substring and is not included.
   size_t last_string_type_index_to_include = first_string_type_index_to_include;
   iterator = first_string_type_index_to_include;
-  while ((iterator < string->string_type->count) && (GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[iterator]) <= end_grapheme)) {
+  while ((iterator < string->string_type->count) && (GTA_UC_GET_OFFSET_FROM_TYPE_OFFSET_PAIR(string->string_type->data[iterator]) < end_grapheme)) {
     last_string_type_index_to_include = iterator;
     ++iterator;
   }

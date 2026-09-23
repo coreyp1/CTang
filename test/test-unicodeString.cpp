@@ -734,6 +734,108 @@ TEST(Render, Concatenated) {
 }
 
 
+TEST(Render, SubstringOfConcatenated) {
+  // gta_unicode_string_substring used to search for the segment containing the
+  // start grapheme with `offset >= grapheme_start`, which is the test for a
+  // segment beginning at or after the start.  Every segment passes it when the
+  // start is 0, so the loop ran off the end of the list and gave the whole
+  // substring the *last* segment's type.
+  //
+  // A whole-string substring is exactly what printing a string takes, so a
+  // trusted tail laundered an untrusted head: the first case below rendered as
+  // `<i><b>`, with the untrusted half reaching the output unescaped.
+  char trusted_source[] = "<b>";
+  char html_source[] = "<i>";
+
+  {
+    // Untrusted first: the head must still be escaped.
+    gcu_memory_reset_counts();
+    auto trusted = gta_unicode_string_create(trusted_source, strlen(trusted_source), GTA_UNICODE_STRING_TYPE_TRUSTED);
+    auto html = gta_unicode_string_create(html_source, strlen(html_source), GTA_UNICODE_STRING_TYPE_HTML);
+    ASSERT_TRUE(trusted);
+    ASSERT_TRUE(html);
+    auto joined = gta_unicode_string_concat(html, trusted);
+    ASSERT_TRUE(joined);
+    auto whole = gta_unicode_string_substring(joined, 0, joined->grapheme_length);
+    ASSERT_TRUE(whole);
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(whole);
+    ASSERT_TRUE(rendered.buffer);
+    EXPECT_EQ("&lt;i&gt;<b>", string{rendered.buffer});
+    gcu_free(rendered.buffer);
+    gta_unicode_string_destroy(whole);
+    gta_unicode_string_destroy(joined);
+    gta_unicode_string_destroy(html);
+    gta_unicode_string_destroy(trusted);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // Trusted first: the tail must still be escaped, and the head must not be.
+    gcu_memory_reset_counts();
+    auto trusted = gta_unicode_string_create(trusted_source, strlen(trusted_source), GTA_UNICODE_STRING_TYPE_TRUSTED);
+    auto html = gta_unicode_string_create(html_source, strlen(html_source), GTA_UNICODE_STRING_TYPE_HTML);
+    ASSERT_TRUE(trusted);
+    ASSERT_TRUE(html);
+    auto joined = gta_unicode_string_concat(trusted, html);
+    ASSERT_TRUE(joined);
+    auto whole = gta_unicode_string_substring(joined, 0, joined->grapheme_length);
+    ASSERT_TRUE(whole);
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(whole);
+    ASSERT_TRUE(rendered.buffer);
+    EXPECT_EQ("<b>&lt;i&gt;", string{rendered.buffer});
+    gcu_free(rendered.buffer);
+    gta_unicode_string_destroy(whole);
+    gta_unicode_string_destroy(joined);
+    gta_unicode_string_destroy(html);
+    gta_unicode_string_destroy(trusted);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // A substring that starts inside the second segment takes that segment's
+    // type, not the first segment's.
+    gcu_memory_reset_counts();
+    auto trusted = gta_unicode_string_create(trusted_source, strlen(trusted_source), GTA_UNICODE_STRING_TYPE_TRUSTED);
+    auto html = gta_unicode_string_create(html_source, strlen(html_source), GTA_UNICODE_STRING_TYPE_HTML);
+    ASSERT_TRUE(trusted);
+    ASSERT_TRUE(html);
+    auto joined = gta_unicode_string_concat(trusted, html);
+    ASSERT_TRUE(joined);
+    auto tail = gta_unicode_string_substring(joined, 3, 3);
+    ASSERT_TRUE(tail);
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(tail);
+    ASSERT_TRUE(rendered.buffer);
+    EXPECT_EQ("&lt;i&gt;", string{rendered.buffer});
+    gcu_free(rendered.buffer);
+    gta_unicode_string_destroy(tail);
+    gta_unicode_string_destroy(joined);
+    gta_unicode_string_destroy(html);
+    gta_unicode_string_destroy(trusted);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // A substring that straddles the boundary keeps both segments, each
+    // encoded its own way.
+    gcu_memory_reset_counts();
+    auto trusted = gta_unicode_string_create(trusted_source, strlen(trusted_source), GTA_UNICODE_STRING_TYPE_TRUSTED);
+    auto html = gta_unicode_string_create(html_source, strlen(html_source), GTA_UNICODE_STRING_TYPE_HTML);
+    ASSERT_TRUE(trusted);
+    ASSERT_TRUE(html);
+    auto joined = gta_unicode_string_concat(trusted, html);
+    ASSERT_TRUE(joined);
+    auto middle = gta_unicode_string_substring(joined, 1, 4);
+    ASSERT_TRUE(middle);
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(middle);
+    ASSERT_TRUE(rendered.buffer);
+    EXPECT_EQ("b>&lt;i", string{rendered.buffer});
+    gcu_free(rendered.buffer);
+    gta_unicode_string_destroy(middle);
+    gta_unicode_string_destroy(joined);
+    gta_unicode_string_destroy(html);
+    gta_unicode_string_destroy(trusted);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   int result = RUN_ALL_TESTS();
