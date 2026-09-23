@@ -150,8 +150,103 @@ endif
 PKG_CONFIG_LOOKUP_PATH := $(if $(PKG_CONFIG_PATH_ENV),$(PKG_CONFIG_PATH_ENV):)$(PKG_CONFIG_PATH)
 
 
+# The optimization level is the one thing that distinguishes the two builds'
+# compile flags. `release` is what gets installed and what anything linking
+# against this library actually runs, so it is compiled for speed; `debug` is
+# compiled for stepping through. -g stays in both, because a release build that
+# cannot be read in a debugger is a release build nobody can diagnose, and a JIT
+# is worth having readable backtraces for; the symbols cost only file size, not
+# run time, since -g emits DWARF rather than different code.
+#
+# BUILD=debug used to change only the artifact's *name* - it appended -debug to
+# BRANCH and VERSION_STRING and nothing else - so `make BUILD=debug` produced a
+# -O2 binary wearing a debug filename, which is the one build you cannot step
+# through.
+#
+# Where the other -O levels in this file come from, since last-one-wins only
+# helps if the flags actually arrive in that order:
+#   - `make coverage` appends --coverage -O0 through EXTRA_CFLAGS, which is at
+#     the end of CFLAGS, so its -O0 wins.
+#   - The fuzz build does not use CFLAGS at all; FUZZ_LIB_FLAGS carries its own
+#     -O1.
+#   - The sanitizer build is the exception worth knowing about: SAN_FLAGS has no
+#     -O of its own, and SAN_CFLAGS is $(CFLAGS) $(SAN_FLAGS), so `make
+#     test-asan` runs at whatever OPT_CFLAGS says rather than at a level of its
+#     own. That is why it follows BUILD along with everything else. Measured:
+#
+#       62 C   translation units at -O2   (the library, inheriting release)
+#        7 C++ translation units at -O1   (the test binaries)
+#
+#     Seven of the nine libraries in the suite are shaped this way, so the
+#     sanitizer gate's fidelity moves with the release level rather than being
+#     pinned. Whether that is right - run the gate at what ships, or pin it at
+#     -O1 so the gate does not change under you - is a suite-wide question and
+#     deliberately NOT settled here. Left as it is, and measured, so that
+#     whatever is decided is decided once rather than nine times.
+#
+#     Those figures are read out of the ARTIFACTS, not parsed out of `make -n`.
+#     gcc records the command line in DWARF by default (-grecord-gcc-switches),
+#     so the flags an object was actually built with are in the object:
+#
+#       readelf --debug-dump=info <file> | grep DW_AT_producer
+#
+#     and the level is the last -O in that string. The 7 test units have no .o
+#     of their own - each test binary is compiled and linked in one step - so
+#     for those, read the executable and keep the C++ compile units. Exclude
+#     gcc's own libsanitizer CUs, which are in there too (asan_preinit.cpp and
+#     friends, at -O2) and are not ours.
+#
+#     Four successive attempts to get this number by parsing `make -n` output
+#     were each wrong in a different direction, so the text is not the
+#     instrument. Recorded so nobody repeats them: counting every -O on a line
+#     rather than the last invents compilations, since only the last is obeyed.
+#     Selecting lines by ` -c ` drops every unit compiled and linked in one
+#     step - here all 7 C++ units - and reports 62 as though it were the whole
+#     gate, while the self-check still sums, because the dropped lines are
+#     missing from both sides. Selecting instead on the line naming a source
+#     over-matches in other libraries of the suite, roughly doubling their
+#     counts, for a reason nobody has yet traced; it happens to be right here,
+#     which is not a recommendation.
+ifeq ($(BUILD),debug)
+OPT_CFLAGS := -O0
+OPT_CXXFLAGS := -O0
+else
+# -O2 rather than -O3: measured across five workloads and both execution paths,
+# -O3 came out slower than -O2, and -O2 captured essentially the whole win over
+# -O0 (6-9%).
+#
+# Treat that as a measurement of today's ctang rather than a finding about -O3.
+# The library still has untraced inefficiencies, and a -O3-is-slower result on a
+# codebase with unexplained overhead may be describing the overhead - -O3's
+# extra inlining is exactly the kind of thing that could be interacting with it.
+# Re-measure once those are traced; until then -O2 stands because it is the
+# suite floor, not because -O3 was ruled out.
+#
+# It is tempting to discount that span on the grounds that a share of ctang's
+# run time is JIT-emitted machine code no -O level recompiles. That reasoning
+# was pre-registered as a prediction when the levels were measured, and it was
+# wrong: fib(30) gained 20% under the JIT and 24% under bytecode, essentially
+# the same. perf says why - only 9.85% of a JIT-executed fib(32) is in emitted
+# instructions, while 48% is ctang's own C runtime and 35% is libc, because the
+# JIT emits a call into that runtime for essentially every arithmetic operation
+# and comparison. The JIT is native code calling C per operation, not a program
+# running natively, so -O reaches almost all of it.
+#
+# What the figure really carries is the allocator: a third of fib's time is
+# malloc, one computed value heap-allocated per integer result. That is the
+# untraced inefficiency above, with a number on it - and it is a far better
+# reason to distrust a -O3 comparison than the JIT is, since allocation
+# behaviour is exactly what extra inlining perturbs. Fixing value reuse is
+# worth more than any -O level here.
+OPT_CFLAGS := -O2
+# The C++ here is test translation units only - no shipped code - so this is a
+# build-time-versus-test-run-time trade, not the policy's subject.
+OPT_CXXFLAGS := -O1
+endif
+
+
 CXX := g++
-CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g $(EXTRA_CXXFLAGS)
+CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 $(OPT_CXXFLAGS) -g $(EXTRA_CXXFLAGS)
 CC := cc
 # cutil, found through pkg-config. The name carries the branch, which is how a
 # consumer picks a version; CUTIL_PC is overridable so this library can be
@@ -194,11 +289,7 @@ endif
 endif
 ICU_CFLAGS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --cflags icu-io icu-i18n icu-uc)
 ICU_LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs icu-io icu-i18n icu-uc)
-# -O2 rather than -O3: measured across five workloads and both execution paths,
-# -O3 came out slower than -O2, and -O2 captures essentially the whole win over
-# -O0 (6-9%). -g costs nothing at run time - it emits DWARF, not different code
-# - and a JIT is worth having readable backtraces for.
-CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O2 -g $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(EXTRA_CFLAGS)
+CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 $(OPT_CFLAGS) -g $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(EXTRA_CFLAGS)
 
 # The shipped library exports its public API and nothing else. Tests reach the
 # internals by linking the static archive, which a static link can do even for
