@@ -56,10 +56,19 @@ extern "C" {
  * not exported at all: it cannot collide with another version of this library
  * and it does not appear in the dynamic symbol table.  See CONVENTIONS.md
  * section 4.
+ *
+ * On Windows a consumer linking the static archive rather than the DLL must
+ * define GHOTIIO_TANG_STATIC.  Without it every declaration is dllimport, the
+ * compiler emits references to `__imp_` thunks, and the archive - which
+ * defines the functions themselves, not import thunks - satisfies none of
+ * them.  The command-line tool and the test suite link the archive, so the
+ * Makefile defines it for them.
  */
 #if defined(_WIN32) || defined(__CYGWIN__)
 #ifdef GHOTIIO_TANG_BUILD
 #define GTA_API __declspec(dllexport)
+#elif defined(GHOTIIO_TANG_STATIC)
+#define GTA_API
 #else
 #define GTA_API __declspec(dllimport)
 #endif
@@ -78,6 +87,8 @@ extern "C" {
 #if defined(_WIN32) || defined(__CYGWIN__)
 #ifdef GHOTIIO_TANG_BUILD
 #define GTA_API_DATA __declspec(dllexport)
+#elif defined(GHOTIIO_TANG_STATIC)
+#define GTA_API_DATA
 #else
 #define GTA_API_DATA __declspec(dllimport)
 #endif
