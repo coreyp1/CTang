@@ -711,6 +711,10 @@ SAN_APP_DIR := $(SAN_BUILD_DIR)/apps
 SAN_CFLAGS := $(CFLAGS) $(SAN_FLAGS)
 SAN_CXXFLAGS := $(CXXFLAGS) $(SAN_FLAGS)
 SAN_LDFLAGS := $(LDFLAGS) $(SAN_FLAGS)
+# The mirror of LIB_CFLAGS. It exists so that the stamp can record these two
+# flags: spelled inline in the recipes, they were text no variable held, and a
+# stamp cannot record what it cannot name.
+SAN_LIB_CFLAGS := $(SAN_CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD
 
 SAN_LIBOBJECTS := $(patsubst $(OBJ_DIR)/%,$(SAN_OBJ_DIR)/%,$(LIBOBJECTS))
 SAN_STATIC_TARGET := $(SAN_APP_DIR)/$(STATIC_TARGET)
@@ -737,15 +741,15 @@ SAN_RUN_ENV := LD_LIBRARY_PATH="$(SAN_APP_DIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
 
 $(SAN_OBJ_DIR)/%.o: src/%.c $(SAN_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
-	$(CC) $(SAN_CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
+	$(CC) $(SAN_LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
 
 $(SAN_OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c $(SAN_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
-	$(CC) $(SAN_CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
+	$(CC) $(SAN_LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
 
 $(SAN_OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c $(SAN_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
-	$(CC) $(SAN_CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ -Wno-unused-function
+	$(CC) $(SAN_LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ -Wno-unused-function
 
 $(SAN_STATIC_TARGET): $(SAN_LIBOBJECTS)
 	@printf "\n### Archiving instrumented library ###\n"
@@ -859,6 +863,13 @@ FUZZ_SAN := -fsanitize=address,$(SAN_CHECKS) -fno-sanitize-recover=$(SAN_CHECKS)
             -fno-omit-frame-pointer -g -O1
 FUZZ_LIB_FLAGS := $(FUZZ_SAN) -fsanitize=fuzzer-no-link
 FUZZ_BIN_FLAGS := $(FUZZ_SAN) -fsanitize=fuzzer
+# As with SAN_LIB_CFLAGS: everything the fuzz recipes actually pass, in one
+# variable, so that the stamp records the whole command and not a prefix of it.
+# ICU_CFLAGS and CUTIL_CFLAGS matter most here - they come from pkg-config, so
+# they change when a dependency is reinstalled rather than when anyone edits
+# this file, and the fuzz tree is the one that runs longest against them.
+FUZZ_LIB_CFLAGS := $(FUZZ_LIB_FLAGS) -std=c17 -w -DGHOTIIO_TANG_BUILD $(ICU_CFLAGS) $(CUTIL_CFLAGS)
+FUZZ_BIN_CFLAGS := $(FUZZ_BIN_FLAGS) -std=c17 -w $(ICU_CFLAGS) $(CUTIL_CFLAGS)
 
 FUZZ_DIR := $(BUILD_DIR)-fuzz
 FUZZ_OBJ_DIR := $(FUZZ_DIR)/objects
@@ -897,15 +908,15 @@ endif
 # several of them in the generated parser.
 $(FUZZ_OBJ_DIR)/%.o: src/%.c $(FUZZ_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
-	@$(FUZZ_CC) $(FUZZ_LIB_FLAGS) -std=c17 -w -DGHOTIIO_TANG_BUILD $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
+	@$(FUZZ_CC) $(FUZZ_LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
 
 $(FUZZ_OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c $(FUZZ_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
-	@$(FUZZ_CC) $(FUZZ_LIB_FLAGS) -std=c17 -w -DGHOTIIO_TANG_BUILD $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
+	@$(FUZZ_CC) $(FUZZ_LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
 
 $(FUZZ_OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c $(FUZZ_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
-	@$(FUZZ_CC) $(FUZZ_LIB_FLAGS) -std=c17 -w -DGHOTIIO_TANG_BUILD $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
+	@$(FUZZ_CC) $(FUZZ_LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
 
 # $1 = harness basename, $2 = target suffix
 define fuzz-rule
@@ -919,7 +930,7 @@ $$(FUZZ_APP_DIR)/$1: test/fuzz/$1.c $$(FUZZ_OBJECTS)
 	fi
 	@mkdir -p $$(@D) $$(FUZZ_CORPUS)/$2
 	@printf "\n### Building $1 ###\n"
-	$$(FUZZ_CC) $$(FUZZ_BIN_FLAGS) -std=c17 -w $$(ICU_CFLAGS) $$(CUTIL_CFLAGS) $$(INCLUDE) \
+	$$(FUZZ_CC) $$(FUZZ_BIN_CFLAGS) $$(INCLUDE) \
 		-o $$@ $$< $$(FUZZ_OBJECTS) $$(ICU_LIBS) $$(CUTIL_LIBS) -lstdc++ -lm $$(FUZZ_RPATH)
 
 # env -u LD_PRELOAD for the same reason the sanitizer target does it: desktop
@@ -1367,19 +1378,33 @@ help: ## Display this help
 # definition has an empty target: not an error, just a rule that silently does
 # not exist. And the first target in a makefile is the default goal, so a stamp
 # rule above `all:` makes a bare `make` build the stamp and nothing else.
+#
+# Each stamp must name every variable its guarded recipes expand, the compiler
+# included - a stamp that records a variable one derivation upstream of the
+# real one passes every test you would think to run. Measured here before the
+# fix: `make all CC='cc -O1'` rebuilt 0 of 62 objects and left every one of
+# them recording -O2, because $(CC) appeared in every compile recipe and in no
+# stamp. The same held for LIB_CFLAGS against CFLAGS, and for the fuzz tree's
+# ICU_CFLAGS and CUTIL_CFLAGS, which come from pkg-config and so change when a
+# dependency is reinstalled rather than when this file is edited.
+#
+# The check is mechanical: for each recipe a stamp guards, subtract the
+# stamp's variables from the recipe's. Anything left is a flag change that
+# rebuilds nothing, which is invisible - it looks exactly like a tree that was
+# already current.
 .PHONY: force-flags
 
 $(FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(CFLAGS) $(CXXFLAGS) $(LDFLAGS) $(INCLUDE)' > $@.new
+	@printf '%s\n' '$(CC) $(CXX) $(LIB_CFLAGS) $(CXXFLAGS) $(LDFLAGS) $(TESTFLAGS) $(INCLUDE) $(OS_SPECIFIC_CXX_FLAGS)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
 
 $(FUZZ_FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(FUZZ_SAN) $(FUZZ_LIB_FLAGS) $(FUZZ_BIN_FLAGS) $(INCLUDE)' > $@.new
+	@printf '%s\n' '$(FUZZ_CC) $(FUZZ_LIB_CFLAGS) $(FUZZ_BIN_CFLAGS) $(INCLUDE)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
 
 $(SAN_FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(SAN_CFLAGS) $(SAN_CXXFLAGS) $(SAN_LDFLAGS) $(INCLUDE)' > $@.new
+	@printf '%s\n' '$(CC) $(CXX) $(SAN_LIB_CFLAGS) $(SAN_CXXFLAGS) $(SAN_LDFLAGS) $(TESTFLAGS) $(INCLUDE)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
