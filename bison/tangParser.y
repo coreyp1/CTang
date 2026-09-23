@@ -242,6 +242,12 @@ typedef struct GTA_Parser_Date {
 #include <ghoti.io/tang/ast/astNodeAll.h>
 
 static GTA_Parser_Error ErrorOutOfMemory = "Out of memory/Memory allocation error";
+
+// Every value *parseError can hold must outlive the parse. These literals do.
+// bison's own message does not - yymsg points into a buffer freed when yyparse
+// returns - so GTA_Parser_error stores this instead and puts the detailed
+// message, which is copied, into the parse-error node.
+static GTA_Parser_Error ErrorSyntax = "Syntax error";
 // static GTA_Parser_Error ErrorOctalOutOfBounds = true;
 // static GTA_Parser_Error ErrorStringError = true;
 // static GTA_Parser_Error ErrorUnexpectedScriptEnd = true;
@@ -1592,9 +1598,24 @@ expression
 
 // https://www.gnu.org/software/bison/manual/bison.html#YYERROR
 void GTA_Parser_error(GTA_PARSER_LTYPE * yylloc, GTA_MAYBE_UNUSED(yyscan_t * scanner), GTA_Ast_Node * * ast, GTA_Parser_Error * parseError, const char * yymsg) {
-  *parseError = yymsg;
+  // A stable literal, not yymsg: see ErrorSyntax above. The detailed message
+  // goes into the node below, which copies it.
+  *parseError = ErrorSyntax;
+
+  // Always record the failure as a node, not only when a partial AST happens
+  // to exist. Most syntax errors are caught before the start rule has assigned
+  // anything, so the old `if (*ast)` meant no node was built, the parse
+  // returned null - which already means "there was nothing to parse", an empty
+  // source being valid - and gta_program_create turned that into an empty
+  // program. A script with a syntax error therefore compiled, ran, printed
+  // nothing and reported success.
+  //
+  // The node copies the message, which matters: yymsg points into a buffer
+  // bison frees when yyparse returns, so it cannot outlive the parse. That is
+  // also why *parseError above is only ever compared against null by the
+  // rules, and must not be read by a caller.
   if (*ast) {
     gta_ast_node_destroy(*ast);
-    *ast = (GTA_Ast_Node *)gta_ast_node_parse_error_create(yymsg, *yylloc);
   }
+  *ast = (GTA_Ast_Node *)gta_ast_node_parse_error_create(yymsg, *yylloc);
 }

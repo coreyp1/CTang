@@ -904,9 +904,12 @@ TEST(Parse, InvalidUtf8InAStringLiteral) {
   {
     gcu_memory_reset_counts();
     GTA_Ast_Node * ast = gta_tang_parse_script("\"\xff\"");
-    ASSERT_EQ(ast, nullptr);
-    ASSERT_EQ(0, gta_tang_node_count(ast));
-    if (ast) { gta_ast_node_destroy(ast); }
+    // Rejection is a parse-error node, not null. Null means "there was
+    // nothing to parse" - an empty source is valid - and collapsing the two
+    // is what let a syntax error compile into an empty program.
+    ASSERT_NE(ast, nullptr);
+    ASSERT_TRUE(GTA_AST_IS_PARSE_ERROR(ast));
+    gta_ast_node_destroy(ast);
     ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
   }
   {
@@ -915,9 +918,9 @@ TEST(Parse, InvalidUtf8InAStringLiteral) {
     // started clearing $$ correctly it received null and aborted on an assert.
     gcu_memory_reset_counts();
     GTA_Ast_Node * ast = gta_tang_parse_script("\"\xff\"<");
-    ASSERT_EQ(ast, nullptr);
-    ASSERT_EQ(0, gta_tang_node_count(ast));
-    if (ast) { gta_ast_node_destroy(ast); }
+    ASSERT_NE(ast, nullptr);
+    ASSERT_TRUE(GTA_AST_IS_PARSE_ERROR(ast));
+    gta_ast_node_destroy(ast);
     ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
   }
   {
@@ -925,9 +928,10 @@ TEST(Parse, InvalidUtf8InAStringLiteral) {
     for (const char * src : {"\"\x80\"", "\"\xc3\"", "\"\xf0\x9f\""}) {
       gcu_memory_reset_counts();
       GTA_Ast_Node * ast = gta_tang_parse_script(src);
-      ASSERT_EQ(ast, nullptr);
-      if (ast) { gta_ast_node_destroy(ast); }
-      ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+      ASSERT_NE(ast, nullptr) << src;
+      ASSERT_TRUE(GTA_AST_IS_PARSE_ERROR(ast)) << src;
+      gta_ast_node_destroy(ast);
+      ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << src;
     }
   }
   {

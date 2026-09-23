@@ -63,6 +63,31 @@ GTA_Ast_Node * gta_tang_primary_parse(const char * source, bool is_template) {
 
   gta_flex_delete_buffer(state, scanner);
   gta_flexlex_destroy(scanner);
+
+  // A failed parse must not come back as null. Null already means "there was
+  // nothing to parse", which an empty source legitimately is, and
+  // gta_program_create turns that into an empty program - so a script with a
+  // syntax error used to compile, run, print nothing and report success.
+  //
+  // Two things can fail a parse and only one of them goes through
+  // GTA_Parser_error: a rule action that cannot allocate, or that is handed
+  // input it must reject such as invalid UTF-8, sets parseError itself and
+  // never reaches bison's error handler. That is the case being caught here.
+  if (parseError) {
+    if (ast && !GTA_AST_IS_PARSE_ERROR(ast)) {
+      gta_ast_node_destroy(ast);
+      ast = 0;
+    }
+    if (!ast) {
+      ast = (GTA_Ast_Node *)gta_ast_node_parse_error_create(parseError,
+        (GTA_PARSER_LTYPE) {
+          .first_line = 0,
+          .first_column = 0,
+          .last_line = 0,
+          .last_column = 0,
+        });
+    }
+  }
   return ast;
 }
 
