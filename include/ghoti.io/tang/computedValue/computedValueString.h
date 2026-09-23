@@ -155,6 +155,25 @@ GTA_API char * GTA_CALL gta_computed_value_string_to_string(GTA_Computed_Value *
 GTA_API GTA_NO_DISCARD GTA_Unicode_String * GTA_CALL gta_computed_value_string_print(GTA_Computed_Value * self, GTA_Execution_Context * context);
 
 /**
+ * Concatenates a string with another value.
+ *
+ * Calls the `add` method of the virtual table.
+ *
+ * The other value is converted to text exactly as printing it would, so
+ * `"a" + b` and printing `"a"` followed by `b` produce the same bytes.  A
+ * value that cannot be printed cannot be concatenated, and an error operand
+ * is returned as the result rather than being rendered into the text.
+ *
+ * @param self The string.
+ * @param other The other operand.
+ * @param self_is_lhs Whether `self` is the left-hand side of the operation.
+ * @param is_assignment Whether the operation is an assignment.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, bool is_assignment, GTA_Execution_Context * context);
+
+/**
  * Casts a computed value to a different type.
  *
  * Calls the `cast` method of the virtual table.

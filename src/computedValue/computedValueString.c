@@ -155,7 +155,7 @@ GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .to_string = gta_computed_value_string_to_string,
   .print = gta_computed_value_string_print,
   .assign_index = gta_computed_value_assign_index_not_supported,
-  .add = gta_computed_value_add_not_implemented,
+  .add = gta_computed_value_string_add,
   .subtract = gta_computed_value_subtract_not_supported,
   .multiply = gta_computed_value_multiply_not_supported,
   .divide = gta_computed_value_divide_not_supported,
@@ -344,6 +344,69 @@ GTA_Unicode_String * GTA_CALL gta_computed_value_string_print(GTA_Computed_Value
 
   assert(string->value);
   return gta_unicode_string_substring(string->value, 0, string->value->grapheme_length);
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_string_add(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(bool is_assignment), GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(self));
+  GTA_Computed_Value_String * string = (GTA_Computed_Value_String *)self;
+  assert(string->value);
+  assert(other);
+
+  // An error is the answer, not something to paste into the text.  Rendering
+  // it would turn it into an ordinary string, so the rest of the expression
+  // would succeed and the error would reach the page as prose that nothing
+  // downstream can tell apart from output the author meant.
+  if (GTA_COMPUTED_VALUE_IS_ERROR(other)) {
+    return other;
+  }
+
+  // Concatenation is the same act as printing, so the other operand is
+  // converted the way printing converts it - which also means a value that
+  // cannot be printed (null, a function, a library) cannot be concatenated
+  // either, and says so instead of contributing nothing.
+  const GTA_Unicode_String * other_value;
+  GTA_Unicode_String * printed = NULL;
+  if (GTA_COMPUTED_VALUE_IS_STRING(other)) {
+    // Taken directly rather than through print(), which would copy it only to
+    // have the copy destroyed below.  The segment types are what concat reads,
+    // and they are on the value itself.
+    other_value = ((GTA_Computed_Value_String *)other)->value;
+    assert(other_value);
+  }
+  else {
+    assert(other->vtable);
+    if (other->vtable->print == gta_computed_value_print_not_supported) {
+      return gta_computed_value_error_not_supported;
+    }
+    printed = other->vtable->print(other, context);
+    if (!printed) {
+      return gta_computed_value_error_out_of_memory;
+    }
+    other_value = printed;
+  }
+
+  // gta_unicode_string_concat carries each operand's segment types across, so
+  // a trusted string joined to an untrusted one yields a result whose halves
+  // are still encoded separately.  That is the whole reason the operands are
+  // not flattened to bytes first.
+  GTA_Unicode_String * concatenated = self_is_lhs
+    ? gta_unicode_string_concat(string->value, other_value)
+    : gta_unicode_string_concat(other_value, string->value);
+  if (printed) {
+    gta_unicode_string_destroy(printed);
+  }
+  if (!concatenated) {
+    return gta_computed_value_error_out_of_memory;
+  }
+
+  GTA_Computed_Value * result = (GTA_Computed_Value *)gta_computed_value_string_create(concatenated, true, context);
+  if (!result) {
+    gta_unicode_string_destroy(concatenated);
+    return gta_computed_value_error_out_of_memory;
+  }
+  return result;
 }
 
 

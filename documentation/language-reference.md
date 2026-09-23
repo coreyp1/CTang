@@ -251,6 +251,7 @@ which is an error.
 | integer, integer | integer. `/` truncates toward zero (`-10 / 3` is `-3`); `%` takes the sign of the dividend (`-10 % 3` is `-1`, `42 % -10` is `2`) |
 | integer, float or float, float | float, in either order |
 | array `+` array | a new array, the concatenation |
+| string `+` anything printable | a new string, the concatenation (4.2.1) |
 | anything else | error `Not supported` |
 
 Division or modulo by zero, integer or float, is an error (`Divide by zero`,
@@ -277,8 +278,42 @@ quotient and would trap on it.
 Float arithmetic is unaffected: it has infinities and follows the usual
 floating-point rules.
 
-`+` on strings is **not** concatenation; it is currently `Not implemented`
-(13.2). This is the largest open decision in section 14.
+#### 4.2.1 `+` on strings
+
+`+` concatenates when either operand is a string. The other operand is
+converted to text **exactly as printing it would convert it**, so `"a" + b`
+and `print("a"); print(b);` produce the same bytes:
+
+```
+"ab" + "cd"       is "abcd"
+"count: " + 5     is "count: 5"
+5 + " apples"     is "5 apples"
+"b=" + true       is "b=true"
+"a=" + [1, 2]     is "a=[1, 2]"
+```
+
+Two consequences follow from tying it to printing:
+
+- A value that cannot be printed cannot be concatenated. `null`, a function
+  and a library are errors (`Not supported`) rather than contributing nothing
+  to the text.
+- **An error operand is the result**, not text inside it. `"big: " +
+  (9223372036854775807 + 1)` is `[INTEGER TOO LARGE]`, not the string
+  `"big: [INTEGER TOO LARGE]"`. Concatenating the marker's text would make the
+  result an ordinary string, and everything after it would succeed on prose
+  that nothing downstream can tell apart from output the author meant.
+
+The result is a **multi-segment string, each segment keeping its own tag**
+(section 8), which is why concatenation joins `GTA_Unicode_String`s rather
+than bytes. `"<b>" + !"<i>"` renders as `<b>&lt;i&gt;`: the trusted half is
+untouched and the untrusted half is escaped, exactly as if the two had been
+printed one after the other. Collapsing the result to a single tag would
+either emit untrusted input unescaped or double-escape the markup around it.
+Slicing the join keeps the boundary where it was.
+
+Note that `+` is the only meaning available, so the operands' runtime types
+decide whether an expression adds or concatenates: `a + 1` is `6` when `a` is
+the integer `5` and `"51"` when `a` is the string `"5"`.
 
 ### 4.3 Comparison: `<` `<=` `>` `>=`
 
@@ -670,7 +705,8 @@ The `tang` command-line tool and `GTA_PROGRAM_FLAG_PRINT_TO_STDOUT` write the
 **raw** form (13.19).
 
 Tagging is per segment, so `print("<b>"); print(!"<i>")` renders as
-`<b>&lt;i&gt;`.
+`<b>&lt;i&gt;` - and so does `print("<b>" + !"<i>")`, because concatenation
+joins the segment lists rather than the bytes (4.2.1).
 
 ### 8.3 What this buys
 
@@ -793,7 +829,7 @@ The errors:
 | `Divide by zero` | `/` with a zero divisor |
 | `Modulo by zero` | `%` with a zero divisor |
 | `Not supported` | an operation the operand types do not define: `"a" + 1`, `1 < 2 < 3`, `%` on floats, indexing `null` |
-| `Not implemented` | an operation that is defined but not yet written (13.2, 13.3, 13.7) |
+| `Not implemented` | an operation that is defined but not yet written (13.3, 13.7) |
 | `Invalid index` | a non-integer array or string index; a slice step of 0; an out-of-range negative index in assignment |
 | `Map key is not a string` | indexing a map with a non-string |
 | `Invalid function call` | calling something that is not a function |
@@ -932,8 +968,19 @@ number and says so, because the text above points at these by number.
    so `NULL` means only that there was nothing to parse.
    Fix: treat `parseError != NULL` as failure regardless of the AST.
 
-2. **String concatenation is not implemented.** `"ab" + "cd"` is
-   `Not implemented`. So is `"a" + 1`, which is `Not supported`.
+2. **Fixed.** String concatenation was not implemented at run time: `"ab" +
+   "cd"` was `Not implemented` and `"a" + 1` was `Not supported`. The AST
+   simplifier folded string `+` with `gta_unicode_string_concat` all along, so
+   a folded program and an executed one disagreed about the same source. `+`
+   now concatenates whenever either operand is a string (4.2.1).
+
+   Fixing it made a second defect reachable, since nothing else built a
+   multi-segment string: `gta_unicode_string_substring` searched for the
+   segment containing the start grapheme with `offset >= grapheme_start`,
+   which every segment satisfies when the start is 0, so a whole-string
+   substring - which is what printing takes - was given the *last* segment's
+   type. A trusted tail laundered an untrusted head, and `!"<i>" + "<b>"`
+   would have reached the output as `<i><b>`, unescaped.
 
 3. **Equality and ordering are not implemented for strings, booleans or
    null.** `"a" == "a"`, `true == true`, `null == null`, `"a" < "b"` all
@@ -1028,13 +1075,12 @@ number and says so, because the text above points at these by number.
 Things this document deliberately does not decide, because they are choices
 rather than defects. Each needs a decision, then a test, then code.
 
-- **String concatenation.** `+`, following most of the family; or a
-  dedicated operator, so that `"1" + 1` cannot mean two things. Whatever is
-  chosen has to say what the *encoding* of the result is when the operands
-  differ - `"<b>" + !"x"` - and the answer that keeps the guarantees of
-  section 8 is that the result is a multi-segment string and each segment
-  keeps its own tag, exactly as the output buffer does. The infrastructure
-  for that exists (`gta_unicode_string_concat`).
+- ~~**String concatenation.**~~ **Decided:** `+`, the spelling a template
+  author reaches for first, rather than a dedicated operator. The cost is
+  that the operands' runtime types decide whether an expression adds or
+  concatenates, which the author cannot see at the point of use. The result
+  is a multi-segment string with each segment keeping its own tag, which is
+  the only answer that keeps the guarantees of section 8. See 4.2.1.
 - **Equality across types.** Strict (`"3" == 3` is false) or coercing? This
   document assumes strict, because a template language should not have
   PHP's `==`.

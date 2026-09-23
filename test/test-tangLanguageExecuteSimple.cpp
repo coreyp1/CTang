@@ -3140,6 +3140,144 @@ TEST(Print, Map) {
   }
 }
 
+TEST(Concatenate, Strings) {
+  // `+` on two strings was `Not implemented` at run time while the AST
+  // simplifier already folded it with gta_unicode_string_concat, so a
+  // constant-folded program and an executed one disagreed about the same
+  // source.
+  {
+    TEST_PROGRAM_SETUP(R"(print("ab" + "cd");)");
+    ASSERT_STREQ(context->output->buffer, "abcd");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Through variables, so nothing can be folded on the way.
+    TEST_PROGRAM_SETUP(R"(a = "ab"; b = "cd"; print(a + b);)");
+    ASSERT_STREQ(context->output->buffer, "abcd");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Left-associative chains, and the empty string as either operand.
+    TEST_PROGRAM_SETUP(R"(print("a" + "b" + "c"); print(","); print("" + "x"); print(","); print("x" + "");)");
+    ASSERT_STREQ(context->output->buffer, "abc,x,x");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
+TEST(Concatenate, NonStrings) {
+  // The other operand is converted exactly as printing it would convert it,
+  // so `"a" + b` and `print("a"); print(b);` agree by construction.
+  {
+    TEST_PROGRAM_SETUP(R"(print("count: " + 5);)");
+    ASSERT_STREQ(context->output->buffer, "count: 5");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The string on the right. The integer vtable declines a string operand,
+    // and the dispatcher retries the other way round, so this exercises the
+    // self_is_lhs == false path and proves the operands are not swapped.
+    TEST_PROGRAM_SETUP(R"(print(5 + " apples");)");
+    ASSERT_STREQ(context->output->buffer, "5 apples");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    TEST_PROGRAM_SETUP(R"(print("pi=" + 3.5); print(","); print("b=" + true); print(","); print("a=" + [1, 2]);)");
+    ASSERT_STREQ(context->output->buffer, "pi=3.5,b=true,a=[1, 2]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Identical to printing the two pieces in sequence.
+    TEST_PROGRAM_SETUP(R"(print("n=" + 7); print("|"); print("n="); print(7);)");
+    ASSERT_STREQ(context->output->buffer, "n=7|n=7");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
+TEST(Concatenate, KeepsEachHalfsEncoding) {
+  // The reason concatenation goes through GTA_Unicode_String rather than bytes:
+  // the result is multi-segment and each segment keeps its own tag, so a
+  // trusted literal joined to an untrusted one is still escaped on exactly the
+  // untrusted half. Collapsing to one tag would either emit user input
+  // unescaped or double-escape the markup around it.
+  //
+  // context->output->buffer is the raw buffer, so the check has to render.
+  {
+    TEST_PROGRAM_SETUP(R"(print("<b>" + !"<i>");)");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "<b>&lt;i&gt;");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The untrusted half first: it must not inherit the trusted tag of the
+    // half after it.
+    TEST_PROGRAM_SETUP(R"(print(!"<i>" + "<b>");)");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "&lt;i&gt;<b>");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Concatenating is the same as printing the pieces one at a time.
+    TEST_PROGRAM_SETUP(R"(print("<b>"); print(!"<i>");)");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "<b>&lt;i&gt;");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // And a slice across the join keeps the boundary where it was.
+    TEST_PROGRAM_SETUP(R"(print(("<x>" + !"<i>")[1:5]);)");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "x>&lt;i");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
+TEST(Concatenate, ErrorsAndUnprintableValues) {
+  {
+    // An error is the answer, not something to paste into the text. Rendering
+    // it would make the result an ordinary string, and everything downstream
+    // would then succeed on prose that nothing can tell apart from output the
+    // author meant.
+    TEST_PROGRAM_SETUP(R"("big: " + (9223372036854775807 + 1);)");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_integer_too_large);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The error on the left reaches the same place by the reversed call.
+    TEST_PROGRAM_SETUP(R"((9223372036854775807 + 1) + " big";)");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_integer_too_large);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Printing the whole expression therefore shows the error rather than a
+    // sentence with the error's text embedded in it.
+    TEST_PROGRAM_SETUP(R"(print("big: " + (9223372036854775807 + 1));)");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A value that cannot be printed cannot be concatenated either, and says
+    // so rather than contributing nothing to the text.
+    TEST_PROGRAM_SETUP(R"("x" + null;)");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_not_supported);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 int main(int argc, char **argv) {
   gcu_memory_reset_counts();
   language = gta_language_create();
