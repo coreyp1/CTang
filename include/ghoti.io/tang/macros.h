@@ -378,7 +378,11 @@ typedef GCU_Hash64_Value GTA_HashX_Value;
  */
 #define GTA_COMPUTED_VALUE_IS_ARRAY(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_array_vtable)
 #define GTA_COMPUTED_VALUE_IS_BOOLEAN(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_boolean_vtable)
-#define GTA_COMPUTED_VALUE_IS_ERROR(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_error_vtable)
+// Two vtables, because an error that renders as its own marker ([OVERFLOW]
+// and friends) is an error in every respect except that printing it produces
+// the marker rather than nothing. Anything asking "is this an error" wants
+// both.
+#define GTA_COMPUTED_VALUE_IS_ERROR(X) ((((GTA_Computed_Value *) X)->vtable == &gta_computed_value_error_vtable) || (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_error_marker_vtable))
 #define GTA_COMPUTED_VALUE_IS_FLOAT(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_float_vtable)
 #define GTA_COMPUTED_VALUE_IS_FUNCTION(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_function_vtable)
 #define GTA_COMPUTED_VALUE_IS_FUNCTION_NATIVE(X) (((GTA_Computed_Value *) X)->vtable == &gta_computed_value_function_native_vtable)

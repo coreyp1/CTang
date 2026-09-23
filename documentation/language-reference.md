@@ -286,11 +286,30 @@ Evaluates `c` for truthiness and yields `a` or `b`. Right-associative:
 | null | `false` | `0` | `0.0` | `"null"` |
 | boolean | itself | `1` / `0` | `1.0` / `0.0` | `"true"` / `"false"` |
 | integer | `!= 0` | itself | exact | decimal digits |
-| float | `!= 0.0` | truncate toward zero | itself | see 4.12 |
+| float | `!= 0.0` | truncate toward zero, or a marker if it does not fit (below) | itself | see 4.12 |
 | string | non-empty | leading decimal integer, else `0` (`"12abc"` is `12`, `"abc"` is `0`) | leading decimal, else `0.0` | itself |
 | array | crash (13.6) | crash | crash | crash |
 | map | crash (13.6) | `Not supported` | `Not supported` | `Not supported` |
 | error | - | - | - | `Not implemented` |
+
+**A float that does not fit in an integer does not produce a number.** The
+range is `[-2^63, 2^63)`, and a value outside it - or a value that is not a
+number at all - becomes an error value that prints as a marker:
+
+| Value | `as int` |
+| --- | --- |
+| at least `2^63`, or `inf` | `[OVERFLOW]` |
+| below `-2^63`, or `-inf` | `[UNDERFLOW]` |
+| a NaN | `[NOT A NUMBER]` |
+
+These are error values, so they are false in a condition and arithmetic on
+them yields an error, but unlike other errors they print as the marker rather
+than as nothing - the alternative is not silence but a number that is untrue.
+
+Note that `9223372036854775807.0` is `[OVERFLOW]`: the largest integer is not
+representable as a float and the literal rounds up to `2^63`, which does not
+fit. The largest float that does convert is `9223372036854774784.0`.
+`-9223372036854775808.0` converts exactly, being a power of two.
 
 ### 4.8 Index: `a[i]`
 

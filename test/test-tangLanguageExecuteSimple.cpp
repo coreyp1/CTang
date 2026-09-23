@@ -1953,6 +1953,100 @@ TEST(Syntax, IntegerDivisionOverflowDoesNotKillTheProcess) {
 }
 
 
+TEST(Cast, OutOfRangeFloatToIntegerSaysSo) {
+  // Casting a float that does not fit in an integer used to be undefined
+  // behaviour, and on x86-64 the conversion instruction answers with the
+  // "integer indefinite" value. That is GTA_INTEGER_MIN - for a huge POSITIVE
+  // float as readily as a huge negative one - so `hugeFloat as int` printed
+  // -9223372036854775808 and nothing told the reader that the number was not
+  // the answer. It now says which way it went out of range.
+  //
+  // Both engines run this file, and both must agree: the constant folder
+  // declines to fold an out-of-range cast rather than carrying a second copy
+  // of the rule, so there is one answer by construction.
+
+  // Larger than any double, so it is an infinity. Exponent notation does not
+  // lex, hence the digits.
+  const std::string huge = std::string(320, '9') + ".0";
+
+  {
+    // In range, and still folded and converted as before.
+    TEST_PROGRAM_SETUP(R"(print(3.9 as int); print(","); print((0.0 - 3.9) as int);)");
+    ASSERT_STREQ(context->output->buffer, "3,-3");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Finite, but far outside the range.
+    TEST_PROGRAM_SETUP(R"(print(77777777777777777777777.9 as int);)");
+    ASSERT_STREQ(context->output->buffer, "[OVERFLOW]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    TEST_PROGRAM_SETUP(R"(print((0.0 - 77777777777777777777777.9) as int);)");
+    ASSERT_STREQ(context->output->buffer, "[UNDERFLOW]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Infinity.
+    std::string src = "print(" + huge + " as int);";
+    TEST_PROGRAM_SETUP(src.c_str());
+    ASSERT_STREQ(context->output->buffer, "[OVERFLOW]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    std::string src = "print((0.0 - " + huge + ") as int);";
+    TEST_PROGRAM_SETUP(src.c_str());
+    ASSERT_STREQ(context->output->buffer, "[UNDERFLOW]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A NaN is neither, and is reachable: infinity minus infinity. It compares
+    // false against every bound, so without its own test it would fall through
+    // into the conversion and be undefined behaviour again.
+    std::string src = "print((" + huge + " - " + huge + ") as int);";
+    TEST_PROGRAM_SETUP(src.c_str());
+    ASSERT_STREQ(context->output->buffer, "[NOT A NUMBER]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The boundary, which is where a naive test gets it wrong. GTA_INTEGER_MAX
+    // is not representable as a double and rounds UP to 2^63, so the literal
+    // spelling of the maximum does not fit and must be refused...
+    TEST_PROGRAM_SETUP(R"(print(9223372036854775807.0 as int);)");
+    ASSERT_STREQ(context->output->buffer, "[OVERFLOW]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // ...while the largest double below 2^63 converts exactly, and so does
+    // GTA_INTEGER_MIN, which is a power of two and exact.
+    TEST_PROGRAM_SETUP(R"(print(9223372036854774784.0 as int); print(","); print((0.0 - 9223372036854775808.0) as int);)");
+    ASSERT_STREQ(context->output->buffer, "9223372036854774784,-9223372036854775808");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The marker prints where the number would have gone, and execution
+    // carries on - it is a value, not a halt.
+    TEST_PROGRAM_SETUP(R"(print("A"); print(77777777777777777777777.9 as int); print("B");)");
+    ASSERT_STREQ(context->output->buffer, "A[OVERFLOW]B");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // It survives assignment, so it cannot be laundered into a number by
+    // storing it first.
+    TEST_PROGRAM_SETUP(R"(x = 77777777777777777777777.9 as int; print(x);)");
+    ASSERT_STREQ(context->output->buffer, "[OVERFLOW]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // And it is an error value: arithmetic on it does not produce a number,
+    // and it is false in a condition.
+    TEST_PROGRAM_SETUP(R"(if (77777777777777777777777.9 as int) { print("T"); } else { print("F"); })");
+    ASSERT_STREQ(context->output->buffer, "F");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 TEST(Syntax, NegatingTheMostNegativeIntegerIsDefined) {
   // -GTA_INTEGER_MIN has no representable result, so `-value` on it was signed
   // overflow: undefined behaviour in both the constant folder and the runtime.

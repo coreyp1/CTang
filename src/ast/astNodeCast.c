@@ -180,8 +180,29 @@ GTA_Ast_Node * gta_ast_node_cast_simplify(GTA_Ast_Node * self, GTA_Ast_Simplify_
   }
   else if (GTA_AST_IS_FLOAT(cast->expression)) {
     switch(cast->type) {
-      case GTA_CAST_TYPE_INTEGER:
-        return (GTA_Ast_Node *)gta_ast_node_integer_create((int64_t)((GTA_Ast_Node_Float *)cast->expression)->value, cast->base.location);
+      case GTA_CAST_TYPE_INTEGER: {
+        GTA_Float value = ((GTA_Ast_Node_Float *)cast->expression)->value;
+        // Decline to fold what does not fit, and let the runtime answer it
+        // with [OVERFLOW], [UNDERFLOW] or [NOT A NUMBER]. There is no AST node
+        // that could carry those, and declining is how this file already
+        // handles a fold it cannot perform - it also keeps the two answers
+        // identical by construction rather than by keeping two tables in step.
+        //
+        // The negated test also catches NaN, which compares false against
+        // everything.
+        //
+        // GTA_INTEGER_MIN is a power of two and so is exact in the float
+        // type; GTA_INTEGER_MAX is not, and rounds up to 2^63 when converted.
+        // So the upper bound is written as -(GTA_Float)GTA_INTEGER_MIN, which
+        // is exactly 2^63, and tested with a strict `<`. Writing it as
+        // `value > GTA_INTEGER_MAX` would compare against 2^63 after rounding
+        // and let 2^63 itself through, which is the value that does not fit.
+        if (!((value >= (GTA_Float)GTA_INTEGER_MIN)
+          && (value < -(GTA_Float)GTA_INTEGER_MIN))) {
+          return 0;
+        }
+        return (GTA_Ast_Node *)gta_ast_node_integer_create((GTA_Integer)value, cast->base.location);
+      }
       case GTA_CAST_TYPE_FLOAT: {
         GTA_Ast_Node * expression = cast->expression;
         cast->expression = 0;

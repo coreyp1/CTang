@@ -107,6 +107,46 @@ GTA_API extern GTA_Computed_Value * gta_computed_value_error_argument_count_mism
 GTA_API extern GTA_Computed_Value * gta_computed_value_error_global_rng_seed_not_changeable;
 
 /**
+ * The vtable for error values that render as their own marker.
+ *
+ * It is the ordinary error vtable in every respect but one: printing it
+ * produces the message itself rather than nothing. Ordinary errors print as
+ * nothing, which is the right answer when the failure is the operation - there
+ * is no value to show. It is the wrong answer when the failure IS the value,
+ * because the alternative is not silence but a number that is simply untrue.
+ *
+ * Casting an out-of-range float to an integer used to give -9223372036854775808
+ * for a huge positive value as readily as a huge negative one, because that is
+ * what the x86-64 conversion instruction produces when the answer does not fit.
+ * A reader cannot tell that from a real result. These values say so instead.
+ */
+GTA_API extern GTA_Computed_Value_VTable gta_computed_value_error_marker_vtable;
+
+/**
+ * Singleton for a value too large to represent in the target type.
+ *
+ * Prints as `[OVERFLOW]`.
+ */
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_overflow;
+
+/**
+ * Singleton for a value too small (too negative) to represent in the target
+ * type.
+ *
+ * Prints as `[UNDERFLOW]`.
+ */
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_underflow;
+
+/**
+ * Singleton for a value that is not a number at all, and so is neither an
+ * overflow nor an underflow.
+ *
+ * Reachable: `inf - inf` is a NaN, and `inf` is reachable from a float literal
+ * too large to represent. Prints as `[NOT A NUMBER]`.
+ */
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_not_a_number;
+
+/**
  * Represents an error value.
  */
 struct GTA_Computed_Value_Error {
@@ -136,6 +176,16 @@ GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_error_create(con
  * @return The string representation of the error.
  */
 GTA_API GTA_NO_DISCARD char * GTA_CALL gta_computed_value_error_to_string(GTA_Computed_Value * self);
+
+/**
+ * Produce a string representation of a marker error: the message on its own,
+ * with no "Error: " prefix, because the message is already the whole answer.
+ * The caller is responsible for freeing the returned string.
+ *
+ * @param self The GTA_Computed_Value_Error object.
+ * @return The string representation of the error.
+ */
+GTA_API GTA_NO_DISCARD char * GTA_CALL gta_computed_value_error_marker_to_string(GTA_Computed_Value * self);
 
 #ifdef __cplusplus
 }

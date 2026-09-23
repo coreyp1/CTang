@@ -450,7 +450,33 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_float_cast(GTA_Computed_Value *
     return self;
   }
   if (type == &gta_computed_value_integer_vtable) {
-    return (GTA_Computed_Value *)gta_computed_value_integer_create((GTA_Integer)number->value, context);
+    GTA_Float value = number->value;
+    // A float outside the integer's range has no correct answer here, and the
+    // conversion is undefined behaviour rather than a clamp. On x86-64 it
+    // produced GTA_INTEGER_MIN for a huge POSITIVE value as readily as for a
+    // huge negative one, so `hugeFloat as int` printed -9223372036854775808
+    // and nothing distinguished that from a real result. Say what happened
+    // instead.
+    //
+    // NaN first, because it compares false against everything and would
+    // otherwise fall through into the conversion. It is reachable: `inf` comes
+    // from a float literal too large to represent, and `inf - inf` is a NaN.
+    if (value != value) {
+      return gta_computed_value_error_not_a_number;
+    }
+  // GTA_INTEGER_MIN is a power of two and so is exact in the float type;
+  // GTA_INTEGER_MAX is not, and rounds up to 2^63 when converted. So the upper
+  // bound is written as -(GTA_Float)GTA_INTEGER_MIN, which is exactly 2^63,
+  // and tested with a strict `<`. Writing it as `value > GTA_INTEGER_MAX`
+  // would compare against 2^63 after rounding and let 2^63 itself through,
+  // which is the value that does not fit.
+    if (value >= -(GTA_Float)GTA_INTEGER_MIN) {
+      return gta_computed_value_error_overflow;
+    }
+    if (value < (GTA_Float)GTA_INTEGER_MIN) {
+      return gta_computed_value_error_underflow;
+    }
+    return (GTA_Computed_Value *)gta_computed_value_integer_create((GTA_Integer)value, context);
   }
   if (type == &gta_computed_value_boolean_vtable) {
     return (GTA_Computed_Value *)(number->value != 0 ? gta_computed_value_boolean_true : gta_computed_value_boolean_false);

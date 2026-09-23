@@ -714,6 +714,59 @@ TEST(Parse, ConstantFoldingDoesNotOverflow) {
 }
 
 
+TEST(Parse, OutOfRangeCastDoesNotFold) {
+  // Converting a float that does not fit into an integer is undefined
+  // behaviour, and the folder did it at compile time. That is the site the
+  // fuzzer reached, because it parses and simplifies without executing, and
+  // under -fno-sanitize-recover it aborts - which is how a fuzz run ended with
+  // no artifact at all.
+  //
+  // The folder now declines, leaving the cast node for run time to answer with
+  // [OVERFLOW], [UNDERFLOW] or [NOT A NUMBER]. Declining rather than folding
+  // to a marker is deliberate: there is no AST node that could carry one, and
+  // it means the two engines and the folder cannot drift apart, because only
+  // one of them decides.
+  for (const char * src : {
+      "77777777777777777777777.9 as int;",
+      "(0.0 - 77777777777777777777777.9) as int;",
+      "9223372036854775807.0 as int;",           // rounds up to 2^63, does not fit
+      }) {
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script(src);
+    ASSERT_NE(ast, nullptr) << "failed to parse: " << src;
+    ast = gta_tang_simplify(ast);
+    ASSERT_NE(ast, nullptr) << src;
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << "leaked on: " << src;
+  }
+  {
+    // The cast survives simplification rather than becoming an integer, which
+    // is what leaves the answer to run time.
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script("77777777777777777777777.9 as int");
+    ASSERT_NE(ast, nullptr);
+    ast = gta_tang_simplify(ast);
+    ASSERT_NE(ast, nullptr);
+    ASSERT_TRUE(GTA_AST_IS_CAST(ast));
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+  {
+    // And a cast that does fit must still fold, or the guard has simply turned
+    // this fold off.
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_script("3.9 as int");
+    ASSERT_NE(ast, nullptr);
+    ast = gta_tang_simplify(ast);
+    ASSERT_NE(ast, nullptr);
+    ASSERT_TRUE(GTA_AST_IS_INTEGER(ast));
+    ASSERT_EQ(3, ((GTA_Ast_Node_Integer *)ast)->value);
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
+
 TEST(Parse, InvalidUtf8InAStringLiteral) {
   // A string literal whose bytes are not valid UTF-8 makes
   // gta_unicode_string_create_and_adopt fail. That arm freed the token's
