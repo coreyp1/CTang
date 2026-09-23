@@ -362,6 +362,14 @@ CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfa
 # The shipped library exports its public API and nothing else. Tests reach the
 # internals by linking the static archive, which a static link can do even for
 # hidden symbols.
+ifeq ($(OS_NAME), Windows)
+# Everything built here but the library itself links the static archive or
+# the library's objects directly, so the headers must not say dllimport to it:
+# neither provides __imp_ thunks. The library's own objects also get
+# GHOTIIO_TANG_BUILD, which the header tests first. See GTA_API in macros.h.
+CFLAGS += -DGHOTIIO_TANG_STATIC
+CXXFLAGS += -DGHOTIIO_TANG_STATIC
+endif
 LIB_CFLAGS := $(CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD
 
 # The bison and flex output is not ours to edit - a regeneration would discard
@@ -469,11 +477,7 @@ TEST_GATES ?= check-symbols
 # The static archive, not -l: a static link resolves hidden symbols, so the
 # tests can exercise internals the shared library does not export. ICU and
 # cutil follow it, because an archive carries no DT_NEEDED of its own.
-#
-# GHOTIIO_TANG_STATIC rides along with the archive, because every compile that
-# links it is a one-step compile-and-link: on Windows it turns the headers'
-# dllimport off, which the archive cannot satisfy. See GTA_API in macros.h.
-TANGLIBRARY := -DGHOTIIO_TANG_STATIC -Wl,--whole-archive $(APP_DIR)/$(STATIC_TARGET) -Wl,--no-whole-archive $(ICU_LIBS) $(CUTIL_LIBS)
+TANGLIBRARY := -Wl,--whole-archive $(APP_DIR)/$(STATIC_TARGET) -Wl,--no-whole-archive $(ICU_LIBS) $(CUTIL_LIBS)
 
 
 all: $(APP_DIR)/$(TARGET) $(APP_DIR)/$(STATIC_TARGET) $(APP_DIR)/tang$(EXE_EXTENSION) ## Build the shared and static libraries
@@ -777,7 +781,7 @@ SAN_LIB_CFLAGS := $(SAN_CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD
 
 SAN_LIBOBJECTS := $(patsubst $(OBJ_DIR)/%,$(SAN_OBJ_DIR)/%,$(LIBOBJECTS))
 SAN_STATIC_TARGET := $(SAN_APP_DIR)/$(STATIC_TARGET)
-SAN_TANGLIBRARY := -DGHOTIIO_TANG_STATIC -Wl,--whole-archive $(SAN_STATIC_TARGET) -Wl,--no-whole-archive $(ICU_LIBS) $(CUTIL_LIBS)
+SAN_TANGLIBRARY := -Wl,--whole-archive $(SAN_STATIC_TARGET) -Wl,--no-whole-archive $(ICU_LIBS) $(CUTIL_LIBS)
 
 # name|source, so one rule template covers them all.
 SAN_TEST_PAIRS := \
