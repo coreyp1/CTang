@@ -192,12 +192,18 @@ PKG_CONFIG_LOOKUP_PATH := $(if $(PKG_CONFIG_PATH_ENV),$(PKG_CONFIG_PATH_ENV):)$(
 #
 #     Seven of the nine libraries in the suite are shaped this way, so the
 #     sanitizer gate's fidelity moves with the release level rather than being
-#     pinned. Whether that is right - run the gate at what ships, or pin it at
-#     -O1 so the gate does not change under you - is a suite-wide question and
-#     deliberately NOT settled here. Left as it is, and measured, so that
-#     whatever is decided is decided once rather than nine times. ctang's gate
-#     is already split between two levels, so "pin it at -O1" has to say which
-#     half it means.
+#     pinned.
+#
+#     SETTLED for ctang on 2026-09-23: it stays inheriting. A sanitizer gate
+#     built at a different -O than the shipped library is testing a different
+#     program, so matching is the option that needs no argument and diverging
+#     is the one that does. Inheriting also keeps `BUILD=debug` able to put the
+#     gate at -O0 when a stack trace matters, which pinning would take away.
+#
+#     The argument that used to weigh against this was aliasing coverage, and
+#     it no longer does - see the correction below. This is ctang's decision on
+#     ctang's evidence, not a suite-wide ruling; the other eight still have to
+#     make it for themselves.
 #
 #     One cost of pinning that is easy to miss, measured here on gcc 14.2.0
 #     rather than taken on report: -Wstrict-aliasing only fires when
@@ -209,11 +215,34 @@ PKG_CONFIG_LOOKUP_PATH := $(if $(PKG_CONFIG_PATH_ENV),$(PKG_CONFIG_PATH_ENV):)$(
 #     the sanitizer build at -O1 drops aliasing checking silently unless
 #     -fstrict-aliasing is named alongside it.
 #
-#     The neighbouring claim that -Wstrict-aliasing=3, the level -Wall selects,
-#     reports nothing did NOT reproduce here: this probe was caught at levels
-#     1, 2 and 3 alike. Level sensitivity is a property of the construct, so
-#     level 1 remains the right choice for catching the most, but the default
-#     level is not blind.
+#     CORRECTED 2026-09-23. The paragraph here used to say that the default
+#     level "is not blind", on the strength of one probe caught at levels 1, 2
+#     and 3 alike. That probe was not recorded, so it cannot be re-run, and it
+#     does not generalise. Four aliasing constructs measured on gcc 14.2.0,
+#     each compiled at -O2 and asked at each level:
+#
+#       pointer cast deref     (*(int *)f after *f = 1.0f)       1
+#       address-of local       (float * f = (float *)&i)         1 2
+#       struct to struct       ((struct B *)a)->y                1
+#       returned narrow alias  ((short *)p)                      1
+#
+#     Level 3 - which is what -Wall selects, and so what ctang actually
+#     compiles with - caught NONE of the four. Level 1 caught all four.
+#
+#     And level 1 cannot be adopted here: building the library with it emits
+#     669 diagnostics across 48 of the 62 translation units, every one of them
+#     the C struct-inheritance downcast `(GTA_Ast_Node_Boolean *) self`, which
+#     C17 6.7.2.1p15 makes well defined. That idiom IS the vtable mechanism
+#     this library is built from, so the false positives are not a backlog to
+#     work through.
+#
+#     So the honest position is that ctang has effectively no aliasing
+#     instrument: level 3 sees almost nothing, level 1 sees the architecture,
+#     no sanitizer detects the class at any -O, and clang implements no
+#     -Wstrict-aliasing at all. That is why pinning the sanitizer level can no
+#     longer be argued against on aliasing grounds - there is nothing there to
+#     lose - and it is also why a green `make test CC=clang` must never be read
+#     as evidence about this class.
 #
 #     Those figures are read out of the ARTIFACTS, not parsed out of `make -n`.
 #     gcc records the command line in DWARF by default (-grecord-gcc-switches),
