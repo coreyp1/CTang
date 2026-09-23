@@ -36,7 +36,11 @@ GTA_Computed_Value_VTable gta_computed_value_boolean_vtable = {
   .destroy_in_place = gta_computed_value_boolean_destroy,
   .deep_copy = gta_computed_value_boolean_deep_copy,
   .to_string = gta_computed_value_boolean_to_string,
-  .print = gta_computed_value_print_not_supported,
+  // Booleans print as "true" and "false", the same text `as string` already
+  // produced. This was print_not_supported, which renders as nothing - so a
+  // template that printed a boolean silently dropped it, which in a language
+  // whose entire job is generating text is a value that cannot be seen.
+  .print = gta_computed_value_generic_print_from_to_string,
   .assign_index = gta_computed_value_assign_index_not_implemented,
   .add = gta_computed_value_add_not_supported,
   .subtract = gta_computed_value_subtract_not_supported,

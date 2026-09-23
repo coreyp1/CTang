@@ -2103,6 +2103,37 @@ TEST(Cast, OutOfRangeFloatToIntegerSaysSo) {
 }
 
 
+TEST(Print, Boolean) {
+  // Printing a boolean rendered as nothing: the boolean vtable's print was
+  // print_not_supported, even though its to_string already produced "true" and
+  // "false" and `true as string` already printed them. In a language whose job
+  // is generating text, that is a value that cannot be seen - and it quietly
+  // turned `print(a == b)` in a test into an assertion of nothing.
+  {
+    TEST_PROGRAM_SETUP(R"(print(true); print(","); print(false);)");
+    ASSERT_STREQ(context->output->buffer, "true,false");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // However the boolean arrives: from a comparison, from a negation, from a
+    // cast, and through a variable.
+    TEST_PROGRAM_SETUP(R"(
+      print(1 < 2); print(","); print(1 > 2); print(",");
+      print(!true); print(","); print(1 as bool); print(",");
+      x = 2 == 2; print(x);
+    )");
+    ASSERT_STREQ(context->output->buffer, "true,false,false,true,true");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // And it still agrees with the string cast, which was already right.
+    TEST_PROGRAM_SETUP(R"(print(true as string); print(","); print(true);)");
+    ASSERT_STREQ(context->output->buffer, "true,true");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 TEST(Syntax, IntegerLiteralOutOfRangeIsRejected) {
   // A literal that does not fit used to saturate, so `9223372036854775808`
   // silently became `9223372036854775807`. A literal has no operands and
@@ -2283,7 +2314,11 @@ TEST(Declare, FloatLiteralsDoNotShareASingleton) {
       print(a == b);
       print(a); print(","); print(b);
     )");
-    ASSERT_STREQ(context->output->buffer, "2.75,2.75");
+    // The leading "true" is the `a == b` above. It used to contribute nothing,
+    // because printing a boolean rendered as nothing - so the interning check
+    // this case exists for was silently asserting only that two prints of 2.75
+    // came out as 2.75.
+    ASSERT_STREQ(context->output->buffer, "true2.75,2.75");
     TEST_PROGRAM_TEARDOWN();
   }
 }

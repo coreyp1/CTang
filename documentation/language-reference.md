@@ -63,7 +63,7 @@ until one of two tags:
 
 A `%>` returns to text mode. Tags may not nest. Text mode ends at end of
 input; an unterminated `<%` is not an error, and the code inside it is
-compiled as if it were closed (see 13.1 for what "not an error" costs).
+compiled as if it were closed.
 
 Literal text is output with the `TRUSTED` encoding (section 8): a template
 author's own markup is never escaped. Only values reaching `print` are.
@@ -427,7 +427,7 @@ the output and yields `null`. What each type appends:
 | float | fixed notation with six decimals, trailing zeros removed, decimal point kept: `3.5`, `0.333333`, `100.`, `1.` |
 | null | nothing |
 | array | `[` elements separated by `, ` `]`, each element as `print` would show it, recursively: `[1, [2, 3], x]` |
-| boolean | **intended:** `true` / `false`. **Currently:** nothing (13.8) |
+| boolean | `true` / `false` |
 | map | `{` entries separated by `, ` `}`, each entry a quoted key, `": "`, and the value as `print` would show it, recursively: `{"a": 1, "b": [2, 3]}` |
 | function, library, rng, error | nothing |
 
@@ -768,10 +768,10 @@ and any character that is not a token.
 returns `NULL`, and the `tang` tool exits with status 1 and "failed to
 compile". Nothing runs.
 
-The implementation honours this only sometimes (13.1). When it does not, the
-program is created, runs, produces no output and a `null` result, and the
-host has no way to tell that from a correct empty template. This is the
-first defect to fix, because everything that depends on Tang inherits it.
+The implementation honours this (13.1). It did not always: a parse that
+failed used to be indistinguishable from an empty source, so the program was
+created, ran, produced no output and a `null` result, and the host had no way
+to tell that from a correct empty template.
 
 Compile-time errors that are not syntax errors - `global` at top level, a
 function or identifier declared twice - also fail creation, with a message on
@@ -793,7 +793,7 @@ The errors:
 | `Divide by zero` | `/` with a zero divisor |
 | `Modulo by zero` | `%` with a zero divisor |
 | `Not supported` | an operation the operand types do not define: `"a" + 1`, `1 < 2 < 3`, `%` on floats, indexing `null` |
-| `Not implemented` | an operation that is defined but not yet written (13.2, 13.3, 13.7, 13.8) |
+| `Not implemented` | an operation that is defined but not yet written (13.2, 13.3, 13.7) |
 | `Invalid index` | a non-integer array or string index; a slice step of 0; an out-of-range negative index in assignment |
 | `Map key is not a string` | indexing a map with a non-string |
 | `Invalid function call` | calling something that is not a function |
@@ -916,18 +916,20 @@ one token; that is an implementation detail and changes nothing above.
 
 ## 13. Implementation status
 
-Every item is reproducible with `tang -s -e '<code>'`, or with the test
+Every open item is reproducible with `tang -s -e '<code>'`, or with the test
 harness in `test/`. Numbers are for cross-reference from the text above, not
-priority - except that 13.1 comes first.
+priority, and they are never reused: an item that has been fixed keeps its
+number and says so, because the text above points at these by number.
 
-1. **Syntax errors are swallowed when they occur before the parser has
-   reduced the start symbol.** `GTA_Parser_error()` replaces the AST with a
-   parse-error node only if an AST already exists; otherwise it leaves it
-   `NULL`, and `gta_program_create()` treats `NULL` as an empty program.
-   Which errors fail and which are swallowed depends on the parser's
-   reduction timing, not on anything the author can predict: `1e5` and
-   `1; ; 2;` fail; `;;`, `'x'`, `%>`, `"unterminated`, `use math.pi;`, and
-   in template mode `A <% 1 + %> C` all silently produce an empty program.
+1. **Fixed.** Syntax errors used to be swallowed when they occurred before
+   the parser had reduced the start symbol. `GTA_Parser_error()` built a
+   parse-error node only if an AST already existed, otherwise it left `NULL` -
+   and `NULL` already meant "empty source", which `gta_program_create()`
+   turns into an empty program. Which errors failed and which were swallowed
+   depended on reduction timing rather than on anything the author could
+   predict. The node is now built unconditionally, and a rule action that
+   rejects its input (invalid UTF-8, or a failed allocation) produces one too,
+   so `NULL` means only that there was nothing to parse.
    Fix: treat `parseError != NULL` as failure regardless of the AST.
 
 2. **String concatenation is not implemented.** `"ab" + "cd"` is
@@ -937,14 +939,13 @@ priority - except that 13.1 comes first.
    null.** `"a" == "a"`, `true == true`, `null == null`, `"a" < "b"` all
    yield `Not implemented`. Only numbers and arrays compare.
 
-4. **Float literals with the same integer part are the same literal.**
-   `gta_program_get_singleton()` takes the interning key as `GTA_UInteger`,
-   and `astNodeFloat.c` passes the double straight in, so `0.25` and `0.5`
-   both key as `0` and the second resolves to the first. `0.5 + 0.25` is `1.`;
-   `0.1 + 0.2` is `0.2`; `0.3 - 0.1` is `0.`; `1.5 + 1.75` is `3.`. Literals
-   whose integer parts differ, and values that did not come from literals,
-   are unaffected - which is why `Binary.Add`'s float cases, which use library
-   values, pass. Fix: hash the double's bit pattern.
+4. **Fixed.** Float literals with the same integer part used to be the same
+   literal. `gta_program_get_singleton()` takes the interning key as
+   `GTA_UInteger` and `astNodeFloat.c` passed the double straight in, so
+   `0.25` and `0.5` both keyed as `0` and the second resolved to the first:
+   `0.5 + 0.25` was `1.`, `0.1 + 0.2` was `0.2`. The key is now the double's
+   bit pattern. Interning itself still works - one value used twice is still
+   one singleton.
 
 5. **Arrays and maps are always falsy.** `if ([1])` takes the else branch;
    `![1]` is `true`; `[1] && 2` is `[1]`.
@@ -957,8 +958,10 @@ priority - except that 13.1 comes first.
 7. **`m.name` does not read a map member** (`Not implemented`) even though
    `m.name = v` writes one. `m["name"]` works.
 
-8. **`print(true)` prints nothing** - the boolean vtable's `print` is
-   `not_supported`.
+8. **Fixed.** `print(true)` used to print nothing: the boolean vtable's
+   `print` was `not_supported`, even though its `to_string` already produced
+   `true` and `false` and `true as string` already printed them. Booleans now
+   print as `true` and `false`.
 
 9. **Assigning through a string index is silently ignored.**
    `s = "abc"; s[0] = "z"; s;` is `"abc"`. Should be an error, since strings
