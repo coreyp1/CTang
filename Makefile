@@ -182,7 +182,25 @@ PKG_CONFIG_LOOKUP_PATH := $(if $(PKG_CONFIG_PATH_ENV),$(PKG_CONFIG_PATH_ENV):)$(
 #     pinned. Whether that is right - run the gate at what ships, or pin it at
 #     -O1 so the gate does not change under you - is a suite-wide question and
 #     deliberately NOT settled here. Left as it is, and measured, so that
-#     whatever is decided is decided once rather than nine times.
+#     whatever is decided is decided once rather than nine times. ctang's gate
+#     is already split between two levels, so "pin it at -O1" has to say which
+#     half it means.
+#
+#     One cost of pinning that is easy to miss, measured here on gcc 14.2.0
+#     rather than taken on report: -Wstrict-aliasing only fires when
+#     -fstrict-aliasing is active, and gcc enables that at -O2, not before.
+#     `gcc -O1 -Q --help=optimizers` prints [disabled] for it and -O2 prints
+#     [enabled]. On a type-punning probe, -O1 alone found nothing, adding
+#     -fstrict-aliasing to -O1 found it, and -O2 -fno-strict-aliasing found
+#     nothing - the warning follows the flag rather than the level. So pinning
+#     the sanitizer build at -O1 drops aliasing checking silently unless
+#     -fstrict-aliasing is named alongside it.
+#
+#     The neighbouring claim that -Wstrict-aliasing=3, the level -Wall selects,
+#     reports nothing did NOT reproduce here: this probe was caught at levels
+#     1, 2 and 3 alike. Level sensitivity is a property of the construct, so
+#     level 1 remains the right choice for catching the most, but the default
+#     level is not blind.
 #
 #     Those figures are read out of the ARTIFACTS, not parsed out of `make -n`.
 #     gcc records the command line in DWARF by default (-grecord-gcc-switches),
