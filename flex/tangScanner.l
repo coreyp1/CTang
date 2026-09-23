@@ -389,6 +389,21 @@ static size_t gta_flex_get_state_stack_depth(void * yyscanner);
   = {
     return GTA_PARSER_ASSIGN;
   }
+  \+= {
+    return GTA_PARSER_PLUS_ASSIGN;
+  }
+  \-= {
+    return GTA_PARSER_MINUS_ASSIGN;
+  }
+  \*= {
+    return GTA_PARSER_MULTIPLY_ASSIGN;
+  }
+  \/= {
+    return GTA_PARSER_DIVIDE_ASSIGN;
+  }
+  %= {
+    return GTA_PARSER_MODULO_ASSIGN;
+  }
   \+ {
     return GTA_PARSER_PLUS;
   }

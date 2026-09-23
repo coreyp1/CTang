@@ -69,6 +69,11 @@
 %token STRINGERROR "Malformed String"
 %token <GTA_Parser_Unicode_String> IDENTIFIER "identifier"
 %token ASSIGN "="
+%token PLUS_ASSIGN "+="
+%token MINUS_ASSIGN "-="
+%token MULTIPLY_ASSIGN "*="
+%token DIVIDE_ASSIGN "/="
+%token MODULO_ASSIGN "%="
 %token PLUS "+"
 %token MINUS "-"
 %token MULTIPLY "*"
@@ -163,7 +168,7 @@
 // Notice that the order is reversed from:
 // https://en.cppreference.com/w/cpp/language/operator_precedence
 // Here, rules are in order of lowest to highest precedence.
-%right "=" "?" ":"
+%right "=" "+=" "-=" "*=" "/=" "%=" "?" ":"
 %left "||"
 %left "&&"
 %left "==" "!="
@@ -287,6 +292,70 @@ static void vector64_map_pair_cleanup(GCU_Vector64 * vector) {
     gcu_free((void *)vector->data[i].p);
   }
 }
+
+// `a += b` is parsed into the tree for `a = a + b`, so the arithmetic, the
+// overflow reporting and the string concatenation all come from the operators
+// that already exist and are already tested - and both engines get it without
+// knowing the spelling was different.
+//
+// The target identifier is therefore needed in two places, as the thing
+// assigned to and as the left operand of the arithmetic. An identifier node
+// owns its name, so the name is duplicated; sharing one node between the two
+// positions would free it twice.
+//
+// Only an identifier can be the target. `a[i] += b` would need a deep copy of
+// the index expression, which does not exist, and desugaring it without one
+// would evaluate `i` twice - so `a[f()] += 1` would call f() twice. A compound
+// assignment that silently calls a function twice is worse than not having one,
+// so the grammar refuses the form instead.
+//
+// Takes ownership of name.str and of rhs on every path, including failure.
+static GTA_Ast_Node * make_compound_assign(GTA_Parser_Unicode_String name, GTA_Ast_Node * rhs, GTA_Binary_Type operator_type, GTA_PARSER_LTYPE location) {
+  char * duplicate = gcu_malloc(name.len + 1);
+  if (!duplicate) {
+    gcu_free((void *)name.str);
+    gta_ast_node_destroy(rhs);
+    return NULL;
+  }
+  memcpy(duplicate, name.str, name.len);
+  duplicate[name.len] = '\0';
+
+  // The read copy adopts the token's own string, the write copy the duplicate.
+  GTA_Ast_Node * read = (GTA_Ast_Node *)gta_ast_node_identifier_create(name.str, location);
+  if (!read) {
+    gcu_free((void *)name.str);
+    gcu_free(duplicate);
+    gta_ast_node_destroy(rhs);
+    return NULL;
+  }
+
+  GTA_Ast_Node * target = (GTA_Ast_Node *)gta_ast_node_identifier_create(duplicate, location);
+  if (!target) {
+    gcu_free(duplicate);
+    gta_ast_node_destroy(read);
+    gta_ast_node_destroy(rhs);
+    return NULL;
+  }
+
+  GTA_Ast_Node * operation = (GTA_Ast_Node *)gta_ast_node_binary_create(read, rhs, operator_type, location);
+  if (!operation) {
+    gta_ast_node_destroy(read);
+    gta_ast_node_destroy(rhs);
+    gta_ast_node_destroy(target);
+    return NULL;
+  }
+
+  // gta_ast_node_binary_create owns read and rhs from here, so the failure
+  // path below destroys the operation rather than its parts.
+  GTA_Ast_Node * assignment = (GTA_Ast_Node *)gta_ast_node_assign_create(target, operation, location);
+  if (!assignment) {
+    gta_ast_node_destroy(operation);
+    gta_ast_node_destroy(target);
+    return NULL;
+  }
+  return assignment;
+}
+
 
 #define LOCATION(A, B)              \
   GTA_PARSER_LTYPE location = {     \
@@ -1384,6 +1453,86 @@ expression
 
       LOCATION(@1, @3);
       $$ = (GTA_Ast_Node *)gta_ast_node_assign_create($1, $3, location);
+      if (!$$) {
+        *parseError = ErrorOutOfMemory;
+      }
+    }
+  | IDENTIFIER "+=" expression
+    {
+      // Verify that there have been no memory errors.
+      // VERIFY2 rather than VERIFY1: $1 is the identifier token and owns its
+      // string, so discarding only $3 on the error path leaks the name.
+      VERIFY2($1,$3,$$);
+
+      LOCATION(@1, @3);
+      // make_compound_assign frees everything it was handed if it fails, and
+      // returns NULL - which is already what $$ must be - so there is nothing
+      // to undo here. Matches the plain assignment arm above.
+      $$ = make_compound_assign($1, $3, GTA_BINARY_TYPE_ADD, location);
+      if (!$$) {
+        *parseError = ErrorOutOfMemory;
+      }
+    }
+  | IDENTIFIER "-=" expression
+    {
+      // Verify that there have been no memory errors.
+      // VERIFY2 rather than VERIFY1: $1 is the identifier token and owns its
+      // string, so discarding only $3 on the error path leaks the name.
+      VERIFY2($1,$3,$$);
+
+      LOCATION(@1, @3);
+      // make_compound_assign frees everything it was handed if it fails, and
+      // returns NULL - which is already what $$ must be - so there is nothing
+      // to undo here. Matches the plain assignment arm above.
+      $$ = make_compound_assign($1, $3, GTA_BINARY_TYPE_SUBTRACT, location);
+      if (!$$) {
+        *parseError = ErrorOutOfMemory;
+      }
+    }
+  | IDENTIFIER "*=" expression
+    {
+      // Verify that there have been no memory errors.
+      // VERIFY2 rather than VERIFY1: $1 is the identifier token and owns its
+      // string, so discarding only $3 on the error path leaks the name.
+      VERIFY2($1,$3,$$);
+
+      LOCATION(@1, @3);
+      // make_compound_assign frees everything it was handed if it fails, and
+      // returns NULL - which is already what $$ must be - so there is nothing
+      // to undo here. Matches the plain assignment arm above.
+      $$ = make_compound_assign($1, $3, GTA_BINARY_TYPE_MULTIPLY, location);
+      if (!$$) {
+        *parseError = ErrorOutOfMemory;
+      }
+    }
+  | IDENTIFIER "/=" expression
+    {
+      // Verify that there have been no memory errors.
+      // VERIFY2 rather than VERIFY1: $1 is the identifier token and owns its
+      // string, so discarding only $3 on the error path leaks the name.
+      VERIFY2($1,$3,$$);
+
+      LOCATION(@1, @3);
+      // make_compound_assign frees everything it was handed if it fails, and
+      // returns NULL - which is already what $$ must be - so there is nothing
+      // to undo here. Matches the plain assignment arm above.
+      $$ = make_compound_assign($1, $3, GTA_BINARY_TYPE_DIVIDE, location);
+      if (!$$) {
+        *parseError = ErrorOutOfMemory;
+      }
+    }
+  | IDENTIFIER "%=" expression
+    {
+      // Verify that there have been no memory errors.
+      // VERIFY2 rather than VERIFY1: $1 is the identifier token and owns its
+      // string, so discarding only $3 on the error path leaks the name.
+      VERIFY2($1,$3,$$);
+
+      LOCATION(@1, @3);
+      // make_compound_assign frees everything it was handed if it fails, and
+      // returns NULL - which is already what $$ must be - so there is nothing
+      // to undo here. Matches the plain assignment arm above.
+      $$ = make_compound_assign($1, $3, GTA_BINARY_TYPE_MODULO, location);
       if (!$$) {
         *parseError = ErrorOutOfMemory;
       }

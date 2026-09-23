@@ -151,7 +151,8 @@ Single quotes are not string delimiters; `'` is a syntax error.
 ### 2.7 Operators and punctuation
 
 ```
-=  +  -  *  /  %  !  <  <=  >  >=  ==  !=  &&  ||  ?  :  .  ,  ;
+=  +=  -=  *=  /=  %=
++  -  *  /  %  !  <  <=  >  >=  ==  !=  &&  ||  ?  :  .  ,  ;
 (  )  [  ]  {  }  <%  <%=  %>
 ```
 
@@ -230,7 +231,7 @@ From loosest to tightest. Operators on one row share a level.
 
 | Level | Operators | Associativity |
 | --- | --- | --- |
-| 1 | `=` `? :` | right |
+| 1 | `=` `+=` `-=` `*=` `/=` `%=` `? :` | right |
 | 2 | `\|\|` | left |
 | 3 | `&&` | left |
 | 4 | `==` `!=` | left |
@@ -485,6 +486,28 @@ makes `a = b = 3` work. The target may be:
 
 Any other target - a slice, a call, a literal - is not a valid assignment
 target. It is currently accepted and does the wrong thing (13.11).
+
+#### 4.13.1 Compound assignment: `target += expression`
+
+`+=`, `-=`, `*=`, `/=` and `%=`. `a += b` means exactly `a = a + b`, with the
+same precedence and right-associativity as `=`, so `a += 2 * 3` adds six and
+`a += b += 1` works. Everything the operator does comes from the plain binary
+form: `+=` concatenates when either side is a string (4.2.1), and an overflow
+is reported rather than wrapped, so
+
+```
+a = 9223372036854775807; a += 1;   leaves a as [INTEGER TOO LARGE]
+s = ""; for (i = 0; i < 3; i += 1) { s += "x"; }   leaves s as "xxx"
+```
+
+**The target must be an identifier.** Unlike plain assignment, `a[i] += b` and
+`a.name += b` are syntax errors; write `a[i] = a[i] + b`. The restriction is
+deliberate rather than pending: desugaring an index target would evaluate the
+index expression twice, so `a[f()] += 1` would call `f` twice, and a compound
+assignment that silently calls a function twice is worse than one that does
+not exist. A form that evaluates its target once would need the target
+compiled as a reference, which is a larger change than this spelling is worth
+on its own.
 
 ### 4.14 Array and map literals
 

@@ -3278,6 +3278,151 @@ TEST(Concatenate, ErrorsAndUnprintableValues) {
 }
 
 
+TEST(CompoundAssign, Arithmetic) {
+  // `a += 1` did not parse at all - there was no token for it, so the scanner
+  // returned `+` then `=` and no rule accepted the pair. It is built into the
+  // tree for `a = a + 1`, so the arithmetic, the overflow reporting and the
+  // concatenation all come from operators that already exist.
+  {
+    TEST_PROGRAM_SETUP(R"(a = 1; a += 2; print(a);)");
+    ASSERT_STREQ(context->output->buffer, "3");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    TEST_PROGRAM_SETUP(R"(
+      a = 10; a -= 3; print(a); print(",");
+      b = 10; b *= 3; print(b); print(",");
+      c = 10; c /= 3; print(c); print(",");
+      d = 10; d %= 3; print(d);
+    )");
+    ASSERT_STREQ(context->output->buffer, "7,30,3,1");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The right-hand side is a whole expression, not just the next operand:
+    // `a += 2 * 3` is `a = a + (2 * 3)`, not `(a + 2) * 3`.
+    TEST_PROGRAM_SETUP(R"(a = 1; a += 2 * 3; print(a); print(","); b = 2; b *= 1 + 3; print(b);)");
+    ASSERT_STREQ(context->output->buffer, "7,8");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Right-associative, like plain assignment.
+    TEST_PROGRAM_SETUP(R"(a = 1; b = 1; a += b += 1; print(a); print(","); print(b);)");
+    ASSERT_STREQ(context->output->buffer, "3,2");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // The shape the self-assignment bug used to corrupt: a compound assignment
+    // is exactly that shape, so it is worth asserting a later read is clean.
+    TEST_PROGRAM_SETUP(R"(a = 1; a += 2; b = a + 3; print(a); print(","); print(b);)");
+    ASSERT_STREQ(context->output->buffer, "3,6");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
+TEST(CompoundAssign, StringsAndLoops) {
+  {
+    // The accumulator in a loop, which is what `+=` is mostly for.
+    TEST_PROGRAM_SETUP(R"(s = ""; for (i = 0; i < 3; i += 1) { s += "x"; } print(s);)");
+    ASSERT_STREQ(context->output->buffer, "xxx");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    TEST_PROGRAM_SETUP(R"(a = "q"; a += "r"; print(a); print(","); b = "n="; b += 5; print(b);)");
+    ASSERT_STREQ(context->output->buffer, "qr,n=5");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Concatenating through `+=` keeps each half's tag, the same as `+` does -
+    // it is the same node underneath.
+    TEST_PROGRAM_SETUP(R"(a = "<b>"; a += !"<i>"; print(a);)");
+    GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);
+    ASSERT_TRUE(rendered.buffer);
+    ASSERT_STREQ(rendered.buffer, "<b>&lt;i&gt;");
+    gcu_free(rendered.buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // `global` inside a function, which is the only place `global` is legal.
+    TEST_PROGRAM_SETUP(R"(n = 1; function f() { global n; n += 4; } f(); print(n);)");
+    ASSERT_STREQ(context->output->buffer, "5");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
+TEST(CompoundAssign, ErrorsPropagate) {
+  {
+    // Overflow is reported by the underlying `+`, so it reaches the variable
+    // as a marker rather than wrapping.
+    TEST_PROGRAM_SETUP(R"(a = 9223372036854775807; a += 1; a;)");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    ASSERT_EQ(context->result, gta_computed_value_error_integer_too_large);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    TEST_PROGRAM_SETUP(R"(a = 5; a /= 0; a;)");
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ERROR(context->result));
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
+TEST(CompoundAssign, FailingParseDoesNotLeakTheName) {
+  // Found by the parse fuzzer within 150 seconds of the operators existing.
+  //
+  // The rule's action runs, and then VERIFY has to discard what the rule was
+  // handed. The first version discarded only the expression, so the identifier
+  // token's string - which the token owns until the action adopts it - leaked
+  // whenever the expression was missing. An invalid UTF-8 byte in a string
+  // literal is one way to make it missing: the string arm fails, yields a null
+  // node, and the compound-assignment arm still reduces.
+  //
+  // Two bytes per occurrence, so nothing visible without a leak checker. Note
+  // that `W = "\x9f";` never leaked - the plain assignment rule already used
+  // the two-value form, and the bug was introduced by not following it.
+  for (const char * src : {
+      "W += \"\x9f\";",
+      "W -= \"\x9f\";",
+      "W *= \"\x9f\";",
+      "W /= \"\x9f\";",
+      "W %= \"\x9f\";",
+      "longer_name += \"\x9f\";",
+      }) {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(language, src);
+    ASSERT_FALSE(program) << "accepted: " << src;
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << "leaked on: " << src;
+  }
+}
+
+
+TEST(CompoundAssign, OnlyAnIdentifierCanBeTheTarget) {
+  // `a[i] += b` would have to evaluate the target twice to be desugared - there
+  // is no AST deep copy - and `a[f()] += 1` calling f() twice is a worse
+  // outcome than the form not existing. It is refused at parse time.
+  for (const char * src : {
+      "x = [1, 2]; x[0] += 5;",
+      "m = [\"k\": 1]; m[\"k\"] += 5;",
+      "x = [1, 2]; x[0] -= 5;",
+      "1 += 2;",
+      "a = 1; a += ;",
+      }) {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(language, src);
+    ASSERT_FALSE(program) << "accepted: " << src;
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << "leaked on: " << src;
+  }
+  {
+    // The spelled-out form is still accepted, and is the workaround.
+    TEST_PROGRAM_SETUP(R"(x = [1, 2]; x[0] = x[0] + 5; print(x[0]);)");
+    ASSERT_STREQ(context->output->buffer, "6");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+
 int main(int argc, char **argv) {
   gcu_memory_reset_counts();
   language = gta_language_create();
