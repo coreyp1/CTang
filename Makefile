@@ -200,10 +200,11 @@ PKG_CONFIG_LOOKUP_PATH := $(if $(PKG_CONFIG_PATH_ENV),$(PKG_CONFIG_PATH_ENV):)$(
 #     is the one that does. Inheriting also keeps `BUILD=debug` able to put the
 #     gate at -O0 when a stack trace matters, which pinning would take away.
 #
-#     The argument that used to weigh against this was aliasing coverage, and
-#     it no longer does - see the correction below. This is ctang's decision on
-#     ctang's evidence, not a suite-wide ruling; the other eight still have to
-#     make it for themselves.
+#     The argument that used to weigh against this was aliasing coverage. It
+#     never worked, for a reason better than the one first written here: no
+#     sanitizer sees this class at any -O. See below. This is ctang's decision
+#     on ctang's evidence, not a suite-wide ruling; the other eight still have
+#     to make it for themselves.
 #
 #     One cost of pinning that is easy to miss, measured here on gcc 14.2.0
 #     rather than taken on report: -Wstrict-aliasing only fires when
@@ -215,34 +216,41 @@ PKG_CONFIG_LOOKUP_PATH := $(if $(PKG_CONFIG_PATH_ENV),$(PKG_CONFIG_PATH_ENV):)$(
 #     the sanitizer build at -O1 drops aliasing checking silently unless
 #     -fstrict-aliasing is named alongside it.
 #
-#     CORRECTED 2026-09-23. The paragraph here used to say that the default
-#     level "is not blind", on the strength of one probe caught at levels 1, 2
-#     and 3 alike. That probe was not recorded, so it cannot be re-run, and it
-#     does not generalise. Four aliasing constructs measured on gcc 14.2.0,
-#     each compiled at -O2 and asked at each level:
+#     The paragraph above is RIGHT and an earlier version of this block
+#     briefly said otherwise. Level sensitivity is a property of the
+#     construct, along two axes measured pairwise on gcc 14.2.0 at -O2:
 #
-#       pointer cast deref     (*(int *)f after *f = 1.0f)       1
-#       address-of local       (float * f = (float *)&i)         1 2
-#       struct to struct       ((struct B *)a)->y                1
-#       returned narrow alias  ((short *)p)                      1
+#       *(int *)&g        address of a visible object, in place    1 2 3
+#       int * p = ...&g   same object, via a pointer variable      1 2
+#       *(int *)d         d is a parameter                         1
+#       struct-to-struct  cast of a parameter                      1
+#       through a void *                                           none
 #
-#     Level 3 - which is what -Wall selects, and so what ctang actually
-#     compiles with - caught NONE of the four. Level 1 caught all four.
+#     Taking the address of an object the compiler can see is what level 2
+#     needs; routing the cast through a separate pointer variable is what
+#     defeats level 3, which reports the in-place dereference and nothing
+#     else. Level 1 dominates - it catches whatever any level catches.
 #
-#     And level 1 cannot be adopted here: building the library with it emits
+#     So ctang's effective level 3 is a narrow instrument, not an absent one:
+#     it fires on the first row under ctang's real flags and on none of the
+#     rest. Four constructs probed here at first all sat on the same side of
+#     both axes, which produced a clean and wrong "level 3 catches nothing".
+#
+#     Level 1 cannot be adopted regardless: building the library with it emits
 #     669 diagnostics across 48 of the 62 translation units, every one of them
 #     the C struct-inheritance downcast `(GTA_Ast_Node_Boolean *) self`, which
 #     C17 6.7.2.1p15 makes well defined. That idiom IS the vtable mechanism
-#     this library is built from, so the false positives are not a backlog to
-#     work through.
+#     this library is built from, so they are not a backlog to work through.
 #
-#     So the honest position is that ctang has effectively no aliasing
-#     instrument: level 3 sees almost nothing, level 1 sees the architecture,
-#     no sanitizer detects the class at any -O, and clang implements no
-#     -Wstrict-aliasing at all. That is why pinning the sanitizer level can no
-#     longer be argued against on aliasing grounds - there is nothing there to
-#     lose - and it is also why a green `make test CC=clang` must never be read
-#     as evidence about this class.
+#     None of which changes the decision above, because the aliasing argument
+#     for matching the shipped -O never worked anyway: NO sanitizer detects
+#     this class at ANY -O, so "the optimizer exploits aliasing at -O2,
+#     therefore run the gate at -O2" is a true claim about the optimizer
+#     welded to a false one about the gate. The gate stays inherited for the
+#     reasons given above, not for this one.
+#
+#     And a green `make test CC=clang` is not evidence here either way: clang
+#     accepts -Wstrict-aliasing=1 and =2, implements neither, and rejects =3.
 #
 #     Those figures are read out of the ARTIFACTS, not parsed out of `make -n`.
 #     gcc records the command line in DWARF by default (-grecord-gcc-switches),
