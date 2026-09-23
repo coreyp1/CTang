@@ -1921,8 +1921,10 @@ TEST(Case, ToInteger) {
 TEST(Syntax, IntegerDivisionOverflowDoesNotKillTheProcess) {
   // INT64_MIN / -1 overflows, and on x86-64 the hardware raises SIGFPE rather
   // than wrapping - so this was not a wrong answer but a dead process, from a
-  // one-line script, in both execution engines. Reported as "not supported"
-  // because the result is genuinely not representable.
+  // one-line script, in both execution engines.
+  //
+  // This test only asserts that the line is reached at all. What the operators
+  // now answer is asserted in Syntax.IntegerOverflowIsReportedNotWrapped.
   {
     TEST_PROGRAM_SETUP(R"(
       print("start ");
@@ -2089,70 +2091,76 @@ TEST(Cast, OutOfRangeFloatToIntegerSaysSo) {
 }
 
 
-TEST(Syntax, NegatingTheMostNegativeIntegerIsDefined) {
-  // -GTA_INTEGER_MIN has no representable result, so `-value` on it was signed
-  // overflow: undefined behaviour in both the constant folder and the runtime.
-  // It did not produce a wrong answer in practice - both wrapped back to
-  // GTA_INTEGER_MIN - but under -fno-sanitize-recover it aborts, which is how
-  // the fuzzer met it, and an abort inside libFuzzer's death handling collides
-  // with ASan's reporter and leaves no artifact at all.
+TEST(Syntax, IntegerOverflowIsReportedNotWrapped) {
+  // Arithmetic that cannot produce a representable answer says so, rather than
+  // wrapping. Wrapping was the worst of the three options: a clamp is wrong by
+  // a bounded amount, but 9223372036854775807 + 1 came back as the most
+  // negative integer there is, which looks exactly like a real result.
   //
-  // No test reached this value before, which is why `make test-san` was green
-  // against it. The literal cannot express it - 9223372036854775808 saturates
-  // to GTA_INTEGER_MAX - so it has to be built by arithmetic.
+  // GTA_INTEGER_MIN cannot be written as a literal - 9223372036854775808
+  // saturates to the maximum - so it is built by arithmetic here.
+  //
+  // Both engines run this file and both must agree: the constant folder
+  // declines to fold anything that overflows, so run time answers all of it.
   {
-    TEST_PROGRAM_SETUP(R"(
-      print(0 - (0 - 9223372036854775807 - 1));
-    )");
-    ASSERT_STREQ(context->output->buffer, "-9223372036854775808");
+    TEST_PROGRAM_SETUP(R"(print(9223372036854775807 + 1);)");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
     TEST_PROGRAM_TEARDOWN();
   }
   {
-    // The unary operator, which is the folded path rather than the subtraction.
-    TEST_PROGRAM_SETUP(R"(
-      print(-(0 - 9223372036854775807 - 1));
-    )");
-    ASSERT_STREQ(context->output->buffer, "-9223372036854775808");
+    TEST_PROGRAM_SETUP(R"(print((0 - 9223372036854775807 - 1) - 1);)");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO SMALL]");
     TEST_PROGRAM_TEARDOWN();
   }
   {
-    // Ordinary negation must be untouched.
-    TEST_PROGRAM_SETUP(R"(
-      print(-5); print(","); print(-(0 - 5)); print(","); print(-9223372036854775807);
-    )");
-    ASSERT_STREQ(context->output->buffer, "-5,5,-9223372036854775807");
+    TEST_PROGRAM_SETUP(R"(print(9223372036854775807 * 2);)");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
     TEST_PROGRAM_TEARDOWN();
   }
   {
-    // Add, subtract and multiply overflow the same way and were undefined for
-    // the same reason. The constant folder already declines to fold these
-    // (they overflow), so what runs here is the runtime path in both engines.
-    TEST_PROGRAM_SETUP(R"(
-      print(9223372036854775807 + 1);
-    )");
-    ASSERT_STREQ(context->output->buffer, "-9223372036854775808");
+    // A negative product reports the other direction.
+    TEST_PROGRAM_SETUP(R"(print((0 - 9223372036854775807 - 1) * 2);)");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO SMALL]");
     TEST_PROGRAM_TEARDOWN();
   }
   {
-    TEST_PROGRAM_SETUP(R"(
-      print((0 - 9223372036854775807 - 1) - 1);
-    )");
-    ASSERT_STREQ(context->output->buffer, "9223372036854775807");
+    // Negation, where the result is one past the maximum. Both spellings.
+    TEST_PROGRAM_SETUP(R"(print(-(0 - 9223372036854775807 - 1));)");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
     TEST_PROGRAM_TEARDOWN();
   }
   {
-    TEST_PROGRAM_SETUP(R"(
-      print(9223372036854775807 * 2);
-    )");
-    ASSERT_STREQ(context->output->buffer, "-2");
+    TEST_PROGRAM_SETUP(R"(print(0 - (0 - 9223372036854775807 - 1));)");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
     TEST_PROGRAM_TEARDOWN();
   }
   {
-    // Ordinary arithmetic must be untouched.
+    // GTA_INTEGER_MIN / -1 is one past the maximum, and raised SIGFPE before
+    // it was guarded at all - a killed process from one line of script.
+    TEST_PROGRAM_SETUP(R"(print((0 - 9223372036854775807 - 1) / -1);)");
+    ASSERT_STREQ(context->output->buffer, "[INTEGER TOO LARGE]");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // But the REMAINDER is representable: x % -1 is 0 for every x, under both
+    // the truncating and the flooring convention. Only the hardware objected,
+    // because it computes the quotient too. It used to be refused; it has an
+    // ordinary answer.
+    TEST_PROGRAM_SETUP(R"(print((0 - 9223372036854775807 - 1) % -1); print(","); print(7 % -1);)");
+    ASSERT_STREQ(context->output->buffer, "0,0");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Ordinary arithmetic must be untouched, or the guard has simply broken
+    // the operators.
     TEST_PROGRAM_SETUP(R"(
       print(2 + 3); print(","); print(10 - 4); print(","); print(6 * 7);
+      print(","); print(-5); print(","); print(-(0 - 5));
+      print(","); print(10 / 2); print(","); print(10 % 3);
+      print(","); print(9223372036854775807); print(","); print(0 - 9223372036854775807 - 1);
     )");
-    ASSERT_STREQ(context->output->buffer, "5,6,42");
+    ASSERT_STREQ(context->output->buffer,
+      "5,6,42,-5,5,5,1,9223372036854775807,-9223372036854775808");
     TEST_PROGRAM_TEARDOWN();
   }
 }

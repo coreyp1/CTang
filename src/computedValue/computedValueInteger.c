@@ -122,14 +122,14 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_negative(GTA_Computed_V
   assert(GTA_COMPUTED_VALUE_IS_INTEGER(self));
   GTA_Computed_Value_Integer * integer = (GTA_Computed_Value_Integer *)self;
 
-  // Negate through the unsigned type. GTA_INTEGER_MIN has no positive
-  // counterpart, so `-value` on it is signed overflow, which is undefined
-  // behaviour and aborts a sanitizer build. Unsigned arithmetic wraps by
-  // definition and gives the same answer the compiler already produced, so
-  // this preserves what both engines did and only makes it defined. See the
-  // matching comment in gta_ast_node_unary_simplify: the constant folder has
-  // to agree with this, or the two disagree on the same expression.
-  GTA_Integer negated = (GTA_Integer)(0 - (GTA_UInteger)integer->value);
+  // GTA_INTEGER_MIN has no positive counterpart, so negating it has no
+  // representable answer. Say so rather than wrapping: wrapping returned the
+  // same negative number the operator was asked to negate, which is a worse
+  // lie than a clamp because it changes nothing while looking like it did.
+  if (integer->value == GTA_INTEGER_MIN) {
+    return gta_computed_value_error_integer_too_large;
+  }
+  GTA_Integer negated = -integer->value;
 
   if (integer->base.is_temporary) {
     integer->value = negated;
@@ -146,20 +146,19 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_add(GTA_Computed_Value 
 
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
-    // Add through the unsigned type. Signed overflow is undefined behaviour,
-    // and while every compiler here wrapped, a sanitizer build aborts on it -
-    // so the operator that looked like it worked was one `make test-asan`
-    // away from stopping the suite, and the only reason it never did is that
-    // no test added two large integers. Unsigned arithmetic wraps by
-    // definition and gives exactly the value that was produced before.
+    // Refuse an overflow rather than wrapping. Wrapping is a bigger lie than
+    // the clamp the casts used to do: 9223372036854775807 + 1 came back as the
+    // most negative integer there is, which looks like an answer.
     //
-    // Wrapping rather than refusing is the existing behaviour of this
-    // operator, kept deliberately. Divide and modulo refuse instead, but only
-    // because GTA_INTEGER_MIN / -1 traps on x86-64 and there was no behaviour
-    // to preserve. Whether overflow should become an error is one decision
-    // across add, subtract, multiply and negate, not four.
-    GTA_Integer result = (GTA_Integer)((GTA_UInteger)number->value
-      + (GTA_UInteger)other_number_integer->value);
+    // __builtin_add_overflow compiles to the add and a branch on the overflow
+    // flag the processor already set. Addition can only overflow when the
+    // operands share a sign, so that sign says which way it went.
+    GTA_Integer result;
+    if (__builtin_add_overflow(number->value, other_number_integer->value, &result)) {
+      return number->value > 0
+        ? gta_computed_value_error_integer_too_large
+        : gta_computed_value_error_integer_too_small;
+    }
     if (number->base.is_temporary) {
       number->value = result;
       number->base.is_true = (bool)number->value;
@@ -192,12 +191,17 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_subtract(GTA_Computed_V
 
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
-    // Unsigned for the same reason as the add above.
-    GTA_Integer result = self_is_lhs
-      ? (GTA_Integer)((GTA_UInteger)number->value
-        - (GTA_UInteger)other_number_integer->value)
-      : (GTA_Integer)((GTA_UInteger)other_number_integer->value
-        - (GTA_UInteger)number->value);
+    // Refused on overflow, as the add above. Subtraction can only overflow
+    // when the operands differ in sign, so the sign of the left-hand operand
+    // says which way it went.
+    GTA_Integer lhs = self_is_lhs ? number->value : other_number_integer->value;
+    GTA_Integer rhs = self_is_lhs ? other_number_integer->value : number->value;
+    GTA_Integer result;
+    if (__builtin_sub_overflow(lhs, rhs, &result)) {
+      return lhs >= 0
+        ? gta_computed_value_error_integer_too_large
+        : gta_computed_value_error_integer_too_small;
+    }
     if (number->base.is_temporary) {
       number->value = result;
       number->base.is_true = (bool)number->value;
@@ -233,9 +237,14 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_multiply(GTA_Computed_V
 
   if (GTA_COMPUTED_VALUE_IS_INTEGER(other)) {
     GTA_Computed_Value_Integer * other_number_integer = (GTA_Computed_Value_Integer *)other;
-    // Unsigned for the same reason as the add above.
-    GTA_Integer result = (GTA_Integer)((GTA_UInteger)number->value
-      * (GTA_UInteger)other_number_integer->value);
+    // Refused on overflow, as the add above. The sign of the true product is
+    // the sign of the operands combined, which says which way it went.
+    GTA_Integer result;
+    if (__builtin_mul_overflow(number->value, other_number_integer->value, &result)) {
+      return ((number->value < 0) != (other_number_integer->value < 0))
+        ? gta_computed_value_error_integer_too_small
+        : gta_computed_value_error_integer_too_large;
+    }
     if (number->base.is_temporary) {
       number->value = result;
       number->base.is_true = (bool)number->value;
@@ -272,22 +281,16 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_divide(GTA_Computed_Val
       || (!self_is_lhs && number->value == 0)) {
       return gta_computed_value_error_divide_by_zero;
     }
-    // INT64_MIN / -1 and INT64_MIN % -1 overflow: the quotient is one past
-    // the maximum. On x86-64 the hardware raises SIGFPE rather than wrapping,
-    // so this is not a wrong answer but a killed process - `(0-9223372036854775807-1) / -1`
-    // in a script was enough. Reported as "not supported" because the result
-    // genuinely is not representable.
-    //
-    // That dedicated value now exists: gta_computed_value_error_integer_too_large,
-    // which the casts return. The quotient here is exactly 2^63, so it would
-    // be the more informative answer, and this is one of the places to change
-    // if integer overflow should report rather than wrap. That is one decision
-    // across add, subtract, multiply, negate and this, so it is not made here.
+    // GTA_INTEGER_MIN / -1 is one past the maximum, and on x86-64 the hardware
+    // raises SIGFPE for it rather than wrapping - so this was not a wrong
+    // answer but a killed process, from `(0-9223372036854775807-1) / -1` in a
+    // script. The quotient is exactly 2^63, so it is reported the same way any
+    // other value too big for an integer is.
     {
       GTA_Integer numerator = self_is_lhs ? number->value : other_number_integer->value;
       GTA_Integer denominator = self_is_lhs ? other_number_integer->value : number->value;
       if ((numerator == GTA_INTEGER_MIN) && (denominator == -1)) {
-        return gta_computed_value_error_not_supported;
+        return gta_computed_value_error_integer_too_large;
       }
     }
     GTA_Integer result = self_is_lhs
@@ -336,27 +339,21 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_integer_modulo(GTA_Computed_Val
       || (!self_is_lhs && number->value == 0)) {
       return gta_computed_value_error_modulo_by_zero;
     }
-    // INT64_MIN / -1 and INT64_MIN % -1 overflow: the quotient is one past
-    // the maximum. On x86-64 the hardware raises SIGFPE rather than wrapping,
-    // so this is not a wrong answer but a killed process - `(0-9223372036854775807-1) / -1`
-    // in a script was enough. Reported as "not supported" because the result
-    // genuinely is not representable.
+    // `x % -1` is 0 for every x - -1 divides everything evenly - under both
+    // the truncating and the flooring convention, and `7 % -1` already
+    // answered 0. The hardware disagrees for one input: on x86-64 the modulo
+    // instruction computes the quotient as well, and GTA_INTEGER_MIN / -1
+    // overflows and raises SIGFPE, so this was a killed process for a question
+    // with a perfectly ordinary answer.
     //
-    // That dedicated value now exists: gta_computed_value_error_integer_too_large,
-    // which the casts return. The quotient here is exactly 2^63, so it would
-    // be the more informative answer, and this is one of the places to change
-    // if integer overflow should report rather than wrap. That is one decision
-    // across add, subtract, multiply, negate and this, so it is not made here.
-    {
-      GTA_Integer numerator = self_is_lhs ? number->value : other_number_integer->value;
-      GTA_Integer denominator = self_is_lhs ? other_number_integer->value : number->value;
-      if ((numerator == GTA_INTEGER_MIN) && (denominator == -1)) {
-        return gta_computed_value_error_not_supported;
-      }
-    }
-    GTA_Integer result = self_is_lhs
-      ? number->value % other_number_integer->value
-      : other_number_integer->value % number->value;
+    // It used to be refused as "not supported", which was wrong in a quieter
+    // way: unlike the divide, the remainder here IS representable. Answered
+    // now, rather than refused.
+    GTA_Integer numerator = self_is_lhs ? number->value : other_number_integer->value;
+    GTA_Integer denominator = self_is_lhs ? other_number_integer->value : number->value;
+    GTA_Integer result = ((numerator == GTA_INTEGER_MIN) && (denominator == -1))
+      ? 0
+      : numerator % denominator;
     if (number->base.is_temporary) {
       number->value = result;
       number->base.is_true = (bool)number->value;

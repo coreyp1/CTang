@@ -246,6 +246,25 @@ Division or modulo by zero, integer or float, is an error (`Divide by zero`,
 
 Unary minus applies to integers and floats. On anything else it is an error.
 
+**Integer arithmetic that overflows does not wrap.** `+`, `-`, `*` and unary
+`-` report a result that does not fit the same way the casts do, with
+`[INTEGER TOO LARGE]` or `[INTEGER TOO SMALL]` according to the direction:
+
+```
+9223372036854775807 + 1        is [INTEGER TOO LARGE]
+9223372036854775807 * 2        is [INTEGER TOO LARGE]
+-(0 - 9223372036854775807 - 1) is [INTEGER TOO LARGE]
+```
+
+Division overflows for exactly one pair of operands, `GTA_INTEGER_MIN / -1`,
+whose quotient is one past the maximum; that is `[INTEGER TOO LARGE]` too.
+Modulo does not overflow at all - `x % -1` is `0` for every `x` - and answers
+`0` for that pair, even though the hardware's modulo instruction computes the
+quotient and would trap on it.
+
+Float arithmetic is unaffected: it has infinities and follows the usual
+floating-point rules.
+
 `+` on strings is **not** concatenation; it is currently `Not implemented`
 (13.2). This is the largest open decision in section 14.
 
@@ -304,7 +323,8 @@ value that prints as a marker:
 
 This applies to both sources that can exceed the range - a float and a string
 - and the marker is deliberately the same for both, because it means the same
-thing. `99999999999999999999999.0 as int` and `"99999999999999999999999" as
+thing. Integer arithmetic that overflows reports with the same two markers
+(4.2). `99999999999999999999999.0 as int` and `"99999999999999999999999" as
 int` are both `[INTEGER TOO LARGE]`.
 
 A string that is not a number at all is still `0`, not a marker: `"abc" as
