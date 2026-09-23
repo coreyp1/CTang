@@ -550,13 +550,22 @@ $(OBJ_DIR)/%.o: src/%.c $(FLAGS_STAMP) | $(LIBVER_GEN)
 # unit includes macros.h, which reaches libver_gen.h. Without it a clean
 # `make test` failed outright, because tangParser.o is the first entry in
 # LIBOBJECTS and so was compiled before anything had generated that header.
-$(OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c | $(LIBVER_GEN)
+#
+# They carry the flags stamp for the same reason, and it has to be spelled out
+# here because an explicit rule replaces the pattern rule's prerequisites
+# rather than adding to them. Without it these two were the only objects in
+# the tree that a flag change did not rebuild: 60 of 62 picked up
+# `EXTRA_CFLAGS=-O1`, while tangParser.o and tangScanner.o kept recording -O2
+# in their DW_AT_producer. They are also the two largest objects in the
+# library, so the pair that silently stayed behind was the parser and the
+# scanner. The stamp goes after the .c so that $< is still the source.
+$(OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c $(FLAGS_STAMP) | $(LIBVER_GEN)
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_CXX_FLAGS)
 	@sed -i 's|\([A-Za-z]\):\([\\/]\)|\1\\:\2|g' $(@:.o=.d) 2>/dev/null || true
 
-$(OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c | $(LIBVER_GEN)
+$(OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c $(FLAGS_STAMP) | $(LIBVER_GEN)
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(LIB_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_CXX_FLAGS) -Wno-unused-function
@@ -730,11 +739,11 @@ $(SAN_OBJ_DIR)/%.o: src/%.c $(SAN_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
 	$(CC) $(SAN_CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
 
-$(SAN_OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c | $(LIBVER_GEN)
+$(SAN_OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c $(SAN_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
 	$(CC) $(SAN_CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
 
-$(SAN_OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c | $(LIBVER_GEN)
+$(SAN_OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c $(SAN_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
 	$(CC) $(SAN_CFLAGS) -fvisibility=hidden -DGHOTIIO_TANG_BUILD $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ -Wno-unused-function
 
@@ -890,11 +899,11 @@ $(FUZZ_OBJ_DIR)/%.o: src/%.c $(FUZZ_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
 	@$(FUZZ_CC) $(FUZZ_LIB_FLAGS) -std=c17 -w -DGHOTIIO_TANG_BUILD $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
 
-$(FUZZ_OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c | $(LIBVER_GEN)
+$(FUZZ_OBJ_DIR)/tangParser.o: $(GEN_DIR)/tangParser.c $(FUZZ_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
 	@$(FUZZ_CC) $(FUZZ_LIB_FLAGS) -std=c17 -w -DGHOTIIO_TANG_BUILD $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
 
-$(FUZZ_OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c | $(LIBVER_GEN)
+$(FUZZ_OBJ_DIR)/tangScanner.o: $(GEN_DIR)/tangScanner.c $(FUZZ_FLAGS_STAMP) | $(LIBVER_GEN)
 	@mkdir -p $(@D)
 	@$(FUZZ_CC) $(FUZZ_LIB_FLAGS) -std=c17 -w -DGHOTIIO_TANG_BUILD $(ICU_CFLAGS) $(CUTIL_CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@
 
