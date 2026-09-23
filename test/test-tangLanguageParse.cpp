@@ -756,6 +756,44 @@ TEST(Parse, InvalidUtf8InATemplateDoesNotLeaveAFreedPointer) {
 }
 
 
+TEST(Parse, QuickPrintFreesTheExpressionItWasHanded) {
+  // `\x87<%=t%>` leaked the parsed expression - seven bytes.
+  //
+  // The QUICKPRINTBEGINANDSTRING arm is handed two things it owns: the
+  // token's string and $2, the expression already parsed between the
+  // delimiters. Its early exits freed only the string. That matters because
+  // the first of them is reached by ordinary input rather than by allocation
+  // failure: the leading template text is part of the same token, and
+  // gta_unicode_string_create_and_adopt rejects invalid UTF-8.
+  //
+  // The rule is the one this grammar keeps running into - by the time an
+  // action runs, the RHS has been popped into $1..$n, so a %destructor will
+  // not run for any of it, and an action that bails is the last owner of
+  // everything it was handed.
+  for (const char * src : {
+      "\x87<%=t%>",
+      "\x87<%= \"a\" + b %>",
+      "\xdb<%=t%> tail <%=u%>",
+      }) {
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_template(src);
+    if (ast) {
+      gta_ast_node_destroy(ast);
+    }
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << "leaked on: " << src;
+  }
+  {
+    // The same shape with valid UTF-8 must still parse, or the guard has
+    // broken quick print.
+    gcu_memory_reset_counts();
+    GTA_Ast_Node * ast = gta_tang_parse_template("hi <%= t %>");
+    ASSERT_NE(ast, nullptr);
+    gta_ast_node_destroy(ast);
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count());
+  }
+}
+
+
 TEST(Parse, OutOfRangeCastDoesNotFold) {
   // Converting a float that does not fit into an integer is undefined
   // behaviour, and the folder did it at compile time. That is the site the

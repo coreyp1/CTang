@@ -889,10 +889,17 @@ closedStatement
 
       LOCATION(@1, @3);
 
+      // This arm owns two things it was handed: $1.str and $2. Every exit
+      // before $2 is adopted below has to free both - the RHS has already
+      // been popped, so no %destructor will run for them. Freeing only the
+      // string leaked the whole parsed expression, and the first branch is
+      // reached by ordinary input: gta_unicode_string_create_and_adopt fails
+      // on invalid UTF-8, so `\x87<%=t%>` leaked the identifier node.
       GTA_Unicode_String * string = gta_unicode_string_create_and_adopt($1.str, $1.len, $1.type);
       if (!string) {
         *parseError = ErrorOutOfMemory;
         gcu_free((void *)$1.str);
+        gta_ast_node_destroy($2);
         $$ = 0;
         break;
       }
@@ -900,6 +907,7 @@ closedStatement
       GTA_Ast_Node * preceding = (GTA_Ast_Node *)gta_ast_node_string_create(string, @1);
       if (!preceding) {
         gta_unicode_string_destroy(string);
+        gta_ast_node_destroy($2);
         $$ = 0;
         *parseError = ErrorOutOfMemory;
         break;
@@ -908,14 +916,17 @@ closedStatement
       GTA_Ast_Node * print_preceding = (GTA_Ast_Node *)gta_ast_node_print_create(preceding, @1);
       if (!print_preceding) {
         gta_ast_node_destroy(preceding);
+        gta_ast_node_destroy($2);
         $$ = 0;
         *parseError = ErrorOutOfMemory;
         break;
       }
 
+      // gta_ast_node_print_create only adopts $2 when it succeeds.
       GTA_Ast_Node * print_expression = (GTA_Ast_Node *)gta_ast_node_print_create($2, @2);
       if (!print_expression) {
         gta_ast_node_destroy(print_preceding);
+        gta_ast_node_destroy($2);
         $$ = 0;
         *parseError = ErrorOutOfMemory;
         break;
@@ -949,6 +960,8 @@ closedStatement
       LOCATION(@1, @3);
       $$ = (GTA_Ast_Node *)gta_ast_node_print_create($2, location);
       if (!$$) {
+        // print_create only adopts $2 when it succeeds.
+        gta_ast_node_destroy($2);
         *parseError = ErrorOutOfMemory;
         break;
       }
