@@ -60,9 +60,6 @@ typedef enum GTA_Bytecode {
                                ///<   putting them into a map.
   GTA_BYTECODE_CAST,           ///< Get type, pop val, push type(val)
   GTA_BYTECODE_SET_NOT_TEMP,   ///< Set the top of the stack to not be a temporary value
-  GTA_BYTECODE_ADOPT,          ///< Pop val. Val will be adopted by the next
-                               ///<   operation.  If temp, set not temp.  Otherwise,
-                               ///<   copy val.
 
   GTA_BYTECODE_POP,            ///< Pop a val
   GTA_BYTECODE_PUSH_BP,        ///< Push the base pointer onto the stack

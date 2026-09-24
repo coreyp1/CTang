@@ -350,13 +350,11 @@ bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
   //   POKE_LOCAL/GLOBAL (fp + identifier offset)
   //   POP
   //
-  // SET_NOT_TEMP rather than ADOPT: the loop variable is bound to the
-  // element, not to a copy of it, so `for (x : a) { x[0] = 9; }` is visible
-  // through `a`. Arrays and maps are reference types throughout the language
-  // - `b = a` and passing to a function both share - and nothing makes this
-  // binding the exception. See section 3 of the language reference. ADOPT
-  // deep-copies anything that is not temporary or a singleton, which made
-  // this the one place in Tang that copied a container.
+  // SET_NOT_TEMP: the loop variable is bound to the element, not to a copy
+  // of it, so `for (x : a) { x[0] = 9; }` is visible through `a`. Arrays and
+  // maps are reference types throughout the language - `b = a` and passing to
+  // a function both share - and nothing makes this binding the exception. See
+  // section 3 of the language reference.
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SET_NOT_TEMP))
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
@@ -507,9 +505,9 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
     && gta_compiler_context_add_label_jump(context, end_of_loop, v->count - 4)
 
   // 7. Clear is_temporary, so that the in-place fast path in the arithmetic
-  //    operators cannot mutate a value a variable now holds. Not
-  //    gta_binary_adopt__x86_64(), which would also deep copy: see the
-  //    matching comment in gta_ast_node_ranged_for_compile_to_bytecode().
+  //    operators cannot mutate a value a variable now holds. The variable is
+  //    bound to the element itself; see the matching comment in
+  //    gta_ast_node_ranged_for_compile_to_bytecode().
   //   mov byte ptr [rax + is_temporary_offset], 0
     && gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
 

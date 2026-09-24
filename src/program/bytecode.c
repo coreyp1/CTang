@@ -80,10 +80,6 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%4zu SET_NOT_TEMP\n", current - start);
         ++current;
         break;
-      case GTA_BYTECODE_ADOPT:
-        printf("%4zu ADOPT\n", current - start);
-        ++current;
-        break;
       case GTA_BYTECODE_POP:
         printf("%4zu POP\n", current - start);
         ++current;

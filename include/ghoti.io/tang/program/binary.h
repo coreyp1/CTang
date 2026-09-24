@@ -259,24 +259,6 @@ GTA_API bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function);
 GTA_API bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg);
 
 /**
- * Helper function to add the commands to adopt a value.
- *
- * A temporary or singleton value is marked as not temporary and kept.  Any
- * other value is deep copied, and the copy replaces it in `target_reg`.  So
- * this gives whatever it is emitted for - a ranged-for variable, say - value
- * semantics, and callers that mean to share a value rather than copy it
- * should clear `is_temporary` themselves instead of calling this.
- *
- * Clobbers RAX and the two argument registers, because it may call
- * gta_computed_value_deep_copy().
- *
- * @param context The compiler context.
- * @param target_reg The register holding the value to be adopted.
- * @return True on success, false on failure.
- */
-GTA_API bool gta_binary_adopt__x86_64(GTA_Compiler_Context * context, GTA_Register target_reg);
-
-/**
  * x86_64 instruction: ADD reg, imm
  *
  * @param vector The vector in which to store the instruction.

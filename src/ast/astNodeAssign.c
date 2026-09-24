@@ -290,12 +290,10 @@ static bool __compile_binary_lhs_is_identifier__x86_64(GTA_Ast_Node * lhs, GTA_C
   // operators, which mutates an operand rather than allocating a result - so
   // `a = a + 1; b = a + 3;` left a equal to 9 instead of 6.
   //
-  // Not gta_binary_adopt__x86_64(), which also deep-copies a non-temporary:
-  // that would give assignment value semantics for arrays and maps under this
-  // engine alone, while the bytecode compiler deliberately emits SET_NOT_TEMP
-  // here for the same reason. Whether tang's assignment copies a container is
-  // a language design question; both engines alias it today. See the matching
-  // comment in gta_ast_node_assign_compile_to_bytecode().
+  // Clearing the flag is all that happens here: `b = a` gives both names the
+  // same array, as section 3 of the language reference says it does for every
+  // reference type. The bytecode compiler emits SET_NOT_TEMP for the same
+  // reason.
   //
   //   mov byte ptr [rax + is_temporary_offset], 0
     && gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)

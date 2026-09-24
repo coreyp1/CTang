@@ -215,22 +215,6 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         value->is_temporary = false;
         break;
       }
-      case GTA_BYTECODE_ADOPT: {
-        // Adopt the top of the stack.
-        GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[*sp-1]);
-        if (value->is_temporary || value->is_singleton) {
-          value->is_temporary = false;
-        }
-        else {
-          GTA_Computed_Value * value_copy = gta_computed_value_deep_copy(value, context);
-          if (!value_copy) {
-            context->result = gta_computed_value_error_out_of_memory;
-            break;
-          }
-          context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(value_copy);
-        }
-        break;
-      }
       case GTA_BYTECODE_POP: {
         // Simply decrease the stack pointer.  The garbage collector will take
         // care of the rest.

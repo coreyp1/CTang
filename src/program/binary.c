@@ -27,7 +27,6 @@
 #include <ghoti.io/tang/program/binary.h>
 #include <ghoti.io/tang/program/compilerContext.h>
 #include <ghoti.io/tang/computedValue/computedValue.h>
-#include <ghoti.io/tang/computedValue/computedValueError.h>
 
 #define VECTOR_GROWTH_FACTOR ((double)1.5)
 
@@ -175,95 +174,6 @@ bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
     && gta_call_reg__x86_64(vector, reg)
   ;
 #endif
-}
-
-
-bool gta_binary_adopt__x86_64(GTA_Compiler_Context * context, GTA_Register target_reg) {
-  assert(context);
-  assert(context->binary_vector);
-  assert(REG_IS_INTEGER(target_reg));
-  assert(REG_IS_64BIT(target_reg));
-  GCU_Vector8 * v = context->binary_vector;
-
-  bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
-  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
-
-  GTA_Integer label_mark_not_temporary;
-  GTA_Integer label_done;
-
-  // Overview:
-  // If the computed value is a singleton or temporary, then mark it as not
-  // temporary and leave it where it is.  Otherwise, make a deep copy and
-  // leave the copy in target_reg.
-  //
-  // Both flags are `bool`, so they are tested a byte at a time, the way every
-  // other flag test in this compiler does it.  Loading them as 64-bit words
-  // took in the padding after them and the first bytes of the subtype's own
-  // fields - an array's element vector, for instance - so the test was
-  // nonzero for reasons that had nothing to do with either flag, and the deep
-  // copy was never reached.  It also read four bytes past a value that is
-  // nothing but the base struct.
-
-  return true
-  // Create the jump labels.
-    && ((label_mark_not_temporary = gta_compiler_context_get_label(context)) >= 0)
-    && ((label_done = gta_compiler_context_get_label(context)) >= 0)
-
-  /////////////////////////////////////////////////////////////////////////////
-  // if (is_temporary || is_singleton) jump to mark_not_temporary
-  /////////////////////////////////////////////////////////////////////////////
-  //   cmp byte ptr [target_reg + is_temporary_offset], 0
-  //   jne mark_not_temporary
-    && gta_cmp_ind8_imm8__x86_64(v, target_reg, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
-    && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
-    && gta_compiler_context_add_label_jump(context, label_mark_not_temporary, v->count - 4)
-  //   cmp byte ptr [target_reg + is_singleton_offset], 0
-  //   jne mark_not_temporary
-    && gta_cmp_ind8_imm8__x86_64(v, target_reg, GTA_REG_NONE, 0, (GTA_Integer)is_singleton_offset, 0)
-    && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
-    && gta_compiler_context_add_label_jump(context, label_mark_not_temporary, v->count - 4)
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Call the deep copy function.
-  /////////////////////////////////////////////////////////////////////////////
-  //   mov R1, target_reg                      ; Move the value to the first argument.
-  //   mov R2, r15                             ; Move the context to the second argument.
-    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, target_reg)
-    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
-  // gta_computed_value_deep_copy(target_reg, context)
-    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_deep_copy)
-  // The copy is returned in RAX.  Nothing else in this helper assumes where
-  // target_reg is, so move it across explicitly.
-  //   mov target_reg, rax
-    && (target_reg == GTA_REG_RAX || gta_mov_reg_reg__x86_64(v, target_reg, GTA_REG_RAX))
-
-  /////////////////////////////////////////////////////////////////////////////
-  // A failed copy returns null.  Put the out-of-memory error in its place
-  // rather than storing a null that the next instruction would dereference;
-  // the bytecode interpreter answers a failed copy the same way.
-  /////////////////////////////////////////////////////////////////////////////
-  //   test target_reg, target_reg
-  //   jne mark_not_temporary
-  //   mov target_reg, gta_computed_value_error_out_of_memory
-    && gta_test_reg_reg__x86_64(v, target_reg, target_reg)
-    && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
-    && gta_compiler_context_add_label_jump(context, label_mark_not_temporary, v->count - 4)
-    && gta_mov_reg_imm__x86_64(v, target_reg, (int64_t)(GTA_Integer)&gta_computed_value_error_out_of_memory)
-    && gta_mov_reg_ind__x86_64(v, target_reg, target_reg, GTA_REG_NONE, 0, 0)
-    && gta_jmp__x86_64(v, 0xDEADBEEF)
-    && gta_compiler_context_add_label_jump(context, label_done, v->count - 4)
-
-  /////////////////////////////////////////////////////////////////////////////
-  // mark_not_temporary:
-  //   is_temporary = 0
-  /////////////////////////////////////////////////////////////////////////////
-  //   mov byte ptr [target_reg + is_temporary_offset], 0
-    && gta_compiler_context_set_label(context, label_mark_not_temporary, v->count)
-    && gta_mov_ind8_imm8__x86_64(v, target_reg, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
-
-  // done:
-    && gta_compiler_context_set_label(context, label_done, v->count)
-  ;
 }
 
 
