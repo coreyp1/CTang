@@ -1,5 +1,7 @@
 
 #include <assert.h>
+#include <inttypes.h>
+#include <stdio.h>
 #include <gtest/gtest.h>
 #include <ghoti.io/cutil/memory.h>
 #include <algorithm>
@@ -3476,6 +3478,52 @@ TEST(CompoundAssign, OnlyAnIdentifierCanBeTheTarget) {
     TEST_PROGRAM_TEARDOWN();
   }
 }
+
+
+#ifdef __linux__
+/**
+ * True if any mapping in /proc/self/maps covers `address`.
+ */
+static bool address_is_mapped(void * address) {
+  uintptr_t target = (uintptr_t)address;
+  FILE * maps = fopen("/proc/self/maps", "r");
+  if (!maps) {
+    return false;
+  }
+  char line[512];
+  bool found = false;
+  while (!found && fgets(line, sizeof(line), maps)) {
+    uintptr_t start;
+    uintptr_t end;
+    if (sscanf(line, "%" SCNxPTR "-%" SCNxPTR, &start, &end) == 2) {
+      found = (target >= start) && (target < end);
+    }
+  }
+  fclose(maps);
+  return found;
+}
+
+
+// The JIT's code block is mmap()ed, and only gta_program_destroy() gives it
+// back.  Nothing else here can see it leak: it is not a malloc'd block, so
+// the allocation counts every other test in this file compares, and
+// LeakSanitizer, both look straight past it.
+TEST(Binary, CodeBlockIsUnmappedOnDestroy) {
+  GTA_Program * program = gta_program_create(language, "print(1 + 1);");
+  ASSERT_TRUE(program);
+  void * binary = program->binary;
+  if (!binary) {
+    // The bytecode engine ran this one; there is no block to release.
+    gta_program_destroy(program);
+    GTEST_SKIP() << "no binary was generated";
+  }
+  // Read the mapping while it must still be there, so that a run which
+  // cannot see /proc fails here rather than passing below for that reason.
+  ASSERT_TRUE(address_is_mapped(binary));
+  gta_program_destroy(program);
+  ASSERT_FALSE(address_is_mapped(binary));
+}
+#endif // __linux__
 
 
 int main(int argc, char **argv) {

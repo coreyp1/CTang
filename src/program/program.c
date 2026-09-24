@@ -272,6 +272,7 @@ bool gta_program_create_in_place_with_flags(GTA_Program * program, GTA_Language 
     .ast = 0,
     .bytecode = 0,
     .binary = 0,
+    .binary_length = 0,
     .flags = flags,
     .scope = 0,
     .singletons = 0,
@@ -440,16 +441,18 @@ void gta_program_destroy_in_place(GTA_Program * self) {
   }
   self->bytecode = 0;
 
-  // Destroy the binary.
+  // Destroy the binary.  self->binary is executable memory, not a vector:
+  // asking it for a vector's count read the first instructions of the
+  // compiled program as a length, and munmap() refused every one of them.
   if (self->binary) {
 #ifdef _WIN32
     VirtualFree(self->binary, 0, MEM_RELEASE);
 #else
-    size_t length = gcu_vector8_count(self->binary);
-    munmap(self->binary, length);
+    munmap(self->binary, self->binary_length);
 #endif // _WIN32
   }
   self->binary = 0;
+  self->binary_length = 0;
 }
 
 
@@ -929,6 +932,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   program->binary = VirtualAlloc(0, length, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
   if (program->binary) {
     memcpy(program->binary, v->data, length);
+    program->binary_length = length;
     // dump the binary to stderr
     // printf("\nProgram code:\n%s\n", program->code);
     // Write to a file named "output.bin" for debugging.
@@ -958,6 +962,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
       program->binary = 0;
     }
     else {
+      program->binary_length = length;
       // dump the binary to stderr
       // printf("\nProgram code:\n%s\n", program->code);
       // fwrite(v->data, 1, length, stderr);

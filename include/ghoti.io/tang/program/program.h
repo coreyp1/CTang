@@ -154,6 +154,14 @@ struct GTA_Program {
    */
   void * binary;
   /**
+   * The length, in bytes, of the block that `binary` points to.
+   *
+   * The block is executable memory obtained from mmap() or VirtualAlloc()
+   * rather than an allocation carrying a header, so its length cannot be
+   * recovered from the pointer.  munmap() is given it at destruction.
+   */
+  size_t binary_length;
+  /**
    * The flags for the program.
    */
   GTA_Program_Flags flags;
