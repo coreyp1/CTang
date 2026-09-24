@@ -198,10 +198,10 @@ bool gta_binary_adopt__x86_64(GTA_Compiler_Context * context, GTA_Register targe
   /////////////////////////////////////////////////////////////////////////////
   // Call the deep copy function.
   /////////////////////////////////////////////////////////////////////////////
-  //   mov rdi, target_reg                     ; Move the value to RDI.
-  //   mov rsi, r15                            ; Move the context to RSI.
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RDI, target_reg)
-    && gta_mov_reg_reg__x86_64(v, GTA_REG_RSI, GTA_REG_R15)
+  //   mov R1, target_reg                      ; Move the value to the first argument.
+  //   mov R2, r15                             ; Move the context to the second argument.
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R1, target_reg)
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
   // gta_computed_value_deep_copy(target_reg, context)
     && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_deep_copy)
 
