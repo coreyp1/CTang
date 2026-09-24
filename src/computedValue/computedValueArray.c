@@ -142,7 +142,22 @@ bool GTA_CALL gta_computed_value_array_create_in_place(GTA_Computed_Value_Array 
     },
     .elements = GTA_VECTORX_CREATE(size),
   };
-  return self->elements != NULL;
+  if (!self->elements) {
+    return false;
+  }
+  // The vector's reserve is best-effort: cutil's create leaves `data` null and
+  // `capacity` zero when the allocation it asked for was refused, and still
+  // reports success, so nothing downstream can tell a reserved vector from an
+  // unreserved one.  Every caller here passes the number of elements it is
+  // about to write directly into `data`, so the room has to be real.  Without
+  // this, `[[], [], 0] * 100000000` wanted 2.4 GB, was refused, and wrote the
+  // first element through a null pointer.
+  if (size && (self->elements->capacity < size)) {
+    GTA_VECTORX_DESTROY(self->elements);
+    self->elements = NULL;
+    return false;
+  }
+  return true;
 }
 
 
@@ -427,6 +442,13 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_multiply(GTA_Computed_Val
   GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)gta_computed_value_array_create(element_count, context);
   if (!result) {
     return gta_computed_value_error_out_of_memory;
+  }
+  if (!element_count) {
+    // Repeating an empty array is an empty array, however many times.  Said
+    // here rather than left to the loops below, which would otherwise spin
+    // `rhs->value` times over an empty body - and `[] * 9223372036854775807`
+    // would not come back.
+    return (GTA_Computed_Value *)result;
   }
   // The elements are written into the vector's storage directly below, so the
   // count has to be set here.  It was not, and `[1, 2] * 3` was `[]`: the

@@ -3871,6 +3871,8 @@ TEST(Binary, ArrayRepetition) {
   expect_error("3 * [1, 2];", "Error: Not supported");
   // A count that cannot be allocated is an error, not a wrapped product.
   expect_error("[1, 2] * 9223372036854775807;", "Error: Out of memory");
+  // Repeating an empty array answers without counting to the repetition.
+  expect_string("([] * 9223372036854775807) as string;", "[]");
 }
 
 
