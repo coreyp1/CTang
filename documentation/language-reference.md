@@ -571,6 +571,11 @@ Iterates the elements of an **array**, binding each to `name` in turn. `name`
 keeps the last element afterwards. Mutating the array during iteration is
 permitted and affects later iterations.
 
+`name` is bound to the element, not to a copy of it, which follows from
+arrays and maps being reference types (section 3): `for (x : a) { x[0] = 9; }`
+is visible through `a`. Rebinding `name` is not mutation and does not reach
+the array - `for (x : a) { x = 99; }` leaves `a` alone.
+
 Only arrays are iterable. Strings are `Not implemented`; maps and everything
 else are `Not supported` (14).
 
