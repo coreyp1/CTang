@@ -94,6 +94,16 @@ GTA_API extern GTA_Computed_Value * gta_computed_value_error_invalid_index;
 GTA_API extern GTA_Computed_Value * gta_computed_value_error_invalid_function_call;
 
 /**
+ * A singleton for a call that nested deeper than the execution context
+ * allows.
+ *
+ * The x86-64 engine calls compiled functions with real `call` instructions,
+ * so unbounded recursion runs the process's own stack out and takes the
+ * host down with it.  See GTA_EXECUTION_CONTEXT_DEFAULT_MAX_CALL_DEPTH.
+ */
+GTA_API extern GTA_Computed_Value * gta_computed_value_error_recursion_limit;
+
+/**
  * Indicates that the attempted function call could not be executed, because
  * the number of arguments supplied did not match the number of parameters
  * expected by the function.

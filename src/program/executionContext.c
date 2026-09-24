@@ -71,6 +71,8 @@ bool gta_execution_context_create_in_place(GTA_Execution_Context * context, GTA_
     .library = library,
     .user_data = 0,
     .fp = 0,
+    .call_depth = 0,
+    .max_call_depth = GTA_EXECUTION_CONTEXT_DEFAULT_MAX_CALL_DEPTH,
   };
   return true;
 

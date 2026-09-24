@@ -29,6 +29,7 @@
 #include <ghoti.io/tang/computedValue/computedValueFunction.h>
 #include <ghoti.io/tang/computedValue/computedValueFunctionNative.h>
 #include <ghoti.io/tang/program/binary.h>
+#include <ghoti.io/tang/program/executionContext.h>
 
 GTA_Ast_Node_VTable gta_ast_node_function_call_vtable = {
   .name = "FunctionCall",
@@ -258,6 +259,8 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   // Offsets
   int32_t vtable_offset = (int32_t)(size_t)(&((GTA_Computed_Value *)0)->vtable);
   int32_t num_arguments_offset = (int32_t)(size_t)(&((GTA_Computed_Value_Function *)0)->num_arguments);
+  int32_t call_depth_offset = (int32_t)(size_t)(&((GTA_Execution_Context *)0)->call_depth);
+  int32_t max_call_depth_offset = (int32_t)(size_t)(&((GTA_Execution_Context *)0)->max_call_depth);
   int32_t pointer_offset = (int32_t)(size_t)(&((GTA_Computed_Value_Function *)0)->pointer);
   int32_t bound_object = (int32_t)(size_t)(&((GTA_Computed_Value_Function_Native *)0)->bound_object);
   int32_t callback = (int32_t)(size_t)(&((GTA_Computed_Value_Function_Native *)0)->callback);
@@ -267,6 +270,8 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   GTA_Integer not_a_native_function = -1;
   GTA_Integer not_a_function = -1;
   GTA_Integer argument_count_mismatch = -1;
+  GTA_Integer recursion_limit = -1;
+  GTA_Integer depth_is_allowed = -1;
   GTA_Integer cleanup = -1;
   GTA_Integer restore_frame_pointer = -1;
 
@@ -300,6 +305,8 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
     && ((not_a_native_function = gta_compiler_context_get_label(context)) >= 0)
     && ((not_a_function = gta_compiler_context_get_label(context)) >= 0)
     && ((argument_count_mismatch = gta_compiler_context_get_label(context)) >= 0)
+    && ((recursion_limit = gta_compiler_context_get_label(context)) >= 0)
+    && ((depth_is_allowed = gta_compiler_context_get_label(context)) >= 0)
     && ((cleanup = gta_compiler_context_get_label(context)) >= 0)
     && ((restore_frame_pointer = gta_compiler_context_get_label(context)) >= 0)
 
@@ -415,6 +422,34 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
     && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, argument_count_mismatch, v->count - 4)
 
+  // Refuse to nest deeper than the context allows.
+  //
+  // This is a real `call`, so the recursion runs on the process's own stack:
+  // `function f(n) { return f(n + 1); } f(0);` used to overflow it and take
+  // the host down.  The count lives on the execution context so that both
+  // engines share the one limit.  A max of zero disables it.
+  //   mov Scratch1, [r15 + call_depth_offset]
+  //   mov Scratch2, [r15 + max_call_depth_offset]
+  //   test Scratch2, Scratch2
+  //   jz depth_is_allowed
+  //   cmp Scratch1, Scratch2
+  //   jae recursion_limit
+    && gta_mov_reg_ind__x86_64(v, GTA_X86_64_Scratch1, GTA_REG_R15, GTA_REG_NONE, 0, call_depth_offset)
+    && gta_mov_reg_ind__x86_64(v, GTA_X86_64_Scratch2, GTA_REG_R15, GTA_REG_NONE, 0, max_call_depth_offset)
+    && gta_test_reg_reg__x86_64(v, GTA_X86_64_Scratch2, GTA_X86_64_Scratch2)
+    && gta_jcc__x86_64(v, GTA_CC_Z, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, depth_is_allowed, v->count - 4)
+    && gta_cmp_reg_reg__x86_64(v, GTA_X86_64_Scratch1, GTA_X86_64_Scratch2)
+    && gta_jcc__x86_64(v, GTA_CC_AE, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, recursion_limit, v->count - 4)
+
+  // depth_is_allowed:
+  //   add Scratch1, 1
+  //   mov [r15 + call_depth_offset], Scratch1
+    && gta_compiler_context_set_label(context, depth_is_allowed, v->count)
+    && gta_add_reg_imm__x86_64(v, GTA_X86_64_Scratch1, 1)
+    && gta_mov_ind_reg__x86_64(v, GTA_REG_R15, GTA_REG_NONE, 0, call_depth_offset, GTA_X86_64_Scratch1)
+
   // Load the function pointer, call it, then clean up.
   // Note: The stack is already aligned. The called function's frame layout
   // (gta_ast_node_function_analyze()) expects GTA_SHADOW_SIZE__X86_64 bytes
@@ -422,9 +457,28 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   // gta_binary_call_reg__x86_64() puts there.
   //   mov rax, [rax + pointer_offset]
   //   call rax
-  //   jmp cleanup
     && gta_mov_reg_ind__x86_64(v, GTA_REG_RAX, GTA_REG_RAX, GTA_REG_NONE, 0, pointer_offset)
     && gta_binary_call_reg__x86_64(v, GTA_REG_RAX)
+
+  // The call returned, so give the depth back.  Scratch1 is caller-saved and
+  // the callee may have used it, so it is reloaded rather than remembered;
+  // RAX holds the result and must not be touched.
+  //   mov Scratch1, [r15 + call_depth_offset]
+  //   add Scratch1, -1
+  //   mov [r15 + call_depth_offset], Scratch1
+  //   jmp cleanup
+    && gta_mov_reg_ind__x86_64(v, GTA_X86_64_Scratch1, GTA_REG_R15, GTA_REG_NONE, 0, call_depth_offset)
+    && gta_add_reg_imm__x86_64(v, GTA_X86_64_Scratch1, -1)
+    && gta_mov_ind_reg__x86_64(v, GTA_REG_R15, GTA_REG_NONE, 0, call_depth_offset, GTA_X86_64_Scratch1)
+    && gta_jmp__x86_64(v, 0xDEADBEEF)
+    && gta_compiler_context_add_label_jump(context, cleanup, v->count - 4)
+
+  // recursion_limit:
+  //   Nothing was counted, because the call was never made.
+  //   mov rax, gta_computed_value_error_recursion_limit
+  //   jmp cleanup
+    && gta_compiler_context_set_label(context, recursion_limit, v->count)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (GTA_Integer)gta_computed_value_error_recursion_limit)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, cleanup, v->count - 4)
 

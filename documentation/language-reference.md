@@ -1101,9 +1101,17 @@ number and says so, because the text above points at these by number.
     zones, but no grammar rule consumes the tokens. `@now;` is currently
     swallowed under 13.1 and yields `null`.
 
-14. **No recursion limit.** `function f(n) { return f(n + 1); } f(0);`
-    overflows the C stack and segfaults the host process. A template can take
-    the server down.
+14. **Fixed.** `function f(n) { return f(n + 1); } f(0);` overflowed the C
+    stack and took the host process down, because the x86-64 engine calls
+    compiled functions with real `call` instructions. An execution context now
+    carries a call depth and a maximum, default
+    `GTA_EXECUTION_CONTEXT_DEFAULT_MAX_CALL_DEPTH` (512), and a call that
+    would go past it yields `Recursion Limit Exceeded` instead of being made.
+    A host that knows its own stack can raise or lower it on the context, and
+    zero removes it - which is only safe under the bytecode engine, whose
+    calls do not use the C stack. Both engines share the one limit so that
+    they still agree. This is the first of the limits section 14 asks for;
+    instruction count, output size and memory are still open.
 
 15. **Fixed** as a crash; the language question is still open. `foo();
     function foo() {}` crashed with `free(): invalid pointer` - see 13.24 for
@@ -1241,8 +1249,10 @@ rather than defects. Each needs a decision, then a test, then code.
   the host then needs to *know* an error happened, and today it only finds
   out if the error was the last value. A per-context error list, or a flag
   to halt on first error, or both.
-- **Limits.** Instruction count, recursion depth, output size, memory. The
-  README promises them; the sandbox story depends on them.
+- **Limits.** Instruction count, output size, memory. Recursion depth is
+  done (13.14) and is the shape the rest can follow: a field on the execution
+  context with a default, which the host can change. The README promises
+  them; the sandbox story depends on them.
 - **Date literals** (13.13) - finish or remove.
 - **Number separators** (`1_000_000`), exponent floats (`1e5`).
 - **Keys for reconciliation.** cjelly's `docs/semantics.md` needs Tang to

@@ -192,6 +192,21 @@ static GTA_Computed_Value_Error gta_computed_value_error_argument_count_mismatch
 };
 
 
+static GTA_Computed_Value_Error gta_computed_value_error_recursion_limit_singleton = {
+  .base = {
+    .vtable = &gta_computed_value_error_vtable,
+    .context = 0,
+    .is_true = false,
+    .is_error = true,
+    .is_temporary = false,
+    .requires_deep_copy = false,
+    .is_singleton = true,
+    .is_a_reference = false,
+  },
+  .message = "Recursion Limit Exceeded",
+};
+
+
 static GTA_Computed_Value_Error gta_computed_value_error_global_rng_seed_not_changeable_singleton = {
   .base = {
     .vtable = &gta_computed_value_error_vtable,
@@ -297,6 +312,7 @@ GTA_Computed_Value * gta_computed_value_error_divide_by_zero = (GTA_Computed_Val
 GTA_Computed_Value * gta_computed_value_error_modulo_by_zero = (GTA_Computed_Value *)&gta_computed_value_error_modulo_by_zero_singleton;
 GTA_Computed_Value * gta_computed_value_error_invalid_index = (GTA_Computed_Value *)&gta_computed_value_error_invalid_index_singleton;
 GTA_Computed_Value * gta_computed_value_error_invalid_function_call = (GTA_Computed_Value *)&gta_computed_value_error_invalid_function_call_singleton;
+GTA_Computed_Value * gta_computed_value_error_recursion_limit = (GTA_Computed_Value *)&gta_computed_value_error_recursion_limit_singleton;
 GTA_Computed_Value * gta_computed_value_error_argument_count_mismatch = (GTA_Computed_Value *)&gta_computed_value_error_argument_count_mismatch_singleton;
 GTA_Computed_Value * gta_computed_value_error_global_rng_seed_not_changeable = (GTA_Computed_Value *)&gta_computed_value_error_global_rng_seed_not_changeable_singleton;
 GTA_Computed_Value * gta_computed_value_error_integer_too_large = (GTA_Computed_Value *)&gta_computed_value_error_integer_too_large_singleton;

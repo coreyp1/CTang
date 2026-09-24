@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <ghoti.io/cutil/memory.h>
 #include <iostream>
+#include <string>
 #include <unicode/uclean.h>
 
 #include <ghoti.io/tang/tang.h>
@@ -1160,6 +1161,67 @@ TEST(Function, TheWrongNumberOfArgumentsIsAnError) {
   expect_error("function f(a) { return a; } f(1, 2);", "Error: Argument Count Mismatch");
   expect_error("function f() { return 1; } f(1);", "Error: Argument Count Mismatch");
   expect_integer("function f(a) { return a; } f(1, 2); 7;", 7);
+}
+
+
+
+// Unbounded recursion used to run the process's own stack out under the
+// x86-64 engine, which calls compiled functions with real `call`
+// instructions - a template could take the host down.  Both engines now share
+// one limit, carried on the execution context.
+TEST(Function, RecursionIsBounded) {
+  expect_error("function f(n) { return f(n + 1); } f(0);",
+    "Error: Recursion Limit Exceeded");
+  expect_error("function f() { return f(); } f();",
+    "Error: Recursion Limit Exceeded");
+  // Indirect recursion counts the same way.
+  expect_error("function g(n) { return g(n); } function f(n) { return g(n); } f(1);",
+    "Error: Recursion Limit Exceeded");
+}
+
+
+// The limit must not leak between calls: a call that hits it has to give back
+// everything it counted, or a later call inherits the depth and fails too.
+TEST(Function, TheCallDepthIsGivenBack) {
+  const char * deep = "function d(n) { if (n <= 0) { return 0; } return d(n - 1); }";
+  // Comfortably inside the default limit.
+  expect_integer((std::string(deep) + " d(400);").c_str(), 0);
+  // Past it, and then inside it again.
+  expect_integer((std::string(deep) + " d(100000); d(400);").c_str(), 0);
+  expect_integer((std::string(deep) + " d(100000); d(100000); d(400);").c_str(), 0);
+  // And in a loop, where the count is spent and recovered repeatedly.
+  expect_integer((std::string(deep) + " x = 1; for (i : [1, 2, 3]) { x = d(400); } x;").c_str(), 0);
+}
+
+
+// A host that knows its own stack can move the limit, and zero removes it.
+TEST(Function, TheCallDepthLimitIsTheHostsToSet) {
+  const char * code = "function d(n) { if (n <= 0) { return 0; } return d(n - 1); } d(40);";
+  {
+    GTA_Program * program = gta_program_create(language, code);
+    ASSERT_TRUE(program);
+    GTA_Execution_Context * context = gta_execution_context_create(program);
+    ASSERT_TRUE(context);
+    ASSERT_EQ(context->max_call_depth, (GTA_UInteger)GTA_EXECUTION_CONTEXT_DEFAULT_MAX_CALL_DEPTH);
+    context->max_call_depth = 10;
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_TRUE(context->result->is_error);
+    gta_execution_context_destroy(context);
+    gta_program_destroy(program);
+  }
+  {
+    GTA_Program * program = gta_program_create(language, code);
+    ASSERT_TRUE(program);
+    GTA_Execution_Context * context = gta_execution_context_create(program);
+    ASSERT_TRUE(context);
+    context->max_call_depth = 100;
+    ASSERT_TRUE(gta_program_execute(context));
+    ASSERT_TRUE(context->result);
+    ASSERT_FALSE(context->result->is_error);
+    gta_execution_context_destroy(context);
+    gta_program_destroy(program);
+  }
 }
 
 

@@ -64,7 +64,12 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
           context->result = gta_computed_value_error_out_of_memory;
         }
 
-        // Pop the frame pointer from the pc_stack.
+        // Pop the frame pointer from the pc_stack.  An empty pc_stack means
+        // this is the program's own return rather than a function's, and
+        // nothing was counted for it.
+        if (context->call_depth) {
+          --context->call_depth;
+        }
         context->fp = context->pc_stack->count > 0
           ? GTA_TYPEX_UI(context->pc_stack->data[--context->pc_stack->count])
           : 0;
@@ -572,6 +577,18 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
           break;
         }
 
+        // Refuse to nest deeper than the context allows.  The bytecode engine
+        // does not use the C stack for a Tang call, so this is not what keeps
+        // it alive - it keeps it agreeing with the x86-64 engine, for which
+        // the limit is the difference between an error and the process dying.
+        if (context->max_call_depth && (context->call_depth >= context->max_call_depth)) {
+          *sp -= num_arguments;
+          if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(gta_computed_value_error_recursion_limit))) {
+            context->result = gta_computed_value_error_out_of_memory;
+          }
+          break;
+        }
+
         // Prepare to call the function.
         // Push the return address onto the pc stack.
         if (!GTA_VECTORX_APPEND(context->pc_stack, GTA_TYPEX_MAKE_P(next))) {
@@ -586,6 +603,7 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         }
         // Set the frame pointer to the stack pointer minus the number of arguments.
         context->fp = *sp - num_arguments;
+        ++context->call_depth;
         // Set the pc to the function's address.
         next = &context->program->bytecode->data[function->pointer];
 

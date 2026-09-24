@@ -60,6 +60,19 @@ typedef GTA_Computed_Value * GTA_CALL (*GTA_Execution_Context_Global_Create) (GT
  * The Context class is used to manage the state of the execution environment
  * for a Tang program as it is being executed.
 */
+/**
+ * The call depth a new execution context allows by default.
+ *
+ * The x86-64 engine calls compiled functions with real `call` instructions,
+ * so this is a bound on the process's own stack, not on a heap structure:
+ * `function f(n) { return f(n + 1); } f(0);` used to run the stack out and
+ * take the host down with it.  The figure is deliberately well inside a
+ * default 8 MiB thread stack, because a frame's size depends on how many
+ * locals the function has and a template author cannot be expected to
+ * reason about that.
+ */
+#define GTA_EXECUTION_CONTEXT_DEFAULT_MAX_CALL_DEPTH 512
+
 struct GTA_Execution_Context {
   /**
    * The program being executed.
@@ -97,6 +110,23 @@ struct GTA_Execution_Context {
    * The current frame pointer.
    */
   GTA_UInteger fp;
+  /**
+   * How many Tang function calls are currently on the stack.
+   *
+   * Both engines keep this; the x86-64 engine reads and writes it from
+   * compiled code, which is why it lives here rather than being derived.
+   */
+  GTA_UInteger call_depth;
+  /**
+   * The deepest `call_depth` a call is allowed to reach.
+   *
+   * A call that would go past it yields
+   * `gta_computed_value_error_recursion_limit` instead of being made.  A host
+   * that knows its own stack may raise or lower this after creating the
+   * context; zero disables the limit, which is only safe for the bytecode
+   * engine, whose calls do not use the C stack.
+   */
+  GTA_UInteger max_call_depth;
 };
 
 /**
