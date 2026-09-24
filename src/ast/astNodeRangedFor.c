@@ -497,7 +497,7 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
     && gta_compiler_context_add_label_jump(context, end_of_loop, v->count - 4)
 
   // 7. Adopt the value.
-    && gta_binary_adopt__x86_64(context, GTA_REG_RAX, GTA_REG_RDX, GTA_REG_R8, GTA_REG_R9)
+    && gta_binary_adopt__x86_64(context, GTA_REG_RAX)
 
   // 8. Assign the iterator value to the ranged-for variable.
   //   mov [REG(12 or 13) + identifier_stack_location_offset], rax

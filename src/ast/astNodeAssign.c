@@ -282,9 +282,23 @@ static bool __compile_binary_lhs_is_identifier__x86_64(GTA_Ast_Node * lhs, GTA_C
   // of the memory address for whichever variable we're trying to access.
   int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
 
+  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
+
   return true
-  // Adopt the value.
-    && gta_binary_adopt__x86_64(context, GTA_REG_RAX, GTA_REG_RDX, GTA_REG_R8, GTA_REG_R9)
+  // Clear is_temporary before storing. A stored value that is still marked
+  // temporary is fair game for the in-place fast path in the arithmetic
+  // operators, which mutates an operand rather than allocating a result - so
+  // `a = a + 1; b = a + 3;` left a equal to 9 instead of 6.
+  //
+  // Not gta_binary_adopt__x86_64(), which also deep-copies a non-temporary:
+  // that would give assignment value semantics for arrays and maps under this
+  // engine alone, while the bytecode compiler deliberately emits SET_NOT_TEMP
+  // here for the same reason. Whether tang's assignment copies a container is
+  // a language design question; both engines alias it today. See the matching
+  // comment in gta_ast_node_assign_compile_to_bytecode().
+  //
+  //   mov byte ptr [rax + is_temporary_offset], 0
+    && gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
 
   // Store the value in the appropriate location.
   // RAX contains the final value of the RHS.

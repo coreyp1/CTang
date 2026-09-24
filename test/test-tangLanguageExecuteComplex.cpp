@@ -235,6 +235,56 @@ TEST(ControlFlow, RangedFor) {
   }
 }
 
+TEST(ControlFlow, RangedForVariableIsACopy) {
+  {
+    // The loop variable is adopted, which deep copies anything that is not
+    // temporary or a singleton, so writing through it must not reach the
+    // container being walked. The x86_64 compiler tested is_temporary and
+    // is_singleton as 64-bit words, which took in the bytes after them, so
+    // the copy was never made and this printed 9 under the JIT and 1 under
+    // the bytecode interpreter.
+    TEST_PROGRAM_SETUP(R"(
+      a = [[1], [2]];
+      for (x : a) {
+        x[0] = 9;
+      }
+      print(a[0][0]);
+      print(a[1][0]);
+    )");
+    ASSERT_STREQ(context->output->buffer, "12");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
+TEST(Assignment, ContainersAreShared) {
+  {
+    // Assignment does not copy: `b = a` gives both names the same array, in
+    // both engines. This is the language as it stands rather than a
+    // conclusion anyone reached - see the comments in
+    // gta_ast_node_assign_compile_to_bytecode() and its x86_64 counterpart -
+    // and it is pinned here so that changing it has to be deliberate.
+    TEST_PROGRAM_SETUP(R"(
+      a = [1];
+      b = a;
+      b[0] = 9;
+      print(a[0]);
+    )");
+    ASSERT_STREQ(context->output->buffer, "9");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A map is shared the same way.
+    TEST_PROGRAM_SETUP(R"(
+      a = {k: 1};
+      b = a;
+      b["k"] = 9;
+      print(a["k"]);
+    )");
+    ASSERT_STREQ(context->output->buffer, "9");
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(ControlFlow, Break) {
   {
     // Break in a while loop.
