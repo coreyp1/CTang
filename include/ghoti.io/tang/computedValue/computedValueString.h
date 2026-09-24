@@ -186,6 +186,83 @@ GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_a
 GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
+ * Compares two strings for equality.
+ *
+ * Comparison is on content only.  A string's segment types record where each
+ * part came from, for encoding; they are not part of what the string is.
+ *
+ * Equality is strict: a string is never equal to a value of another type.
+ *
+ * @param self The string.
+ * @param other The value to compare against.
+ * @param self_is_lhs Whether `self` is the left-hand side of the operation.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+
+/**
+ * Compares two strings for inequality.
+ *
+ * @param self The string.
+ * @param other The value to compare against.
+ * @param self_is_lhs Whether `self` is the left-hand side of the operation.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+
+/**
+ * Orders two strings.
+ *
+ * Ordering is by code point, which for UTF-8 is the same as ordering the
+ * bytes.  It is not a collation: it does not know about locale, case folding
+ * or combining sequences, and is not meant to be used to sort text for a
+ * reader.
+ *
+ * @param self The string.
+ * @param other The value to compare against.
+ * @param self_is_lhs Whether `self` is the left-hand side of the operation.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+
+/**
+ * Orders two strings.  See gta_computed_value_string_less_than().
+ *
+ * @param self The string.
+ * @param other The value to compare against.
+ * @param self_is_lhs Whether `self` is the left-hand side of the operation.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+
+/**
+ * Orders two strings.  See gta_computed_value_string_less_than().
+ *
+ * @param self The string.
+ * @param other The value to compare against.
+ * @param self_is_lhs Whether `self` is the left-hand side of the operation.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+
+/**
+ * Orders two strings.  See gta_computed_value_string_less_than().
+ *
+ * @param self The string.
+ * @param other The value to compare against.
+ * @param self_is_lhs Whether `self` is the left-hand side of the operation.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_string_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+
+
+/**
  * Gets a value from the object using an index.
  *
  * @param self The object to get the value from.

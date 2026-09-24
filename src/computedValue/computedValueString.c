@@ -161,12 +161,12 @@ GTA_Computed_Value_VTable gta_computed_value_string_vtable = {
   .divide = gta_computed_value_divide_not_supported,
   .modulo = gta_computed_value_modulo_not_supported,
   .negative = gta_computed_value_negative_not_supported,
-  .less_than = gta_computed_value_less_than_not_implemented,
-  .less_than_equal = gta_computed_value_less_than_equal_not_implemented,
-  .greater_than = gta_computed_value_greater_than_not_implemented,
-  .greater_than_equal = gta_computed_value_greater_than_equal_not_implemented,
-  .equal = gta_computed_value_equal_not_implemented,
-  .not_equal = gta_computed_value_not_equal_not_implemented,
+  .less_than = gta_computed_value_string_less_than,
+  .less_than_equal = gta_computed_value_string_less_than_equal,
+  .greater_than = gta_computed_value_string_greater_than,
+  .greater_than_equal = gta_computed_value_string_greater_than_equal,
+  .equal = gta_computed_value_string_equal,
+  .not_equal = gta_computed_value_string_not_equal,
   .period = gta_computed_value_generic_period,
   .index = gta_computed_value_string_index,
   .slice = gta_computed_value_string_slice,
@@ -344,6 +344,135 @@ GTA_Unicode_String * GTA_CALL gta_computed_value_string_print(GTA_Computed_Value
 
   assert(string->value);
   return gta_unicode_string_substring(string->value, 0, string->value->grapheme_length);
+}
+
+
+/**
+ * Order two strings by their bytes, which for UTF-8 is code point order.
+ *
+ * memcmp() on the shorter length decides whenever the strings differ inside
+ * it; when one is a prefix of the other, the shorter sorts first.  Comparing
+ * with strcmp() would have stopped at an embedded null, which a Tang string
+ * is allowed to contain.
+ *
+ * @param lhs The left-hand string.
+ * @param rhs The right-hand string.
+ * @return Negative, zero or positive as lhs sorts before, with, or after rhs.
+ */
+static int string_compare(const GTA_Unicode_String * lhs, const GTA_Unicode_String * rhs) {
+  assert(lhs);
+  assert(rhs);
+  size_t shorter = lhs->byte_length < rhs->byte_length
+    ? lhs->byte_length
+    : rhs->byte_length;
+  int difference = shorter ? memcmp(lhs->buffer, rhs->buffer, shorter) : 0;
+  if (difference) {
+    return difference;
+  }
+  if (lhs->byte_length == rhs->byte_length) {
+    return 0;
+  }
+  return lhs->byte_length < rhs->byte_length ? -1 : 1;
+}
+
+
+/**
+ * Order self against other, with the operands in source order.
+ *
+ * The virtual table is reached through whichever operand is a string, so
+ * `self` is not always the left-hand side; self_is_lhs says which it was, and
+ * the sign is flipped when it was the right.
+ *
+ * @param self The string whose vtable was dispatched to.
+ * @param other The other operand.
+ * @param self_is_lhs Whether `self` was the left-hand side.
+ * @param ordered Receives the comparison, in source order.
+ * @return true if both operands were strings, false otherwise.
+ */
+static bool string_compare_operands(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, int * ordered) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_STRING(self));
+  assert(ordered);
+
+  if (!GTA_COMPUTED_VALUE_IS_STRING(other)) {
+    return false;
+  }
+  int difference = string_compare(
+    ((GTA_Computed_Value_String *)self)->value,
+    ((GTA_Computed_Value_String *)other)->value);
+  *ordered = self_is_lhs ? difference : -difference;
+  return true;
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_string_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  // Equality is strict, so a string is simply not equal to anything that is
+  // not a string.  Saying "not supported" instead would make `s == 3` an
+  // error in a template rather than the false it plainly is.
+  int ordered = 0;
+  if (!string_compare_operands(self, other, self_is_lhs, &ordered)) {
+    return (GTA_Computed_Value *)gta_computed_value_boolean_false;
+  }
+  return (GTA_Computed_Value *)(ordered == 0
+    ? gta_computed_value_boolean_true
+    : gta_computed_value_boolean_false);
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_string_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  int ordered = 0;
+  if (!string_compare_operands(self, other, self_is_lhs, &ordered)) {
+    return (GTA_Computed_Value *)gta_computed_value_boolean_true;
+  }
+  return (GTA_Computed_Value *)(ordered != 0
+    ? gta_computed_value_boolean_true
+    : gta_computed_value_boolean_false);
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_string_less_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  // Ordering, unlike equality, has no sensible answer across types: there is
+  // no reason a string should sort before or after an integer.
+  int ordered = 0;
+  if (!string_compare_operands(self, other, self_is_lhs, &ordered)) {
+    return gta_computed_value_error_not_supported;
+  }
+  return (GTA_Computed_Value *)(ordered < 0
+    ? gta_computed_value_boolean_true
+    : gta_computed_value_boolean_false);
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_string_less_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  int ordered = 0;
+  if (!string_compare_operands(self, other, self_is_lhs, &ordered)) {
+    return gta_computed_value_error_not_supported;
+  }
+  return (GTA_Computed_Value *)(ordered <= 0
+    ? gta_computed_value_boolean_true
+    : gta_computed_value_boolean_false);
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_string_greater_than(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  int ordered = 0;
+  if (!string_compare_operands(self, other, self_is_lhs, &ordered)) {
+    return gta_computed_value_error_not_supported;
+  }
+  return (GTA_Computed_Value *)(ordered > 0
+    ? gta_computed_value_boolean_true
+    : gta_computed_value_boolean_false);
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_string_greater_than_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  int ordered = 0;
+  if (!string_compare_operands(self, other, self_is_lhs, &ordered)) {
+    return gta_computed_value_error_not_supported;
+  }
+  return (GTA_Computed_Value *)(ordered >= 0
+    ? gta_computed_value_boolean_true
+    : gta_computed_value_boolean_false);
 }
 
 

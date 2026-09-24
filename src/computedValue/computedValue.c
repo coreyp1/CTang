@@ -68,8 +68,8 @@ GTA_Computed_Value_VTable gta_computed_value_null_vtable = {
   .less_than_equal = gta_computed_value_less_than_equal_not_supported,
   .greater_than = gta_computed_value_greater_than_not_supported,
   .greater_than_equal = gta_computed_value_greater_than_equal_not_supported,
-  .equal = gta_computed_value_equal_not_implemented,
-  .not_equal = gta_computed_value_not_equal_not_implemented,
+  .equal = gta_computed_value_null_equal,
+  .not_equal = gta_computed_value_null_not_equal,
   .period = gta_computed_value_generic_period,
   .index = gta_computed_value_index_not_supported,
   .slice = gta_computed_value_slice_not_supported,
@@ -339,6 +339,29 @@ char * GTA_CALL gta_computed_value_null_to_string(GTA_MAYBE_UNUSED(GTA_Computed_
   }
   strcpy(str, "null");
   return str;
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_null_equal(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_NULL(self));
+
+  // `x == null` is the way a template asks whether a value is there at all,
+  // so it has to answer true or false rather than raise.  Null carries no
+  // value, so being null is the whole of the comparison.
+  return (GTA_Computed_Value *)(GTA_COMPUTED_VALUE_IS_NULL(other)
+    ? gta_computed_value_boolean_true
+    : gta_computed_value_boolean_false);
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_null_not_equal(GTA_MAYBE_UNUSED(GTA_Computed_Value * self), GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_NULL(self));
+
+  return (GTA_Computed_Value *)(GTA_COMPUTED_VALUE_IS_NULL(other)
+    ? gta_computed_value_boolean_false
+    : gta_computed_value_boolean_true);
 }
 
 

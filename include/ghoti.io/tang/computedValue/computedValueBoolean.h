@@ -133,6 +133,32 @@ GTA_API GTA_NO_DISCARD char * GTA_CALL gta_computed_value_boolean_to_string(GTA_
  */
 GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
+/**
+ * Compares a boolean against another value for equality.
+ *
+ * Equality is strict: `true == 1` is false.  Booleans have no ordering, so
+ * there is nothing here for `<` and friends.
+ *
+ * @param self The boolean.
+ * @param other The value to compare against.
+ * @param self_is_lhs Whether `self` is the left-hand side of the operation.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+
+/**
+ * Compares a boolean against another value for inequality.
+ *
+ * @param self The boolean.
+ * @param other The value to compare against.
+ * @param self_is_lhs Whether `self` is the left-hand side of the operation.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

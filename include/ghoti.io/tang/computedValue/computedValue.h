@@ -825,6 +825,31 @@ GTA_API GTA_NO_DISCARD char * GTA_CALL gta_computed_value_null_to_string(GTA_Com
 GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_null_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
 
 /**
+ * Compares null against another value for equality.
+ *
+ * Null is equal to null and to nothing else.  Null has no ordering.
+ *
+ * @param self The null value.
+ * @param other The value to compare against.
+ * @param self_is_lhs Whether `self` is the left-hand side of the operation.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_null_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+
+/**
+ * Compares null against another value for inequality.
+ *
+ * @param self The null value.
+ * @param other The value to compare against.
+ * @param self_is_lhs Whether `self` is the left-hand side of the operation.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_null_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, bool self_is_lhs, GTA_Execution_Context * context);
+
+
+/**
  * Prints a computed value.
  *
  * Calls the `print` method of the virtual table.

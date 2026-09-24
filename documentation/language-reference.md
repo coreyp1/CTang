@@ -1010,9 +1010,15 @@ number and says so, because the text above points at these by number.
    type. A trusted tail laundered an untrusted head, and `!"<i>" + "<b>"`
    would have reached the output as `<i><b>`, unescaped.
 
-3. **Equality and ordering are not implemented for strings, booleans or
-   null.** `"a" == "a"`, `true == true`, `null == null`, `"a" < "b"` all
-   yield `Not implemented`. Only numbers and arrays compare.
+3. **Fixed.** Equality and ordering were implemented only for numbers and
+   arrays; every other type's virtual table carried the "not implemented"
+   stub, so `"a" == "a"`, `true == true` and `null == null` were errors.
+   Equality is now defined for strings, booleans and null, and is **strict**
+   across types (section 14): a value of one type is never equal to a value
+   of another, and asking is not an error, because `x == null` is how a
+   template asks whether a value is there at all. Strings also order, by code
+   point, which for UTF-8 is byte order - not a collation. Ordering across
+   types has no answer and remains an error.
 
 4. **Fixed.** Float literals with the same integer part used to be the same
    literal. `gta_program_get_singleton()` takes the interning key as

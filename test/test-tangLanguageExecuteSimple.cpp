@@ -3521,6 +3521,104 @@ TEST(Syntax, ARefusedStatementDoesNotTruncateTheProgram) {
 }
 
 
+
+// Run a source that must yield a boolean, and say which boolean.
+static void expect_boolean(const char * code, bool expected) {
+  gcu_memory_reset_counts();
+  GTA_Program * program = gta_program_create(language, code);
+  ASSERT_TRUE(program) << code;
+  GTA_Execution_Context * context = gta_execution_context_create(program);
+  ASSERT_TRUE(context) << code;
+  ASSERT_TRUE(gta_program_execute(context)) << code;
+  ASSERT_TRUE(context->result) << code;
+  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result)) << code;
+  ASSERT_EQ(((GTA_Computed_Value_Boolean *)context->result)->value, expected) << code;
+  gta_execution_context_destroy(context);
+  gta_program_destroy(program);
+}
+
+
+// Equality used to be implemented only for numbers and arrays: every other
+// type's vtable carried the "not implemented" stub, so `"a" == "a"` was an
+// error rather than true.
+TEST(Binary, EqualityOfStringsBooleansAndNull) {
+  expect_boolean("\"a\" == \"a\";", true);
+  expect_boolean("\"a\" == \"b\";", false);
+  expect_boolean("\"a\" != \"b\";", true);
+  expect_boolean("\"a\" != \"a\";", false);
+  expect_boolean("\"\" == \"\";", true);
+  expect_boolean("\"abc\" == \"ab\";", false);
+  expect_boolean("true == true;", true);
+  expect_boolean("true == false;", false);
+  expect_boolean("false != true;", true);
+  expect_boolean("null == null;", true);
+  expect_boolean("null != null;", false);
+  // A concatenated string is stored in segments; equality is on content, so
+  // how the string came to exist must not show through.
+  expect_boolean("(\"a\" + \"b\") == \"ab\";", true);
+  expect_boolean("\"ab\" == (\"a\" + \"b\");", true);
+}
+
+
+// Equality is strict (section 14): a value of one type is never equal to a
+// value of another, and asking is not an error - a template asks `x == null`
+// to find out whether a value is there at all.
+TEST(Binary, EqualityAcrossTypesIsFalseNotAnError) {
+  expect_boolean("\"a\" == 3;", false);
+  expect_boolean("3 == \"a\";", false);
+  expect_boolean("\"3\" == 3;", false);
+  expect_boolean("true == 1;", false);
+  expect_boolean("1 == true;", false);
+  expect_boolean("null == 0;", false);
+  expect_boolean("null == false;", false);
+  expect_boolean("null == \"\";", false);
+  expect_boolean("[1] == \"a\";", false);
+  expect_boolean("\"a\" != 3;", true);
+  expect_boolean("null != 0;", true);
+}
+
+
+// Ordering strings is by code point, which for UTF-8 is byte order.  Unlike
+// equality, ordering across types has no answer and stays an error.
+TEST(Binary, OrderingStrings) {
+  expect_boolean("\"a\" < \"b\";", true);
+  expect_boolean("\"b\" < \"a\";", false);
+  expect_boolean("\"a\" < \"a\";", false);
+  expect_boolean("\"a\" <= \"a\";", true);
+  expect_boolean("\"b\" > \"a\";", true);
+  expect_boolean("\"a\" >= \"b\";", false);
+  // A prefix sorts before the longer string that contains it.
+  expect_boolean("\"a\" < \"ab\";", true);
+  expect_boolean("\"ab\" > \"a\";", true);
+  expect_boolean("\"\" < \"a\";", true);
+  // Beyond ASCII, where a signed char comparison would have gone wrong.
+  expect_boolean("\"é\" > \"e\";", true);
+  expect_boolean("\"é\" < \"ê\";", true);
+}
+
+
+TEST(Binary, OrderingAcrossTypesIsAnError) {
+  const char * cases[] = {
+    "\"a\" < 3;",
+    "3 < \"a\";",
+    "\"a\" >= null;",
+    "true < false;",
+  };
+  for (const char * code : cases) {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(language, code);
+    ASSERT_TRUE(program) << code;
+    GTA_Execution_Context * context = gta_execution_context_create(program);
+    ASSERT_TRUE(context) << code;
+    ASSERT_TRUE(gta_program_execute(context)) << code;
+    ASSERT_TRUE(context->result) << code;
+    ASSERT_TRUE(context->result->is_error) << code;
+    gta_execution_context_destroy(context);
+    gta_program_destroy(program);
+  }
+}
+
+
 #ifdef __linux__
 /**
  * True if any mapping in /proc/self/maps covers `address`.

@@ -52,8 +52,8 @@ GTA_Computed_Value_VTable gta_computed_value_boolean_vtable = {
   .less_than_equal = gta_computed_value_less_than_equal_not_supported,
   .greater_than = gta_computed_value_less_than_equal_not_supported,
   .greater_than_equal = gta_computed_value_greater_than_equal_not_supported,
-  .equal = gta_computed_value_equal_not_implemented,
-  .not_equal = gta_computed_value_not_equal_not_implemented,
+  .equal = gta_computed_value_boolean_equal,
+  .not_equal = gta_computed_value_boolean_not_equal,
   .period = gta_computed_value_generic_period,
   .index = gta_computed_value_index_not_supported,
   .slice = gta_computed_value_slice_not_supported,
@@ -150,6 +150,34 @@ char * GTA_CALL gta_computed_value_boolean_to_string(GTA_Computed_Value * self) 
   }
   strcpy(str, self->is_true ? "true" : "false");
   return str;
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_BOOLEAN(self));
+
+  // Equality is strict, so `true == 1` is false rather than an error.  The
+  // operands' order does not matter for equality, so self_is_lhs is not read.
+  if (!GTA_COMPUTED_VALUE_IS_BOOLEAN(other)) {
+    return (GTA_Computed_Value *)gta_computed_value_boolean_false;
+  }
+  return (GTA_Computed_Value *)(((GTA_Computed_Value_Boolean *)self)->value == ((GTA_Computed_Value_Boolean *)other)->value
+    ? gta_computed_value_boolean_true
+    : gta_computed_value_boolean_false);
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_boolean_not_equal(GTA_Computed_Value * self, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(bool self_is_lhs), GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_BOOLEAN(self));
+
+  if (!GTA_COMPUTED_VALUE_IS_BOOLEAN(other)) {
+    return (GTA_Computed_Value *)gta_computed_value_boolean_true;
+  }
+  return (GTA_Computed_Value *)(((GTA_Computed_Value_Boolean *)self)->value != ((GTA_Computed_Value_Boolean *)other)->value
+    ? gta_computed_value_boolean_true
+    : gta_computed_value_boolean_false);
 }
 
 
