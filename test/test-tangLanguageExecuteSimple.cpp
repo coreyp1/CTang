@@ -2865,33 +2865,38 @@ TEST(Slice, Array) {
     TEST_PROGRAM_TEARDOWN();
   }
   {
-    // Slice from negative index (past beginning) to end, positive skip.
+    // Slice from negative index (past beginning) to end, positive skip.  The
+    // start clamps to the beginning, so the walk starts at element 0 - it
+    // does not keep the phase it would have had counting up from -13.
     TEST_PROGRAM_SETUP("[0,1,2,3,4,5,6,7,8,9,0][-13::3]");
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
     GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)context->result;
     ASSERT_EQ(4, result->elements->count);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[0].p));
-    ASSERT_EQ(1, ((GTA_Computed_Value_Integer *)result->elements->data[0].p)->value);
+    ASSERT_EQ(0, ((GTA_Computed_Value_Integer *)result->elements->data[0].p)->value);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[1].p));
-    ASSERT_EQ(4, ((GTA_Computed_Value_Integer *)result->elements->data[1].p)->value);
+    ASSERT_EQ(3, ((GTA_Computed_Value_Integer *)result->elements->data[1].p)->value);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[2].p));
-    ASSERT_EQ(7, ((GTA_Computed_Value_Integer *)result->elements->data[2].p)->value);
+    ASSERT_EQ(6, ((GTA_Computed_Value_Integer *)result->elements->data[2].p)->value);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[3].p));
-    ASSERT_EQ(0, ((GTA_Computed_Value_Integer *)result->elements->data[3].p)->value);
+    ASSERT_EQ(9, ((GTA_Computed_Value_Integer *)result->elements->data[3].p)->value);
     TEST_PROGRAM_TEARDOWN();
   }
   {
-    // Slice from index past end to beginning, negative skip.
+    // Slice from index past end to beginning, negative skip.  The start
+    // clamps to the last element, so the walk starts there.
     TEST_PROGRAM_SETUP("[0,1,2,3,4,5,6,7,8,9,0][19::-5]");
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_ARRAY(context->result));
     GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)context->result;
-    ASSERT_EQ(2, result->elements->count);
+    ASSERT_EQ(3, result->elements->count);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[0].p));
-    ASSERT_EQ(9, ((GTA_Computed_Value_Integer *)result->elements->data[0].p)->value);
+    ASSERT_EQ(0, ((GTA_Computed_Value_Integer *)result->elements->data[0].p)->value);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[1].p));
-    ASSERT_EQ(4, ((GTA_Computed_Value_Integer *)result->elements->data[1].p)->value);
+    ASSERT_EQ(5, ((GTA_Computed_Value_Integer *)result->elements->data[1].p)->value);
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(result->elements->data[2].p));
+    ASSERT_EQ(0, ((GTA_Computed_Value_Integer *)result->elements->data[2].p)->value);
     TEST_PROGRAM_TEARDOWN();
   }
   {
@@ -2933,10 +2938,12 @@ TEST(Slice, String) {
   }
   {
     // Slice from negative index (past beginning) to end, positive skip.
+    // This is 4.9's own worked example: the start clamps to the beginning,
+    // so the walk starts at "a".
     TEST_PROGRAM_SETUP(R"("abcdefghijklmnopqrstuvwxyz"[-34::3])");
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
-    ASSERT_STREQ("behknqtwz", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    ASSERT_STREQ("adgjmpsvy", ((GTA_Computed_Value_String *)context->result)->value->buffer);
     TEST_PROGRAM_TEARDOWN();
   }
   {
@@ -2944,7 +2951,7 @@ TEST(Slice, String) {
     TEST_PROGRAM_SETUP(R"("abcdefghijklmnopqrstuvwxyz"[33::-5])");
     ASSERT_TRUE(context->result);
     ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result));
-    ASSERT_STREQ("xsnid", ((GTA_Computed_Value_String *)context->result)->value->buffer);
+    ASSERT_STREQ("zupkfa", ((GTA_Computed_Value_String *)context->result)->value->buffer);
     TEST_PROGRAM_TEARDOWN();
   }
   {
@@ -3979,6 +3986,31 @@ TEST(Slice, AStepNearTheWidthOfTheTypeStillSelectsTheStart) {
   // that breaks a plain negation of the step as well as the distance.
   expect_string("([1, 2, 3, 4][3:-9223372036854775808:-9223372036854775808]) as string;", "[4]");
   expect_string("(\"abcd\"[3:-9223372036854775808:-9223372036854775808]) as string;", "d");
+}
+
+
+// 4.9 says the semantics are Python's, and gives the case outright: a start
+// past the near end "starts at the beginning".  The implementation stepped in
+// towards the container instead, in whole steps, which keeps the phase the
+// start would have had - so a start one short of a multiple of the step began
+// one element in.  A step of 1 hides it entirely, which is why every slice
+// anyone writes by hand agreed.
+TEST(Slice, AStartPastTheNearEndBeginsAtTheEdge) {
+  expect_string("([0, 1, 2][-34::3]) as string;", "[0]");
+  expect_string("(\"abc\"[-34::3]) as string;", "a");
+  expect_string("([0, 1, 2][-4::3]) as string;", "[0]");
+  // Walking backwards, the near end is the other one.
+  expect_string("([0, 1, 2][34::-3]) as string;", "[2]");
+  expect_string("(\"abc\"[34::-3]) as string;", "c");
+  // The phase is not kept from outside, but it is kept from inside: a start
+  // that is already in range still decides where the walk lands.
+  expect_string("([0, 1, 2, 3, 4, 5][1::3]) as string;", "[1, 4]");
+  expect_string("([0, 1, 2, 3, 4, 5][4::-3]) as string;", "[4, 1]");
+  // A step wide enough to leave the container in one move selects the edge.
+  expect_string("([0, 1, 2][-9223372036854775808::63]) as string;", "[0]");
+  expect_string("(\"abc\"[-9223372036854775808::63]) as string;", "a");
+  expect_string("([0, 1, 2][9223372036854775807::-63]) as string;", "[2]");
+  expect_string("(\"abc\"[9223372036854775807::-63]) as string;", "c");
 }
 
 

@@ -591,50 +591,6 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_Computed_Value 
 }
 
 
-// Helper function to correct start and end values of a slice.
-static GTA_Integer GTA_CALL correct_bounds(GTA_Integer value, GTA_Integer boundary, GTA_Integer step) {
-  // Every caller passes a `value` on the far side of `boundary` from the way
-  // the step walks, so the term being looked for always exists.
-  assert(step != 0);
-  assert(step > 0 ? value < boundary : value > boundary);
-
-  // Not `value + ceil((boundary - value) / step) * step`, which is what this
-  // was: `[1, 2, 3][-9223372036854775808::63]` makes that product
-  // 146402730743726601 * 63, which does not fit, and signed overflow is
-  // undefined behaviour rather than a large number.  The answer itself is
-  // always within one step of `boundary`, so only the distance modulo the
-  // step is needed and no product has to be formed at all.  The distance is
-  // taken in GTA_UInteger, where the wrap is defined and the true magnitude
-  // always fits.
-  GTA_UInteger magnitude = step < 0
-    ? (GTA_UInteger)0 - (GTA_UInteger)step
-    : (GTA_UInteger)step;
-  GTA_UInteger distance = step < 0
-    ? (GTA_UInteger)value - (GTA_UInteger)boundary
-    : (GTA_UInteger)boundary - (GTA_UInteger)value;
-  GTA_UInteger remainder = distance % magnitude;
-  if (!remainder) {
-    // The sequence lands on the boundary exactly.
-    return boundary;
-  }
-
-  // How far past the boundary the first eligible term falls: at least 1 and
-  // less than the step, so this much is always representable.
-  GTA_UInteger overshoot = magnitude - remainder;
-
-  // The term itself need not be, once the step approaches the width of the
-  // type.  Every eligible index is then outside the container, which is what
-  // saturating here says: the caller's intersection check turns it into the
-  // empty slice.
-  if (step > 0) {
-    return overshoot > ((GTA_UInteger)GTA_INTEGER_MAX - (GTA_UInteger)boundary)
-      ? GTA_INTEGER_MAX
-      : boundary + (GTA_Integer)overshoot;
-  }
-  return overshoot > ((GTA_UInteger)boundary - (GTA_UInteger)GTA_INTEGER_MIN)
-    ? GTA_INTEGER_MIN
-    : boundary - (GTA_Integer)overshoot;
-}
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context) {
@@ -683,65 +639,40 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value 
   GTA_Integer array_count = (GTA_Integer)array->elements->count;
 
   // A start past the far end selects nothing, whichever way the step walks
-  // (4.9).  This has to be said before the corrections below, because
-  // correct_bounds assumes it is moving *towards* the boundary it is given: if
-  // the start is already past it, the division truncates towards zero and the
-  // rounding step then moves the end one whole step the wrong way.  So
-  // `[0, 1][10:65535:256]` came out with an end of 266 against a start of 10,
-  // which passed the intersection check below, and the build loop read
-  // element 10 of a two-element array.  A step of 1 hid it: the correction
-  // lands exactly on the boundary and the check catches it.
+  // (4.9).  What used to follow stepped in towards the boundary rather than
+  // clamping to it, and a start already past the boundary sent the end one
+  // whole step the wrong way: `[0, 1][10:65535:256]` came out with an end of
+  // 266 against a start of 10, which passed the intersection check below, and
+  // the build loop read element 10 of a two-element array.  A step of 1 hid
+  // it, landing exactly on the boundary.  The clamps below cannot reproduce
+  // it, but this says outright what the answer is.
   if (((step_value > 0) && (start_value >= array_count))
     || ((step_value < 0) && (start_value < 0))) {
     GTA_Computed_Value * empty = gta_computed_value_array_create(0, context);
     return empty ? empty : gta_computed_value_error_out_of_memory;
   }
 
+  // Both ends are clamped to the container: 4.9 says the semantics are
+  // Python's, and Python clamps.  This stepped in from outside instead,
+  // keeping the start's phase, so `[0, 1, 2][-34::3]` selected element 2,
+  // where 4.9's own worked example says a start that far back "starts at
+  // the beginning".  Two of this suite's own slice cases had been written
+  // down from the code, so the tests agreed with it.
   if (step_value > 0) {
-    // If the step value is positive, then the start value should be the first
-    // eligible value that is greater than or equal to 0.
     if (start_value < 0) {
-      start_value = correct_bounds(start_value, 0, step_value);
+      start_value = 0;
     }
-    // It is possible that the start_value is outside of the bounds of the
-    // array (e.g., [1, 2, 3][-4::10]).
-    // It is possible that end_value is less than start_value.  If so, then do
-    // nothing so that the first sanity check will catch it.  Otherwise, if
-    // end_value is greater than the end of the array, then set it to the first
-    // eligible value that is after the end of the array.
-    if ((end_value > start_value) && (end_value > array_count)) {
-      end_value = correct_bounds(start_value, array_count, step_value);
-    }
-  }
-  else {
-    // If the step value is negative, then the start value should be the first
-    // eligible value that is less than or equal to the end of the array.
-    if (start_value > array_count - 1) {
-      start_value = correct_bounds(start_value, array_count - 1, step_value);
-    }
-    // It is possible that the start_value is outside of the bounds of the
-    // array (e.g., [1, 2, 3][4::-10]).
-    // It is possible that end_value is greater than start_value.  If so, then
-    // do nothing so that the first sanity check will catch it.  Otherwise, if
-    // end_value is less than the start of the array, then set it to the first
-    // eligible value that is before the start of the array.
-    if ((end_value < start_value) && (end_value < -1)) {
-      end_value = correct_bounds(start_value, -1, step_value);
-    }
-  }
-
-  // The corrected end is the first eligible index past the array, which for
-  // a large step is a long way past it and can be as far out as the type's
-  // own limit.  The loop below stops at the first index that reaches the end,
-  // so cutting it back to the array's own edge visits exactly the same
-  // indices, and every value from here on is array-sized.
-  if (step_value > 0) {
     if (end_value > array_count) {
       end_value = array_count;
     }
   }
-  else if (end_value < -1) {
-    end_value = -1;
+  else {
+    if (start_value > array_count - 1) {
+      start_value = array_count - 1;
+    }
+    if (end_value < -1) {
+      end_value = -1;
+    }
   }
 
   // First sanity check.  If the start, end, and step values do not intersect,

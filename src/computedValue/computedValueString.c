@@ -639,50 +639,6 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_index(GTA_Computed_Value
 }
 
 
-// Helper function to correct start and end values of a slice.
-static GTA_Integer correct_bounds(GTA_Integer value, GTA_Integer boundary, GTA_Integer step) {
-  // Every caller passes a `value` on the far side of `boundary` from the way
-  // the step walks, so the term being looked for always exists.
-  assert(step != 0);
-  assert(step > 0 ? value < boundary : value > boundary);
-
-  // Not `value + ceil((boundary - value) / step) * step`, which is what this
-  // was: `[1, 2, 3][-9223372036854775808::63]` makes that product
-  // 146402730743726601 * 63, which does not fit, and signed overflow is
-  // undefined behaviour rather than a large number.  The answer itself is
-  // always within one step of `boundary`, so only the distance modulo the
-  // step is needed and no product has to be formed at all.  The distance is
-  // taken in GTA_UInteger, where the wrap is defined and the true magnitude
-  // always fits.
-  GTA_UInteger magnitude = step < 0
-    ? (GTA_UInteger)0 - (GTA_UInteger)step
-    : (GTA_UInteger)step;
-  GTA_UInteger distance = step < 0
-    ? (GTA_UInteger)value - (GTA_UInteger)boundary
-    : (GTA_UInteger)boundary - (GTA_UInteger)value;
-  GTA_UInteger remainder = distance % magnitude;
-  if (!remainder) {
-    // The sequence lands on the boundary exactly.
-    return boundary;
-  }
-
-  // How far past the boundary the first eligible term falls: at least 1 and
-  // less than the step, so this much is always representable.
-  GTA_UInteger overshoot = magnitude - remainder;
-
-  // The term itself need not be, once the step approaches the width of the
-  // type.  Every eligible index is then outside the container, which is what
-  // saturating here says: the caller's intersection check turns it into the
-  // empty slice.
-  if (step > 0) {
-    return overshoot > ((GTA_UInteger)GTA_INTEGER_MAX - (GTA_UInteger)boundary)
-      ? GTA_INTEGER_MAX
-      : boundary + (GTA_Integer)overshoot;
-  }
-  return overshoot > ((GTA_UInteger)boundary - (GTA_UInteger)GTA_INTEGER_MIN)
-    ? GTA_INTEGER_MIN
-    : boundary - (GTA_Integer)overshoot;
-}
 
 
 GTA_Computed_Value * GTA_CALL gta_computed_value_string_slice(GTA_Computed_Value * self, GTA_Computed_Value * start, GTA_Computed_Value * end, GTA_Computed_Value * step, GTA_Execution_Context * context) {
@@ -739,51 +695,27 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_slice(GTA_Computed_Value
       gta_unicode_string_create("", 0, GTA_UNICODE_STRING_TYPE_TRUSTED), true, context);
   }
 
+  // Both ends are clamped to the container: 4.9 says the semantics are
+  // Python's, and Python clamps.  This stepped in from outside instead,
+  // keeping the start's phase, so `"abc"[-34::3]` selected the last
+  // character, where 4.9's own worked example says a start that far back
+  // "starts at the beginning".  Two of this suite's own slice cases had
+  // been written down from the code, so the tests agreed with it.
   if (step_value > 0) {
-    // If the step value is positive, then the start value should be the first
-    // eligible value that is greater than or equal to 0.
     if (start_value < 0) {
-      start_value = correct_bounds(start_value, 0, step_value);
+      start_value = 0;
     }
-    // It is possible that the start_value is outside of the bounds of the
-    // string (e.g., "abc"[-4::10]).
-    // It is possible that end_value is less than start_value.  If so, then do
-    // nothing so that the first sanity check will catch it.  Otherwise, if
-    // end_value is greater than the end of the string, then set it to the
-    // first eligible value that is after the end of the string.
-    if ((end_value > start_value) && (end_value > grapheme_length)) {
-      end_value = correct_bounds(start_value, grapheme_length, step_value);
-    }
-  }
-  else {
-    // If the step value is negative, then the start value should be the first
-    // eligible value that is less than or equal to the end of the string.
-    if (start_value > grapheme_length - 1) {
-      start_value = correct_bounds(start_value, grapheme_length - 1, step_value);
-    }
-    // It is possible that the start_value is outside of the bounds of the
-    // string (e.g., "abc"[4::-10]).
-    // It is possible that end_value is greater than start_value.  If so, then
-    // do nothing so that the first sanity check will catch it.  Otherwise, if
-    // end_value is less than the start of the string, then set it to the
-    // first eligible value that is before the start of the string.
-    if ((end_value < start_value) && (end_value < -1)) {
-      end_value = correct_bounds(start_value, -1, step_value);
-    }
-  }
-
-  // The corrected end is the first eligible index past the string, which for
-  // a large step is a long way past it and can be as far out as the type's
-  // own limit.  The loop below stops at the first index that reaches the end,
-  // so cutting it back to the string's own edge visits exactly the same
-  // indices, and every value from here on is string-sized.
-  if (step_value > 0) {
     if (end_value > grapheme_length) {
       end_value = grapheme_length;
     }
   }
-  else if (end_value < -1) {
-    end_value = -1;
+  else {
+    if (start_value > grapheme_length - 1) {
+      start_value = grapheme_length - 1;
+    }
+    if (end_value < -1) {
+      end_value = -1;
+    }
   }
 
   // First sanity check.  If the start, end, and step values do not intersect,

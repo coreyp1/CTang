@@ -1427,6 +1427,21 @@ number and says so, because the text above points at these by number.
     was ASan/UBSan riding along with the generator, not the two engines
     disagreeing.
 
+40. **Fixed.** `"abcdefghijklmnopqrstuvwxyz"[-34::3]` was `behknqtwz`, and
+    4.9's own text says a start that far back "starts at the beginning" - so
+    it should have been `adgjmpsvy`. A start outside the container was not
+    clamped to the edge; it was stepped in towards the edge in whole steps,
+    which keeps the phase the start would have had counting from outside. A
+    start one short of a multiple of the step therefore began one element in,
+    in both directions and for both arrays and strings. A step of 1 hides it
+    completely - the phase is every index - which is why every slice written
+    by hand agreed with the code. **Three of this suite's own slice cases had
+    been written down from the implementation and asserted the wrong answer**,
+    including the `[-34::3]` that 4.9 names. Corrected against Python, which
+    4.9 gives as the definition. The helper that did the stepping is gone;
+    clamping is two comparisons and needs no arithmetic that can overflow,
+    which is most of what 39 had just had to be made safe.
+
 ---
 
 ## 14. Open questions
