@@ -1050,6 +1050,59 @@ static void expect_integer(const char * code, GTA_Integer expected) {
 }
 
 
+static void expect_null(const char * code) {
+  gcu_memory_reset_counts();
+  GTA_Program * program = gta_program_create(language, code);
+  ASSERT_TRUE(program) << code;
+  GTA_Execution_Context * context = gta_execution_context_create(program);
+  ASSERT_TRUE(context) << code;
+  ASSERT_TRUE(gta_program_execute(context)) << code;
+  ASSERT_TRUE(context->result) << code;
+  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result)) << code;
+  gta_execution_context_destroy(context);
+  gta_program_destroy(program);
+}
+
+
+static void expect_boolean(const char * code, bool expected) {
+  gcu_memory_reset_counts();
+  GTA_Program * program = gta_program_create(language, code);
+  ASSERT_TRUE(program) << code;
+  GTA_Execution_Context * context = gta_execution_context_create(program);
+  ASSERT_TRUE(context) << code;
+  ASSERT_TRUE(gta_program_execute(context)) << code;
+  ASSERT_TRUE(context->result) << code;
+  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_BOOLEAN(context->result)) << code;
+  ASSERT_EQ(((GTA_Computed_Value_Boolean *)context->result)->value, expected) << code;
+  gta_execution_context_destroy(context);
+  gta_program_destroy(program);
+}
+
+
+// A local is addressed as stack[fp + position], and the bytecode engine never
+// made the slots past the arguments exist.  They were above the top of the
+// stack, which is where the next push goes, so a local and an expression
+// temporary shared a slot; and reading one that had never been assigned read
+// the vector's spare capacity, found a zero, and dereferenced it as a value.
+// The x86-64 engine reserves the frame and fills it with null, and disagreed.
+TEST(Function, ALocalHasASlotOfItsOwn) {
+  // A temporary deeper than one slot used to land on the first local.
+  expect_integer("function f() { z = 5; w = ((1 + 2) + 3); z; } f();", 5);
+  expect_integer("function f() { z = 5; w = ((1 + 2) + 3); w; } f();", 6);
+  expect_integer("function f(a, b) { c = a + b; d = ((c * 2) + 1); c; } f(3, 4);", 7);
+  expect_integer("function f(a, b) { c = a + b; d = ((c * 2) + 1); d; } f(3, 4);", 15);
+  // Section 6: reading a name that was never assigned yields null, and that
+  // has to be the null value rather than a null pointer - so something has to
+  // use it.
+  expect_null("function f() { z; } f();");
+  expect_boolean("function f() { z; } (!f());", true);
+  expect_null("function f() { return z; } f();");
+  expect_null("function f(a) { z; } f(1);");
+  // The frame is given back, so a second call starts from null again.
+  expect_integer("function f() { if (z) { return 1; } z = 2; return 0; } f(); f();", 0);
+}
+
+
 // The x86-64 caller walked the arguments backwards while walking the slots it
 // wrote them into forwards, so every parameter was bound to the wrong
 // argument: `f(1, 2, 3)` bound a to 3 and c to 1.  Silent wrong answers, not

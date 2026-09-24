@@ -365,7 +365,38 @@ bool gta_ast_node_function_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
   GTA_Integer old_break_label = context->break_label;
   GTA_Integer old_return_label = context->return_label;
 
-  return true
+  // The slots the frame needs beyond the arguments the caller already pushed.
+  //
+  // A local is addressed as stack[fp + position], and the virtual machine sets
+  // fp to the stack pointer minus the argument count - so the arguments occupy
+  // the first positions and every later one has to be a slot that exists.
+  // Nothing made them exist.  The positions past the arguments were simply
+  // above the top of the stack, which is where the next push goes, so a local
+  // and an expression temporary were the same slot:
+  //
+  //     function f() { z = 5; w = ((1 + 2) + 3); z; } f();
+  //
+  // answered 3.  Reading a local that had never been assigned was worse: it
+  // read whatever the vector's spare capacity held, which is a zero byte, and
+  // the engine then dereferenced a null pointer rather than yielding the null
+  // value that section 6 promises.
+  //
+  // The x86-64 engine has always reserved this space and filled it with null;
+  // this is the same prologue.  The count includes the shadow-space
+  // placeholders and the return-address placeholder, which that engine needs
+  // and this one does not - they are pushed anyway, because what has to match
+  // is the position numbering, which is shared.
+  assert(function->scope);
+  assert(function->scope->variable_positions);
+  assert(function->parameters);
+  size_t positions = GTA_HASHX_COUNT(function->scope->variable_positions);
+  assert(positions >= function->parameters->count);
+  if (positions < function->parameters->count) {
+    return false;
+  }
+  size_t slots_to_reserve = positions - function->parameters->count;
+
+  bool error_free = true
   // Create jump labels.
     && ((after_function = gta_compiler_context_get_label(context)) >= 0)
     && ((context->continue_label = gta_compiler_context_get_label(context)) >= 0)
@@ -381,7 +412,17 @@ bool gta_ast_node_function_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler
 
   // Record the function's bytecode offset.
     && (function->runtime_function->pointer = GTA_VECTORX_COUNT(b))
+  ;
 
+  // Reserve the rest of the frame.
+  //   NULL   (once per slot)
+  for (size_t i = 0; error_free && (i < slots_to_reserve); ++i) {
+    error_free = true
+      && GTA_BYTECODE_APPEND(o, b->count)
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL));
+  }
+
+  return error_free
   // Compile the function body.
     && gta_ast_node_compile_to_bytecode(function->block, context)
 
