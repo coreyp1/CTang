@@ -281,16 +281,24 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
     // Compile the value.
       && gta_ast_node_compile_to_binary__x86_64(pair->value, context)
     // If the element is temporary or is singleton, then set it as not
-    // temporary and append.
+    // temporary and append.  Otherwise it belongs to something else and a
+    // copy of it goes in, which is what stops a container held by a name from
+    // being aliased by every literal that mentions it.
+    //
+    // These two were `je`, which is the opposite test: it took the adopt path
+    // when the flag was CLEAR.  So a value that belonged to a name was
+    // adopted, and the only thing ever copied was a temporary singleton,
+    // which is nothing.  `x = [1]; y = [x]; x[0] = 9; y[0][0];` was 9 here
+    // and 1 under the bytecode engine.
     //   cmp byte ptr [rax + is_temporary_offset], 0
-    //   je mark_not_temporary
+    //   jne mark_not_temporary
       && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
-      && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+      && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
       && gta_compiler_context_add_label_jump(context, mark_not_temporary, v->count - 4)
     //   cmp byte ptr [rax + is_singleton_offset], 0
-    //   je mark_not_temporary
+    //   jne mark_not_temporary
       && gta_cmp_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_singleton_offset, 0)
-      && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
+      && gta_jcc__x86_64(v, GTA_CC_NE, 0xDEADBEEF)
       && gta_compiler_context_add_label_jump(context, mark_not_temporary, v->count - 4)
     // gta_computed_value_deep_copy(element, context)
     //   mov GTA_X86_64_R1, rax

@@ -3910,6 +3910,27 @@ TEST(Cast, Containers) {
 }
 
 
+// Putting a value into a container copies it unless it is a temporary or a
+// singleton - the same rule `assign_index` follows (13.21), and what keeps a
+// container held by a name from being aliased by every literal that mentions
+// it.  The x86-64 engine emitted the test the wrong way round: it took the
+// adopt path when the flag was clear, so a named container was aliased and the
+// only thing ever copied was a temporary singleton, which is nothing.
+TEST(Assignment, ALiteralStoresACopyOfWhatItIsGiven) {
+  expect_integer("x = [1]; y = [x]; x[0] = 9; y[0][0];", 1);
+  expect_integer("x = [1]; y = {k: x}; x[0] = 9; y[\"k\"][0];", 1);
+  expect_integer("x = {a: 1}; y = [x]; x.a = 9; y[0][\"a\"];", 1);
+  expect_integer("x = {a: 1}; y = {k: x}; x.a = 9; y[\"k\"][\"a\"];", 1);
+  // A name still refers to the same container; only putting one *into* a
+  // container copies it (section 3).
+  expect_integer("x = [1]; y = x; x[0] = 9; y[0];", 9);
+  // A temporary is adopted rather than copied, so a literal built in place is
+  // not copied twice.
+  expect_string("[[1, 2], 3] as string;", "[[1, 2], 3]");
+  expect_string("{k: [1, 2]} as string;", "{\"k\": [1, 2]}");
+}
+
+
 // Storing a container into itself took the deep-copy path in assign_index,
 // which is the only path that uses the execution context - and the x86-64
 // caller was loading the context into the second argument register and then
