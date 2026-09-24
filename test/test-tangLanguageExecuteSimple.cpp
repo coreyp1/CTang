@@ -3852,6 +3852,28 @@ TEST(Assignment, TheRightHandSideRunsOnce) {
 }
 
 
+// `array * integer` repeats the array.  The result was created with room for
+// every element and the elements were written into that room, but the vector's
+// count was never set - so `[1, 2] * 3` was `[]`, an array with six elements
+// in it that said it held none.  The count of elements was also taken as an
+// unchecked product, so a large repetition wrapped and asked the allocator for
+// most of the address space.
+TEST(Binary, ArrayRepetition) {
+  expect_string("([1, 2] * 3) as string;", "[1, 2, 1, 2, 1, 2]");
+  expect_string("([1] * 1) as string;", "[1]");
+  expect_boolean("([1, 2] * 2) == [1, 2, 1, 2];", true);
+  expect_string("([1, 2] * 0) as string;", "[]");
+  expect_string("([] * 5) as string;", "[]");
+  // The elements are copies, so mutating the source does not reach them.
+  expect_integer("x = [[1]]; y = (x * 2); x[0][0] = 9; (y[0][0] + y[1][0]);", 2);
+  // Only array-times-integer, in that order (4.2).
+  expect_error("[1] * -1;", "Error: Not supported");
+  expect_error("3 * [1, 2];", "Error: Not supported");
+  // A count that cannot be allocated is an error, not a wrapped product.
+  expect_error("[1, 2] * 9223372036854775807;", "Error: Out of memory");
+}
+
+
 // `&&` and `||` are compiled to a conditional jump that does not pop what it
 // tested, because when the left operand decides the answer it *is* the answer.
 // The other branch has to pop it, and did not, so an expression that is only

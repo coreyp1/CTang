@@ -114,7 +114,10 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_create(size_t size, GTA_Exe
     // Attempt to add the pointer to the context's garbage collection list.
     if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
       gta_computed_value_map_destroy_in_place(&self->base);
-      return gta_computed_value_error_out_of_memory;
+      // NULL, like the two failures above it: see the note in
+      // gta_computed_value_array_create.  This one arm returned the
+      // out-of-memory value, which every caller reads as success.
+      return NULL;
     }
   }
   return (GTA_Computed_Value *)self;

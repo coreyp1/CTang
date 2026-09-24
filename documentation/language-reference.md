@@ -252,6 +252,7 @@ which is an error.
 | integer, integer | integer. `/` truncates toward zero (`-10 / 3` is `-3`); `%` takes the sign of the dividend (`-10 % 3` is `-1`, `42 % -10` is `2`) |
 | integer, float or float, float | float, in either order |
 | array `+` array | a new array, the concatenation |
+| array `*` integer, in that order | a new array, the elements repeated that many times; `0` gives the empty array, a negative count is an error, and a count too large to allocate is `Out of memory` |
 | string `+` anything printable | a new string, the concatenation (4.2.1) |
 | anything else | error `Not supported` |
 

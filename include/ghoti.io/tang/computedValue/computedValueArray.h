@@ -59,7 +59,7 @@ struct GTA_Computed_Value_Array {
  *
  * @param size The expected size of the array.
  * @param context The execution context to create the value in.
- * @return The new computed value for the array.
+ * @return The new computed value for the array, or NULL on failure.
  */
 GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_array_create(size_t size, GTA_Execution_Context * context);
 

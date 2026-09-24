@@ -20,6 +20,7 @@
 
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -96,19 +97,26 @@ GTA_INIT_FUNCTION(setup) {
 GTA_Computed_Value * GTA_CALL gta_computed_value_array_create(size_t size, GTA_Execution_Context * context) {
   assert(context);
 
+  // Failure is NULL, not the out-of-memory value.  Every caller tests the
+  // result with `if (!result)` and the x86-64 emitters test it with `test rax,
+  // rax`, so returning a value said "this worked" to all of them - and what
+  // they then dereferenced as an array was the error singleton, whose
+  // `elements` field is whatever lies at that offset in a much smaller object.
+  // Returning the error here and reporting it there is also duplication: each
+  // caller already answers a failure with the same singleton.
   GTA_Computed_Value_Array * self = gcu_malloc(sizeof(GTA_Computed_Value_Array));
   if (self == NULL) {
-    return gta_computed_value_error_out_of_memory;
+    return NULL;
   }
   if (!gta_computed_value_array_create_in_place(self, size, context)) {
     gcu_free(self);
-    return gta_computed_value_error_out_of_memory;
+    return NULL;
   }
   if (context) {
     // Attempt to add the pointer to the context's garbage collection list.
     if (!GTA_VECTORX_APPEND(context->garbage_collection, GTA_TYPEX_MAKE_P(self))) {
       gta_computed_value_array_destroy_in_place(&self->base);
-      return gta_computed_value_error_out_of_memory;
+      return NULL;
     }
   }
   return (GTA_Computed_Value *)self;
@@ -404,10 +412,27 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_multiply(GTA_Computed_Val
   // Create a new array that will be a repeated concatenation of the source array.
   assert(lhs->elements);
   assert(lhs->elements->count ? (bool)lhs->elements->data : true);
-  GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)gta_computed_value_array_create(lhs->elements->count * rhs->value, context);
+
+  // How many elements the result has, if it can have that many.  This product
+  // used to be taken unchecked, so `[0, 0, 0] * 9223372036854775807` wrapped to
+  // 9223372036854775805 and the allocator was asked for that many pointers.
+  // The bound is what a vector of them can address, not what a size_t can
+  // hold, because the vector multiplies by the element size again.
+  size_t repetitions = (size_t)rhs->value;
+  if (lhs->elements->count > (SIZE_MAX / sizeof(GTA_TypeX_Union)) / repetitions) {
+    return gta_computed_value_error_out_of_memory;
+  }
+  size_t element_count = lhs->elements->count * repetitions;
+
+  GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)gta_computed_value_array_create(element_count, context);
   if (!result) {
     return gta_computed_value_error_out_of_memory;
   }
+  // The elements are written into the vector's storage directly below, so the
+  // count has to be set here.  It was not, and `[1, 2] * 3` was `[]`: the
+  // result had room for six elements, six elements were written into that
+  // room, and the vector still said it held none.
+  result->elements->count = element_count;
 
   // Note: Similar to the `gta_computed_value_array_deep_copy` function, all
   // objects created in this function are tracked by the garbage collection,
