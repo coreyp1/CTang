@@ -1096,10 +1096,14 @@ number and says so, because the text above points at these by number.
     error and stays one, because that is the only way the author hears about
     it. `break` keeps the value it was given.
 
-13. **Date literals are scanned but not parsed.** `@` puts the scanner into a
-    date state that recognises `now`, `today`, `+3d`, ISO dates and time
-    zones, but no grammar rule consumes the tokens. `@now;` is currently
-    swallowed under 13.1 and yields `null`.
+13. **Still open, and it is a decision rather than a defect.** `@` puts the
+    scanner into a date state that recognises `now`, `today`, `+3d`, ISO
+    dates and time zones, and the parser declares tokens for all of them, but
+    no grammar rule consumes them. It is no longer swallowed - since 13.1,
+    `@now;` fails to compile, which is at least honest. Finishing it means a
+    date type with arithmetic, formatting and time zones; removing it means
+    deleting a scanner state and eleven token declarations that were written
+    on purpose. Section 14 has that choice and has not made it.
 
 14. **Fixed.** `function f(n) { return f(n + 1); } f(0);` overflowed the C
     stack and took the host process down, because the x86-64 engine calls
@@ -1143,10 +1147,13 @@ number and says so, because the text above points at these by number.
     aborted the process. Two separate defects, the first hiding the second:
     see 13.24 and 13.25. Both now fail compilation.
 
-19. **`PRINT_TO_STDOUT` and the `tang` tool emit the raw buffer**, with no
-    encoding applied, so `!"<b>"` reaches stdout as `<b>`. Either is
-    defensible as a debugging aid; neither is what a user of a *template*
-    tool expects, and the tool has no flag to render.
+19. **Fixed.** `PRINT_TO_STDOUT` and the `tang` tool emitted the raw buffer,
+    with no encoding applied, so `!"<b>"` reached stdout as `<b>`. The
+    stdout path now renders: `print(!"<b>")` gives `&lt;b&gt;`,
+    `print("<b>")` gives `<b>`, and `print(!"<b>" + "<i>")` gives
+    `&lt;b&gt;<i>` - each half keeping its own encoding, which is what
+    section 8 promises. A flag for the raw buffer would be the thing to add
+    if the debugging aid is wanted back; nothing asks for it yet.
 
 20. **Fixed.** Percent-encoding of non-ASCII bytes was wrong.
     `unicodeString.c` indexed the hex table with `string->buffer[i] >> 4` on
@@ -1164,8 +1171,9 @@ number and says so, because the text above points at these by number.
     the ABI puts the fourth argument in. Storing a container into itself
     stores a deep copy of what it held, so no cycle is created.
 
-22. **The README's `print!(...)` is not syntax.** The examples there predate
-    the `!"..."` prefix and do not parse.
+22. **Fixed.** The README's examples used `print!(...)`, which is not syntax;
+    they predated the `!"..."` prefix and did not parse. The examples there
+    now run.
 
 23. **Fixed.** A statement whose bytecode compile refused truncated the
     program instead of failing it. `gta_program_compile_bytecode()` published
