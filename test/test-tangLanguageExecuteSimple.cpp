@@ -4109,6 +4109,18 @@ TEST(Assignment, StoringAContainerIntoItself) {
   // The element that does the mutating still sees its own write.
   expect_integer("x = [(d = [1]), (d[1] = 9)]; d.size;", 2);
 
+  // A freshly built container is nobody else's, so storing one into another
+  // adopts it rather than copying it.  A map said otherwise where an array
+  // said so, which cost a deep copy of every map literal put inside anything
+  // - and a copy of a map rebuilds its hash table by re-inserting in
+  // iteration order, so the copy came out in a different order from the
+  // original.  Asserted as a comparison rather than a literal string because
+  // the order itself is the hash's business and this suite does not pin it:
+  // a map nested inside another renders exactly as it does on its own.
+  expect_boolean("(({k1: 1, k0: 2, k3: 3}) as string)"
+    " == ((({k1: {k1: 1, k0: 2, k3: 3}}).k1) as string);", true);
+  expect_boolean("(([1, 2, 3]) as string) == (((([1, 2, 3]))[:]) as string);", true);
+
   // Storing it into itself at an index that grows the array.  The grow loop
   // used to leave the slot being assigned unwritten while raising the count,
   // and the deep copy of the value - which is this same array - then walked

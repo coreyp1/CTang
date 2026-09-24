@@ -242,8 +242,13 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
             context->result = gta_computed_value_error_out_of_memory;
             break;
           }
-          // The copy is temporary, so the ARRAY or MAP that follows adopts it
-          // instead of copying it a second time.
+          // Say so rather than assume it: a fresh array is temporary and a
+          // fresh map is not (they disagree, see 13.43), so a map's deep copy
+          // arrives marked non-temporary and the MAP that follows would copy
+          // it a second time.  Two rebuilds of a hash table against the
+          // x86-64 engine's one is a different iteration order for the same
+          // literal, which is how this was found.
+          copy->is_temporary = true;
           context->stack->data[*sp - 1] = GTA_TYPEX_MAKE_P(copy);
         }
         break;

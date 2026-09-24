@@ -1495,6 +1495,27 @@ number and says so, because the text above points at these by number.
     the engines themselves, which is the only place a two-engine oracle can
     see by itself.
 
+43. **Fixed.** A freshly created array was temporary and a freshly created map
+    was not. "Temporary" means nobody else holds this yet, which is exactly
+    what a value a constructor has just returned is, so the map was simply
+    wrong - and the cost was a deep copy of every map literal stored into any
+    container, which is also a change of iteration order, because copying a
+    map rebuilds its hash table by re-inserting in iteration order. `{k1: m}`
+    therefore printed `m` in a different order from `m` on its own.
+
+    Found by 13.42's own fix. The new `ADOPT` instruction copies a value that
+    is not temporary, and the copy of a map arrived marked non-temporary too,
+    so `MAP` copied it a second time: two rebuilds against the x86-64 engine's
+    one, and the next campaign reported the order mismatch within seven
+    minutes. `ADOPT` now says outright that its copy is temporary rather than
+    relying on the constructors to agree, which is worth keeping even with
+    them fixed.
+
+    The regression test is written as a comparison rather than an expected
+    string - a map nested inside another renders exactly as it does on its own
+    - because the order is the hash function's business and this suite
+    deliberately does not pin it.
+
 ---
 
 ## 14. Open questions

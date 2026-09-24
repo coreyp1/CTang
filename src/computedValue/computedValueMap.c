@@ -145,7 +145,12 @@ bool GTA_CALL gta_computed_value_map_create_in_place(GTA_Computed_Value_Map * se
       // rather than derived.
       .is_true = size > 0,
       .is_error = false,
-      .is_temporary = false,
+      // Temporary, as a freshly created array is.  A map nobody else holds
+      // yet is exactly what "temporary" means, and saying otherwise made
+      // every map literal stored into a container get a deep copy it did not
+      // need - visible as a change of iteration order, because a copy rebuilds
+      // the hash table by re-inserting in iteration order.
+      .is_temporary = true,
       .requires_deep_copy = false,
       .is_singleton = false,
       .is_a_reference = false,
