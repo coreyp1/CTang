@@ -437,7 +437,8 @@ Reads a named attribute of a value. Which names exist depends on the type:
 | array | `size` |
 | library | its members (section 9) |
 | rng | `next_int`, `next_float`, `next_bool`, `set_seed`; and five declared but unimplemented names (9.2) |
-| map, integer, float, boolean, null, function | none; `Not implemented` |
+| map | its keys, and `null` for a name it does not hold (see below) |
+| integer, float, boolean, null, function | none; `Not implemented` |
 
 Attributes are values, not calls. Something that needs no arguments is an
 attribute (`s.length`, `r.next_int`), never `s.length()`. An attribute that
@@ -465,12 +466,19 @@ the output and yields `null`. What each type appends:
 | integer | decimal digits |
 | float | fixed notation with six decimals, trailing zeros removed, decimal point kept: `3.5`, `0.333333`, `100.`, `1.` |
 | null | nothing |
-| array | `[` elements separated by `, ` `]`, each element as `print` would show it, recursively: `[1, [2, 3], x]` |
+| array | `[` elements separated by `, ` `]`, recursively |
 | boolean | `true` / `false` |
-| map | `{` entries separated by `, ` `}`, each entry a quoted key, `": "`, and the value as `print` would show it, recursively: `{"a": 1, "b": [2, 3]}` |
+| map | `{` entries separated by `, ` `}`, each entry a quoted key, `": "`, and the value, recursively: `{"a": 1, "b": [2, 3]}` |
 | function, library, rng, error | nothing |
 
 `as string` on a float uses the same formatting, so `3.0 as string` is `"3."`.
+
+**A container renders its elements as `as string` would, not as `print`
+would**, and the two differ for exactly the four types that print as nothing:
+`print(f)` emits nothing and `print([f])` emits `[Function(1)]`. Likewise an
+error inside a container appears as its marker text rather than as nothing.
+Whether that is the right choice is open (14); what is not open is that one of
+the two has to be documented, and this is the one the code does.
 
 ### 4.13 Assignment: `target = expression`
 
@@ -1432,6 +1440,12 @@ rather than defects. Each needs a decision, then a test, then code.
   which is why it will not write a `while` whose condition it does not
   control; with a budget the engine enforces, it could hand the parser
   anything and let the limit stop it.
+- **What a container shows for a value that prints as nothing.** `print(f)` is
+  nothing and `print([f])` is `[Function(1)]`, because a container renders its
+  elements as `as string` does rather than as `print` does. The same asymmetry
+  applies to a library, an rng, and an error - an error inside an array shows
+  its marker text. Either the container should skip them, or `print` should
+  show them; today they disagree, and 4.12 documents the code.
 - **Date literals** (13.13) - finish or remove.
 - **Number separators** (`1_000_000`), exponent floats (`1e5`).
 - **Keys for reconciliation.** cjelly's `docs/semantics.md` needs Tang to
