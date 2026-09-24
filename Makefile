@@ -689,15 +689,21 @@ $(APP_DIR)/libtestLibrary.so: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -shared -o $@ $< $(LDFLAGS) -fPIC
 
+# $< and the objects by name, not $^: -MMD writes the headers this test
+# included into the .d, make reads them back as prerequisites of the same
+# target, and $^ then puts every one of them on the command line. g++ compiles
+# them and says nothing; clang++ refuses the whole link with "treating
+# 'c-header' input as 'c++-header'". It only bites on the second build, once
+# the .d exists.
 $(APP_DIR)/testAllocator$(EXE_EXTENSION): test/test-allocator.cpp $(OBJ_DIR)/allocator.o
 	@printf "\n### Compiling Allocator Test ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testAllocator.d -o $@ $^ $(LDFLAGS) $(TESTFLAGS)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testAllocator.d -o $@ $< $(OBJ_DIR)/allocator.o $(LDFLAGS) $(TESTFLAGS)
 
 $(APP_DIR)/testUnicodeString$(EXE_EXTENSION): test/test-unicodeString.cpp $(OBJ_DIR)/unicodeString.o $(OBJ_DIR)/allocator.o
 	@printf "\n### Compiling UnicodeString Test ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testUnicodeString.d -o $@ $^ $(LDFLAGS) $(TESTFLAGS)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testUnicodeString.d -o $@ $< $(OBJ_DIR)/unicodeString.o $(OBJ_DIR)/allocator.o $(LDFLAGS) $(TESTFLAGS)
 
 $(APP_DIR)/testTangLanguageParse$(EXE_EXTENSION): test/test-tangLanguageParse.cpp $(APP_DIR)/$(STATIC_TARGET) | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Tang Language Parse Test ###\n"
