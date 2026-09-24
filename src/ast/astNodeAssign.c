@@ -433,11 +433,18 @@ static bool __compile_binary_lhs_is_period(GTA_Ast_Node * lhs, GTA_Ast_Node * rh
     && gta_push_reg__x86_64(v, GTA_REG_RAX)
     && gta_push_reg__x86_64(v, GTA_REG_RAX)
   // gta_computed_value_assign_index(expression, index, value, context)
-  //    mov GTA_X86_64_R2, r15
+  //
+  // The context is the fourth argument, so it goes in R4.  It used to be
+  // loaded into R2 - the second - and the pop below then wrote the index
+  // over it, leaving the callee to read whatever happened to be in R4 as a
+  // context.  Nothing noticed while the value being assigned was temporary,
+  // because the array adopts those without touching the context; assigning a
+  // named value took the deep-copy path instead and crashed.
+  //    mov GTA_X86_64_R4, r15
   //    pop GTA_X86_64_R3 ; add rsp, 8
   //    pop GTA_X86_64_R2 ; add rsp, 8
   //    pop GTA_X86_64_R1 ; add rsp, 8
-    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R4, GTA_REG_R15)
     && gta_pop_reg__x86_64(v, GTA_X86_64_R3)
     && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
     && gta_pop_reg__x86_64(v, GTA_X86_64_R2)
@@ -504,11 +511,19 @@ bool gta_ast_node_assign_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
           && gta_push_reg__x86_64(v, GTA_REG_RAX)
         // gta_computed_value_assign_index(expression, index, value, context)
         // Each pop takes the value and then discards its padding slot.
-        //    mov GTA_X86_64_R2, r15
+        //
+        // The context is the fourth argument, so it goes in R4.  It used to
+        // be loaded into R2 - the second - and the pop below then wrote the
+        // index over it, leaving the callee to read whatever happened to be
+        // in R4 as a context.  Nothing noticed while the value being assigned
+        // was temporary, because a container adopts those without touching
+        // the context; assigning a named value takes the deep-copy path
+        // instead, and `x = [1, 2]; x[0] = x;` crashed.
+        //    mov GTA_X86_64_R4, r15
         //    pop GTA_X86_64_R3 ; add rsp, 8
         //    pop GTA_X86_64_R2 ; add rsp, 8
         //    pop GTA_X86_64_R1 ; add rsp, 8
-          && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
+          && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R4, GTA_REG_R15)
           && gta_pop_reg__x86_64(v, GTA_X86_64_R3)
           && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
           && gta_pop_reg__x86_64(v, GTA_X86_64_R2)

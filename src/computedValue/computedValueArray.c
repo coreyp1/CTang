@@ -26,7 +26,9 @@
 #include <ghoti.io/cutil/memory.h>
 #include <ghoti.io/tang/macros.h>
 #include <ghoti.io/tang/computedValue/computedValueArray.h>
+#include <ghoti.io/tang/unicodeString.h>
 #include <ghoti.io/tang/computedValue/computedValueBoolean.h>
+#include <ghoti.io/tang/computedValue/computedValueString.h>
 #include <ghoti.io/tang/computedValue/computedValueError.h>
 #include <ghoti.io/tang/computedValue/computedValueInteger.h>
 #include <ghoti.io/tang/computedValue/computedValueIterator.h>
@@ -76,7 +78,7 @@ GTA_Computed_Value_VTable gta_computed_value_array_vtable = {
   .slice = gta_computed_value_array_slice,
   .iterator_get = gta_computed_value_array_iterator_get,
   .iterator_next = gta_computed_value_iterator_next_not_implemented,
-  .cast = gta_computed_value_cast,
+  .cast = gta_computed_value_array_cast,
   .call = gta_computed_value_call_not_supported,
   .attributes = attributes,
   .attributes_count = 0,
@@ -178,6 +180,42 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_deep_copy(GTA_Computed_Va
   }
   return (GTA_Computed_Value *)copy;
 }
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_array_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_ARRAY(self));
+
+  if (type == &gta_computed_value_boolean_vtable) {
+    // A container is true when it holds something; see is_true.
+    return (GTA_Computed_Value *)(self->is_true
+      ? gta_computed_value_boolean_true
+      : gta_computed_value_boolean_false);
+  }
+
+  if (type == &gta_computed_value_string_vtable) {
+    char * str = gta_computed_value_array_to_string(self);
+    if (!str) {
+      return gta_computed_value_error_out_of_memory;
+    }
+    // The rendering is this library's own text, not anything the template
+    // was given, so it is trusted.
+    GTA_Unicode_String * unicode_str = gta_unicode_string_create(str, strlen(str), GTA_UNICODE_STRING_TYPE_TRUSTED);
+    gcu_free(str);
+    if (!unicode_str) {
+      return gta_computed_value_error_out_of_memory;
+    }
+    GTA_Computed_Value * result = (GTA_Computed_Value *)gta_computed_value_string_create(unicode_str, true, context);
+    if (!result) {
+      gta_unicode_string_destroy(unicode_str);
+      return gta_computed_value_error_out_of_memory;
+    }
+    return result;
+  }
+
+  // There is no number a container could sensibly be.
+  return gta_computed_value_error_not_supported;
+}
+
 
 char * GTA_CALL gta_computed_value_array_to_string(GTA_Computed_Value * self) {
   assert(self);

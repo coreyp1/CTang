@@ -544,19 +544,31 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         }
 
         // Verify that it is a valid function.
+        //
+        // A call is an expression and has to leave exactly one value behind,
+        // like every other one.  These two used to set context->result and
+        // leave nothing, so the stack was short by one: the POP the block
+        // compiler emits after the statement took the value underneath
+        // instead, context->result was overwritten at the end by whatever was
+        // then on top, and `f = 3; f();` came out as 3 - no error at all, and
+        // the JIT said `Invalid function call` for the same source.
         if (!GTA_COMPUTED_VALUE_IS_FUNCTION(potential_function)) {
-          context->result = gta_computed_value_error_invalid_function_call;
-          // Pop the arguments off the stack.
+          // Pop the arguments off the stack, then leave the error in their
+          // place as the value of the call.
           *sp -= num_arguments;
+          if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(gta_computed_value_error_invalid_function_call))) {
+            context->result = gta_computed_value_error_out_of_memory;
+          }
           break;
         }
         GTA_Computed_Value_Function * function = (GTA_Computed_Value_Function *)potential_function;
 
         // Verify that the number of arguments is correct.
         if (num_arguments != function->num_arguments) {
-          context->result = gta_computed_value_error_argument_count_mismatch;
-          // Pop the arguments off the stack.
           *sp -= num_arguments;
+          if (!GTA_VECTORX_APPEND(context->stack, GTA_TYPEX_MAKE_P(gta_computed_value_error_argument_count_mismatch))) {
+            context->result = gta_computed_value_error_out_of_memory;
+          }
           break;
         }
 

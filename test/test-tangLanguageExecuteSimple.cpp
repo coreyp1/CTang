@@ -3798,6 +3798,58 @@ TEST(RangedFor, ANonIterableExpressionIsStillAnError) {
 }
 
 
+
+// Run a source that must yield a string, and say which string.
+static void expect_string(const char * code, const char * expected) {
+  gcu_memory_reset_counts();
+  GTA_Program * program = gta_program_create(language, code);
+  ASSERT_TRUE(program) << code;
+  GTA_Execution_Context * context = gta_execution_context_create(program);
+  ASSERT_TRUE(context) << code;
+  ASSERT_TRUE(gta_program_execute(context)) << code;
+  ASSERT_TRUE(context->result) << code;
+  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_STRING(context->result)) << code;
+  ASSERT_STREQ(((GTA_Computed_Value_String *)context->result)->value->buffer, expected) << code;
+  gta_execution_context_destroy(context);
+  gta_program_destroy(program);
+}
+
+
+// The array's cast slot held the generic dispatcher, which is the function
+// that reads the cast slot - so `[] as bool` called itself until the stack
+// ran out.  A container casts to a boolean, which is its truthiness, and to a
+// string, which is its rendering; there is no number it could sensibly be.
+TEST(Cast, Containers) {
+  expect_boolean("[] as bool;", false);
+  expect_boolean("[1] as bool;", true);
+  expect_boolean("[0] as bool;", true);
+  expect_boolean("{:} as bool;", false);
+  expect_boolean("{a: 1} as bool;", true);
+  expect_string("[1, 2] as string;", "[1, 2]");
+  expect_string("[] as string;", "[]");
+  expect_string("{a: 1} as string;", "{\"a\": 1}");
+  expect_error("[] as int;", "Error: Not supported");
+  expect_error("[] as float;", "Error: Not supported");
+  expect_error("{:} as int;", "Error: Not supported");
+}
+
+
+// Storing a container into itself took the deep-copy path in assign_index,
+// which is the only path that uses the execution context - and the x86-64
+// caller was loading the context into the second argument register and then
+// popping the index over it, so the callee read whatever was in the fourth.
+// Assigning a temporary never noticed, because those are adopted without the
+// context being touched.
+TEST(Assignment, StoringAContainerIntoItself) {
+  expect_string("x = [1, 2]; x[0] = x; x as string;", "[[1, 2], 2]");
+  expect_integer("x = [1, 2]; x[0] = x; x[0][1];", 2);
+  expect_integer("m = {:}; m[\"k\"] = m; 1;", 1);
+  // Assigning a value held by another name takes the same path.
+  expect_string("x = [1, 2]; y = [3]; x[0] = y; x as string;", "[[3], 2]");
+  expect_string("m = {:}; n = [1]; m.v = n; m as string;", "{\"v\": [1]}");
+}
+
+
 #ifdef __linux__
 /**
  * True if any mapping in /proc/self/maps covers `address`.

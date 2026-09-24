@@ -1036,10 +1036,14 @@ number and says so, because the text above points at these by number.
    set again by the operations that can grow one from empty. An empty array
    or map is false; one that holds anything is true.
 
-6. **`as` on an array crashes** with a null-context assertion in
-   `gta_computed_value_array_create()` for every target type. `[] as bool`
-   segfaults. `{:} as bool` also crashes; the other map casts return
-   `Not supported`.
+6. **Fixed**, and the old diagnosis was wrong. `[] as bool` did not hit a
+   null-context assertion: the array's `cast` slot held
+   `gta_computed_value_cast`, which is the generic dispatcher that *reads*
+   the cast slot, so every cast called itself until the stack ran out.
+   A container now casts to a boolean, which is its truthiness (13.5), and to
+   a string, which is its rendering. There is no number a container could
+   sensibly be, so `[] as int` is `Not supported`. Maps cast the same way;
+   they previously said `Not supported` for all of it.
 
 7. **Fixed.** `m.name` did not read a map member (`Not implemented`) even
    though `m.name = v` wrote one. The map's `period` was the generic
@@ -1109,9 +1113,14 @@ number and says so, because the text above points at these by number.
     declaration ought to be hoisted instead is still the open question in
     section 14.
 
-16. **The two backends disagree on calling a non-function.** `f = 3; f();`
-    is `Invalid function call` under the JIT and `3` under the bytecode VM;
-    `(1)(2)` segfaults the VM.
+16. **Fixed.** `f = 3; f();` was `Invalid function call` under the JIT and
+    `3` under the bytecode VM. A call is an expression and has to leave
+    exactly one value behind, like every other one; the VM's refusals set
+    `context->result` and left nothing, so the stack was short by one - the
+    POP the block compiler emits after the statement took the value
+    underneath, and `context->result` was then overwritten at the end by
+    whatever was on top. The error is now left in the arguments' place, which
+    is also what the argument-count mismatch does.
 
 17. **Fixed.** `function f(a, a) {}` never returned from
     `gta_program_create()`. Two parameters with one name take one slot in the
@@ -1137,8 +1146,15 @@ number and says so, because the text above points at these by number.
     `"é".percent.render` was `%l3%f9`. The index is now taken through
     `unsigned char`, and the result is `%C3%A9`.
 
-21. **Storing an array inside itself aborts.** `x = [1, 2]; x[0] = x;`
-    fails the same assertion as 13.6 under the JIT and segfaults the VM.
+21. **Fixed**, and it was not the same fault as 13.6. `x = [1, 2]; x[0] = x;`
+    takes the deep-copy path in `assign_index`, which is the only path that
+    uses the execution context - and the x86-64 caller was loading the
+    context into the *second* argument register and then popping the index
+    over it, so the callee read whatever happened to be in the fourth.
+    Assigning a temporary never noticed, because a container adopts those
+    without touching the context. The context is now passed in the register
+    the ABI puts the fourth argument in. Storing a container into itself
+    stores a deep copy of what it held, so no cycle is created.
 
 22. **The README's `print!(...)` is not syntax.** The examples there predate
     the `!"..."` prefix and do not parse.

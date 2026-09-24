@@ -194,6 +194,20 @@ GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_peri
  */
 GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_set_key_val(GTA_Computed_Value_Map * self, GTA_Computed_Value * key, GTA_Computed_Value * value);
 
+
+/**
+ * Casts the map to another type.
+ *
+ * A map casts to a boolean - true when it holds something - and to a
+ * string, which is its rendering.  There is no number it could sensibly be.
+ *
+ * @param self The map.
+ * @param type The type to cast to.
+ * @param context The execution context of the program.
+ * @return The result of the operation or NULL if the operation failed.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_cast(GTA_Computed_Value * self, GTA_Computed_Value_VTable * type, GTA_Execution_Context * context);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

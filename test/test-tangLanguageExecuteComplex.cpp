@@ -1117,6 +1117,52 @@ TEST(Function, RedeclarationAndForwardCallsFailCompilation) {
 }
 
 
+
+// Run a source that must yield an error, and say which message.
+static void expect_error(const char * code, const char * message) {
+  gcu_memory_reset_counts();
+  GTA_Program * program = gta_program_create(language, code);
+  ASSERT_TRUE(program) << code;
+  GTA_Execution_Context * context = gta_execution_context_create(program);
+  ASSERT_TRUE(context) << code;
+  ASSERT_TRUE(gta_program_execute(context)) << code;
+  ASSERT_TRUE(context->result) << code;
+  ASSERT_TRUE(context->result->is_error) << code;
+  char * rendered = gta_computed_value_to_string(context->result);
+  ASSERT_TRUE(rendered) << code;
+  ASSERT_STREQ(rendered, message) << code;
+  gcu_free(rendered);
+  gta_execution_context_destroy(context);
+  gta_program_destroy(program);
+}
+
+
+// A call is an expression and has to leave exactly one value behind, like
+// every other one.  The bytecode engine's refusals set context->result and
+// left nothing, so the stack was short by one: the POP after the statement
+// took the value underneath, context->result was overwritten at the end by
+// whatever was then on top, and `f = 3; f();` came out as 3 - no error, while
+// the x86-64 engine said `Invalid function call` for the same source.
+TEST(Function, CallingSomethingThatIsNotAFunctionIsAnError) {
+  expect_error("f = 3; f();", "Error: Invalid function call");
+  expect_error("(1)(2);", "Error: Invalid function call");
+  expect_error("f = \"x\"; f();", "Error: Invalid function call");
+  expect_error("f = [1]; f();", "Error: Invalid function call");
+  expect_error("null();", "Error: Invalid function call");
+  // The statement after it still runs, and gets the stack it expects.
+  expect_integer("f = 3; f(); 7;", 7);
+  expect_integer("f = 3; f(); f(); f(); 7;", 7);
+}
+
+
+TEST(Function, TheWrongNumberOfArgumentsIsAnError) {
+  expect_error("function f(a) { return a; } f();", "Error: Argument Count Mismatch");
+  expect_error("function f(a) { return a; } f(1, 2);", "Error: Argument Count Mismatch");
+  expect_error("function f() { return 1; } f(1);", "Error: Argument Count Mismatch");
+  expect_integer("function f(a) { return a; } f(1, 2); 7;", 7);
+}
+
+
 int main(int argc, char **argv) {
   gcu_memory_reset_counts();
   language = gta_language_create();
