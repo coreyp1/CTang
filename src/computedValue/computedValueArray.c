@@ -360,8 +360,16 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_add(GTA_Computed_Value * 
   }
 
   // Copy the elements from the two arrays into the new array.
-  memcpy(result->elements->data, lhs->elements->data, sizeof(GTA_TypeX_Union) * lhs->elements->count);
-  memcpy(result->elements->data + lhs->elements->count, rhs->elements->data, sizeof(GTA_TypeX_Union) * rhs->elements->count);
+  //
+  // An empty array's data pointer is null, and memcpy() is undefined when
+  // either pointer is null even for a length of zero - which `[] + []` is.
+  // UBSan says so; nothing else does.
+  if (lhs->elements->count) {
+    memcpy(result->elements->data, lhs->elements->data, sizeof(GTA_TypeX_Union) * lhs->elements->count);
+  }
+  if (rhs->elements->count) {
+    memcpy(result->elements->data + lhs->elements->count, rhs->elements->data, sizeof(GTA_TypeX_Union) * rhs->elements->count);
+  }
 
   // Update the count of the new array.
   result->elements->count = lhs->elements->count + rhs->elements->count;
