@@ -148,11 +148,20 @@ extern "C" {
 
 /**
  * A cross-compiler macro for declaring a function as no discard.
+ *
+ * GCC and clang get the attribute form in C++ as well as in C.  Every
+ * declaration here spells it `GTA_API GTA_NO_DISCARD`, which puts it after a
+ * GNU attribute and ahead of the return type; in C++ an attribute in that
+ * position appertains to the *type*, and a type is not something
+ * [[nodiscard]] can be applied to.  g++ lets it pass, clang++ refuses the
+ * translation unit.  __attribute__((warn_unused_result)) carries no such
+ * positional rule, and is what the library's own C compilation already uses,
+ * so both languages now mean the same thing by the macro.
  */
-#if defined(__cplusplus) && __cplusplus >= 201703L
-#define GTA_NO_DISCARD [[nodiscard]]
-#elif defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
 #define GTA_NO_DISCARD __attribute__((warn_unused_result))
+#elif defined(__cplusplus) && __cplusplus >= 201703L
+#define GTA_NO_DISCARD [[nodiscard]]
 #else
 #error "Unsupported compiler"
 #endif
