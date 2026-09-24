@@ -4080,10 +4080,23 @@ TEST(Assignment, ALiteralStoresACopyOfWhatItIsGiven) {
 TEST(Assignment, StoringAContainerIntoItself) {
   expect_string("x = [1, 2]; x[0] = x; x as string;", "[[1, 2], 2]");
   expect_integer("x = [1, 2]; x[0] = x; x[0][1];", 2);
-  expect_integer("m = {:}; m[\"k\"] = m; 1;", 1);
+  // This line used to end with `1;` rather than reading the map back, and so
+  // could not see that the map had stored a reference to itself: rendering it
+  // recursed until the stack ran out.
+  expect_string("m = {:}; m[\"k\"] = m; m as string;", "{\"k\": {}}");
+  expect_integer("d = {a: 1}; d.b = d; d.b.a;", 1);
+  // The copy is of what the map held at the time, so it has no `b` of its own.
+  expect_null("d = {a: 1}; d.b = d; d.b.b;");
+  // Not rendered whole: a map iterates in hash order, so `{a, b}` comes back
+  // as `b` first.  Read the copy back through its key instead.
   // Assigning a value held by another name takes the same path.
   expect_string("x = [1, 2]; y = [3]; x[0] = y; x as string;", "[[3], 2]");
   expect_string("m = {:}; n = [1]; m.v = n; m as string;", "{\"v\": [1]}");
+  // ...and what it takes is a copy, so a later write through the other name
+  // does not reach it.  A map adopted instead, where an array already copied.
+  // Read back by key rather than rendered: a map iterates in hash order.
+  expect_integer("m = {a: 1}; n = {a: 1}; m.b = n; n.a = 9; m.b.a;", 1);
+  expect_integer("m = {a: 1}; n = [1]; m.b = n; n[0] = 9; m.b[0];", 1);
 
   // Storing it into itself at an index that grows the array.  The grow loop
   // used to leave the slot being assigned unwritten while raising the count,

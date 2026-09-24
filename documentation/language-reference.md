@@ -1442,6 +1442,28 @@ number and says so, because the text above points at these by number.
     clamping is two comparisons and needs no arithmetic that can overflow,
     which is most of what 39 had just had to be made safe.
 
+41. **Fixed.** `d = {k1: 1}; d.k3 = d;` crashed on being rendered, and
+    `d.k3 = e; e.k1 = 9;` changed what `d` shows. A map's index assignment
+    adopted whatever it was given instead of copying it (13.21), where the
+    array's index assignment already copied - so a map held a reference to a
+    named variable, and a map assigned into itself held a reference to itself,
+    which `to_string` then followed until the stack ran out. Both spellings
+    reach it (`d.k3 = d` and `d["k3"] = d`), and both engines call the same
+    function, so they agreed with each other while both were wrong.
+
+    The test for this case existed and could not see it: it was written as
+    `m = {:}; m["k"] = m; 1;`, which sets the reference up and then never
+    reads the map back. Found by the differential harness, whose generator
+    ended a program with `d.k3 = d` in a template - where the map *is*
+    rendered.
+
+    One more in the same region, fixed alongside and not separately
+    observable: the bytecode engine's map-literal build takes a deep copy of a
+    non-temporary key and then inserts the original. A map literal's key is a
+    bare identifier (4.7) and so is always a fresh temporary, which means that
+    branch cannot run today - but it is wrong the moment a computed key is
+    spellable, and the value branch beside it is written correctly.
+
 ---
 
 ## 14. Open questions

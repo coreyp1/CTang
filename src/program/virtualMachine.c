@@ -184,7 +184,13 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
                 context->result = gta_computed_value_error_out_of_memory;
                 break;
               }
-              GTA_HASHX_SET(map->key_hash, key_hash, GTA_TYPEX_MAKE_P(key));
+              // key_copy, not key: this took the copy and then inserted the
+              // original, which is the one line the value branch below gets
+              // right.  Unreachable today - a map literal's key is a bare
+              // identifier (4.7), so it is always a fresh temporary and the
+              // branch above is the one that runs - but it is wrong the
+              // moment a computed key is spellable.
+              GTA_HASHX_SET(map->key_hash, key_hash, GTA_TYPEX_MAKE_P(key_copy));
             }
             if (value->is_temporary || value->is_singleton) {
               value->is_temporary = false;

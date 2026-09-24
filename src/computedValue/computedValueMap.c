@@ -224,9 +224,31 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_deep_copy(GTA_Computed_Valu
 }
 
 
-GTA_Computed_Value * GTA_CALL gta_computed_value_map_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_MAYBE_UNUSED(GTA_Execution_Context * context)) {
+GTA_Computed_Value * GTA_CALL gta_computed_value_map_assign_index(GTA_Computed_Value * self, GTA_Computed_Value * index, GTA_Computed_Value * other, GTA_Execution_Context * context) {
   assert(self);
   assert(GTA_COMPUTED_VALUE_IS_MAP(self));
+
+  // Copy or adopt (13.21), which the array's index assignment already did and
+  // this did not: it adopted whatever it was given.  So a map took a
+  // reference to a named variable rather than a copy of it, and
+  // `d.k3 = e; e.k1 = 9;` changed what `d` shows; and `d.k3 = d` put the map
+  // inside itself, where rendering it recursed until the stack ran out.
+  //
+  // The copies are taken before anything is inserted, so a map assigned into
+  // itself copies the contents it had, which are finite.  Both engines reach
+  // this same function, which is why they agreed with each other throughout.
+  if (!(index->is_temporary || index->is_singleton)) {
+    index = gta_computed_value_deep_copy(index, context);
+    if (!index) {
+      return gta_computed_value_error_out_of_memory;
+    }
+  }
+  if (!(other->is_temporary || other->is_singleton)) {
+    other = gta_computed_value_deep_copy(other, context);
+    if (!other) {
+      return gta_computed_value_error_out_of_memory;
+    }
+  }
   return gta_computed_value_map_set_key_val((GTA_Computed_Value_Map *)self, index, other);
 }
 
