@@ -600,6 +600,15 @@ static int gta_gen_expression(GTA_Gen * g, int cap) {
         break;
       }
       int which = (int)gta_gen_pick(g, (uint32_t)g->fn_count);
+      if (gta_gen_rare(g, 8)) {
+        // The function itself, uncalled.  A function is a value (section 7),
+        // and this is the only way one reaches a position where it is printed
+        // or compared - which is where the two engines had different things to
+        // say about it (13.37).
+        gta_gen_emitf(g, "f%d", which);
+        bound = GTA_GEN_SCALAR;
+        break;
+      }
       int arity = g->fn[which].arity;
       // Occasionally the wrong number of arguments, which is an error value
       // (4.11) and so something the two engines have to produce alike.

@@ -119,10 +119,14 @@ char * GTA_CALL gta_computed_value_function_to_string(GTA_Computed_Value * self)
   assert(GTA_COMPUTED_VALUE_IS_FUNCTION(self));
   GTA_Computed_Value_Function * function = (GTA_Computed_Value_Function *)self;
 
+  // The arity, and not the entry point.  `pointer` is a bytecode offset under
+  // one engine and a machine address under the other, so printing it made the
+  // two engines answer differently for the same program - and the address one
+  // is a code address, handed to whatever the template's output reaches.
   char * string = gcu_malloc(64);
   if (!string) {
     return NULL;
   }
-  snprintf(string, 64, "Function(%zu, %zu)", function->num_arguments, function->pointer);
+  snprintf(string, 64, "Function(%zu)", function->num_arguments);
   return string;
 }

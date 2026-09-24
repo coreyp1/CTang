@@ -26,17 +26,15 @@
  *
  * ## What "the same result" means here
  *
- * A function value prints its entry point, and the two engines do not have the
- * same one to print: under the bytecode engine it is an offset into the
- * instruction vector, and under the JIT it is an address in the mapping.  That
- * is a real difference and not one this harness can call a defect, so a
- * function result is compared as a function and not by its text.  (That it
- * puts a code address into a value a template can print is a separate
- * question, and one for the language rather than for a fuzzer.)
+ * Nothing is normalised.  There was one exception for a while - a function
+ * value printed its entry point, which is a bytecode offset under one engine
+ * and a machine address under the other - and the right answer turned out to
+ * be that the printed form should not contain it (13.37), not that the
+ * comparison should look away.  An error is compared by its full text, because
+ * which error is exactly what the two engines have disagreed about before.
  *
- * Nothing else is normalised.  In particular an error is compared by its full
- * text, because which error is exactly what the two engines have disagreed
- * about before.
+ * A harness with no exceptions is worth keeping.  Every exception is a shape
+ * the oracle stops covering, and the reason for it ages out of view.
  *
  * ## Reading the corpus
  *
@@ -147,17 +145,7 @@ static void engine_run(Engine_Run * run, const char * source,
     : gta_program_execute_bytecode(context);
 
   if (context->result) {
-    // See the file comment: the engines have different things to say about
-    // where a function lives, and both are right.
-    if (GTA_COMPUTED_VALUE_IS_FUNCTION(context->result)) {
-      run->result = gcu_malloc(sizeof("<function>"));
-      if (run->result) {
-        memcpy(run->result, "<function>", sizeof("<function>"));
-      }
-    }
-    else {
-      run->result = gta_computed_value_to_string(context->result);
-    }
+    run->result = gta_computed_value_to_string(context->result);
   }
   if (context->output) {
     GTA_Unicode_Rendered_String rendered = gta_unicode_string_render(context->output);

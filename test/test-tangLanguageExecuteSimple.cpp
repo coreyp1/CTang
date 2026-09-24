@@ -3960,6 +3960,23 @@ TEST(Slice, AStartPastTheFarEndSelectsNothing) {
 }
 
 
+// A function's printed form used to carry its entry point, which is a bytecode
+// offset under one engine and a machine address under the other - so the same
+// program answered differently depending on which ran it, and the answer the
+// default engine gave was a code address in text a template can emit.
+TEST(Cast, AFunctionDoesNotPrintItsAddress) {
+  // `f as string` is `Not supported`, so a container's rendering is how the
+  // text reaches a template at all - and how this hid.
+  expect_string("function f(a) { 1; } [f] as string;", "[Function(1)]");
+  expect_string("function f() { 1; } [f] as string;", "[Function(0)]");
+  expect_string("function f(a, b) { 1; } [f] as string;", "[Function(2)]");
+  expect_string("function f(a) { 1; } {k: f} as string;", "{\"k\": Function(1)}");
+  // A function assigned to another name is the same function.
+  expect_string("function f(a) { 1; } g = f; [g] as string;", "[Function(1)]");
+  expect_error("function f(a) { 1; } f as string;", "Error: Not supported");
+}
+
+
 // The array's cast slot held the generic dispatcher, which is the function
 // that reads the cast slot - so `[] as bool` called itself until the stack
 // ran out.  A container casts to a boolean, which is its truthiness, and to a

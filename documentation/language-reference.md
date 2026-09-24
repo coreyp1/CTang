@@ -1368,7 +1368,19 @@ number and says so, because the text above points at these by number.
     open on the out-of-memory path, which returns with the array grown and
     that slot never written at all.
 
-37. **Fixed.** `m.b` on a key the map does not hold was `Map Key Not Found`
+37. **Fixed.** A function's printed form carried its entry point:
+    `[f] as string` was `[Function(1, 5)]` under the bytecode engine and
+    `[Function(1, 140053114687542)]` under the x86-64 one, because `pointer`
+    is an offset into the instruction vector for one and an address in the
+    mapping for the other. So the same program answered differently depending
+    on which engine ran it, and the answer the default engine gave put a code
+    address into text a template emits - which is not something a sandboxed
+    template language should hand out. It prints the arity alone now:
+    `Function(1)`. `f as string` is still `Not supported`; a container's
+    rendering is the only way the text reaches a program, which is why this
+    was not visible in the obvious place.
+
+38. **Fixed.** `m.b` on a key the map does not hold was `Map Key Not Found`
     while `m["b"]` was `null`, so the two spellings of one read disagreed.
     13.7 chose the error on the strength of a line written at the same time -
     "which is what `m["name"]` already said" - which was a claim about the
