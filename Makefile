@@ -1034,8 +1034,31 @@ FUZZ_TIME ?= 60
 # machine with room: make fuzz FUZZ_RSS_MB=4096
 FUZZ_RSS_MB ?= 2048
 
+# An allocation this library cannot have is a code path, not a stop.
+#
+# A template can ask for an array of any size it likes - `[1, 2] * 1000000000`
+# is eight words of source - and the right answer is the out-of-memory value,
+# which is what every allocating function here is written to return.  ASan's
+# default is to treat a refused allocation as a fatal error instead, so the
+# campaign ended on the first program that asked for too much and the code that
+# answers the question was never reached.  With these two the allocator refuses
+# and hands back NULL, which is the input that arm needs.
+#
+# The cap is well under FUZZ_RSS_MB so that the refusal happens before the
+# process grows into libFuzzer's own limit, where the death is a killed process
+# rather than a reported value.
+FUZZ_ASAN_OPTIONS ?= allocator_may_return_null=1:max_allocation_size_mb=512
+
 FUZZ_OBJECTS := $(patsubst $(OBJ_DIR)/%,$(FUZZ_OBJ_DIR)/%,$(LIBOBJECTS))
 -include $(FUZZ_OBJECTS:.o=.d)
+# And the harnesses' own. They include headers of their own - lastInput.h, and
+# the generator, which is most of the differential harness - and without this
+# the link rule tracks only the .c file. Editing the generator would then
+# leave the previous binary in place, and a fuzz run that "does not pick up a
+# change" is indistinguishable from one that found the change made no
+# difference.
+FUZZ_HARNESSES := fuzz_parse fuzz_template fuzz_differential
+-include $(patsubst %,$(FUZZ_APP_DIR)/%.d,$(FUZZ_HARNESSES))
 
 ifdef PREFIX
 FUZZ_RPATH := -Wl,-rpath,$(LIB_INSTALL_PATH)/$(SUITE)
@@ -1069,6 +1092,7 @@ $$(FUZZ_APP_DIR)/$1: test/fuzz/$1.c $$(FUZZ_OBJECTS)
 	@mkdir -p $$(@D) $$(FUZZ_CORPUS)/$2
 	@printf "\n### Building $1 ###\n"
 	$$(FUZZ_CC) $$(FUZZ_BIN_CFLAGS) $$(INCLUDE) \
+		-MMD -MP -MF $$(FUZZ_APP_DIR)/$1.d \
 		-o $$@ $$< $$(FUZZ_OBJECTS) $$(ICU_LIBS) $$(CUTIL_LIBS) -lstdc++ -lm $$(FUZZ_RPATH)
 
 # env -u LD_PRELOAD for the same reason the sanitizer target does it: desktop
@@ -1085,7 +1109,7 @@ fuzz-run-$2: $$(FUZZ_APP_DIR)/$1
 	@cp -n $$(FUZZ_SEEDS)/$2/* $$(FUZZ_CORPUS)/$2/ 2>/dev/null || true
 	@printf "\n### Fuzzing $2 for $$(FUZZ_TIME)s ###\n"
 	@mkdir -p $$(FUZZ_ARTIFACTS)
-	@env -u LD_PRELOAD $$(FUZZ_APP_DIR)/$1 $$(FUZZ_CORPUS)/$2 \
+	@env -u LD_PRELOAD ASAN_OPTIONS=$$(FUZZ_ASAN_OPTIONS) $$(FUZZ_APP_DIR)/$1 $$(FUZZ_CORPUS)/$2 \
 		-max_total_time=$$(FUZZ_TIME) \
 		-timeout=10 -rss_limit_mb=$$(FUZZ_RSS_MB) -print_final_stats=1 \
 		-artifact_prefix=$$(FUZZ_ARTIFACTS)/$2-
@@ -1093,9 +1117,10 @@ endef
 
 $(eval $(call fuzz-rule,fuzz_parse,parse))
 $(eval $(call fuzz-rule,fuzz_template,template))
+$(eval $(call fuzz-rule,fuzz_differential,differential))
 
 fuzz: ## Build and run every fuzzer for $(FUZZ_TIME) seconds each
-fuzz: fuzz-run-parse fuzz-run-template
+fuzz: fuzz-run-parse fuzz-run-template fuzz-run-differential
 
 fuzz-clean: ## Remove the fuzz build (keeps the corpus)
 fuzz-clean:
