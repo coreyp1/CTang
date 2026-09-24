@@ -64,7 +64,18 @@ GTA_Ast_Node * GTA_CALL gta_ast_node_create(GTA_PARSER_LTYPE location) {
 void GTA_CALL gta_ast_node_destroy(GTA_Ast_Node * self) {
   assert(self);
   assert(self->vtable);
-  (!self->is_singleton && self->vtable->destroy)
+
+  // A singleton has static storage, so there is nothing to give back.  The
+  // is_singleton test used to be folded into the condition below, which sent
+  // singletons to the fallback - and the fallback is a free(), not a no-op.
+  // So the check that exists to protect a singleton was what freed it, and
+  // every error reported by returning a parse-error singleton aborted the
+  // process with "free(): invalid pointer" instead of failing compilation.
+  if (self->is_singleton) {
+    return;
+  }
+
+  self->vtable->destroy
     ? self->vtable->destroy(self)
     : gta_ast_node_null_destroy(self);
 }

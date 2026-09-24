@@ -212,6 +212,40 @@ bool gta_ast_node_function_call_compile_to_bytecode(GTA_Ast_Node * self, GTA_Com
 }
 
 
+/**
+ * Reverse the argument block at [rsp], in place, for a native call.
+ *
+ * The block holds `count` 8-byte slots.  The count is known when the code is
+ * emitted, so the swaps are emitted straight out rather than as a loop.
+ *
+ * Uses GTA_X86_64_Scratch1 and GTA_X86_64_Scratch2, which the caller must
+ * have finished with.
+ *
+ * @param v The binary vector to emit into.
+ * @param count The number of argument slots.
+ * @return true on success, false on failure.
+ */
+static bool reverse_argument_block__x86_64(GCU_Vector8 * v, size_t count) {
+  assert(v);
+
+  bool error_free = true;
+  for (size_t i = 0; error_free && (i < count / 2); ++i) {
+    int32_t low = (int32_t)(8 * i);
+    int32_t high = (int32_t)(8 * (count - i - 1));
+    error_free = true
+    //   mov Scratch1, [rsp + low]
+    //   mov Scratch2, [rsp + high]
+    //   mov [rsp + high], Scratch1
+    //   mov [rsp + low], Scratch2
+      && gta_mov_reg_ind__x86_64(v, GTA_X86_64_Scratch1, GTA_REG_RSP, GTA_REG_NONE, 0, low)
+      && gta_mov_reg_ind__x86_64(v, GTA_X86_64_Scratch2, GTA_REG_RSP, GTA_REG_NONE, 0, high)
+      && gta_mov_ind_reg__x86_64(v, GTA_REG_RSP, GTA_REG_NONE, 0, high, GTA_X86_64_Scratch1)
+      && gta_mov_ind_reg__x86_64(v, GTA_REG_RSP, GTA_REG_NONE, 0, low, GTA_X86_64_Scratch2);
+  }
+  return error_free;
+}
+
+
 bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compiler_Context * context) {
   assert(self);
   assert(GTA_AST_IS_FUNCTION_CALL(self));
@@ -255,8 +289,10 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   assert((total_stack_adjustment % 16) == 0);
   // r12 is the frame pointer that will need to be restored.
   int32_t r12_offset = total_stack_adjustment - 8;
-  // This is the "first" argument that will be pushed onto the stack.  It is
-  // actually the last argument of the function call.
+  // The slot the first argument goes in, which is the highest of the
+  // argument slots: the callee indexes its locals downward from r12, and r12
+  // is set below to one past this slot, so parameter p is read from
+  // [r12 - 8(p + 1)], which is [rsp + first_argument_offset - 8p].
   int32_t first_argument_offset = (8 * num_arguments) - 8;
 
   bool error_free = true
@@ -281,14 +317,24 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   // case an argument needs to call a function.  We just need to put the
   // arguments in the correct place on the stack.
   for (size_t i = 0; error_free && (i < num_arguments); ++i) {
-    // Note: The arguments are pushed in reverse order.
+    // Argument i goes in the slot the callee reads parameter i from, and the
+    // arguments are evaluated in the order they are written.
+    //
+    // This used to walk the arguments backwards while walking the slots
+    // forwards, so every parameter got the wrong argument: `f(1, 2, 3)` with
+    // `function f(a, b, c)` bound a to 3 and c to 1.  Silent, and wrong
+    // answers rather than a crash, under the engine that runs by default.
+    // It also evaluated the arguments last to first, which the bytecode
+    // engine does not, so an argument with a side effect saw a different
+    // order in each.
+    //
     // TODO: Verify the behavior.  Currently, the is_temporary value is set to
     //   false.  This is because the value is being pushed onto the stack and
     //   is being "assigned" to the function's arguments.  Should this be a
     //   copy instead?
     error_free &= true
     // Compile the argument.
-      && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[num_arguments - i - 1]), context)
+      && gta_ast_node_compile_to_binary__x86_64((GTA_Ast_Node *)GTA_TYPEX_P(function_call->arguments->data[i]), context)
     // Set is_temporary to 0.
     //   mov byte ptr [rax + is_temporary_offset], 0
       && gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
@@ -321,6 +367,16 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
     && gta_compiler_context_add_label_jump(context, not_a_native_function, v->count - 4)
 
   // Call the native function.
+  //
+  // A native function is handed the argument block as a C array and reads it
+  // upwards from argv[0], but the block is laid out for a Tang function's
+  // frame, which indexes downwards from r12 - so the first argument is at the
+  // top of the block and argv[0] is at the bottom.  Reverse the block in
+  // place first.  This runs only on this branch, where both scratch registers
+  // are dead: Scratch1 held the vtable that got us here, and Scratch2 is not
+  // loaded until not_a_native_function below.
+    && reverse_argument_block__x86_64(v, num_arguments)
+
   //   mov GTA_X86_64_R1, [rax + bound_object]
   //   mov GTA_X86_64_R2, GTA_VECTORX_COUNT(function_call->arguments)
   //   lea GTA_X86_64_R3, [rsp]

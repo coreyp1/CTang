@@ -1032,6 +1032,91 @@ TEST(Execute, Template) {
   }
 }
 
+
+// Run a source that must yield an integer, and say which integer.
+static void expect_integer(const char * code, GTA_Integer expected) {
+  gcu_memory_reset_counts();
+  GTA_Program * program = gta_program_create(language, code);
+  ASSERT_TRUE(program) << code;
+  GTA_Execution_Context * context = gta_execution_context_create(program);
+  ASSERT_TRUE(context) << code;
+  ASSERT_TRUE(gta_program_execute(context)) << code;
+  ASSERT_TRUE(context->result) << code;
+  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result)) << code;
+  ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, expected) << code;
+  gta_execution_context_destroy(context);
+  gta_program_destroy(program);
+}
+
+
+// The x86-64 caller walked the arguments backwards while walking the slots it
+// wrote them into forwards, so every parameter was bound to the wrong
+// argument: `f(1, 2, 3)` bound a to 3 and c to 1.  Silent wrong answers, not
+// a crash, under the engine that runs by default, and the bytecode engine
+// disagreed with it.
+//
+// Each parameter is read on its own so that a failure says which slot moved.
+TEST(Function, EachParameterGetsItsOwnArgument) {
+  expect_integer("function f(a) { return a; } f(7);", 7);
+  expect_integer("function f(a, b) { return a; } f(1, 2);", 1);
+  expect_integer("function f(a, b) { return b; } f(1, 2);", 2);
+  expect_integer("function f(a, b, c) { return a; } f(1, 2, 3);", 1);
+  expect_integer("function f(a, b, c) { return b; } f(1, 2, 3);", 2);
+  expect_integer("function f(a, b, c) { return c; } f(1, 2, 3);", 3);
+  expect_integer("function f(a, b, c, d) { return a; } f(1, 2, 3, 4);", 1);
+  expect_integer("function f(a, b, c, d) { return d; } f(1, 2, 3, 4);", 4);
+  // A weighted sum catches any permutation at once.
+  expect_integer("function f(a, b, c, d, e) { return a + b * 2 + c * 4 + d * 8 + e * 16; } f(1, 2, 3, 4, 5);", 129);
+  // Through a nested call, so that one frame's layout does not cover another's.
+  expect_integer("function g(x, y) { return x - y; } function f(a, b) { return g(a, b); } f(10, 3);", 7);
+}
+
+
+// A repeated parameter name gives two parameters one slot, so the scope holds
+// fewer variables than the function has parameters - and the x86-64 prologue
+// works that difference out in size_t.  It wrapped, and the loop that fills
+// the locals with null then ran about 2^64 times, which is what "hangs the
+// compiler" was.
+TEST(Function, ARepeatedParameterNameIsRejected) {
+  const char * cases[] = {
+    "function f(a, a) {}",
+    "function f(a, b, a) {} 1;",
+    "function f(a, a, a) {} 1;",
+  };
+  for (const char * code : cases) {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(language, code);
+    ASSERT_FALSE(program) << code;
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << code;
+  }
+  // Distinct names in the same positions still compile.
+  expect_integer("function f(a, b) { return b; } f(1, 2);", 2);
+}
+
+
+// Reporting one of these used to abort the process.  gta_ast_node_destroy()
+// folded its is_singleton test into the condition that picks the destructor,
+// which sent singletons to the fallback - and the fallback is a free(), not a
+// no-op.  So the check that exists to protect a singleton was what freed it,
+// and every error reported by returning a parse-error singleton ended in
+// "free(): invalid pointer".
+TEST(Function, RedeclarationAndForwardCallsFailCompilation) {
+  const char * cases[] = {
+    "function f() {} function f() {}",
+    "x = 1; function x() {}",
+    "foo(); function foo() {}",
+  };
+  for (const char * code : cases) {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(language, code);
+    ASSERT_FALSE(program) << code;
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << code;
+  }
+  // Two different functions, and a call after the declaration, still compile.
+  expect_integer("function f() { return 1; } function g() { return 2; } f() + g();", 3);
+}
+
+
 int main(int argc, char **argv) {
   gcu_memory_reset_counts();
   language = gta_language_create();

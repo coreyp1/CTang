@@ -1101,20 +1101,30 @@ number and says so, because the text above points at these by number.
     overflows the C stack and segfaults the host process. A template can take
     the server down.
 
-15. **Calling a function before its declaration crashes** with
-    `free(): invalid pointer`: `foo(); function foo() {}`.
+15. **Fixed** as a crash; the language question is still open. `foo();
+    function foo() {}` crashed with `free(): invalid pointer` - see 13.24 for
+    why every one of these reported errors crashed rather than failing
+    compilation. It now fails compilation, which is what the current design
+    (declarations bind where they appear) says it should do. Whether the
+    declaration ought to be hoisted instead is still the open question in
+    section 14.
 
 16. **The two backends disagree on calling a non-function.** `f = 3; f();`
     is `Invalid function call` under the JIT and `3` under the bytecode VM;
     `(1)(2)` segfaults the VM.
 
-17. **Duplicate parameter names hang the compiler.**
-    `function f(a, a) {}` never returns from `gta_program_create()`.
+17. **Fixed.** `function f(a, a) {}` never returned from
+    `gta_program_create()`. Two parameters with one name take one slot in the
+    function's scope, so the scope held fewer variables than the function had
+    parameters - and the x86-64 prologue works out how many locals to reserve
+    by subtracting one from the other, in `size_t`. The subtraction wrapped,
+    and the loop that fills the locals with null then ran about 2^64 times.
+    A repeated parameter name is now rejected during analysis, and the
+    subtraction says in an assertion what it is relying on.
 
-18. **Redeclaration aborts instead of failing compilation.** The parse-error
-    singletons `function_redeclared` and `identifier_redeclared` exist, but
-    `function f() {} function f() {}` and `x = 1; function x() {}` both hit
-    an assertion and abort the process.
+18. **Fixed.** `function f() {} function f() {}` and `x = 1; function x() {}`
+    aborted the process. Two separate defects, the first hiding the second:
+    see 13.24 and 13.25. Both now fail compilation.
 
 19. **`PRINT_TO_STDOUT` and the `tang` tool emit the raw buffer**, with no
     encoding applied, so `!"<b>"` reaches stdout as `<b>`. Either is
@@ -1146,6 +1156,40 @@ number and says so, because the text above points at these by number.
     Nothing reported an error, and neither ASan nor the allocation counters
     could see it, because the read stayed inside the vector's own allocation.
     This is what 13.10 and 13.11 were describing.
+
+24. **Fixed.** Reporting an error by returning a parse-error singleton
+    aborted the process with `free(): invalid pointer`.
+    `gta_ast_node_destroy()` folded its `is_singleton` test into the
+    condition that picks the destructor:
+
+    ```c
+    (!self->is_singleton && self->vtable->destroy)
+      ? self->vtable->destroy(self)
+      : gta_ast_node_null_destroy(self);
+    ```
+
+    which sends a singleton to the fallback - and the fallback is a `free()`,
+    not a no-op. So the check that exists to protect a singleton was what
+    freed it. This is why 13.15 and 13.18 crashed instead of failing
+    compilation.
+
+25. **Fixed.** A redeclared function was inserted into the outermost scope's
+    `function_scopes` anyway, and then its scope was destroyed - so the hash
+    held a dangling pointer, and destroying the outermost scope destroyed it
+    a second time. It also dropped the first declaration's scope, which the
+    hash owned. The insert is now skipped when the name is already taken.
+    Hidden behind 13.24, which aborted first.
+
+26. **Fixed.** The x86-64 engine bound every parameter to the wrong
+    argument. The caller walked the arguments backwards while walking the
+    slots it wrote them into forwards, so `f(1, 2, 3)` with
+    `function f(a, b, c)` bound `a` to 3 and `c` to 1. Silent wrong answers
+    rather than a crash, under the engine that runs by default, and the
+    bytecode engine disagreed with it. It also evaluated the arguments last
+    to first, which the bytecode engine does not. Arguments are now evaluated
+    in source order and written to the slot the callee reads that parameter
+    from. A native function is handed the block as a C array and reads it the
+    other way, so that branch reverses it in place first.
 
 ---
 

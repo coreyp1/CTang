@@ -215,12 +215,20 @@ GTA_Ast_Node * gta_ast_node_function_analyze(GTA_Ast_Node * self, GTA_Program * 
   // name hash. If a scope already exists, then error out.
   GTA_HashX_Value existing_scope = GTA_HASHX_GET(outermost_scope->function_scopes, function->mangled_name_hash);
   if (existing_scope.exists) {
+    // Return before the insert.  The hash owns the scopes it holds, and
+    // setting over an existing entry both dropped the first declaration's
+    // scope and left this one in the hash - which then destroyed it a second
+    // time when the outermost scope went, after this function had already
+    // destroyed it here.
     error = gta_ast_node_parse_error_function_redeclared;
+    gta_variable_scope_destroy(function->scope);
+    function->scope = 0;
+    goto FUNCTION_REDECLARATION_ERROR;
   }
   if (!GTA_HASHX_SET(outermost_scope->function_scopes, function->mangled_name_hash, GTA_TYPEX_MAKE_P(function->scope))) {
+    // The insert failed, so the hash does not hold the scope and this is
+    // still the only reference to it.
     error = gta_ast_node_parse_error_out_of_memory;
-  }
-  if (error) {
     gta_variable_scope_destroy(function->scope);
     function->scope = 0;
     goto FUNCTION_REDECLARATION_ERROR;
@@ -259,6 +267,17 @@ GTA_Ast_Node * gta_ast_node_function_analyze(GTA_Ast_Node * self, GTA_Program * 
   assert(GTA_HASHX_COUNT(function->scope->variable_positions) == 0);
   for (size_t i = 0; i < GTA_VECTORX_COUNT(function->parameters); ++i) {
     GTA_Ast_Node_Identifier * parameter = (GTA_Ast_Node_Identifier *)GTA_TYPEX_P(function->parameters->data[i]);
+    // Each parameter must take a slot of its own.  A repeated name takes the
+    // same slot as the first, so the scope ends up with fewer variables than
+    // the function has parameters - and the x86-64 prologue works out how
+    // many locals to reserve by subtracting the parameter count from the
+    // scope's, in size_t.  `function f(a, a) {}` made that subtraction wrap,
+    // and the loop that fills the locals with null then ran about 2^64 times,
+    // which is what "hangs the compiler" was.
+    if (GTA_HASHX_CONTAINS(function->scope->variable_positions, parameter->hash)) {
+      error = gta_ast_node_parse_error_identifier_redeclared;
+      goto GLOBAL_REGISTRATION_ERROR;
+    }
     if ((error = gta_ast_node_analyze((GTA_Ast_Node *)parameter, program, function->scope))) {
       return error;
     }
@@ -414,10 +433,22 @@ bool gta_ast_node_function_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Co
   GTA_Integer old_return_label = context->return_label;
 
   // Stack offsets.
+  // Every parameter, the return address and each shadow-space slot has a slot
+  // of its own in variable_positions, so the scope can only hold more than
+  // their sum.  This is size_t arithmetic: if that ever stopped being true
+  // the subtraction would wrap, and the loop below that fills the locals with
+  // null would emit instructions until it ran out of memory.  Analysis
+  // rejects the one input that made it untrue - a repeated parameter name -
+  // and this says so where the arithmetic is.
+  size_t reserved_slots = function->parameters->count // Parameters are not local variables.
+    + 1                                               // Return address.
+    + GTA_SHADOW_SIZE__X86_64 / 8;                    // Shadow space.
+  assert(GTA_HASHX_COUNT(function->scope->variable_positions) >= reserved_slots);
+  if (GTA_HASHX_COUNT(function->scope->variable_positions) < reserved_slots) {
+    return false;
+  }
   size_t count_of_locals_excluding_parameters = GTA_HASHX_COUNT(function->scope->variable_positions)
-    - function->parameters->count  // Parameters are not local variables.
-    - 1                            // Return address.
-    - GTA_SHADOW_SIZE__X86_64 / 8; // Shadow space.
+    - reserved_slots;
   // When the function is called, the stack was 16-byte aligned.  Then, the
   // return address was pushed onto the stack, undoing the alignment.  The
   // alignment is restored if there is an odd number of arguments, but if there
