@@ -3933,6 +3933,33 @@ TEST(Period, AMissingMemberIsNull) {
 }
 
 
+// A slice whose start is past the far end selects nothing (4.9), and that had
+// to be said before the bounds corrections rather than left to them.
+// correct_bounds assumes it is moving *towards* the boundary it is given; when
+// the start is already past it the division truncates towards zero and the
+// rounding then moves the end one whole step the wrong way, so the end came
+// out *after* the start and the intersection check let it through.  The build
+// loop then read element 10 of a two-element array.  A step of 1 hid it,
+// because the correction lands exactly on the boundary.
+TEST(Slice, AStartPastTheFarEndSelectsNothing) {
+  expect_string("([0, 1][10:65535:256]) as string;", "[]");
+  expect_string("([0, 1][10:20]) as string;", "[]");
+  expect_string("([0, 1][2:5:3]) as string;", "[]");
+  expect_string("([][0:1]) as string;", "[]");
+  expect_string("(\"ab\"[10:65535:256]) as string;", "");
+  expect_string("(\"ab\"[5:9:2]) as string;", "");
+  // Walking backwards, the far end is the other one.
+  expect_string("([0, 1][-9::-256]) as string;", "[]");
+  expect_string("(\"ab\"[-9::-256]) as string;", "");
+  // The slices that were already right stay right.
+  expect_string("([0, 1, 2][1:3]) as string;", "[1, 2]");
+  expect_string("([0, 1, 2][::-1]) as string;", "[2, 1, 0]");
+  expect_string("([0, 1, 2][5::-1]) as string;", "[2, 1, 0]");
+  expect_string("(\"abc\"[::-1]) as string;", "cba");
+  expect_string("(\"abc\"[5::-1]) as string;", "cba");
+}
+
+
 // The array's cast slot held the generic dispatcher, which is the function
 // that reads the cast slot - so `[] as bool` called itself until the stack
 // ran out.  A container casts to a boolean, which is its truthiness, and to a

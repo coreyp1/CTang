@@ -634,6 +634,21 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value 
 
   GTA_Integer array_count = (GTA_Integer)array->elements->count;
 
+  // A start past the far end selects nothing, whichever way the step walks
+  // (4.9).  This has to be said before the corrections below, because
+  // correct_bounds assumes it is moving *towards* the boundary it is given: if
+  // the start is already past it, the division truncates towards zero and the
+  // rounding step then moves the end one whole step the wrong way.  So
+  // `[0, 1][10:65535:256]` came out with an end of 266 against a start of 10,
+  // which passed the intersection check below, and the build loop read
+  // element 10 of a two-element array.  A step of 1 hid it: the correction
+  // lands exactly on the boundary and the check catches it.
+  if (((step_value > 0) && (start_value >= array_count))
+    || ((step_value < 0) && (start_value < 0))) {
+    GTA_Computed_Value * empty = gta_computed_value_array_create(0, context);
+    return empty ? empty : gta_computed_value_error_out_of_memory;
+  }
+
   if (step_value > 0) {
     // If the step value is positive, then the start value should be the first
     // eligible value that is greater than or equal to 0.

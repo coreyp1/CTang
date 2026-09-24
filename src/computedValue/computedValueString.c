@@ -690,6 +690,17 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_slice(GTA_Computed_Value
       ? ((GTA_Computed_Value_Integer *)end)->value
       : ((GTA_Computed_Value_Integer *)end)->value + grapheme_length;
 
+  // A start past the far end selects nothing, whichever way the step walks
+  // (4.9).  The same reasoning as in gta_computed_value_array_slice, which had
+  // the same gap and could be seen to read out of bounds; here the substring
+  // that follows clamps, so it answered a wrong slice rather than reading
+  // anything it should not.
+  if (((step_value > 0) && (start_value >= (GTA_Integer)grapheme_length))
+    || ((step_value < 0) && (start_value < 0))) {
+    return (GTA_Computed_Value *)gta_computed_value_string_create(
+      gta_unicode_string_create("", 0, GTA_UNICODE_STRING_TYPE_TRUSTED), true, context);
+  }
+
   if (step_value > 0) {
     // If the step value is positive, then the start value should be the first
     // eligible value that is greater than or equal to 0.
