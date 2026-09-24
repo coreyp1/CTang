@@ -709,6 +709,21 @@ $(APP_DIR)/testTangLanguageExecuteSimple$(EXE_EXTENSION): test/test-tangLanguage
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/testTangLanguageExecuteSimple.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(TANGLIBRARY)
 
+# The JIT's "mmap refused me a page" arm is not reachable from any input, so
+# the suite runs it by preloading a shim that refuses every executable
+# mapping. Named beside the other test artifacts, never installed, and built
+# only where LD_PRELOAD exists. $(FLAGS_STAMP) because this is compiled with
+# $(CFLAGS) like everything else, and an explicit rule takes none of the
+# pattern rule's prerequisites with it.
+ifeq ($(UNAME_S), Linux)
+MMAP_FAIL_SHIM := $(APP_DIR)/libmmapfail.so
+
+$(MMAP_FAIL_SHIM): test/mmap-fail.c $(FLAGS_STAMP)
+	@printf "\n### Compiling the mmap failure shim ###\n"
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -shared -fPIC -o $@ $<
+endif
+
 $(APP_DIR)/testTangLanguageExecuteComplex$(EXE_EXTENSION): test/test-tangLanguageExecuteComplex.cpp $(APP_DIR)/$(STATIC_TARGET) | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Tang Language Execution Complex Test ###\n"
 	@mkdir -p $(@D)
@@ -1187,6 +1202,7 @@ test: \
 				$(APP_DIR)/testTangLanguageLibrary$(EXE_EXTENSION) \
 				$(APP_DIR)/testBinary$(EXE_EXTENSION) \
 				$(APP_DIR)/tang$(EXE_EXTENSION) \
+				$(MMAP_FAIL_SHIM) \
 				$(TEST_GATES)
 #				$(APP_DIR)/libtestLibrary.so \
 #				$(APP_DIR)/test$(EXE_EXTENSION) \
@@ -1253,6 +1269,21 @@ test: \
 	@printf "##############################################\n"
 	@printf "\033[0m\n\n"
 	LD_LIBRARY_PATH="$(TEST_LD_PATH)" TANG_DISABLE_BYTECODE= $(APP_DIR)/testTangLanguageLibrary --gtest_brief=1
+
+	@printf "\033[0;30;45m\n"
+	@printf "##############################################\n"
+	@printf "### Running with every JIT mapping refused ###\n"
+	@printf "##############################################\n"
+	@printf "\033[0m\n\n"
+ifeq ($(UNAME_S), Linux)
+# Every program falls back to the bytecode, so the whole suite must pass with
+# no JIT at all. Both engines stay enabled: this asks what happens when the
+# JIT is refused, which is not what TANG_DISABLE_BINARY asks.
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" LD_PRELOAD="$(MMAP_FAIL_SHIM)" $(APP_DIR)/testTangLanguageExecuteSimple --gtest_brief=1
+	LD_LIBRARY_PATH="$(TEST_LD_PATH)" LD_PRELOAD="$(MMAP_FAIL_SHIM)" $(APP_DIR)/testTangLanguageExecuteComplex --gtest_brief=1
+else
+	@printf "skipped (needs LD_PRELOAD)\n"
+endif
 
 	@printf "\033[0;30;47m\n"
 	@printf "#########################\n"

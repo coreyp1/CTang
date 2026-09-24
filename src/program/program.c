@@ -955,7 +955,15 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
 #endif
   program->binary = mmap(0, length, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 #endif // !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
-  if (program->binary != MAP_FAILED) {
+  // mmap() reports failure as MAP_FAILED, which is not null. Assigning it
+  // straight to program->binary left a program whose binary pointer was
+  // (void *)-1: gta_program_execute() asks only whether the pointer is set,
+  // so the next run jumped to it and the process died. Fall back to the
+  // bytecode, which is what a program with no binary is supposed to do.
+  if (program->binary == MAP_FAILED) {
+    program->binary = 0;
+  }
+  else {
     memcpy(program->binary, v->data, length);
     if (mprotect(program->binary, length, PROT_EXEC | PROT_READ) != 0) {
       munmap(program->binary, length);
