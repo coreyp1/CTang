@@ -195,6 +195,18 @@ static void gta_program_compile_bytecode(GTA_Program * program) {
     }
   }
 
+  // A statement whose compile refused leaves error_free false, and the
+  // bytecode vector is then missing everything from that statement onward -
+  // including the RETURN.  Falling through here published that partial vector
+  // as the program: gta_program_create() saw a non-null bytecode and reported
+  // success, and the virtual machine ran off the end of the instructions into
+  // the vector's spare capacity, where a zero byte reads as RETURN.  The
+  // program silently stopped at the refused statement instead of failing to
+  // compile.
+  if (!error_free) {
+    goto BYTECODE_DESTROY_GLOBALS_ORDER;
+  }
+
   // Cleanup and exit.
   GTA_VECTORX_DESTROY(variables_order);
   gta_compiler_context_destroy_in_place(&context);

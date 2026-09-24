@@ -3480,6 +3480,47 @@ TEST(CompoundAssign, OnlyAnIdentifierCanBeTheTarget) {
 }
 
 
+
+// A construct whose compile refuses must fail the whole program, not publish
+// the part of the bytecode that was emitted before it.  Publishing the partial
+// vector left the program without its RETURN, and the virtual machine then ran
+// off the end of the instructions into the vector's spare capacity, where a
+// zero reads as RETURN - so the program silently stopped at the refused
+// statement and reported success.
+//
+// Each case below puts a statement after the construct.  Whether the construct
+// itself is supported is not what is being tested and will change; the
+// invariant is that a program which compiles runs all the way to its last
+// statement.
+TEST(Syntax, ARefusedStatementDoesNotTruncateTheProgram) {
+  const char * cases[] = {
+    "x = [1, 2]; x.size = 5; y = 99; y;",
+    "x = [1, 2, 3]; x[1:2] = [9]; y = 99; y;",
+    "x = [1, 2, 3]; x[1:] = 7; y = 99; y;",
+    "m = {:}; m.b = 2; y = 99; y;",
+    "f = 1; f.g.h = 2; y = 99; y;",
+    "s = \"abc\"; s.length = 1; y = 99; y;",
+  };
+  for (const char * code : cases) {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(language, code);
+    if (!program) {
+      // Refused outright, which is the other acceptable answer.
+      ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << code;
+      continue;
+    }
+    GTA_Execution_Context * context = gta_execution_context_create(program);
+    ASSERT_TRUE(context) << code;
+    ASSERT_TRUE(gta_program_execute(context)) << code;
+    ASSERT_TRUE(context->result) << code;
+    ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result)) << code;
+    ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, 99) << code;
+    gta_execution_context_destroy(context);
+    gta_program_destroy(program);
+  }
+}
+
+
 #ifdef __linux__
 /**
  * True if any mapping in /proc/self/maps covers `address`.
