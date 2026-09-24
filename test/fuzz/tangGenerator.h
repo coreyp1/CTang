@@ -59,6 +59,13 @@
  * written; the value on the right is what decides the size, so there is no
  * bound to be had while it is anything the generator does not choose.
  *
+ * `*` has two productions, and bounding one of them is not bounding the
+ * operator: `v *= e` is the same repetition through the compound-assignment
+ * form, and it was still being charged additively alongside `+=` after the
+ * binary form was fixed.  It now takes a factor the generator picks, and only
+ * outside a loop - inside one the growth is that factor to the power of the
+ * iteration count, and nothing this file tracks survives that.
+ *
  * Inside a loop the arithmetic has to account for repetition, and the shape
  * that defeats an additive bound is a variable that reads itself: `v = v + v`
  * doubles, so after `m` iterations it is `2^m`, not `m` times anything.  The
@@ -393,13 +400,41 @@ static int gta_gen_assignment(GTA_Gen * g, bool as_statement) {
   else if (form < 6) {
     // target op= expression.  The accumulator shape: the only one that may
     // grow across iterations, and the growth is charged for here.
-    static const char * const compound[] = { "+=", "-=", "*=", "/=", "%=" };
+    //
+    // `*=` is not in that list, for the same reason the binary `*` is handled
+    // on its own: `*` repeats an array or a string (4.2), so it grows a value
+    // multiplicatively, by the *value* on the right, which an expression does
+    // not bound.  Bounding the binary form alone was not enough - a campaign
+    // wrote `c *= (c[4] = (c = 65536))` and grew until the machine gave out.
+    // It gets a factor the generator picks, and only where the factor can be
+    // charged: inside a loop the growth is that factor to the power of the
+    // iteration count, which no bound here survives, so there it is not
+    // written at all.
     gta_gen_emit_var(g, target);
-    gta_gen_emitf(g, " %s ", compound[gta_gen_pick(g, 5)]);
-    int rhs = gta_gen_assign_rhs(g, GTA_GEN_ARG_CAP);
-    long grown = g->bound[target] + g->multiplier * rhs;
-    g->bound[target] = grown > GTA_GEN_SIZE_CAP ? GTA_GEN_SIZE_CAP : (int)grown;
-    bound = g->bound[target];
+    int factor = 0;
+    if ((g->multiplier == 1) && !gta_gen_pick(g, 4)) {
+      int room = GTA_GEN_SIZE_CAP / (g->bound[target] > 0 ? g->bound[target] : 1);
+      if (room > GTA_GEN_REPEAT_MAX) {
+        room = GTA_GEN_REPEAT_MAX;
+      }
+      if (room >= 2) {
+        factor = 1 + (int)gta_gen_pick(g, (uint32_t)room);
+      }
+    }
+    if (factor) {
+      gta_gen_emitf(g, " *= %d", factor);
+      long grown = (long)g->bound[target] * factor;
+      g->bound[target] = grown > GTA_GEN_SIZE_CAP ? GTA_GEN_SIZE_CAP : (int)grown;
+      bound = g->bound[target];
+    }
+    else {
+      static const char * const compound[] = { "+=", "-=", "/=", "%=" };
+      gta_gen_emitf(g, " %s ", compound[gta_gen_pick(g, 4)]);
+      int rhs = gta_gen_assign_rhs(g, GTA_GEN_ARG_CAP);
+      long grown = g->bound[target] + g->multiplier * rhs;
+      g->bound[target] = grown > GTA_GEN_SIZE_CAP ? GTA_GEN_SIZE_CAP : (int)grown;
+      bound = g->bound[target];
+    }
   }
   else if (form == 6) {
     // target[index] = expression.  A literal index, so that the container
@@ -612,12 +647,20 @@ static int gta_gen_expression(GTA_Gen * g, int cap) {
       // looks like: `255.` is already a complete float literal (2.6), so the
       // scanner hands the parser a float followed by an identifier and the
       // program is a syntax error rather than an attribute read.
+      // `.render`, `.html` and friends return an encoded form of the operand,
+      // and percent-encoding is three characters per byte - so the operand is
+      // built inside a third of the budget, rather than all of it and the
+      // excess reported away as `cap`.  A chain of these cannot run away the
+      // way `*` could, being a constant factor per level against a bounded
+      // depth, but a bound that is capped rather than derived is not a bound.
+      int operand_cap = (cap - 8) / 3;
+      if (operand_cap < GTA_GEN_SCALAR) {
+        operand_cap = GTA_GEN_SCALAR;
+      }
       gta_gen_emit(g, "((");
-      int operand = gta_gen_expression(g, cap);
+      int operand = gta_gen_expression(g, operand_cap);
       gta_gen_emitf(g, ").%s)", gta_gen_attributes[gta_gen_pick(g,
         (uint32_t)(sizeof(gta_gen_attributes) / sizeof(*gta_gen_attributes)))]);
-      // `.render`, `.html` and friends return an encoded form of the operand,
-      // and percent-encoding is three characters per byte.
       long grown = (long)operand * 3 + 8;
       bound = grown > cap ? cap : (int)grown;
       break;
