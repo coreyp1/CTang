@@ -901,7 +901,15 @@ limits can be set describes one of them and the intent of the rest.
 
 1. **Parse.** Source → AST. Failure is a syntax error (10.1).
 2. **Simplify.** Constant folding and variable-map construction; `-3` becomes
-   one literal, and `"a" + "b"` would, if `+` were defined on strings.
+   one literal, and `"a" + "b"` becomes `"ab"`.
+
+   **This stage does not run.** `gta_tang_simplify` is called from no part of
+   `gta_program_create`; the one call site is commented out in
+   `gta_tang_parse`, with the note "temporarily disabled because it does not
+   pick up on global variable changes", and the only caller left is
+   `test/test-tangLanguageParse.cpp`. So the folder is tested and unused, and
+   its arithmetic can drift from the runtime's with nothing to notice - which
+   is what 13.2's second half was. Finish or remove (14).
 3. **Compile.** AST → bytecode, and AST → x86-64 machine code unless disabled.
    Every literal is interned once per program as a **singleton** value; the
    program that references `42` in three places has one `42`.
@@ -1446,6 +1454,12 @@ rather than defects. Each needs a decision, then a test, then code.
   applies to a library, an rng, and an error - an error inside an array shows
   its marker text. Either the container should skip them, or `print` should
   show them; today they disagree, and 4.12 documents the code.
+- **The simplifier.** It is not in the execution pipeline (11), so its
+  constant folding is exercised only by the parse tests and can disagree with
+  the runtime unobserved - which is the shape of 13.2's second defect. Finish
+  it, or remove it and the tests with it. If it is finished, the differential
+  harness gains a third arm for free: fold, then execute, and require the
+  folded answer to match.
 - **Date literals** (13.13) - finish or remove.
 - **Number separators** (`1_000_000`), exponent floats (`1e5`).
 - **Keys for reconciliation.** cjelly's `docs/semantics.md` needs Tang to
