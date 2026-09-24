@@ -231,17 +231,27 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
   assert(GTA_AST_IS_ASSIGN(self));
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
 
-  if (!gta_ast_node_compile_to_bytecode(assign->rhs, context)) {
-    return false;
-  }
-
   // An assignment may be in several forms:
   //   a = foo;
   //   a.b = foo;
   //   a[b] = foo;
+  //
+  // Each form compiles the right-hand side itself, where its turn comes.  It
+  // used to be compiled here instead, before the form was known, and then the
+  // index and member forms - which need the container and the subscript
+  // underneath it - compiled it a second time.  So `a[0] = print(1);` printed
+  // twice, `a[0] = f();` called f twice, and every such assignment left the
+  // first value on the stack with nothing to pop it.  The x86-64 engine has
+  // done it this way since f369720, which is the commit that introduced the
+  // index form: it moved the emission into the branches there and only added
+  // it to the branches here.
   assert(assign->lhs);
   if (GTA_AST_IS_IDENTIFIER(assign->lhs)) {
     GTA_Ast_Node_Identifier * identifier = (GTA_Ast_Node_Identifier *) assign->lhs;
+
+    if (!gta_ast_node_compile_to_bytecode(assign->rhs, context)) {
+      return false;
+    }
 
     if ((identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_LIBRARY)
       || (identifier->type == GTA_AST_NODE_IDENTIFIER_TYPE_GLOBAL)) {

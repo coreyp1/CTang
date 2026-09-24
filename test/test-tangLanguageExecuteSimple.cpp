@@ -3815,6 +3815,43 @@ static void expect_string(const char * code, const char * expected) {
 }
 
 
+// Run a source for what it prints, which is the only way to count how many
+// times a sub-expression ran.
+static void expect_output(const char * code, const char * expected) {
+  gcu_memory_reset_counts();
+  GTA_Program * program = gta_program_create(language, code);
+  ASSERT_TRUE(program) << code;
+  GTA_Execution_Context * context = gta_execution_context_create(program);
+  ASSERT_TRUE(context) << code;
+  ASSERT_TRUE(gta_program_execute(context)) << code;
+  ASSERT_TRUE(context->output) << code;
+  ASSERT_STREQ(context->output->buffer, expected) << code;
+  gta_execution_context_destroy(context);
+  gta_program_destroy(program);
+}
+
+
+// The bytecode engine compiled an assignment's right-hand side before it knew
+// which form of assignment it was, and the index and member forms then
+// compiled it again.  Nothing in the result gave it away - the second value is
+// the one that gets stored, and it equals the first - so it took an effect to
+// see: `a[0] = print(1);` printed "11", and any call on the right-hand side
+// was made twice.  The x86-64 engine has compiled it once per form since
+// f369720; this is that commit's other half.
+TEST(Assignment, TheRightHandSideRunsOnce) {
+  expect_output("a = []; a[0] = print(1); 0;", "1");
+  expect_output("m = {:}; m.k = print(1); 0;", "1");
+  expect_output("m = {:}; m[\"k\"] = print(1); 0;", "1");
+  // A plain name never had the defect, and must not acquire one.
+  expect_output("a = print(1); 0;", "1");
+  // Two of them, so that a fix which merely moved the duplication shows.
+  expect_output("a = []; a[0] = print(1); a[1] = print(2); 0;", "12");
+  // The value stored is still the value of the expression.
+  expect_integer("a = []; a[0] = 7; a[0];", 7);
+  expect_integer("a = []; (a[0] = 7);", 7);
+}
+
+
 // The array's cast slot held the generic dispatcher, which is the function
 // that reads the cast slot - so `[] as bool` called itself until the stack
 // ran out.  A container casts to a boolean, which is its truthiness, and to a
