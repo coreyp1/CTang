@@ -164,9 +164,12 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   // NOTE: These intentionally use the same offset as
   //   `original_value_stack_offset`.  Their usage is all mutually exclusive,
   // but giving them different names makes the code more readable.
-  int32_t original_value_stack_offset = GTA_SHADOW_SIZE__X86_64;
-  int32_t string_to_be_printed_stack_offset = GTA_SHADOW_SIZE__X86_64;
-  int32_t concatenated_string_stack_offset = GTA_SHADOW_SIZE__X86_64;
+  // The slot is inside the 16 bytes this function reserves, at [rsp]; any
+  // shadow space a callee needs is allocated per call, below it, by
+  // gta_binary_call_reg__x86_64().
+  int32_t original_value_stack_offset = 0;
+  int32_t string_to_be_printed_stack_offset = 0;
+  int32_t concatenated_string_stack_offset = 0;
 
   // Jump labels.
   GTA_Integer success_return_null = -1;

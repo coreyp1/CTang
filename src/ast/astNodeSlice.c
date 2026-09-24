@@ -264,18 +264,15 @@ bool gta_ast_node_slice_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
     && gta_push_reg__x86_64(v, GTA_REG_RBP)
     && gta_mov_reg_reg__x86_64(v, GTA_REG_RBP, GTA_REG_RSP)
     && gta_and_reg_imm__x86_64(v, GTA_REG_RSP, 0xFFFFFFF0)
-    // Note: The 32 byte stack allocation is required by the Windows ABI
-    // (see the link below and the comment in gta_binary_call__x86_64).
-    // However, I do not know why the 40 byte stack allocation is required,
-    // but the program crashes otherwise.
-    // TODO: Investigate this further.
-    //
-    //   add rsp, -40
-      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 0)
+    // The Windows x64 ABI passes the fifth argument on the stack, in the slot
+    // just above the callee's 32 bytes of shadow space. Pad by 8 so that rsp
+    // is 16-byte aligned again after the single push; gta_binary_call__x86_64()
+    // then allocates the shadow space, which leaves the pushed value at
+    // [rsp + 32] at the CALL.
+    //   add rsp, -8   ; alignment padding
+      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -8)
     //   push r15      ; context (the fifth argument)
       && gta_push_reg__x86_64(v, GTA_REG_R15)
-    //   add rsp, -32  ; Allocate space for the function call.
-      && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -32)
     //   call func
       && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_slice)
     // Restore the stack after the function call.

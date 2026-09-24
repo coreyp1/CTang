@@ -3076,6 +3076,61 @@ TEST(Map, NestedLiteral) {
   }
 }
 
+TEST(Map, ValueThatCallsOut) {
+  // While a map literal's value is being computed, the map and the key are
+  // saved on the stack with push. Under the Windows x64 ABI every callee owns
+  // the 32 bytes just above its return address and may overwrite them, so a
+  // value expression that calls a C function - which most do - used to have
+  // that callee write over the saved map and key: the map came out empty or
+  // the program crashed. Worse, the binary-operator, print and function-call
+  // compilers stored their own temporaries 32 bytes above the space they had
+  // reserved, on the assumption that nothing else was there, and a pushed
+  // map or key is exactly what was there.
+  //
+  // None of these can fold to a constant: each operand is a variable.
+  // Under System V (no shadow space) all of these already worked; they pin
+  // down that the stack discipline is the same on both.
+  {
+    // A binary operator: a five-argument call, the fifth on the stack under
+    // the Windows ABI.
+    TEST_PROGRAM_SETUP("x = 1; print({a: x + 2});");
+    ASSERT_STREQ("{\"a\": 3}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A unary operator.
+    TEST_PROGRAM_SETUP("x = 3; print({a: -x});");
+    ASSERT_STREQ("{\"a\": -3}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A slice, whose callee takes a fifth argument on the stack under the
+    // Windows ABI.
+    TEST_PROGRAM_SETUP("s = [1, 2, 3]; print({a: s[0:2]});");
+    ASSERT_STREQ("{\"a\": [1, 2]}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A comparison, whose result is a singleton rather than a new value.
+    TEST_PROGRAM_SETUP("x = 1; print({a: x < 2});");
+    ASSERT_STREQ("{\"a\": true}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A call to a Tang function, with an argument.
+    TEST_PROGRAM_SETUP("function f(n) { return n + 1; } print({a: f(1)});");
+    ASSERT_STREQ("{\"a\": 2}", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // An array literal of binary operators, nested in a map, nested in an
+    // array.
+    TEST_PROGRAM_SETUP("x = 1; print([x, {a: [x + 1, x + 2]}]);");
+    ASSERT_STREQ("[1, {\"a\": [2, 3]}]", context->output->buffer);
+    TEST_PROGRAM_TEARDOWN();
+  }
+}
+
 TEST(Print, Map) {
   {
     // The empty map.

@@ -683,20 +683,17 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
   //        sub rsp, GTA_STACK_SIZE (or, "add rsp, -GTA_STACK_SIZE")
   //     4. Reserve shadow space for the callee (if needed)
   //        sub rsp, GTA_SHADOW_SIZE__X86_64 (or, "add rsp, -GTA_SHADOW_SIZE__X86_64")
-  //   * The stack is now properly aligned and the shadow space is reserved.
-  //   * If a value needs to be placed on the stack, then (assuming the value
-  //     is in RAX):
-  //     1. Move the value onto the stack at the beginning of the shadow space.
-  //        mov [rsp + GTA_SHADOW_SIZE__X86_64 - 8], rax
-  //     2. Add 16 bytes to the shadow space (to maintain stack alignment).
-  //        sub rsp, 16 (or, "add rsp, -16")
-  //   * When removing a value from the stack:
-  //     1. Add 16 bytes to the shadow space (to maintain stack alignment).
-  //        add rsp, 16
-  //     2. Move the value from the stack into RAX (for example).
-  //        mov rax, [rsp + GTA_SHADOW_SIZE__X86_64 - 8]
-  //   * When accessing the value on the stack (without removing it):
-  //     1. mov rax, [rsp + GTA_SHADOW_SIZE__X86_64 + 16 - 8]
+  //   * The stack is now properly aligned.
+  //   * Values are saved on the stack in 16-byte units - two pushes, or
+  //     "add rsp, -16" and a store to [rsp] - and always inside the space
+  //     that was reserved for them, never above it, so that alignment holds
+  //     and nothing is stored where an enclosing expression keeps its own.
+  //   * Calls to C go through gta_binary_call__x86_64() or
+  //     gta_binary_call_reg__x86_64(). On Windows these allocate the 32 bytes
+  //     of shadow space immediately around the CALL, below everything that is
+  //     live, because the callee may overwrite it. The frame-level reservation
+  //     in step 4 is therefore no longer what protects a saved value; it is
+  //     kept for the raw calls in the debugging helpers.
   //   * When leaving a function:
   //     1. Restore the stack pointer.
   //        mov rsp, rbp

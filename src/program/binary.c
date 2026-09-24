@@ -148,10 +148,32 @@ bool gta_binary_call__x86_64(GCU_Vector8 * vector, uint64_t function) {
 bool gta_binary_call_reg__x86_64(GCU_Vector8 * vector, GTA_Register reg) {
   assert(vector);
 
+#if defined(_WIN32) || defined(_WIN64)
+  // The Windows x64 ABI gives the callee the 32 bytes immediately above the
+  // return address - [rsp, rsp + 32) at the CALL - to spill its register
+  // arguments into, and callees do use it. The prologue reserves those 32
+  // bytes at the bottom of the frame, but an expression that saves a value
+  // with `push` (a map literal saving the map and the key across the value,
+  // for example) moves rsp down onto the saved value, which then sits in the
+  // next callee's shadow space and is overwritten by it. So every call made
+  // through this helper allocates its own shadow space just below whatever
+  // is live. 32 is a multiple of 16, so rsp's alignment is unchanged, and a
+  // stack argument pushed immediately before the call lands at
+  // [rsp + 32] at the CALL, exactly where the ABI puts the fifth argument.
+  //   add rsp, -32
+  //   call REG
+  //   add rsp, 32
+  return true
+    && gta_add_reg_imm__x86_64(vector, GTA_REG_RSP, -GTA_SHADOW_SIZE__X86_64)
+    && gta_call_reg__x86_64(vector, reg)
+    && gta_add_reg_imm__x86_64(vector, GTA_REG_RSP, GTA_SHADOW_SIZE__X86_64)
+  ;
+#else
   return true
   //   call REG
     && gta_call_reg__x86_64(vector, reg)
   ;
+#endif
 }
 
 

@@ -527,9 +527,9 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
       && gta_ast_node_compile_to_binary__x86_64(binary_node->lhs, context)
     // "Push" the result of the LHS expression.
     //   add rsp, -16
-    //   mov [rsp + GTA_SHADOW_SIZE__X86_64], rax
+    //   mov [rsp], rax
       && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, -16)
-      && gta_mov_ind_reg__x86_64(v, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64, GTA_REG_RAX)
+      && gta_mov_ind_reg__x86_64(v, GTA_REG_RSP, GTA_REG_NONE, 0, 0, GTA_REG_RAX)
     // Compile the RHS expression.  The result will be in rax.
       && gta_ast_node_compile_to_binary__x86_64(binary_node->rhs, context)
 
@@ -537,8 +537,8 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
     // "Pop" the result of the LHS expression.
     // NOTE: We will not change RSP, because if compiling for Windows, it will
     // need it.  RSP will be cleaned up later in this function.
-    //   mov GTA_X86_64_R1, [rsp + GTA_SHADOW_SIZE__X86_64] ; result from lhs
-      && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64)
+    //   mov GTA_X86_64_R1, [rsp] ; result from lhs
+      && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RSP, GTA_REG_NONE, 0, 0)
     //   mov GTA_X86_64_R2, rax  ; result_from_rhs
     //   mov GTA_X86_64_R3, 1    ; true
     //   mov GTA_X86_64_R4, is_assignment ; is_assignment
@@ -547,9 +547,12 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
       && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R4, 0)
 #if defined(_WIN32) || defined(_WIN64)
     // The Windows x64 calling convention ABI requires that the fifth argument
-    // be put on the stack, just above the shadow space.
-    //   mov [rsp + GTA_SHADOW_SIZE__X86_64], r15 ; context (the fifth argument)
-      && gta_mov_ind_reg__x86_64(v, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64, GTA_REG_R15)
+    // be put on the stack, just above the shadow space. The LHS slot at [rsp]
+    // has been read, so it is reused: gta_binary_call__x86_64() allocates the
+    // 32 bytes of shadow space below it, which puts it at [rsp + 32] at the
+    // CALL, where the callee looks for it.
+    //   mov [rsp], r15 ; context (the fifth argument)
+      && gta_mov_ind_reg__x86_64(v, GTA_REG_RSP, GTA_REG_NONE, 0, 0, GTA_REG_R15)
     //   call func
       && gta_binary_call__x86_64(v, (uint64_t)func)
     // Restore the stack after the function call.

@@ -246,15 +246,18 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   //   8                                 ; For the old frame pointer (r12).
   //   (is_stack_padding_needed ? 8 : 0) ; For alignment.
   //   (8 * num_arguments)               ; For the arguments.
-  // NOTE: The shadow space is already present in the stack space.
+  // NOTE: Everything lives inside this reservation, starting at [rsp]. Any
+  // shadow space the ABI requires is allocated below it at the CALL by
+  // gta_binary_call_reg__x86_64(), which is what keeps it from overlapping
+  // values that an enclosing expression has pushed.
   int32_t total_stack_adjustment = 8 + (is_stack_padding_needed ? 8 : 0) + (8 * num_arguments);
   // It should be a multiple of 16.
   assert((total_stack_adjustment % 16) == 0);
   // r12 is the frame pointer that will need to be restored.
-  int32_t r12_offset = GTA_SHADOW_SIZE__X86_64 + total_stack_adjustment - 8;
+  int32_t r12_offset = total_stack_adjustment - 8;
   // This is the "first" argument that will be pushed onto the stack.  It is
   // actually the last argument of the function call.
-  int32_t first_argument_offset = GTA_SHADOW_SIZE__X86_64 + (8 * num_arguments) - 8;
+  int32_t first_argument_offset = (8 * num_arguments) - 8;
 
   bool error_free = true
   // Create jump labels.
@@ -320,17 +323,17 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   // Call the native function.
   //   mov GTA_X86_64_R1, [rax + bound_object]
   //   mov GTA_X86_64_R2, GTA_VECTORX_COUNT(function_call->arguments)
-  //   lea GTA_X86_64_R3, [rsp + GTA_SHADOW_SIZE__X86_64]
+  //   lea GTA_X86_64_R3, [rsp]
   //   mov GTA_X86_64_R4, r15
   //   mov rax, [rax + callback]
   //   call rax
   //   jmp cleanup
     && gta_mov_reg_ind__x86_64(v, GTA_X86_64_R1, GTA_REG_RAX, GTA_REG_NONE, 0, bound_object)
     && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R2, GTA_VECTORX_COUNT(function_call->arguments))
-    && gta_lea_reg_ind__x86_64(v, GTA_X86_64_R3, GTA_REG_RSP, GTA_REG_NONE, 0, GTA_SHADOW_SIZE__X86_64)
+    && gta_lea_reg_ind__x86_64(v, GTA_X86_64_R3, GTA_REG_RSP, GTA_REG_NONE, 0, 0)
     && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R4, GTA_REG_R15)
     && gta_mov_reg_ind__x86_64(v, GTA_REG_RAX, GTA_REG_RAX, GTA_REG_NONE, 0, callback)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
+    && gta_binary_call_reg__x86_64(v, GTA_REG_RAX)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, cleanup, v->count - 4)
 
@@ -357,12 +360,15 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
     && gta_compiler_context_add_label_jump(context, argument_count_mismatch, v->count - 4)
 
   // Load the function pointer, call it, then clean up.
-  // Note: The stack is already aligned.
+  // Note: The stack is already aligned. The called function's frame layout
+  // (gta_ast_node_function_analyze()) expects GTA_SHADOW_SIZE__X86_64 bytes
+  // between its parameters and the return address, which is exactly what
+  // gta_binary_call_reg__x86_64() puts there.
   //   mov rax, [rax + pointer_offset]
   //   call rax
   //   jmp cleanup
     && gta_mov_reg_ind__x86_64(v, GTA_REG_RAX, GTA_REG_RAX, GTA_REG_NONE, 0, pointer_offset)
-    && gta_call_reg__x86_64(v, GTA_REG_RAX)
+    && gta_binary_call_reg__x86_64(v, GTA_REG_RAX)
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, cleanup, v->count - 4)
 
