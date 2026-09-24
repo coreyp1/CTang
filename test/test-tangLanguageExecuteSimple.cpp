@@ -3852,6 +3852,45 @@ TEST(Assignment, TheRightHandSideRunsOnce) {
 }
 
 
+// `&&` and `||` are compiled to a conditional jump that does not pop what it
+// tested, because when the left operand decides the answer it *is* the answer.
+// The other branch has to pop it, and did not, so an expression that is only
+// allowed to leave one value left two.  The value read back was still right -
+// it is the top of the stack either way - so this was invisible to anything
+// that only looked at the result.  It was not invisible to anything that
+// counts down from the top of the stack to find its operands.
+TEST(Binary, ShortCircuitLeavesOneValue) {
+  // The value itself, in all four branches (4.5).
+  expect_integer("(true && 2);", 2);
+  expect_boolean("(false && 2);", false);
+  expect_boolean("(true || 2);", true);
+  expect_integer("(false || 2);", 2);
+  expect_integer("3 && 4;", 4);
+  expect_string("0 || \"x\";", "x");
+  expect_integer("null || 5;", 5);
+
+  // An array literal takes its elements from the top of the stack downward, so
+  // a stray value pushes the earlier elements out of reach.
+  expect_string("x = [9, (true && 2)]; x as string;", "[9, 2]");
+  expect_string("x = [9, (false || 2)]; x as string;", "[9, 2]");
+  expect_string("x = [(true && 1), (true && 2)]; x as string;", "[1, 2]");
+
+  // A call takes its arguments the same way.
+  expect_integer("function f(p, q) { return p; } f(9, (true && 2));", 9);
+  expect_integer("function f(p, q) { return q; } f((true && 2), 9);", 9);
+
+  // A map literal takes key and value pairs, so a stray value is read as a
+  // key - and a key that is not a string had its `value` field dereferenced as
+  // a pointer, which for a boolean is the integer 1.
+  expect_string("m = {k: (true && 2)}; m as string;", "{\"k\": 2}");
+  // Two entries, read back by key: a map does not iterate in insertion order,
+  // and which order it does iterate in is an open question rather than
+  // something this test should be pinning down.
+  expect_integer("m = {j: 1, k: (false || 2)}; m[\"j\"];", 1);
+  expect_integer("m = {j: 1, k: (false || 2)}; m[\"k\"];", 2);
+}
+
+
 // The array's cast slot held the generic dispatcher, which is the function
 // that reads the cast slot - so `[] as bool` called itself until the stack
 // ran out.  A container casts to a boolean, which is its truthiness, and to a

@@ -360,32 +360,45 @@ bool gta_ast_node_binary_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
   assert(context->program);
   assert(context->program->bytecode);
 
-  // Short-circuiting for AND.
-  if (binary_node->operator_type == GTA_BINARY_TYPE_AND) {
-    GTA_Integer lhs_was_false;
+  // Short-circuiting for AND and OR.
+  //
+  // Both produce one value, and which operand it is depends on the branch:
+  // the left one when it decides the answer, the right one otherwise (4.5).
+  // JMPF and JMPT test the top of the stack without removing it, so the branch
+  // that jumps leaves the left operand there as the value - and the branch
+  // that falls through has to POP it before the right operand is pushed on
+  // top.  Without that POP the expression left two values where it is only
+  // allowed to leave one.
+  //
+  // The value read back was still the right one, because it is the top of the
+  // stack either way, so nothing that only looked at the result could see it.
+  // What saw it was anything that finds its operands by counting down from the
+  // top: `[9, (true && 2)]` was `[true, 2]`, `f(9, (true && 2))` bound the
+  // first parameter to `true`, and `{k: (true && 2)}` read a boolean where the
+  // key had to be a string and dereferenced its `value` field - the integer 1 -
+  // as a pointer.
+  if ((binary_node->operator_type == GTA_BINARY_TYPE_AND)
+    || (binary_node->operator_type == GTA_BINARY_TYPE_OR)) {
+    bool is_and = binary_node->operator_type == GTA_BINARY_TYPE_AND;
+    GTA_Integer lhs_decided;
     return true
-      && ((lhs_was_false = gta_compiler_context_get_label(context)) >= 0)
+      && ((lhs_decided = gta_compiler_context_get_label(context)) >= 0)
+    // Compile the lhs.
       && gta_ast_node_compile_to_bytecode(binary_node->lhs, context)
+    // JMPF/JMPT lhs_decided   ; The value is not popped, and is the result.
       && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPF))
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(is_and
+        ? GTA_BYTECODE_JMPF
+        : GTA_BYTECODE_JMPT))
       && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-      && gta_compiler_context_add_label_jump(context, lhs_was_false, context->program->bytecode->count - 1)
-      && gta_ast_node_compile_to_bytecode(binary_node->rhs, context)
-      && gta_compiler_context_set_label(context, lhs_was_false, context->program->bytecode->count);
-  }
-
-  // Short-circuiting for OR.
-  if (binary_node->operator_type == GTA_BINARY_TYPE_OR) {
-    GTA_Integer lhs_was_true;
-    return true
-      && ((lhs_was_true = gta_compiler_context_get_label(context)) >= 0)
-      && gta_ast_node_compile_to_bytecode(binary_node->lhs, context)
+      && gta_compiler_context_add_label_jump(context, lhs_decided, context->program->bytecode->count - 1)
+    // POP                     ; The lhs did not decide it, so discard it.
       && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPT))
-      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-      && gta_compiler_context_add_label_jump(context, lhs_was_true, context->program->bytecode->count - 1)
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+    // Compile the rhs, which is then the result.
       && gta_ast_node_compile_to_bytecode(binary_node->rhs, context)
-      && gta_compiler_context_set_label(context, lhs_was_true, context->program->bytecode->count);
+    // lhs_decided:
+      && gta_compiler_context_set_label(context, lhs_decided, context->program->bytecode->count);
   }
 
   bool error_free = true
