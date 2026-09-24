@@ -163,6 +163,21 @@ GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_inde
 GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_get_from_cstring(GTA_Computed_Value_Map * self, const char * key);
 
 /**
+ * Reads a member of the map.
+ *
+ * `m.name` is the same lookup as `m["name"]`.  A built-in attribute of the
+ * map type, if one ever exists, is checked first, so that data in a map
+ * cannot shadow one.
+ *
+ * @param self The map.
+ * @param identifier_hash The hash of the member name.
+ * @param context The execution context of the program.
+ * @return The member's value, or an error if there is no such member.
+ */
+GTA_API GTA_NO_DISCARD GTA_Computed_Value * GTA_CALL gta_computed_value_map_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context);
+
+
+/**
  * Add a computed value to the map using the provided key.
  *
  * This function will be a helper function for the Map's index assign function.

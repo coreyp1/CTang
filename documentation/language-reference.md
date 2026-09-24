@@ -1041,8 +1041,14 @@ number and says so, because the text above points at these by number.
    segfaults. `{:} as bool` also crashes; the other map casts return
    `Not supported`.
 
-7. **`m.name` does not read a map member** (`Not implemented`) even though
-   `m.name = v` writes one. `m["name"]` works.
+7. **Fixed.** `m.name` did not read a map member (`Not implemented`) even
+   though `m.name = v` wrote one. The map's `period` was the generic
+   attribute lookup, and a map has no attributes, so every name missed. It
+   now checks for a built-in attribute of the map type first - there are
+   none, and the order is what keeps a name like `m.size` available to mean
+   the map's own size later rather than a key arriving from untrusted data -
+   and then looks the name up as a key. A name that is not a key is
+   `Map Key Not Found`, which is what `m["name"]` already said.
 
 8. **Fixed.** `print(true)` used to print nothing: the boolean vtable's
    `print` was `not_supported`, even though its `to_string` already produced
@@ -1053,14 +1059,25 @@ number and says so, because the text above points at these by number.
    `s = "abc"; s[0] = "z"; s;` is `"abc"`. Should be an error, since strings
    are immutable.
 
-10. **Attribute assignment is accepted on every value and every name, and
-    shadows built-ins.** `x = [1, 2]; x.size = 5; x.size;` is `5`;
-    `"abc".length = 1` likewise; `use math; math.pi = 3;` rebinds `pi`;
-    `null.x = 1` succeeds. Worse, an attribute assignment on a **non-map
-    variable rebinds the variable**: `f = 1; f.g.h = 2; f;` is `2`.
+10. **Fixed.** Attribute assignment refused to compile, which - before the
+    caller checked for that, see 13.23 - truncated the program, and made it
+    look as though the assignment had been accepted on every value and every
+    name. It had not: `x = [1, 2]; x.size = 5; x.size;` was `5` because the
+    program ended at the assignment and `5` was the assignment's own value,
+    not because anything had been written. The same reading produced the
+    "rebinds the variable" in the old text of this item and of 13.11.
 
-11. **Assignment to a slice rebinds the variable** instead of being rejected:
-    `x = [1, 2, 3]; x[1:2] = [9]; x;` is `[9]`, and `x[1:] = 7; x;` is `7`.
+    `a.b = v` now compiles to what `a["b"] = v` compiles to, so each type
+    answers for itself: a map writes the member (4.13), an array says
+    `Invalid index` because a string is not an array subscript, and a string,
+    a library and null say `Not supported`. The built-in keeps its meaning -
+    `x.size` is still the array's size - and the program keeps running.
+
+11. **Fixed.** Assignment to a slice was not rejected, it truncated the
+    program (13.23), which read as rebinding the variable. Only a name, a
+    member and a subscript can be assigned to; anything else is now rejected
+    during analysis, in one place, rather than by each compiler abandoning an
+    emission it had half done. `x[1:2] = [9]` fails to compile.
 
 12. **A ranged `for` leaks its iterator sentinel as the program result.**
     `for (i : [1, 2]) {}` as the last statement gives the result

@@ -3670,6 +3670,87 @@ TEST(Truthiness, ContainersTrackWhatTheyHold) {
 }
 
 
+
+// Run a source that must yield an error, and say which message.
+static void expect_error(const char * code, const char * message) {
+  gcu_memory_reset_counts();
+  GTA_Program * program = gta_program_create(language, code);
+  ASSERT_TRUE(program) << code;
+  GTA_Execution_Context * context = gta_execution_context_create(program);
+  ASSERT_TRUE(context) << code;
+  ASSERT_TRUE(gta_program_execute(context)) << code;
+  ASSERT_TRUE(context->result) << code;
+  ASSERT_TRUE(context->result->is_error) << code;
+  char * rendered = gta_computed_value_to_string(context->result);
+  ASSERT_TRUE(rendered) << code;
+  ASSERT_STREQ(rendered, message) << code;
+  gcu_free(rendered);
+  gta_execution_context_destroy(context);
+  gta_program_destroy(program);
+}
+
+
+// `m.name = v` wrote a member all along, but `m.name` read through the
+// generic attribute lookup, which a map has no entries in, so every read was
+// "not implemented" - a map could be written and not read back by the
+// spelling the reference documents.
+TEST(Period, ReadsAMapMember) {
+  expect_integer("m = {a: 1}; m.a;", 1);
+  expect_integer("m = {a: 1, b: 2}; m.b;", 2);
+  expect_integer("m = {:}; m.b = 2; m.b;", 2);
+  expect_integer("m = {a: {b: 2}}; m.a.b;", 2);
+  expect_boolean("m = {a: 1}; m.a == m[\"a\"];", true);
+  expect_error("m = {a: 1}; m.b;", "Error: Map Key Not Found");
+  expect_error("m = {:}; m.anything;", "Error: Map Key Not Found");
+}
+
+
+// Attribute assignment is for map members (section 4.13).  It used to refuse
+// to compile, which - before the caller checked for that - truncated the
+// program.  It now compiles to the same thing `a["b"] = v` does, so each type
+// answers for itself, and only a map accepts it.
+TEST(Assignment, AttributeWritesAMapMember) {
+  expect_integer("m = {:}; m.b = 2; m[\"b\"];", 2);
+  expect_integer("m = {a: 1}; m.a = 9; m.a;", 9);
+  // The value of the assignment is the value assigned.
+  expect_integer("m = {:}; m.b = 2;", 2);
+}
+
+
+// An attribute assignment on anything but a map is an error, and the value it
+// was meant to shadow is untouched.  `x.size = 5` used to end the program,
+// which looked like it had rebound x (13.10).
+TEST(Assignment, AttributeOnANonMapIsAnError) {
+  expect_error("x = [1, 2]; x.size = 5;", "Error: Invalid index");
+  expect_error("s = \"abc\"; s.length = 1;", "Error: Not supported");
+  expect_error("f = 1; f.g = 2;", "Error: Not supported");
+  expect_error("null.x = 1;", "Error: Not supported");
+  expect_error("use math; math.pi = 3;", "Error: Not supported");
+  // The built-in keeps its meaning, and the program keeps running.
+  expect_integer("x = [1, 2]; x.size = 5; x.size;", 2);
+  expect_integer("s = \"abc\"; s.length = 1; s.length;", 3);
+  expect_integer("x = [1, 2]; x.size = 5; y = 99; y;", 99);
+}
+
+
+// Only a name, a member or a subscript can be assigned to.  Assigning to a
+// slice used to look like it rebound the variable (13.11); it was the program
+// ending there.
+TEST(Assignment, OnlyANameMemberOrSubscriptCanBeAssignedTo) {
+  const char * cases[] = {
+    "x = [1, 2, 3]; x[1:2] = [9]; x;",
+    "x = [1, 2, 3]; x[1:] = 7; x;",
+    "s = \"abc\"; s[0:1] = \"z\"; s;",
+  };
+  for (const char * code : cases) {
+    gcu_memory_reset_counts();
+    GTA_Program * program = gta_program_create(language, code);
+    ASSERT_FALSE(program) << code;
+    ASSERT_EQ(gcu_get_alloc_count(), gcu_get_free_count()) << code;
+  }
+}
+
+
 #ifdef __linux__
 /**
  * True if any mapping in /proc/self/maps covers `address`.

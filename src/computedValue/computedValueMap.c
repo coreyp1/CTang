@@ -31,6 +31,7 @@
 #include <ghoti.io/tang/computedValue/computedValueMap.h>
 #include <ghoti.io/tang/computedValue/computedValueString.h>
 #include <ghoti.io/tang/program/executionContext.h>
+#include <ghoti.io/tang/program/program.h>
 
 
 GTA_Computed_Value_VTable gta_computed_value_map_vtable = {
@@ -53,7 +54,7 @@ GTA_Computed_Value_VTable gta_computed_value_map_vtable = {
   .greater_than_equal = gta_computed_value_greater_than_equal_not_supported,
   .equal = gta_computed_value_equal_not_supported,
   .not_equal = gta_computed_value_not_equal_not_supported,
-  .period = gta_computed_value_generic_period,
+  .period = gta_computed_value_map_period,
   .index = gta_computed_value_map_index,
   .slice = gta_computed_value_slice_not_supported,
   .iterator_get = gta_computed_value_iterator_get_not_supported,
@@ -235,7 +236,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_index(GTA_Computed_Value * 
   }
   GTA_Computed_Value_String * key = (GTA_Computed_Value_String *)index;
 
-  GTA_Integer key_hash = gcu_string_hash_64(key->value->buffer, key->value->byte_length);
+  GTA_Integer key_hash = GTA_STRING_HASH(key->value->buffer, key->value->byte_length);
   GTA_HashX_Value result = GTA_HASHX_GET(map->value_hash, key_hash);
   if (!result.exists) {
     return gta_computed_value_null;
@@ -328,11 +329,41 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_get_from_cstring(GTA_Comput
   assert(self);
   assert(key);
 
-  GTA_HashX_Value result = GTA_HASHX_GET(self->value_hash, gcu_string_hash_64(key, strlen(key)));
+  GTA_HashX_Value result = GTA_HASHX_GET(self->value_hash, GTA_STRING_HASH(key, strlen(key)));
   if (!result.exists) {
     return gta_computed_value_error_map_key_not_found;
   }
 
+  return (GTA_Computed_Value *)GTA_TYPEX_P(result.value);
+}
+
+
+GTA_Computed_Value * GTA_CALL gta_computed_value_map_period(GTA_Computed_Value * self, GTA_UInteger identifier_hash, GTA_Execution_Context * context) {
+  assert(self);
+  assert(GTA_COMPUTED_VALUE_IS_MAP(self));
+  assert(self->vtable);
+  assert(context);
+  assert(context->program);
+
+  // `m.name = v` has always written a member, but `m.name` read through the
+  // generic attribute lookup, which a map has no entries in, and so answered
+  // "not implemented" for every name.
+  //
+  // A built-in attribute is looked up first and wins, so that a key arriving
+  // from untrusted data cannot shadow one.  There are none today; the order
+  // is what keeps `m.size` available to mean the map's size later.
+  GTA_Computed_Value_Attribute_Callback callback = gta_program_get_type_attribute(context->program, self->vtable, identifier_hash);
+  if (callback) {
+    return callback(self, context);
+  }
+
+  // The period operator hashes its member name with GTA_STRING_HASH, which is
+  // the same function the map hashes its keys with, so the hash can be used
+  // as it stands.
+  GTA_HashX_Value result = GTA_HASHX_GET(((GTA_Computed_Value_Map *)self)->value_hash, identifier_hash);
+  if (!result.exists) {
+    return gta_computed_value_error_map_key_not_found;
+  }
   return (GTA_Computed_Value *)GTA_TYPEX_P(result.value);
 }
 
@@ -344,7 +375,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_set_key_val(GTA_Computed_Va
 
   // Compute the hash of the key.
   GTA_Computed_Value_String * key_string = (GTA_Computed_Value_String *)key;
-  GTA_Integer key_hash = gcu_string_hash_64(key_string->value->buffer, key_string->value->byte_length);
+  GTA_Integer key_hash = GTA_STRING_HASH(key_string->value->buffer, key_string->value->byte_length);
 
   // Insert the key and value into the hash tables.
   if (!GTA_HASHX_SET(self->key_hash, key_hash, GTA_TYPEX_MAKE_P(key))

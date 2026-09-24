@@ -28,10 +28,13 @@
 #include <ghoti.io/tang/ast/astNodeAssign.h>
 #include <ghoti.io/tang/ast/astNodeIdentifier.h>
 #include <ghoti.io/tang/ast/astNodeIndex.h>
+#include <ghoti.io/tang/ast/astNodeParseError.h>
 #include <ghoti.io/tang/ast/astNodePeriod.h>
 #include <ghoti.io/tang/program/binary.h>
 #include <ghoti.io/tang/program/bytecode.h>
 #include <ghoti.io/tang/program/variable.h>
+#include <ghoti.io/tang/computedValue/computedValueString.h>
+#include <ghoti.io/tang/unicodeString.h>
 
 GTA_Ast_Node_VTable gta_ast_node_assign_vtable = {
   .name = "Assign",
@@ -149,6 +152,16 @@ GTA_Ast_Node * gta_ast_node_assign_analyze(GTA_Ast_Node * self, GTA_Program * pr
   assert(GTA_AST_IS_ASSIGN(self));
   GTA_Ast_Node_Assign * assign = (GTA_Ast_Node_Assign *) self;
 
+  // Only a name, a member and a subscript can be assigned to.  Anything else
+  // - a slice, a literal, the result of a call - is rejected here, once,
+  // rather than by each compiler returning false from the middle of an
+  // emission it has already half done.
+  if (!GTA_AST_IS_IDENTIFIER(assign->lhs)
+    && !GTA_AST_IS_PERIOD(assign->lhs)
+    && !GTA_AST_IS_INDEX(assign->lhs)) {
+    return (GTA_Ast_Node *)gta_ast_node_parse_error_create("Cannot assign to this expression.", self->location);
+  }
+
   GTA_Ast_Node * result = 0;
   result = gta_ast_node_analyze(assign->lhs, program, scope);
   if (!result) {
@@ -167,6 +180,48 @@ void gta_ast_node_assign_walk(GTA_Ast_Node * self, GTA_Ast_Node_Walk_Callback ca
 
   gta_ast_node_walk(assign->lhs, callback, data, return_value);
   gta_ast_node_walk(assign->rhs, callback, data, return_value);
+}
+
+
+/**
+ * Get the interned string value for a period's member name.
+ *
+ * `a.b = v` means `a["b"] = v`, so the member name has to reach the run time
+ * as a string value.  The name lives in the AST for as long as the program
+ * does, so its address is a stable interning key, the same way a string
+ * literal node uses the address of its own GTA_Unicode_String.
+ *
+ * @param context The compiler context.
+ * @param name The member name.
+ * @return The interned string value, or NULL if it could not be created.
+ */
+static GTA_Computed_Value * period_member_name(GTA_Compiler_Context * context, const char * name) {
+  assert(context);
+  assert(context->program);
+  assert(name);
+
+  GTA_UInteger hash = (GTA_UInteger)name;
+  GTA_Computed_Value * singleton = gta_program_get_singleton(context->program, &gta_computed_value_string_vtable, hash);
+  if (singleton) {
+    return singleton;
+  }
+
+  // The member name is written in the source, so it is as trusted as the
+  // program text itself.
+  GTA_Unicode_String * string = gta_unicode_string_create(name, strlen(name), GTA_UNICODE_STRING_TYPE_TRUSTED);
+  if (!string) {
+    return NULL;
+  }
+  singleton = (GTA_Computed_Value *)gta_computed_value_string_create(string, true, NULL);
+  if (!singleton) {
+    gta_unicode_string_destroy(string);
+    return NULL;
+  }
+  if (!gta_program_set_singleton(context->program, &gta_computed_value_string_vtable, hash, singleton)) {
+    gta_computed_value_destroy(singleton);
+    return NULL;
+  }
+  return singleton;
 }
 
 
@@ -233,8 +288,30 @@ bool gta_ast_node_assign_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_C
   }
 
   if (GTA_AST_IS_PERIOD(assign->lhs)) {
-    // This is explicitly not supported.
-    return false;
+    // `a.b = v` is `a["b"] = v`.  Section 4.13 of the language reference says
+    // attribute assignment is for map members, and routing it through
+    // assign_index is what makes that true of every other type as well: an
+    // array answers "invalid index" to a string subscript, and a string, a
+    // library and null all answer "not supported", instead of the assignment
+    // being accepted on anything at all.
+    GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) assign->lhs;
+    GTA_Computed_Value * name = period_member_name(context, period->rhs);
+    if (!name) {
+      return false;
+    }
+
+    return true
+    // Compile the lhs expression.
+      && gta_ast_node_compile_to_bytecode(period->lhs, context)
+    // Push the member name as the index.
+      && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_LOAD))
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_P(name))
+    // Compile the rhs expression.
+      && gta_ast_node_compile_to_bytecode(assign->rhs, context)
+    // Store the value in the appropriate location.
+      && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ASSIGN_INDEX));
   }
 
   if (GTA_AST_IS_INDEX(assign->lhs)) {
@@ -309,10 +386,65 @@ static bool __compile_binary_lhs_is_identifier__x86_64(GTA_Ast_Node * lhs, GTA_C
 }
 
 
-static bool __compile_binary_lhs_is_period(GTA_Ast_Node * lhs, GTA_Compiler_Context * context) {
-  (void) lhs;
-  (void) context;
-  return false;
+/**
+ * Compile `a.b = v` for x86-64.
+ *
+ * The same sequence the index case uses, with the member name loaded as an
+ * immediate where the index expression would be.  See the note there about
+ * why each intermediate takes a pair of stack slots.
+ *
+ * @param lhs The period node on the left of the assignment.
+ * @param rhs The expression on the right of the assignment.
+ * @param context The compiler context.
+ * @return true on success, false on failure.
+ */
+static bool __compile_binary_lhs_is_period(GTA_Ast_Node * lhs, GTA_Ast_Node * rhs, GTA_Compiler_Context * context) {
+  assert(lhs);
+  assert(GTA_AST_IS_PERIOD(lhs));
+  GTA_Ast_Node_Period * period = (GTA_Ast_Node_Period *) lhs;
+
+  assert(context);
+  assert(context->binary_vector);
+  GCU_Vector8 * v = context->binary_vector;
+
+  GTA_Computed_Value * name = period_member_name(context, period->rhs);
+  if (!name) {
+    return false;
+  }
+
+  return true
+  // Compile the lhs expression.
+  //    push rax
+  //    push rax   ; alignment padding
+    && gta_ast_node_compile_to_binary__x86_64(period->lhs, context)
+    && gta_push_reg__x86_64(v, GTA_REG_RAX)
+    && gta_push_reg__x86_64(v, GTA_REG_RAX)
+  // Load the member name as the index.
+  //    mov rax, name
+  //    push rax
+  //    push rax   ; alignment padding
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (GTA_UInteger)name)
+    && gta_push_reg__x86_64(v, GTA_REG_RAX)
+    && gta_push_reg__x86_64(v, GTA_REG_RAX)
+  // Compile the rhs expression.
+  //    push rax
+  //    push rax   ; alignment padding
+    && gta_ast_node_compile_to_binary__x86_64(rhs, context)
+    && gta_push_reg__x86_64(v, GTA_REG_RAX)
+    && gta_push_reg__x86_64(v, GTA_REG_RAX)
+  // gta_computed_value_assign_index(expression, index, value, context)
+  //    mov GTA_X86_64_R2, r15
+  //    pop GTA_X86_64_R3 ; add rsp, 8
+  //    pop GTA_X86_64_R2 ; add rsp, 8
+  //    pop GTA_X86_64_R1 ; add rsp, 8
+    && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
+    && gta_pop_reg__x86_64(v, GTA_X86_64_R3)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
+    && gta_pop_reg__x86_64(v, GTA_X86_64_R2)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
+    && gta_pop_reg__x86_64(v, GTA_X86_64_R1)
+    && gta_add_reg_imm__x86_64(v, GTA_REG_RSP, 8)
+    && gta_binary_call__x86_64(v, (uint64_t)gta_computed_value_assign_index);
 }
 
 
@@ -343,7 +475,7 @@ bool gta_ast_node_assign_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
       && __compile_binary_lhs_is_identifier__x86_64(assign_node->lhs, context)
     )
     : GTA_AST_IS_PERIOD(assign_node->lhs)
-      ? __compile_binary_lhs_is_period(assign_node->lhs, context)
+      ? __compile_binary_lhs_is_period(assign_node->lhs, assign_node->rhs, context)
       : GTA_AST_IS_INDEX(assign_node->lhs)
         ? (true
         // Each intermediate is saved in a PAIR of stack slots, not one.
