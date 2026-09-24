@@ -641,9 +641,47 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_index(GTA_Computed_Value
 
 // Helper function to correct start and end values of a slice.
 static GTA_Integer correct_bounds(GTA_Integer value, GTA_Integer boundary, GTA_Integer step) {
-  GTA_Integer interval = (boundary - value) / step;
-  GTA_Integer roundup = (interval * step) == (boundary - value) ? 0 : 1;
-  return value + ((interval + roundup) * step);
+  // Every caller passes a `value` on the far side of `boundary` from the way
+  // the step walks, so the term being looked for always exists.
+  assert(step != 0);
+  assert(step > 0 ? value < boundary : value > boundary);
+
+  // Not `value + ceil((boundary - value) / step) * step`, which is what this
+  // was: `[1, 2, 3][-9223372036854775808::63]` makes that product
+  // 146402730743726601 * 63, which does not fit, and signed overflow is
+  // undefined behaviour rather than a large number.  The answer itself is
+  // always within one step of `boundary`, so only the distance modulo the
+  // step is needed and no product has to be formed at all.  The distance is
+  // taken in GTA_UInteger, where the wrap is defined and the true magnitude
+  // always fits.
+  GTA_UInteger magnitude = step < 0
+    ? (GTA_UInteger)0 - (GTA_UInteger)step
+    : (GTA_UInteger)step;
+  GTA_UInteger distance = step < 0
+    ? (GTA_UInteger)value - (GTA_UInteger)boundary
+    : (GTA_UInteger)boundary - (GTA_UInteger)value;
+  GTA_UInteger remainder = distance % magnitude;
+  if (!remainder) {
+    // The sequence lands on the boundary exactly.
+    return boundary;
+  }
+
+  // How far past the boundary the first eligible term falls: at least 1 and
+  // less than the step, so this much is always representable.
+  GTA_UInteger overshoot = magnitude - remainder;
+
+  // The term itself need not be, once the step approaches the width of the
+  // type.  Every eligible index is then outside the container, which is what
+  // saturating here says: the caller's intersection check turns it into the
+  // empty slice.
+  if (step > 0) {
+    return overshoot > ((GTA_UInteger)GTA_INTEGER_MAX - (GTA_UInteger)boundary)
+      ? GTA_INTEGER_MAX
+      : boundary + (GTA_Integer)overshoot;
+  }
+  return overshoot > ((GTA_UInteger)boundary - (GTA_UInteger)GTA_INTEGER_MIN)
+    ? GTA_INTEGER_MIN
+    : boundary - (GTA_Integer)overshoot;
 }
 
 
@@ -734,6 +772,20 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_slice(GTA_Computed_Value
     }
   }
 
+  // The corrected end is the first eligible index past the string, which for
+  // a large step is a long way past it and can be as far out as the type's
+  // own limit.  The loop below stops at the first index that reaches the end,
+  // so cutting it back to the string's own edge visits exactly the same
+  // indices, and every value from here on is string-sized.
+  if (step_value > 0) {
+    if (end_value > grapheme_length) {
+      end_value = grapheme_length;
+    }
+  }
+  else if (end_value < -1) {
+    end_value = -1;
+  }
+
   // First sanity check.  If the start, end, and step values do not intersect,
   // then the result is an empty string.
   if ((step_value > 0 && start_value >= end_value) || (step_value < 0 && start_value <= end_value)) {
@@ -759,7 +811,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_slice(GTA_Computed_Value
   // If the step value is not 1, then we need to iterate through the string.
   // TODO: Make this more efficient!
   GTA_Unicode_String * new_string = &gta_unicode_string_empty_singleton;
-  for (GTA_Integer i = start_value; step_value > 0 ? i < end_value : i > end_value; i += step_value) {
+  for (GTA_Integer i = start_value; step_value > 0 ? i < end_value : i > end_value; ) {
     GTA_Unicode_String * substring = gta_unicode_string_substring(string->value, i, 1);
     if (!substring) {
       if (new_string != &gta_unicode_string_empty_singleton) {
@@ -776,6 +828,16 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_string_slice(GTA_Computed_Value
       return (GTA_Computed_Value *)gta_computed_value_error_out_of_memory;
     }
     new_string = temp;
+    // The last index plus the step need not be representable -
+    // `"abc"[1:3:9223372036854775807]` is enough - and signed overflow is
+    // undefined behaviour, not a wrap the condition above would then catch.
+    // There is no next index in that case, so this is the end of the slice.
+    if (step_value > 0
+      ? (i > GTA_INTEGER_MAX - step_value)
+      : (i < GTA_INTEGER_MIN - step_value)) {
+      break;
+    }
+    i += step_value;
   }
 
   GTA_Computed_Value * result = (GTA_Computed_Value *)gta_computed_value_string_create(new_string, new_string == &gta_unicode_string_empty_singleton ? false : true, context);

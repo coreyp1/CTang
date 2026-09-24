@@ -3960,6 +3960,28 @@ TEST(Slice, AStartPastTheFarEndSelectsNothing) {
 }
 
 
+// A slice's bounds are corrected by stepping towards the container in whole
+// steps, and that arithmetic was done in the signed type it is handed.  A step
+// near the width of that type overflows it, which is undefined behaviour and
+// not the wrap the code was written as though it would get: the corrected end
+// came out *below* the start, so a slice that begins at a perfectly ordinary
+// in-range index selected nothing at all.  Four sites, in two files that carry
+// the same helper twice: the correction's product, the loop's own increment,
+// the slice length, and negating the most negative step.
+TEST(Slice, AStepNearTheWidthOfTheTypeStillSelectsTheStart) {
+  // The start is in range and the step is positive, so whatever the step and
+  // the end are, the element at the start is selected.
+  expect_string("([1, 2, 3][2:9223372036854775807:9223372036854775807]) as string;", "[3]");
+  expect_string("(\"abc\"[2:9223372036854775807:9223372036854775807]) as string;", "c");
+  expect_string("([1, 2, 3][1:3:9223372036854775807]) as string;", "[2]");
+  expect_string("(\"abc\"[1:3:9223372036854775807]) as string;", "b");
+  // The most negative integer has no positive counterpart, so it is the value
+  // that breaks a plain negation of the step as well as the distance.
+  expect_string("([1, 2, 3, 4][3:-9223372036854775808:-9223372036854775808]) as string;", "[4]");
+  expect_string("(\"abcd\"[3:-9223372036854775808:-9223372036854775808]) as string;", "d");
+}
+
+
 // A function's printed form used to carry its entry point, which is a bytecode
 // offset under one engine and a machine address under the other - so the same
 // program answered differently depending on which ran it, and the answer the

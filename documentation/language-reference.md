@@ -1404,6 +1404,29 @@ number and says so, because the text above points at these by number.
     Both engines agreed with each other throughout, so no differential could
     see this; reading section 4 against the implementation is what found it.
 
+39. **Fixed.** `[1, 2, 3][1:3:9223372036854775807]` crashed. A slice corrects
+    its bounds by stepping towards the container in whole steps, and all of
+    that arithmetic was done in `GTA_Integer`; a step near the width of that
+    type overflows it, which is undefined behaviour, not the wrap the code
+    was written as though it would get. Five sites, in the two files that
+    carry the same 4-line helper twice: the correction's `interval * step`,
+    the build loop's own `i += step`, the slice length's `end - start`, and
+    negating the most negative step. The consequences ran the whole range -
+    the loop's increment wrapped to a large negative index and the next
+    iteration read that far outside the array, which is the crash;
+    `"abc"[2:9223372036854775807:9223372036854775807]` was `""` and
+    `[1, 2, 3][2:...]` was `[]`, a slice that starts at an in-range index
+    with a positive step selecting nothing; and the rest computed the right
+    answer by wrapping, which an optimiser is under no obligation to keep
+    doing. The corrections now take the distance in `GTA_UInteger`, where the
+    wrap is defined, and need no product at all, because the answer is always
+    within one step of the boundary; the corrected end is then clamped to the
+    container, so nothing downstream carries a value the type cannot hold.
+    Found by the differential harness, as a sanitizer report rather than a
+    divergence - both engines call the same slice code, so the oracle here
+    was ASan/UBSan riding along with the generator, not the two engines
+    disagreeing.
+
 ---
 
 ## 14. Open questions

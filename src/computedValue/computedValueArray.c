@@ -593,9 +593,47 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_index(GTA_Computed_Value 
 
 // Helper function to correct start and end values of a slice.
 static GTA_Integer GTA_CALL correct_bounds(GTA_Integer value, GTA_Integer boundary, GTA_Integer step) {
-  GTA_Integer interval = (boundary - value) / step;
-  GTA_Integer roundup = (interval * step) == (boundary - value) ? 0 : 1;
-  return value + ((interval + roundup) * step);
+  // Every caller passes a `value` on the far side of `boundary` from the way
+  // the step walks, so the term being looked for always exists.
+  assert(step != 0);
+  assert(step > 0 ? value < boundary : value > boundary);
+
+  // Not `value + ceil((boundary - value) / step) * step`, which is what this
+  // was: `[1, 2, 3][-9223372036854775808::63]` makes that product
+  // 146402730743726601 * 63, which does not fit, and signed overflow is
+  // undefined behaviour rather than a large number.  The answer itself is
+  // always within one step of `boundary`, so only the distance modulo the
+  // step is needed and no product has to be formed at all.  The distance is
+  // taken in GTA_UInteger, where the wrap is defined and the true magnitude
+  // always fits.
+  GTA_UInteger magnitude = step < 0
+    ? (GTA_UInteger)0 - (GTA_UInteger)step
+    : (GTA_UInteger)step;
+  GTA_UInteger distance = step < 0
+    ? (GTA_UInteger)value - (GTA_UInteger)boundary
+    : (GTA_UInteger)boundary - (GTA_UInteger)value;
+  GTA_UInteger remainder = distance % magnitude;
+  if (!remainder) {
+    // The sequence lands on the boundary exactly.
+    return boundary;
+  }
+
+  // How far past the boundary the first eligible term falls: at least 1 and
+  // less than the step, so this much is always representable.
+  GTA_UInteger overshoot = magnitude - remainder;
+
+  // The term itself need not be, once the step approaches the width of the
+  // type.  Every eligible index is then outside the container, which is what
+  // saturating here says: the caller's intersection check turns it into the
+  // empty slice.
+  if (step > 0) {
+    return overshoot > ((GTA_UInteger)GTA_INTEGER_MAX - (GTA_UInteger)boundary)
+      ? GTA_INTEGER_MAX
+      : boundary + (GTA_Integer)overshoot;
+  }
+  return overshoot > ((GTA_UInteger)boundary - (GTA_UInteger)GTA_INTEGER_MIN)
+    ? GTA_INTEGER_MIN
+    : boundary - (GTA_Integer)overshoot;
 }
 
 
@@ -692,6 +730,20 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value 
     }
   }
 
+  // The corrected end is the first eligible index past the array, which for
+  // a large step is a long way past it and can be as far out as the type's
+  // own limit.  The loop below stops at the first index that reaches the end,
+  // so cutting it back to the array's own edge visits exactly the same
+  // indices, and every value from here on is array-sized.
+  if (step_value > 0) {
+    if (end_value > array_count) {
+      end_value = array_count;
+    }
+  }
+  else if (end_value < -1) {
+    end_value = -1;
+  }
+
   // First sanity check.  If the start, end, and step values do not intersect,
   // then the result is an empty array.
   if ((step_value > 0 && start_value >= end_value) || (step_value < 0 && start_value <= end_value)) {
@@ -706,9 +758,17 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value 
   //   Leaving it as-is for now because in this state it may allocate one item
   //   too large, but it does not allocate too few.
   //   Example of too few when not adding 1: [0,1,2,3,4,5,6,7,8,9,0][-13::3]
-  GTA_Integer slice_length = (step_value > 0
-    ? ((end_value - start_value) / step_value)
-    : ((start_value - end_value) / -step_value)) + 1;
+  // In GTA_UInteger because neither half is safe signed: the span can be
+  // wider than the signed type, and `-step_value` is itself undefined for the
+  // most negative step.  Both ends are array-sized after the clamp above, so
+  // the quotient is too.
+  GTA_UInteger span = step_value > 0
+    ? (GTA_UInteger)end_value - (GTA_UInteger)start_value
+    : (GTA_UInteger)start_value - (GTA_UInteger)end_value;
+  GTA_UInteger step_magnitude = step_value < 0
+    ? (GTA_UInteger)0 - (GTA_UInteger)step_value
+    : (GTA_UInteger)step_value;
+  GTA_Integer slice_length = (GTA_Integer)(span / step_magnitude) + 1;
 
   // Create a new array that will be the slice of the source array.
   GTA_Computed_Value_Array * result = (GTA_Computed_Value_Array *)gta_computed_value_array_create(slice_length, context);
@@ -718,13 +778,23 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_slice(GTA_Computed_Value 
 
   // Build the array.
   size_t new_i = 0;
-  for (GTA_Integer i = start_value; step_value > 0 ? i < end_value : i > end_value; i += step_value) {
+  for (GTA_Integer i = start_value; step_value > 0 ? i < end_value : i > end_value; ) {
     GTA_Computed_Value * element_copy = gta_computed_value_deep_copy(GTA_TYPEX_P(array->elements->data[i]), context);
     if (!element_copy) {
       return gta_computed_value_error_out_of_memory;
     }
     result->elements->data[new_i++] = GTA_TYPEX_MAKE_P(element_copy);
     ++result->elements->count;
+    // The last index plus the step need not be representable -
+    // `[1, 2, 3][1:3:9223372036854775807]` is enough - and signed overflow is
+    // undefined behaviour, not a wrap the condition above would then catch.
+    // There is no next index in that case, so this is the end of the slice.
+    if (step_value > 0
+      ? (i > GTA_INTEGER_MAX - step_value)
+      : (i < GTA_INTEGER_MIN - step_value)) {
+      break;
+    }
+    i += step_value;
   }
 
   return (GTA_Computed_Value *)result;
