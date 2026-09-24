@@ -20,6 +20,7 @@
 
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <ghoti.io/cutil/memory.h>
@@ -359,7 +360,7 @@ static bool __compile_binary_lhs_is_identifier__x86_64(GTA_Ast_Node * lhs, GTA_C
   // of the memory address for whichever variable we're trying to access.
   int32_t index = ((int32_t)GTA_TYPEX_UI(val.value) + 1) * -8;
 
-  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
+  size_t is_temporary_offset = offsetof(GTA_Computed_Value, is_temporary);
 
   return true
   // Clear is_temporary before storing. A stored value that is still marked

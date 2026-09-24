@@ -20,6 +20,7 @@
 
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <ghoti.io/cutil/memory.h>
@@ -157,10 +158,10 @@ bool gta_ast_node_print_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   bool print_to_stdout = context->program->flags & GTA_PROGRAM_FLAG_PRINT_TO_STDOUT;
 
   // Memory offsets (for use by the generated assembly code).
-  GTA_Unicode_String * * context_output_offset = &((GTA_Execution_Context *)0)->output;
-  size_t * context_output_byte_length_offset = &((GTA_Unicode_String *)0)->byte_length;
-  GTA_Computed_Value_VTable * * vtable_offset = & ((GTA_Computed_Value *)0)->vtable;
-  GTA_Unicode_String *(**vtable_print_offset)(GTA_Computed_Value *, GTA_Execution_Context *) = &((GTA_Computed_Value_VTable *)0)->print;
+  size_t context_output_offset = offsetof(GTA_Execution_Context, output);
+  size_t context_output_byte_length_offset = offsetof(GTA_Unicode_String, byte_length);
+  size_t vtable_offset = offsetof(GTA_Computed_Value, vtable);
+  size_t vtable_print_offset = offsetof(GTA_Computed_Value_VTable, print);
   // NOTE: These intentionally use the same offset as
   //   `original_value_stack_offset`.  Their usage is all mutually exclusive,
   // but giving them different names makes the code more readable.

@@ -20,6 +20,7 @@
 
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <ghoti.io/cutil/memory.h>
@@ -280,7 +281,7 @@ bool gta_ast_node_if_else_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Com
   GTA_Integer end = -1;
 
   // Offsets.
-  bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
+  size_t is_true_offset = offsetof(GTA_Computed_Value, is_true);
 
   // Compile the if-else statement.
   return true

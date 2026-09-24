@@ -20,6 +20,7 @@
 
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <ghoti.io/cutil/memory.h>
@@ -443,7 +444,7 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
 
   // Short-circuiting for AND.
   if (binary_node->operator_type == GTA_BINARY_TYPE_AND) {
-    bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
+    size_t is_true_offset = offsetof(GTA_Computed_Value, is_true);
     GTA_Integer lhs_was_false;
     return true
       && ((lhs_was_false = gta_compiler_context_get_label(context)) >= 0)
@@ -463,7 +464,7 @@ bool gta_ast_node_binary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Comp
 
   // Short-circuiting for OR.
   if (binary_node->operator_type == GTA_BINARY_TYPE_OR) {
-    bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
+    size_t is_true_offset = offsetof(GTA_Computed_Value, is_true);
     GTA_Integer lhs_was_true;
     return true
       && ((lhs_was_true = gta_compiler_context_get_label(context)) >= 0)

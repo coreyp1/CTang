@@ -755,7 +755,7 @@ $(APP_DIR)/test$(EXE_EXTENSION): test/test.cpp $(APP_DIR)/$(STATIC_TARGET) | $(A
 ####################################################################
 #
 # A second, separately-instrumented build of the whole library and every test.
-# Five things here are deliberate, and each of them is a mistake some library
+# Six things here are deliberate, and each of them is a mistake some library
 # in this suite has already made:
 #
 # 1. Its own build directory. Sanitizer objects and release objects must never
@@ -784,11 +784,35 @@ $(APP_DIR)/test$(EXE_EXTENSION): test/test.cpp $(APP_DIR)/$(STATIC_TARGET) | $(A
 #    runs that go through this target - the compile-time flag is what still
 #    holds when someone runs one of these binaries by hand.
 #
-# 5. LD_PRELOAD names the ASan runtime. The runtime insists on being
-#    initialised before anything it intercepts; any LD_PRELOAD inherited from
-#    the environment loads ahead of it and it then refuses to start at all.
+# 5. LD_PRELOAD names the ASan runtime, when the compiler has one to name.
+#    GCC's runtime is a shared library that insists on being initialised
+#    before anything it intercepts; any LD_PRELOAD inherited from the
+#    environment loads ahead of it and it then refuses to start at all.
 #    Desktop sessions here set LD_PRELOAD for unrelated reasons, so this is
 #    not hypothetical either.
+#
+#    Clang links its runtime into the executable instead, and then refuses to
+#    start when a second one arrives ahead of it. So the preload is decided
+#    from the compiler rather than assumed: see SAN_PRELOAD below.
+#
+# 6. Run it under BOTH compilers - `make test-asan` and `make test-asan
+#    CC=clang CXX=clang++` - because they do not implement the same checks and
+#    the difference is not small. Until note 5 was written this target could
+#    not start under clang at all, so every sanitizer figure this library had
+#    was GCC's. Turning clang on found two things in the first run:
+#
+#      - 31 spellings of a member offset as `&((T *)0)->m`, which is a member
+#        access on a null pointer. Clang's UBSan reports it; GCC's does not.
+#        They are `offsetof` now.
+#      - `-fsanitize=function`, which is in clang's -fsanitize=undefined group
+#        and has no GCC equivalent for C, checks an indirect call by reading a
+#        signature stored in front of the callee - and killed the process on
+#        the first call into JIT-generated code, which has no such signature.
+#        See gta_program_execute_binary.
+#
+#    Neither was reachable from the fuzz harnesses either, because those parse
+#    and never execute, and the JIT compiler runs on no other instrumented
+#    path. So "the sanitizers are clean" meant less than it read as.
 #
 # There is deliberately no TSan target: ctang creates no threads (pthread_create
 # appears in no source file), so a ThreadSanitizer run could not fail, and a
@@ -829,10 +853,27 @@ SAN_TEST_PAIRS := \
 
 SAN_TEST_EXES := $(foreach p,$(SAN_TEST_PAIRS),$(SAN_APP_DIR)/$(word 1,$(subst |, ,$(p)))$(EXE_EXTENSION))
 
-# See note 5.
+# See note 5. Which compiler this is cannot be read off -print-file-name:
+# clang searches the GCC toolchain directory too, so it answers that query
+# with GCC's libasan.so and the file is really there. Preloading it ahead of
+# clang's own statically linked runtime is what produced
+#
+#     Your application is linked against incompatible ASan runtimes.
+#
+# from `make test-asan CC=clang`, before any test ran - which is why clang had
+# never run this target, and why the sanitizer gate here had only ever been
+# GCC's. -print-runtime-dir is the discriminator that holds: clang names the
+# directory its runtimes live in, and GCC does not have the option at all and
+# answers nothing.
+#
+# An empty LD_PRELOAD is still an assignment, so the clang branch is not a
+# no-op: it clears whatever the desktop session put there, which is the half
+# of note 5 that applies to both compilers.
+SAN_COMPILER_RUNTIME_DIR := $(shell $(CC) -print-runtime-dir 2>/dev/null)
 SAN_ASAN_RUNTIME := $(shell $(CC) -print-file-name=libasan.so)
+SAN_PRELOAD := $(if $(SAN_COMPILER_RUNTIME_DIR),,$(SAN_ASAN_RUNTIME))
 SAN_RUN_ENV := LD_LIBRARY_PATH="$(SAN_APP_DIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
-               LD_PRELOAD="$(SAN_ASAN_RUNTIME)" \
+               LD_PRELOAD="$(SAN_PRELOAD)" \
                ASAN_OPTIONS=detect_leaks=1:halt_on_error=1:abort_on_error=0 \
                UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1
 

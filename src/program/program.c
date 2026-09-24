@@ -21,6 +21,7 @@
 
 // Include the correct header file for the platform.
 #ifdef _WIN32
+#include <stddef.h>
 #include <windows.h>
 #else
 #include <sys/mman.h>
@@ -600,6 +601,29 @@ typedef union Function_Converter {
 } Function_Converter;
 
 
+/**
+ * Call into the generated code.
+ *
+ * Clang's `-fsanitize=function`, which arrives as part of
+ * `-fsanitize=undefined`, checks an indirect call by reading a type signature
+ * that the compiler stores *in front of* every function it emits.  Nothing
+ * emits a signature in front of a block this library wrote itself, and
+ * `binary` is the first byte of its own mapping, so the check reads the page
+ * before the mapping and the process dies at the call:
+ *
+ *     mov -0x8(%r14),%r15d      ; r14 is program->binary
+ *     AddressSanitizer: SEGV on unknown address <binary - 8>
+ *
+ * The signature is missing because the code is generated, not because the
+ * pointer is of the wrong type, so the check has nothing to say here and is
+ * turned off for this one function.  It stays on everywhere else, and this
+ * also lets a host compile against ctang with clang's UBSan on, which until
+ * now crashed on the first program it ran.  GCC does not implement the check
+ * for C at all, which is why the sanitizer target never saw this.
+ */
+#if defined(__clang__)
+__attribute__((no_sanitize("function")))
+#endif
 bool gta_program_execute_binary(GTA_Execution_Context * context) {
   assert(context);
   assert(context->program);
@@ -772,7 +796,7 @@ void gta_program_compile_binary__x86_64(GTA_Program * program) {
     && gta_mov_reg_reg__x86_64(v, GTA_REG_R15, GTA_X86_64_R1)
 
   //   lea r14, [r15 + offsetof(GTA_Binary_Execution_Context, result)]
-    && gta_lea_reg_ind__x86_64(v, GTA_REG_R14, GTA_REG_R15, GTA_REG_NONE, 0, (int32_t)(size_t)(&((GTA_Execution_Context *)0)->result))
+    && gta_lea_reg_ind__x86_64(v, GTA_REG_R14, GTA_REG_R15, GTA_REG_NONE, 0, (int32_t)offsetof(GTA_Execution_Context, result))
 
   //   mov r13, rsp          ; Store the global stack pointer in r13.
   //   mov r12, rsp          ; Store the frame (local variable) stack pointer in r12.

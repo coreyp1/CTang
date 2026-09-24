@@ -20,6 +20,7 @@
 
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <ghoti.io/cutil/memory.h>
@@ -434,10 +435,10 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
   assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
-  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
+  size_t is_temporary_offset = offsetof(GTA_Computed_Value, is_temporary);
 
   // Offsets.
-  void * vtable_offset = &((GTA_Computed_Value *)0)->vtable;
+  size_t vtable_offset = offsetof(GTA_Computed_Value, vtable);
 
   // Find where the iterator is stored.  It will always be local.
   GTA_Ast_Node_Identifier * iterator = (GTA_Ast_Node_Identifier *)ranged_for->iterator;

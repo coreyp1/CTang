@@ -20,6 +20,7 @@
 
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <ghoti.io/cutil/memory.h>
@@ -220,7 +221,7 @@ bool gta_ast_node_unary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compi
   }
 
   // Get the offset of is_true.
-  int32_t is_true_offset = (int32_t)(size_t)(&((GTA_Computed_Value *)0)->is_true);
+  int32_t is_true_offset = (int32_t)offsetof(GTA_Computed_Value, is_true);
   //   lea GTA_X86_64_Scratch1, [rax + is_true_offset]
   //   mov rax, gta_computed_value_boolean_true
   //   mov GTA_X86_64_Scratch2, gta_computed_value_boolean_false

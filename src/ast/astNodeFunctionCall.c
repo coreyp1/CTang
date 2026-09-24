@@ -20,6 +20,7 @@
 
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <ghoti.io/cutil/memory.h>
@@ -257,14 +258,14 @@ bool gta_ast_node_function_call_compile_to_binary__x86_64(GTA_Ast_Node * self, G
   GCU_Vector8 * v = context->binary_vector;
 
   // Offsets
-  int32_t vtable_offset = (int32_t)(size_t)(&((GTA_Computed_Value *)0)->vtable);
-  int32_t num_arguments_offset = (int32_t)(size_t)(&((GTA_Computed_Value_Function *)0)->num_arguments);
-  int32_t call_depth_offset = (int32_t)(size_t)(&((GTA_Execution_Context *)0)->call_depth);
-  int32_t max_call_depth_offset = (int32_t)(size_t)(&((GTA_Execution_Context *)0)->max_call_depth);
-  int32_t pointer_offset = (int32_t)(size_t)(&((GTA_Computed_Value_Function *)0)->pointer);
-  int32_t bound_object = (int32_t)(size_t)(&((GTA_Computed_Value_Function_Native *)0)->bound_object);
-  int32_t callback = (int32_t)(size_t)(&((GTA_Computed_Value_Function_Native *)0)->callback);
-  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
+  int32_t vtable_offset = (int32_t)offsetof(GTA_Computed_Value, vtable);
+  int32_t num_arguments_offset = (int32_t)offsetof(GTA_Computed_Value_Function, num_arguments);
+  int32_t call_depth_offset = (int32_t)offsetof(GTA_Execution_Context, call_depth);
+  int32_t max_call_depth_offset = (int32_t)offsetof(GTA_Execution_Context, max_call_depth);
+  int32_t pointer_offset = (int32_t)offsetof(GTA_Computed_Value_Function, pointer);
+  int32_t bound_object = (int32_t)offsetof(GTA_Computed_Value_Function_Native, bound_object);
+  int32_t callback = (int32_t)offsetof(GTA_Computed_Value_Function_Native, callback);
+  size_t is_temporary_offset = offsetof(GTA_Computed_Value, is_temporary);
 
   // Jump Labels
   GTA_Integer not_a_native_function = -1;

@@ -20,6 +20,7 @@
 
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <ghoti.io/cutil/memory.h>
@@ -202,8 +203,8 @@ bool gta_ast_node_map_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Compile
   assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
 
-  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
-  bool * is_singleton_offset = &((GTA_Computed_Value *)0)->is_singleton;
+  size_t is_temporary_offset = offsetof(GTA_Computed_Value, is_temporary);
+  size_t is_singleton_offset = offsetof(GTA_Computed_Value, is_singleton);
 
   // Jump labels.
   GTA_Integer end = -1;

@@ -20,6 +20,7 @@
 
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <ghoti.io/cutil/memory.h>
@@ -263,7 +264,7 @@ bool gta_ast_node_ternary_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_Com
   GCU_Vector8 * v = context->binary_vector;
 
   // Offsets.
-  bool * is_true_offset = &((GTA_Computed_Value *)0)->is_true;
+  size_t is_true_offset = offsetof(GTA_Computed_Value, is_true);
 
   // Jump labels.
   GTA_Integer false_label = -1;
