@@ -4013,6 +4013,15 @@ TEST(Assignment, StoringAContainerIntoItself) {
   // Assigning a value held by another name takes the same path.
   expect_string("x = [1, 2]; y = [3]; x[0] = y; x as string;", "[[3], 2]");
   expect_string("m = {:}; n = [1]; m.v = n; m as string;", "{\"v\": [1]}");
+
+  // Storing it into itself at an index that grows the array.  The grow loop
+  // used to leave the slot being assigned unwritten while raising the count,
+  // and the deep copy of the value - which is this same array - then walked
+  // the slot that did not exist yet.
+  expect_string("a = [1]; a[5] = a; a as string;",
+    "[1, null, null, null, null, [1, null, null, null, null, null]]");
+  expect_string("a = [1]; a[5] = 7; a as string;", "[1, null, null, null, null, 7]");
+  expect_string("a = [1]; a[2] = a; a as string;", "[1, null, [1, null, null]]");
 }
 
 

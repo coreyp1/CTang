@@ -337,8 +337,18 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_index_assign(GTA_Computed
     if (!GTA_VECTORX_RESERVE(array->elements, new_size)) {
       return gta_computed_value_error_out_of_memory;
     }
-    for (size_t i = array->elements->count; i < new_size - 1; i++) {
-      // Populate the "new" elements with null.
+    for (size_t i = array->elements->count; i < new_size; i++) {
+      // Populate the "new" elements with null, the last one included.
+      //
+      // The loop used to stop one short, on the reasoning that the slot being
+      // assigned is written immediately below - but not immediately enough.
+      // The count is raised here, so between this line and that write the
+      // array claims an element it does not have, and the deep copy of the
+      // value being assigned runs in between.  When the value is the array
+      // itself, that copy walks the slot that has not been written yet:
+      // `a = [1]; a[5] = a;` read uninitialised heap and dereferenced it.
+      // The same window is open on the out-of-memory path, which returns with
+      // the array grown and the last slot never written at all.
       array->elements->data[i] = GTA_TYPEX_MAKE_P(gta_computed_value_null);
     }
     array->elements->count = new_size;

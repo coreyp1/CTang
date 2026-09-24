@@ -1357,7 +1357,18 @@ number and says so, because the text above points at these by number.
     correction then lands exactly on the boundary. Both the array and the
     string slice say it before the corrections now.
 
-36. **Fixed.** `m.b` on a key the map does not hold was `Map Key Not Found`
+36. **Fixed.** `a = [1]; a[5] = a;` read uninitialised heap. An index past the
+    end grows the array and fills the new slots with null (4.13), and the fill
+    loop stopped one short of the slot being assigned, on the reasoning that
+    the assignment writes it immediately below. It does not write it
+    immediately enough: the count is raised first, so between the two the
+    array claims an element it does not have - and the deep copy of the value
+    being assigned runs in that window. When the value is the array itself,
+    the copy walks the slot that has not been written. The same window was
+    open on the out-of-memory path, which returns with the array grown and
+    that slot never written at all.
+
+37. **Fixed.** `m.b` on a key the map does not hold was `Map Key Not Found`
     while `m["b"]` was `null`, so the two spellings of one read disagreed.
     13.7 chose the error on the strength of a line written at the same time -
     "which is what `m["name"]` already said" - which was a claim about the
