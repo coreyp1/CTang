@@ -401,9 +401,14 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_period(GTA_Computed_Value *
   // The period operator hashes its member name with GTA_STRING_HASH, which is
   // the same function the map hashes its keys with, so the hash can be used
   // as it stands.
+  //
+  // A name the map does not hold is null, which is what the subscript form
+  // answers (4.8).  This used to be `Map Key Not Found`, on the strength of a
+  // claim in 13.7 that the subscript said the same - it does not, and the two
+  // spellings of one read have to agree.
   GTA_HashX_Value result = GTA_HASHX_GET(((GTA_Computed_Value_Map *)self)->value_hash, identifier_hash);
   if (!result.exists) {
-    return gta_computed_value_error_map_key_not_found;
+    return gta_computed_value_null;
   }
   return (GTA_Computed_Value *)GTA_TYPEX_P(result.value);
 }

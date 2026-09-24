@@ -217,7 +217,7 @@ Where a boolean is required - `if`, `while`, `for`, `?:`, `&&`, `||`, `!`,
 | integer | non-zero |
 | float | non-zero (`-0.0` is zero) |
 | string | non-empty (in bytes) |
-| array, map | **intended:** non-empty. **Currently:** never (13.5) |
+| array, map | non-empty |
 | error | never |
 | function, library, rng | unspecified |
 
@@ -320,8 +320,9 @@ the integer `5` and `"51"` when `a` is the string `"5"`.
 ### 4.3 Comparison: `<` `<=` `>` `>=`
 
 Defined between integers and floats, in any combination, with the usual
-numeric meaning. Every other pairing is an error. Strings do not compare
-(13.3).
+numeric meaning, and between two strings, which compare by their bytes -
+so the ordering is by code point rather than by any locale's collation. Every
+other pairing is an error.
 
 ### 4.4 Equality: `==` `!=`
 
@@ -329,7 +330,7 @@ numeric meaning. Every other pairing is an error. Strings do not compare
 | --- | --- |
 | integer or float, integer or float | numeric equality; `0 == 0.0` is true |
 | array, array | true when the same length and every element is `==`, recursively |
-| string, string; boolean, boolean; null, null | **intended:** value equality. **Currently:** `Not implemented` (13.3) |
+| string, string; boolean, boolean; null, null | value equality |
 | map, map | `Not supported` |
 | different types otherwise | `Not supported` |
 
@@ -356,8 +357,8 @@ Evaluates `c` for truthiness and yields `a` or `b`. Right-associative:
 | integer | `!= 0` | itself | exact | decimal digits |
 | float | `!= 0.0` | truncate toward zero, or a marker if it does not fit (below) | itself | see 4.12 |
 | string | non-empty | leading decimal integer (`"12abc"` is `12`), or a marker if there is none or it does not fit (below) | leading decimal, same rule | itself |
-| array | crash (13.6) | crash | crash | crash |
-| map | crash (13.6) | `Not supported` | `Not supported` | `Not supported` |
+| array | non-empty | `Not supported` | `Not supported` | as 4.12 prints it |
+| map | non-empty | `Not supported` | `Not supported` | as 4.12 prints it |
 | error | - | - | - | `Not implemented` |
 
 **A value that does not fit in an integer does not produce a number.** The
@@ -442,15 +443,16 @@ Attributes are values, not calls. Something that needs no arguments is an
 attribute (`s.length`, `r.next_int`), never `s.length()`. An attribute that
 does take arguments is a function value, called with `()`: `r.set_seed(3)`.
 
-Maps are **not** indexed by `.`: `m.a` is `Not implemented`; write `m["a"]`
-(13.7 - and note the asymmetry with assignment in 4.13).
+A map's members are reached by `.` as well as by `[]`: `m.a` and `m["a"]`
+are the same read, and `m.a` on a key the map does not hold is `null`, as the
+subscript is.
 
 ### 4.11 Call: `f(args)`
 
 Calls a function value with positional arguments. The argument count must
 equal the parameter count; otherwise the call yields `Argument Count
 Mismatch` and the body does not run. Calling a non-function yields `Invalid
-function call` (but see 13.16).
+function call`.
 
 ### 4.12 `print(expression)`
 
@@ -481,12 +483,13 @@ makes `a = b = 3` work. The target may be:
   (`a[6] = 42` on a four-element array gives seven elements). A negative
   index past the beginning is an error.
 - an **index** `m[k]` on a map: sets or adds the key.
-- an **attribute** `a.name`: intended for map members only (`m.b = 2` adds
-  `b`). It is currently accepted on every value and on every name, with the
-  consequences in 13.10.
+- an **attribute** `a.name`: a map member (`m.b = 2` adds `b`). On anything
+  that is not a map it is the error that subscripting that type with a string
+  would be - `Invalid index` for an array, `Not supported` for a string, a
+  number or null.
 
 Any other target - a slice, a call, a literal - is not a valid assignment
-target. It is currently accepted and does the wrong thing (13.11).
+target, and is a compile error: `Cannot assign to this expression.`
 
 #### 4.13.1 Compound assignment: `target += expression`
 
@@ -840,7 +843,7 @@ to tell that from a correct empty template.
 
 Compile-time errors that are not syntax errors - `global` at top level, a
 function or identifier declared twice - also fail creation, with a message on
-stderr. See 13.18 for the ones that currently abort instead.
+stderr.
 
 ### 10.2 Run-time errors
 
@@ -857,14 +860,14 @@ The errors:
 | --- | --- |
 | `Divide by zero` | `/` with a zero divisor |
 | `Modulo by zero` | `%` with a zero divisor |
-| `Not supported` | an operation the operand types do not define: `"a" + 1`, `1 < 2 < 3`, `%` on floats, indexing `null` |
-| `Not implemented` | an operation that is defined but not yet written (13.3, 13.7) |
+| `Not supported` | an operation the operand types do not define: `null + 1`, `1 < 2 < 3`, `%` on floats, indexing `null` |
+| `Not implemented` | an operation that is defined but not yet written: iterating a string (5.6), an attribute of a number or a boolean (4.10) |
 | `Invalid index` | a non-integer array or string index; a slice step of 0; an out-of-range negative index in assignment |
 | `Map key is not a string` | indexing a map with a non-string |
 | `Invalid function call` | calling something that is not a function |
 | `Argument Count Mismatch` | calling with the wrong number of arguments |
 | `Cannot change the seed of the global random number generator` | `random.global.set_seed(n)` |
-| `Iterator end` | internal; leaks as a program result (13.12) |
+| `Iterator end` | internal |
 | `Out of memory`, `Invalid bytecode` | internal |
 
 The host sees the last one as `context->result`, and only if it was the
@@ -1052,8 +1055,16 @@ number and says so, because the text above points at these by number.
    now checks for a built-in attribute of the map type first - there are
    none, and the order is what keeps a name like `m.size` available to mean
    the map's own size later rather than a key arriving from untrusted data -
-   and then looks the name up as a key. A name that is not a key is
-   `Map Key Not Found`, which is what `m["name"]` already said.
+   and then looks the name up as a key. A name that is not a key is `null`,
+   which is what `m["name"]` answers (4.8).
+
+   The text here used to say the answer was `Map Key Not Found`, "which is
+   what `m["name"]` already said". That was a claim about the neighbouring
+   operation, written without checking it, and it was wrong: the subscript
+   form answers null. The two spellings of one read disagreed, and the
+   two-engine differential could not see it because both engines agreed with
+   each other. It was reading this section against the implementation that
+   found it.
 
 8. **Fixed.** `print(true)` used to print nothing: the boolean vtable's
    `print` was `not_supported`, even though its `to_string` already produced

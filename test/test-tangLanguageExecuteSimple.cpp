@@ -3700,8 +3700,8 @@ TEST(Period, ReadsAMapMember) {
   expect_integer("m = {:}; m.b = 2; m.b;", 2);
   expect_integer("m = {a: {b: 2}}; m.a.b;", 2);
   expect_boolean("m = {a: 1}; m.a == m[\"a\"];", true);
-  expect_error("m = {a: 1}; m.b;", "Error: Map Key Not Found");
-  expect_error("m = {:}; m.anything;", "Error: Map Key Not Found");
+  // What a name the map does not hold answers is in Period.AMissingMemberIsNull,
+  // where the subscript form it has to agree with is asserted beside it.
 }
 
 
@@ -3912,6 +3912,24 @@ TEST(Binary, ShortCircuitLeavesOneValue) {
   // something this test should be pinning down.
   expect_integer("m = {j: 1, k: (false || 2)}; m[\"j\"];", 1);
   expect_integer("m = {j: 1, k: (false || 2)}; m[\"k\"];", 2);
+}
+
+
+// `m.b` and `m["b"]` are the same read, so they have to answer a missing key
+// the same way, and the subscript form answers null (4.8).  The period form
+// answered `Map Key Not Found`, on the strength of a note in 13.7 claiming
+// the subscript said the same.  Both engines agreed with each other, so the
+// differential could not see it.
+TEST(Period, AMissingMemberIsNull) {
+  expect_null("m = {:}; m.a;");
+  expect_null("m = {a: 1}; m.b;");
+  expect_integer("m = {a: 1}; m.a;", 1);
+  // The two spellings, on the same map, side by side.
+  expect_null("m = {a: 1}; m[\"b\"];");
+  expect_integer("m = {a: 1}; m[\"a\"];", 1);
+  // A key whose value is null is indistinguishable from an absent one, which
+  // is what the subscript form already committed to.
+  expect_null("m = {a: null}; m.a;");
 }
 
 
