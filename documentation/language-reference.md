@@ -1055,9 +1055,13 @@ number and says so, because the text above points at these by number.
    `true` and `false` and `true as string` already printed them. Booleans now
    print as `true` and `false`.
 
-9. **Assigning through a string index is silently ignored.**
-   `s = "abc"; s[0] = "z"; s;` is `"abc"`. Should be an error, since strings
-   are immutable.
+9. **Not a defect, described wrongly.** Assigning through a string index
+   *is* an error: `s = "abc"; s[0] = "z";` yields `Not supported`, and the
+   string is unchanged because strings are immutable. What the old text was
+   reading was the value of the *next* statement - an error that is not the
+   last value of the program is discarded, which is the errors-as-values
+   model and the open question in section 14, not something specific to
+   strings.
 
 10. **Fixed.** Attribute assignment refused to compile, which - before the
     caller checked for that, see 13.23 - truncated the program, and made it
@@ -1079,10 +1083,14 @@ number and says so, because the text above points at these by number.
     during analysis, in one place, rather than by each compiler abandoning an
     emission it had half done. `x[1:2] = [9]` fails to compile.
 
-12. **A ranged `for` leaks its iterator sentinel as the program result.**
-    `for (i : [1, 2]) {}` as the last statement gives the result
-    `Iterator end` (an error) rather than `null`. Visible in every template
-    that ends with a loop.
+12. **Fixed.** A ranged `for` leaked its iterator sentinel as its value, so
+    `for (i : [1, 2]) {}` as the last statement gave the error `Iterator end`
+    rather than `null` - visible in every template that ends with a loop.
+    Both ways out of the loop landed on the same place. They are now
+    separate: running out of elements is the normal end of a loop, and its
+    value is `null`; an expression that could not be iterated at all is an
+    error and stays one, because that is the only way the author hears about
+    it. `break` keeps the value it was given.
 
 13. **Date literals are scanned but not parsed.** `@` puts the scanner into a
     date state that recognises `now`, `today`, `+3d`, ISO dates and time
@@ -1113,16 +1121,31 @@ number and says so, because the text above points at these by number.
     defensible as a debugging aid; neither is what a user of a *template*
     tool expects, and the tool has no flag to render.
 
-20. **Percent-encoding of non-ASCII bytes is wrong.** `unicodeString.c`
-    indexes the hex table with `string->buffer[i] >> 4` on a signed `char`,
-    so a byte ≥ 0x80 produces garbage: `"é".percent.render` is `%l3%f9`
-    instead of `%C3%A9`. Fix: cast to `unsigned char`.
+20. **Fixed.** Percent-encoding of non-ASCII bytes was wrong.
+    `unicodeString.c` indexed the hex table with `string->buffer[i] >> 4` on
+    a signed `char`, so a byte >= 0x80 produced garbage and
+    `"é".percent.render` was `%l3%f9`. The index is now taken through
+    `unsigned char`, and the result is `%C3%A9`.
 
 21. **Storing an array inside itself aborts.** `x = [1, 2]; x[0] = x;`
     fails the same assertion as 13.6 under the JIT and segfaults the VM.
 
 22. **The README's `print!(...)` is not syntax.** The examples there predate
     the `!"..."` prefix and do not parse.
+
+23. **Fixed.** A statement whose bytecode compile refused truncated the
+    program instead of failing it. `gta_program_compile_bytecode()` published
+    `program->bytecode` before compiling and never looked at `error_free` on
+    the way out, so a refusal left the partial vector installed with no
+    `RETURN` appended, `gta_program_create()` saw a non-null bytecode and
+    reported success, and the virtual machine - whose loop has no bound - ran
+    off the end into the vector's spare capacity, where a zero reads as
+    `RETURN` because that opcode is enumerator 0. So the program stopped at
+    the refused statement and called it a clean return:
+    `print("before"); x.size = 5; print("after");` printed only `before`.
+    Nothing reported an error, and neither ASan nor the allocation counters
+    could see it, because the read stayed inside the vector's own allocation.
+    This is what 13.10 and 13.11 were describing.
 
 ---
 

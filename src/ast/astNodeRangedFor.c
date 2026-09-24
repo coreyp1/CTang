@@ -297,6 +297,7 @@ bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
   // Jump labels.
   GTA_Integer get_next_iterator_value = -1;
   GTA_Integer end_of_loop = -1;
+  GTA_Integer iteration_done = -1;
   GTA_Integer original_break_label = context->break_label;
   GTA_Integer original_continue_label = context->continue_label;
 
@@ -305,6 +306,7 @@ bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
   // Create jump labels.
     && ((get_next_iterator_value = gta_compiler_context_get_label(context)) >= 0)
     && ((end_of_loop = gta_compiler_context_get_label(context)) >= 0)
+    && ((iteration_done = gta_compiler_context_get_label(context)) >= 0)
     && ((context->continue_label = gta_compiler_context_get_label(context)) >= 0)
     && ((context->break_label = gta_compiler_context_get_label(context)) >= 0)
 
@@ -340,7 +342,7 @@ bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMPF))
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
-    && gta_compiler_context_add_label_jump(context, end_of_loop, context->program->bytecode->count - 1)
+    && gta_compiler_context_add_label_jump(context, iteration_done, context->program->bytecode->count - 1)
   //   POP ; pop the iterator T/F value.  Iterator current value left on stack.
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
@@ -382,11 +384,39 @@ bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
     && gta_compiler_context_add_label_jump(context, get_next_iterator_value, context->program->bytecode->count - 1)
 
+  // Two ways out of the loop, and they leave different values behind.
+  //
+  // end_of_loop is reached when the expression could not be iterated at all.
+  // Popping the false uncovers the error that says so, and that error is the
+  // value of the loop, because the author needs to be told.
+  //
+  // iteration_done is reached when the iterator ran out, which is not an
+  // error but the normal end of a loop.  The sentinel underneath the false
+  // is an internal marker, so both come off and the loop's value is null.
+  // Leaving the sentinel made `for (i : [1, 2]) {}` as the last statement
+  // yield `Iterator end` - visible in every template ending with a loop.
+  //
   // end_of_loop:
   //   POP                   ; pop the iterator T/F value.
+  //   JMP break_label
     && gta_compiler_context_set_label(context, end_of_loop, context->program->bytecode->count)
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_JMP))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(0))
+    && gta_compiler_context_add_label_jump(context, context->break_label, context->program->bytecode->count - 1)
+  // iteration_done:
+  //   POP                   ; pop the iterator T/F value.
+  //   POP                   ; pop the iterator-end sentinel.
+  //   NULL
+    && gta_compiler_context_set_label(context, iteration_done, context->program->bytecode->count)
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
+    && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_NULL))
   // context->break_label:
     && gta_compiler_context_set_label(context, context->break_label, context->program->bytecode->count)
   // Restore the original break and continue labels.
@@ -436,6 +466,7 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
   GTA_Integer top_of_loop = -1;
   GTA_Integer get_next_iterator_value = -1;
   GTA_Integer end_of_loop = -1;
+  GTA_Integer iteration_done = -1;
   GTA_Integer original_break_label = context->break_label;
   GTA_Integer original_continue_label = context->continue_label;
 
@@ -459,6 +490,7 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
     && ((top_of_loop = gta_compiler_context_get_label(context)) >= 0)
     && ((context->continue_label = get_next_iterator_value = gta_compiler_context_get_label(context)) >= 0)
     && ((context->break_label = end_of_loop = gta_compiler_context_get_label(context)) >= 0)
+    && ((iteration_done = gta_compiler_context_get_label(context)) >= 0)
 
   // 1. Compile the iterator expression.  Result in RAX.
     && gta_ast_node_compile_to_binary__x86_64(ranged_for->expression, context)
@@ -495,14 +527,16 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
     && gta_mov_reg_reg__x86_64(v, GTA_X86_64_R2, GTA_REG_R15)
     && gta_binary_call__x86_64(v, (uint64_t)&gta_computed_value_iterator_iterator_next)
 
-  // 6. If the iterator next fails, jump to the end of the loop.
+  // 6. If the iterator ran out, the loop is over.  That is not an error, so
+  //    it lands on iteration_done rather than on end_of_loop, which is where
+  //    the expression-was-not-iterable error goes.
   //  mov GTA_X86_64_R1, gta_computed_value_error_iterator_end
   //  cmp rax, GTA_X86_64_R1
-  //  je end_of_loop
+  //  je iteration_done
     && gta_mov_reg_imm__x86_64(v, GTA_X86_64_R1, (int64_t)gta_computed_value_error_iterator_end)
     && gta_cmp_reg_reg__x86_64(v, GTA_REG_RAX, GTA_X86_64_R1)
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
-    && gta_compiler_context_add_label_jump(context, end_of_loop, v->count - 4)
+    && gta_compiler_context_add_label_jump(context, iteration_done, v->count - 4)
 
   // 7. Clear is_temporary, so that the in-place fast path in the arithmetic
   //    operators cannot mutate a value a variable now holds. The variable is
@@ -529,7 +563,19 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
     && gta_jmp__x86_64(v, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, top_of_loop, v->count - 4)
 
+  // iteration_done:
+  //   The iterator ran out.  RAX holds the iterator-end sentinel, which is an
+  //   internal marker rather than the value of anything, so the loop's value
+  //   is null.  Leaving the sentinel made `for (i : [1, 2]) {}` as the last
+  //   statement yield `Iterator end`.  Falls through to end_of_loop, which is
+  //   reachable only by jump.
+  //   mov rax, gta_computed_value_null
+    && gta_compiler_context_set_label(context, iteration_done, v->count)
+    && gta_mov_reg_imm__x86_64(v, GTA_REG_RAX, (int64_t)gta_computed_value_null)
+
   // end_of_loop:
+  //   Reached with the error in RAX when the expression could not be iterated
+  //   at all, and by `break` with the break value in RAX.
     && gta_compiler_context_set_label(context, end_of_loop, v->count)
   // Restore the original break and continue labels.
     && ((context->break_label = original_break_label) >= 0)

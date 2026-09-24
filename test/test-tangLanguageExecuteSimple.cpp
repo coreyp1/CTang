@@ -3751,6 +3751,53 @@ TEST(Assignment, OnlyANameMemberOrSubscriptCanBeAssignedTo) {
 }
 
 
+
+// Run a source that must yield null.
+static void expect_null(const char * code) {
+  gcu_memory_reset_counts();
+  GTA_Program * program = gta_program_create(language, code);
+  ASSERT_TRUE(program) << code;
+  GTA_Execution_Context * context = gta_execution_context_create(program);
+  ASSERT_TRUE(context) << code;
+  ASSERT_TRUE(gta_program_execute(context)) << code;
+  ASSERT_TRUE(context->result) << code;
+  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_NULL(context->result)) << code;
+  gta_execution_context_destroy(context);
+  gta_program_destroy(program);
+}
+
+
+// A ranged for that runs to the end of its collection used to leave the
+// iterator's end sentinel behind as its value, so a template ending with a
+// loop - which is most of them - produced the error `Iterator end`.
+TEST(RangedFor, RunningOutIsNullNotAnError) {
+  expect_null("for (i : [1, 2]) {}");
+  expect_null("for (i : []) {}");
+  expect_null("for (i : [1, 2]) { i; }");
+  expect_null("for (i : [1, 2]) { continue; }");
+  expect_null("for (i : [1, 2]) { for (j : [3]) {} }");
+  expect_integer("x = 0; for (i : [1, 2]) { x = x + i; } x;", 3);
+}
+
+
+// Breaking out of the loop is the loop's value, and it was already null;
+// the two exits must not have been merged into one.
+TEST(RangedFor, BreakKeepsItsOwnValue) {
+  expect_null("for (i : [1, 2]) { break; }");
+  expect_null("for (i : [1, 2]) { if (i == 2) { break; } }");
+}
+
+
+// The other way out of the loop is that the expression could not be iterated
+// at all.  That is an error and has to stay one - it is the only way the
+// author hears about it.
+TEST(RangedFor, ANonIterableExpressionIsStillAnError) {
+  expect_error("for (i : 5) {}", "Error: Not supported");
+  expect_error("for (i : {a: 1}) {}", "Error: Not supported");
+  expect_error("for (i : \"abc\") {}", "Error: Not implemented");
+}
+
+
 #ifdef __linux__
 /**
  * True if any mapping in /proc/self/maps covers `address`.
