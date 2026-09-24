@@ -1047,7 +1047,28 @@ FUZZ_RSS_MB ?= 2048
 # The cap is well under FUZZ_RSS_MB so that the refusal happens before the
 # process grows into libFuzzer's own limit, where the death is a killed process
 # rather than a reported value.
-FUZZ_ASAN_OPTIONS ?= allocator_may_return_null=1:max_allocation_size_mb=512
+# quarantine_size_mb because the differential harness ran out of memory with
+# no leak to show for it. LSan is clean at exit and a single input replays in
+# 35ms, so nothing was lost and no one program was large: what grew was ASan's
+# own quarantine, which holds freed blocks back from reuse so that a
+# use-after-free has something to land on. Two engines per input fill it twice
+# as fast as the parse harnesses do. Measured over 20000 executions from a
+# fixed corpus and seed:
+#
+#   default (256MB quarantine) ............... 1460Mb
+#   quarantine_size_mb=64 ....................  751Mb
+#   quarantine_size_mb=64:malloc_context_size=5  724Mb
+#   malloc_context_size=5 .................... 1349Mb
+#
+# So the quarantine is the whole of it, and the shorter allocation traces are
+# not worth 27Mb - every report would lose the stack that says where the block
+# came from. The cost of the smaller quarantine is real and is the reason it
+# is not smaller still: a use-after-free is caught only while the block is
+# held back, and 64MB is a shorter window than the default. It suits this
+# harness because each execution builds and destroys its own program and
+# context, so a stale pointer has one execution to be caught in, not a
+# campaign.
+FUZZ_ASAN_OPTIONS ?= allocator_may_return_null=1:max_allocation_size_mb=512:quarantine_size_mb=64
 
 FUZZ_OBJECTS := $(patsubst $(OBJ_DIR)/%,$(FUZZ_OBJ_DIR)/%,$(LIBOBJECTS))
 -include $(FUZZ_OBJECTS:.o=.d)
