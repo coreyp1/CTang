@@ -235,14 +235,17 @@ TEST(ControlFlow, RangedFor) {
   }
 }
 
-TEST(ControlFlow, RangedForVariableIsACopy) {
+TEST(ControlFlow, RangedForBindsTheElement) {
   {
-    // The loop variable is adopted, which deep copies anything that is not
-    // temporary or a singleton, so writing through it must not reach the
-    // container being walked. The x86_64 compiler tested is_temporary and
-    // is_singleton as 64-bit words, which took in the bytes after them, so
-    // the copy was never made and this printed 9 under the JIT and 1 under
-    // the bytecode interpreter.
+    // The loop variable is bound to the element, not to a copy of it, so
+    // writing through it reaches the container. Arrays are reference types
+    // everywhere else in the language - `b = a` and passing to a function
+    // both share - and this binding is not an exception.
+    //
+    // The two engines disagreed here for the life of the library: the
+    // bytecode interpreter emitted ADOPT, which deep copies, while the
+    // x86_64 compiler asked for the same thing and never got it, because it
+    // read the one-byte is_temporary and is_singleton flags as 64-bit words.
     TEST_PROGRAM_SETUP(R"(
       a = [[1], [2]];
       for (x : a) {
@@ -251,7 +254,34 @@ TEST(ControlFlow, RangedForVariableIsACopy) {
       print(a[0][0]);
       print(a[1][0]);
     )");
+    ASSERT_STREQ(context->output->buffer, "99");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // Rebinding the loop variable is not mutation, and must not reach the
+    // array. This is the line between the two, and it is why clearing
+    // is_temporary is not the same as copying.
+    TEST_PROGRAM_SETUP(R"(
+      a = [1, 2];
+      for (x : a) {
+        x = 99;
+      }
+      print(a[0]);
+      print(a[1]);
+    )");
     ASSERT_STREQ(context->output->buffer, "12");
+    TEST_PROGRAM_TEARDOWN();
+  }
+  {
+    // A map element is shared the same way.
+    TEST_PROGRAM_SETUP(R"(
+      a = [{k: 1}];
+      for (x : a) {
+        x["k"] = 9;
+      }
+      print(a[0]["k"]);
+    )");
+    ASSERT_STREQ(context->output->buffer, "9");
     TEST_PROGRAM_TEARDOWN();
   }
 }

@@ -346,11 +346,19 @@ bool gta_ast_node_ranged_for_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compil
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_POP))
 
   // Assign the current iterator value to the iterator identifier variable.
-  //   ADOPT
+  //   SET_NOT_TEMP
   //   POKE_LOCAL/GLOBAL (fp + identifier offset)
   //   POP
+  //
+  // SET_NOT_TEMP rather than ADOPT: the loop variable is bound to the
+  // element, not to a copy of it, so `for (x : a) { x[0] = 9; }` is visible
+  // through `a`. Arrays and maps are reference types throughout the language
+  // - `b = a` and passing to a function both share - and nothing makes this
+  // binding the exception. See section 3 of the language reference. ADOPT
+  // deep-copies anything that is not temporary or a singleton, which made
+  // this the one place in Tang that copied a container.
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
-    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ADOPT))
+    && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_SET_NOT_TEMP))
     && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
     && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(identifier_is_local ? GTA_BYTECODE_POKE_LOCAL : GTA_BYTECODE_POKE_GLOBAL))
     && GTA_VECTORX_APPEND(context->program->bytecode, identifier_stack_location.value)
@@ -397,6 +405,8 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
   assert(context);
   assert(context->binary_vector);
   GCU_Vector8 * v = context->binary_vector;
+
+  bool * is_temporary_offset = &((GTA_Computed_Value *)0)->is_temporary;
 
   // Offsets.
   void * vtable_offset = &((GTA_Computed_Value *)0)->vtable;
@@ -496,8 +506,12 @@ bool gta_ast_node_ranged_for_compile_to_binary__x86_64(GTA_Ast_Node * self, GTA_
     && gta_jcc__x86_64(v, GTA_CC_E, 0xDEADBEEF)
     && gta_compiler_context_add_label_jump(context, end_of_loop, v->count - 4)
 
-  // 7. Adopt the value.
-    && gta_binary_adopt__x86_64(context, GTA_REG_RAX)
+  // 7. Clear is_temporary, so that the in-place fast path in the arithmetic
+  //    operators cannot mutate a value a variable now holds. Not
+  //    gta_binary_adopt__x86_64(), which would also deep copy: see the
+  //    matching comment in gta_ast_node_ranged_for_compile_to_bytecode().
+  //   mov byte ptr [rax + is_temporary_offset], 0
+    && gta_mov_ind8_imm8__x86_64(v, GTA_REG_RAX, GTA_REG_NONE, 0, (GTA_Integer)is_temporary_offset, 0)
 
   // 8. Assign the iterator value to the ranged-for variable.
   //   mov [REG(12 or 13) + identifier_stack_location_offset], rax
