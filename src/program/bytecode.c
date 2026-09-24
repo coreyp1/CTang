@@ -76,6 +76,10 @@ void gta_bytecode_print(GTA_VectorX * bytecode) {
         printf("%4zu CAST\t%p\n", current - start, GTA_TYPEX_P(*(current + 1)));
         current += 2;
         break;
+      case GTA_BYTECODE_ADOPT:
+        printf("%4zu ADOPT\n", current - start);
+        ++current;
+        break;
       case GTA_BYTECODE_SET_NOT_TEMP:
         printf("%4zu SET_NOT_TEMP\n", current - start);
         ++current;

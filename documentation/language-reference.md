@@ -198,6 +198,15 @@ bare identifiers (`{a: 1}`); at run time keys are strings (`m["a"]`). A
 trailing comma is permitted in the literal. The empty map is `{:}` - `{}` is
 an empty block.
 
+**Putting a container inside another copies it.** A name binds to a container
+(`y = x` aliases), but storing one *into* a container takes a deep copy of it
+unless the value is the expression's own temporary: `x = [1]; y = [x];
+x[0] = 9;` leaves `y` as `[[1]]`, and `m.k = x` the same. The copy is taken
+when the element is evaluated, so a literal behaves as though its container
+were filled one element at a time and a later element cannot reach back into
+an earlier one. Storing a container into itself therefore stores a snapshot
+and creates no cycle.
+
 **Function** values are first-class: they can be assigned, passed and
 called through any expression that evaluates to one.
 
@@ -1463,6 +1472,28 @@ number and says so, because the text above points at these by number.
     bare identifier (4.7) and so is always a fresh temporary, which means that
     branch cannot run today - but it is wrong the moment a computed key is
     spellable, and the value branch beside it is written correctly.
+
+42. **Fixed.** `x = [(d = [1]), (d[1] = 9)];` was `[[1, 9], 9]` under the
+    bytecode engine and `[[1], 9]` under x86-64. A container literal copies
+    what it is given (13.21), and the two engines did it at different times:
+    x86-64 emits the copy inline as each element is built, while the bytecode
+    engine did the whole pass in its `ARRAY` and `MAP` instructions, which see
+    every element at once and therefore run after all of them have been
+    evaluated. A later element's side effect then reached back into an earlier
+    slot.
+
+    The x86-64 timing is the one kept: an element's value is what its
+    expression produced, and a literal behaves as though the container were
+    filled one element at a time. The other timing makes `[a, b]` depend on
+    whether `b` happens to touch what `a` named, which is not something a
+    reader can see. The bytecode engine gains an `ADOPT` instruction, emitted
+    after each element, and the copy leaves `ARRAY`/`MAP` entirely.
+
+    The first finding this harness has reported as an actual *divergence* -
+    the rest have been sanitizer reports or crashes, because both engines call
+    the same value code and agree there even when it is wrong. This one is in
+    the engines themselves, which is the only place a two-engine oracle can
+    see by itself.
 
 ---
 

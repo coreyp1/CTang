@@ -220,6 +220,34 @@ bool gta_virtual_machine_execute_bytecode(GTA_Execution_Context* context) {
         context->stack->data[*sp-1] = GTA_TYPEX_MAKE_P(gta_computed_value_cast(context->stack->data[*sp-1].p, (GTA_Computed_Value_VTable *)(*next++).p, context));
         break;
       }
+      case GTA_BYTECODE_ADOPT: {
+        // Take the value on the stack away from whoever else holds it, so
+        // that what a container literal stores is the value its element
+        // expression produced and not whatever that object becomes later.
+        //
+        // The copy has to happen here, between one element and the next,
+        // rather than when the ARRAY or MAP instruction runs: those see every
+        // element at once, after all of them have been evaluated, so a later
+        // element's side effect reached back into an earlier slot.
+        // `x = [(d = [1]), (d[1] = 9)];` was `[[1, 9], 9]` here and
+        // `[[1], 9]` under the x86-64 engine, which does the copy inline as
+        // each element is built (13.42).
+        GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[*sp - 1]);
+        if (!value->is_temporary && !value->is_singleton) {
+          GTA_Computed_Value * copy = gta_computed_value_deep_copy(value, context);
+          if (!copy) {
+            // As everywhere else in this loop: record it and carry on, rather
+            // than unwinding.  The element stays shared, which is the old
+            // behaviour, and the result is already the error.
+            context->result = gta_computed_value_error_out_of_memory;
+            break;
+          }
+          // The copy is temporary, so the ARRAY or MAP that follows adopts it
+          // instead of copying it a second time.
+          context->stack->data[*sp - 1] = GTA_TYPEX_MAKE_P(copy);
+        }
+        break;
+      }
       case GTA_BYTECODE_SET_NOT_TEMP: {
         // Set the top of the stack to not be temporary.
         GTA_Computed_Value * value = GTA_TYPEX_P(context->stack->data[*sp-1]);

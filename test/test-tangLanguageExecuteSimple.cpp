@@ -4098,6 +4098,17 @@ TEST(Assignment, StoringAContainerIntoItself) {
   expect_integer("m = {a: 1}; n = {a: 1}; m.b = n; n.a = 9; m.b.a;", 1);
   expect_integer("m = {a: 1}; n = [1]; m.b = n; n[0] = 9; m.b[0];", 1);
 
+  // ...and it takes that copy when the element is evaluated, not when the
+  // literal closes.  The bytecode engine did the whole copy pass in its ARRAY
+  // and MAP instructions, which see every element at once and so ran after
+  // all of them - a later element's side effect then reached back into an
+  // earlier slot, and the two engines disagreed about the same literal.
+  expect_string("x = [(d = [1]), (d[1] = 9)]; x as string;", "[[1], 9]");
+  expect_integer("x = [(d = [1]), (d[1] = 9)]; (x[0]).size;", 1);
+  expect_integer("x = {k1: (d = [1]), k2: (d[1] = 9)}; (x.k1).size;", 1);
+  // The element that does the mutating still sees its own write.
+  expect_integer("x = [(d = [1]), (d[1] = 9)]; d.size;", 2);
+
   // Storing it into itself at an index that grows the array.  The grow loop
   // used to leave the slot being assigned unwritten while raising the count,
   // and the deep copy of the value - which is this same array - then walked

@@ -176,11 +176,18 @@ bool gta_ast_node_map_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Cont
 
   assert(map->pairs);
   assert(map->pairs->count ? (bool)map->pairs->data : true);
+  // ADOPT after each key and each value, for the reason given in
+  // gta_ast_node_array_compile_to_bytecode: the copy belongs between one
+  // element and the next, not in a single pass when MAP runs.
   for (size_t i = 0; error_free && (i < map->pairs->count); ++i) {
     GTA_Ast_Node_Map_Pair * pair = (GTA_Ast_Node_Map_Pair *)GTA_TYPEX_P(map->pairs->data[i]);
     error_free &= true
       && gta_ast_node_compile_to_bytecode(pair->key, context)
-      && gta_ast_node_compile_to_bytecode(pair->value, context);
+      && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ADOPT))
+      && gta_ast_node_compile_to_bytecode(pair->value, context)
+      && GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+      && GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ADOPT));
   }
 
   assert(context);

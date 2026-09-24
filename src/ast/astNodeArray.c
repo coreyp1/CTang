@@ -156,8 +156,14 @@ bool gta_ast_node_array_compile_to_bytecode(GTA_Ast_Node * self, GTA_Compiler_Co
 
   assert(array->elements);
   assert(array->elements->count ? (bool)array->elements->data : true);
+  // ADOPT after each element, not one copy pass when ARRAY runs: the element
+  // has to be taken away from whoever else holds it *before* the next element
+  // is evaluated, or that element's side effects reach back into this slot.
+  // The x86-64 emitter below has always done it in this order (13.42).
   for (size_t i = 0; i < array->elements->count; ++i) {
-    if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)GTA_TYPEX_P(array->elements->data[i]), context)) {
+    if (!gta_ast_node_compile_to_bytecode((GTA_Ast_Node *)GTA_TYPEX_P(array->elements->data[i]), context)
+      || !GTA_BYTECODE_APPEND(context->bytecode_offsets, context->program->bytecode->count)
+      || !GTA_VECTORX_APPEND(context->program->bytecode, GTA_TYPEX_MAKE_UI(GTA_BYTECODE_ADOPT))) {
       return false;
     }
   }
