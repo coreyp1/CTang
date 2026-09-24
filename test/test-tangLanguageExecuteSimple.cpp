@@ -3619,6 +3619,57 @@ TEST(Binary, OrderingAcrossTypesIsAnError) {
 }
 
 
+
+// Run a source that must yield an integer, and say which integer.
+static void expect_integer(const char * code, GTA_Integer expected) {
+  gcu_memory_reset_counts();
+  GTA_Program * program = gta_program_create(language, code);
+  ASSERT_TRUE(program) << code;
+  GTA_Execution_Context * context = gta_execution_context_create(program);
+  ASSERT_TRUE(context) << code;
+  ASSERT_TRUE(gta_program_execute(context)) << code;
+  ASSERT_TRUE(context->result) << code;
+  ASSERT_TRUE(GTA_COMPUTED_VALUE_IS_INTEGER(context->result)) << code;
+  ASSERT_EQ(((GTA_Computed_Value_Integer *)context->result)->value, expected) << code;
+  gta_execution_context_destroy(context);
+  gta_program_destroy(program);
+}
+
+
+// Arrays and maps used to be false whatever they held, because is_true was
+// set to false when the container was created and nothing ever set it again.
+// Both engines read that byte straight out of the object, so `if (items)` -
+// the first thing a template does with a list - always took the else branch.
+TEST(Truthiness, ContainersAreTrueWhenTheyHoldSomething) {
+  expect_integer("if ([1]) { 1; } else { 2; }", 1);
+  expect_integer("if ([]) { 1; } else { 2; }", 2);
+  expect_integer("if ([0]) { 1; } else { 2; }", 1);
+  expect_integer("if ({a: 1}) { 1; } else { 2; }", 1);
+  expect_integer("if ({:}) { 1; } else { 2; }", 2);
+  expect_boolean("![1];", false);
+  expect_boolean("![];", true);
+  expect_boolean("!{a: 1};", false);
+  expect_boolean("!{:};", true);
+  expect_integer("[1] && 2;", 2);
+  expect_integer("[] || 2;", 2);
+  expect_integer("x = [1, 2]; if (x) { 1; } else { 2; }", 1);
+}
+
+
+// The flag has to keep up with the container, not just with how it was built:
+// a container that starts empty and is filled afterwards becomes true, and
+// one produced empty by an operation stays false.
+TEST(Truthiness, ContainersTrackWhatTheyHold) {
+  expect_integer("x = []; x[0] = 1; if (x) { 1; } else { 2; }", 1);
+  expect_integer("m = {:}; m[\"k\"] = 1; if (m) { 1; } else { 2; }", 1);
+  expect_integer("x = [1, 2]; y = x[0:0]; if (y) { 1; } else { 2; }", 2);
+  expect_integer("x = [1, 2]; y = x[0:1]; if (y) { 1; } else { 2; }", 1);
+  expect_integer("x = [1] + []; if (x) { 1; } else { 2; }", 1);
+  expect_integer("x = [1] * 0; if (x) { 1; } else { 2; }", 2);
+  expect_integer("x = [] + []; if (x) { 1; } else { 2; }", 2);
+}
+
+
 #ifdef __linux__
 /**
  * True if any mapping in /proc/self/maps covers `address`.

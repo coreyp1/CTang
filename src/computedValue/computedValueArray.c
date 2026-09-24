@@ -118,7 +118,12 @@ bool GTA_CALL gta_computed_value_array_create_in_place(GTA_Computed_Value_Array 
     .base = {
       .vtable = &gta_computed_value_array_vtable,
       .context = context,
-      .is_true = false,
+      // An empty array is false and a populated one is true.  is_true is a
+      // stored byte that both engines read straight out of the object, so it
+      // cannot be derived on demand; every caller passes the number of
+      // elements the array is about to be filled with, and the two places
+      // that can later grow an array from empty set it again.
+      .is_true = size > 0,
       .is_error = false,
       .is_temporary = true,
       .requires_deep_copy = false,
@@ -276,6 +281,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_index_assign(GTA_Computed
       array->elements->data[i] = GTA_TYPEX_MAKE_P(gta_computed_value_null);
     }
     array->elements->count = new_size;
+    array->base.is_true = true;
   }
 
   // Either copy or adopt the new value.
@@ -451,6 +457,7 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_array_append(GTA_Computed_Value
   if (!GTA_VECTORX_APPEND(self->elements, GTA_TYPEX_MAKE_P(value))) {
     return gta_computed_value_error_out_of_memory;
   }
+  self->base.is_true = true;
   value->is_temporary = false;
   return (GTA_Computed_Value *)self;
 }

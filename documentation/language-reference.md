@@ -1028,8 +1028,13 @@ number and says so, because the text above points at these by number.
    bit pattern. Interning itself still works - one value used twice is still
    one singleton.
 
-5. **Arrays and maps are always falsy.** `if ([1])` takes the else branch;
-   `![1]` is `true`; `[1] && 2` is `[1]`.
+5. **Fixed.** Arrays and maps were always falsy: `if ([1])` took the else
+   branch and `![1]` was `true`. `is_true` is a stored byte, which both
+   engines read straight out of the object rather than computing, and the
+   container constructors set it to false and nothing ever set it again. It
+   is now set from the number of elements the container is created with, and
+   set again by the operations that can grow one from empty. An empty array
+   or map is false; one that holds anything is true.
 
 6. **`as` on an array crashes** with a null-context assertion in
    `gta_computed_value_array_create()` for every target type. `[] as bool`

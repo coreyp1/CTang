@@ -134,7 +134,10 @@ bool GTA_CALL gta_computed_value_map_create_in_place(GTA_Computed_Value_Map * se
     .base = {
       .vtable = &gta_computed_value_map_vtable,
       .context = context,
-      .is_true = false,
+      // An empty map is false and a populated one is true.  See the note in
+      // gta_computed_value_array_create_in_place() for why this is stored
+      // rather than derived.
+      .is_true = size > 0,
       .is_error = false,
       .is_temporary = false,
       .requires_deep_copy = false,
@@ -348,6 +351,8 @@ GTA_Computed_Value * GTA_CALL gta_computed_value_map_set_key_val(GTA_Computed_Va
     || !GTA_HASHX_SET(self->value_hash, key_hash, GTA_TYPEX_MAKE_P(value))) {
     return gta_computed_value_error_out_of_memory;
   }
+
+  self->base.is_true = true;
 
   // Claim ownership of the key and value.
   key->is_temporary = false;
