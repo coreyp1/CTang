@@ -877,10 +877,15 @@ This is a design gap (14).
 
 ### 10.3 Limits
 
-None. There is no cap on execution time, recursion depth, memory, or output
-size. `while (true) {}` runs until the host kills it, and unbounded
-recursion overflows the C stack (13.14). The README's statement that limits
-can be set describes intent, not the implementation.
+One of four. Call depth is capped: `max_call_depth` on the execution context,
+512 by default, and a call that would go past it yields `Recursion Limit
+Exceeded` instead of being made. A host that knows its own stack may raise or
+lower it; zero disables it, which is only safe under the bytecode engine,
+whose calls do not use the C stack.
+
+There is still no cap on execution time, memory, or output size.
+`while (true) {}` runs until the host kills it. The README's statement that
+limits can be set describes one of them and the intent of the rest.
 
 ---
 
@@ -1235,6 +1240,131 @@ number and says so, because the text above points at these by number.
     from. A native function is handed the block as a C array and reads it the
     other way, so that branch reverses it in place first.
 
+27. **Fixed.** The sanitizer target could not start under clang, so every
+    sanitizer figure this library had was GCC's. `make test-asan CC=clang`
+    preloaded whatever `$(CC) -print-file-name=libasan.so` answered, and clang
+    answers that query with GCC's libasan.so - it searches the GCC toolchain
+    directory too, and the file is really there. Clang links its own runtime
+    into the executable and refuses to start behind a second one, so the run
+    died during startup with "Your application is linked against incompatible
+    ASan runtimes" before a single test ran. The preload is now decided from
+    `-print-runtime-dir`, which clang answers and GCC does not have.
+
+    Turning clang on found the next two items, both on the JIT compiler -
+    which is the part of the library no instrumented path had ever executed.
+    The fuzz harnesses are clang, but until 33 they parsed and never compiled
+    to binary or ran anything.
+
+28. **Fixed.** 31 member offsets were spelled `&((T *)0)->m`, which is a
+    member access on a null pointer. Clang's UBSan reports it and GCC's does
+    not. The values were right on every target this has been built for, so
+    nothing was broken; the construct has a standard spelling that is not
+    undefined, and it is `offsetof` now.
+
+29. **Fixed.** Calling into JIT-generated code killed the process under
+    clang's `-fsanitize=undefined`. That group includes `-fsanitize=function`,
+    which has no GCC equivalent for C: it checks an indirect call by reading a
+    type signature the compiler stores *in front of* the callee, and generated
+    code carries no such signature, so the check read the page before the
+    mapping and took a SIGSEGV at the call. This was not only about the gate -
+    a host building against ctang with clang's UBSan on would have crashed on
+    the first program it ran. The check is off for that one function and on
+    everywhere else.
+
+30. **Fixed.** The bytecode engine compiled an assignment's right-hand side
+    twice for the index and member forms. It was emitted at the top of
+    `gta_ast_node_assign_compile_to_bytecode`, before the form was known, and
+    then again by the form, which needs the container and the subscript
+    underneath the value. So `a[0] = print(1);` printed twice, any call on the
+    right-hand side was made twice, and the first value was left on the stack
+    with nothing to pop it. Nothing in the result showed it: the second
+    evaluation is the one that gets stored and it equals the first. f369720
+    added the index form and moved the emission into the branches on the
+    x86-64 side while leaving the top-level one standing here.
+
+31. **Fixed.** `&&` and `||` left the left operand on the stack whenever the
+    short circuit was *not* taken. They compile to a conditional jump over the
+    right operand, and JMPF and JMPT deliberately do not pop what they tested,
+    because when the left operand decides the answer it is the answer; the
+    branch that falls through has to pop it, and did not. The value read back
+    was still right - it is the top of the stack either way - so nothing that
+    looked only at the result could see it. What saw it was anything that
+    finds its operands by counting down from the top: `[9, (true && 2)]` was
+    `[true, 2]`, `f(9, (true && 2))` bound the first parameter to `true`, and
+    `{k: (true && 2)}` put the stray value where a key belongs, whereupon the
+    key handler dereferenced a boolean's `value` field - the integer 1 - as a
+    pointer and the process died. The x86-64 engine keeps the operand in a
+    register and was never affected.
+
+32. **Fixed.** A bytecode function's local variables had no slots. A local is
+    addressed as `stack[fp + position]` and the virtual machine sets `fp` to
+    the stack pointer minus the argument count, so the arguments occupy the
+    first positions and every later one had to be a slot that exists. Nothing
+    made them exist: they were above the top of the stack, which is where the
+    next push goes, so a local and an expression temporary were the same slot
+    and `function f() { z = 5; w = ((1 + 2) + 3); z; } f();` answered 3.
+    Reading a local that had never been assigned read the stack vector's spare
+    capacity, found a zero, and handed the engine a null C pointer where
+    section 6 promises the null value - so `function f() { z; } (!f());`
+    killed the process. The x86-64 engine has always reserved the frame and
+    filled it with null; the same prologue is emitted here now.
+
+33. **Fixed.** Both x86-64 literal emitters tested the adopt-or-copy flags the
+    wrong way round. Putting a value into a container copies it unless it is a
+    temporary or a singleton - the rule `assign_index` follows, and what 13.21
+    records as deliberate - and the emitted code jumped to the adopt path when
+    the flag was *clear*. So a container held by a name was aliased by every
+    literal that mentioned it, and the only thing ever deep-copied was a
+    temporary singleton, which does not occur: the whole copy arm was dead
+    code behind an inverted guard. `x = [1]; y = [x]; x[0] = 9; y[0][0];` was
+    9 here and 1 under the bytecode engine. It showed up first as map
+    ordering, because a deep copy rebuilds the hash table by re-inserting in
+    iteration order.
+
+34. **Fixed.** `[1, 2] * 3` was `[]`. The result was created with room for six
+    elements and six elements were written into that room, but the vector's
+    count was never set. The element count was also an unchecked product, so
+    `[0, 0, 0] * 9223372036854775807` wrapped and asked the allocator for most
+    of the address space; it is bounded now, and a count past the bound is
+    `Out of memory`. Repeating an *empty* array also used to spin once per
+    repetition over an empty body.
+
+    Which exposed the allocation contract. `gta_computed_value_array_create`
+    answered a failed allocation with the out-of-memory *value*, while every
+    caller tests the result with `if (!result)` and both x86-64 emitters test
+    it with `test rax, rax` - so a failure read as success everywhere, and
+    what the caller used as an array was the error singleton, whose
+    `elements` field is whatever lies at that offset in a much smaller
+    object. `gta_computed_value_map_create` did it on one of three arms. Both
+    return NULL now.
+
+    And underneath that, cutil's vector create treats its reserve as
+    best-effort: when the allocation is refused it leaves `data` null and
+    `capacity` zero and still reports success. Every array here is created
+    with the number of elements it is about to write directly into `data`, so
+    `gta_computed_value_array_create_in_place` now checks the capacity it
+    asked for. That is a workaround for something cutil should say; it is
+    recorded in `notes/ctang/DIFFERENTIAL-FUZZING.md`.
+
+35. **Fixed.** `[0, 1][10:65535:256]` read element 10 of a two-element array.
+    A slice start past the far end is supposed to be clamped (4.9), and the
+    clamping is done by a helper that walks from a value to the first eligible
+    one at or past a boundary - which assumes it is moving *towards* it. With
+    the start already past, the difference is negative, the division truncates
+    towards zero rather than away from it, and the rounding then moves the end
+    one whole step the wrong way, so the end came out after the start and the
+    intersection check let it through. A step of 1 hides it, because the
+    correction then lands exactly on the boundary. Both the array and the
+    string slice say it before the corrections now.
+
+36. **Fixed.** `m.b` on a key the map does not hold was `Map Key Not Found`
+    while `m["b"]` was `null`, so the two spellings of one read disagreed.
+    13.7 chose the error on the strength of a line written at the same time -
+    "which is what `m["name"]` already said" - which was a claim about the
+    neighbouring operation made without checking it against that operation.
+    Both engines agreed with each other throughout, so no differential could
+    see this; reading section 4 against the implementation is what found it.
+
 ---
 
 ## 14. Open questions
@@ -1273,6 +1403,12 @@ rather than defects. Each needs a decision, then a test, then code.
   done (13.14) and is the shape the rest can follow: a field on the execution
   context with a default, which the host can change. The README promises
   them; the sandbox story depends on them.
+
+  An instruction count would also widen what can be fuzzed. The differential
+  harness (33-35) has to generate programs that terminate by construction,
+  which is why it will not write a `while` whose condition it does not
+  control; with a budget the engine enforces, it could hand the parser
+  anything and let the limit stop it.
 - **Date literals** (13.13) - finish or remove.
 - **Number separators** (`1_000_000`), exponent floats (`1e5`).
 - **Keys for reconciliation.** cjelly's `docs/semantics.md` needs Tang to
