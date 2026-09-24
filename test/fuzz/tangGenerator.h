@@ -49,6 +49,16 @@
  * exceed `GTA_GEN_SIZE_CAP`.  Bounds compose the way printing does: `+` adds,
  * an array literal sums its elements, a cast to string keeps the operand's.
  *
+ * Two operators grow a value, not one.  `*` repeats an array or a string
+ * (4.2), and it multiplies rather than adds, which no additive bound
+ * survives: this argument was first written as though `+` were the only one,
+ * and a campaign duly wrote `[10, 10] * (10 * 16) * ((10 * 10) * (10 * 10))`
+ * and asked for 10^14 elements.  So the right operand of `*` is a literal no
+ * larger than `GTA_GEN_REPEAT_MAX`, and the left is built inside a budget
+ * divided by it.  The cost is that `expression * expression` is never
+ * written; the value on the right is what decides the size, so there is no
+ * bound to be had while it is anything the generator does not choose.
+ *
  * Inside a loop the arithmetic has to account for repetition, and the shape
  * that defeats an additive bound is a variable that reads itself: `v = v + v`
  * doubles, so after `m` iterations it is `2^m`, not `m` times anything.  The
@@ -117,6 +127,9 @@
 #define GTA_GEN_OUTPUT 65536
 /// Iterations any one generated loop may run.
 #define GTA_GEN_LOOP_MAX 4
+/// Largest right operand of `*`.  `*` repeats an array or a string (4.2), so
+/// this is a growth factor, not just a number.
+#define GTA_GEN_REPEAT_MAX 4
 
 typedef struct {
   // The byte source.
@@ -487,15 +500,33 @@ static int gta_gen_expression(GTA_Gen * g, int cap) {
     case 8:
     case 9:
     case 10: {
-      // A binary operator.  `+` is the only one that can produce something
-      // larger than either operand, so it is the only one that has to split
-      // the budget; the rest return an operand or a number.
+      // A binary operator.  `+` and `*` can produce something larger than
+      // either operand - `+` concatenates and `*` repeats - so those two
+      // split the budget; the rest return an operand or a number.
       const char * op = gta_gen_binary_ops[gta_gen_pick(g,
         (uint32_t)(sizeof(gta_gen_binary_ops) / sizeof(*gta_gen_binary_ops)))];
       bool concatenates = (op[0] == '+');
       if (concatenates && !half) {
         op = "-";
         concatenates = false;
+      }
+      if (op[0] == '*') {
+        // The growth is multiplicative, so the factor has to be a number the
+        // generator picked rather than whatever an expression evaluates to.
+        int factor = 1 + (int)gta_gen_pick(g, GTA_GEN_REPEAT_MAX);
+        int left_cap = cap / factor;
+        if (left_cap < GTA_GEN_SCALAR) {
+          left_cap = GTA_GEN_SCALAR;
+          factor = 1;
+        }
+        gta_gen_emit(g, "(");
+        int left = gta_gen_expression(g, left_cap);
+        gta_gen_emitf(g, " * %d)", factor);
+        bound = left * factor;
+        if (bound > cap) {
+          bound = cap;
+        }
+        break;
       }
       gta_gen_emit(g, "(");
       int left = gta_gen_expression(g, concatenates ? half : cap);
