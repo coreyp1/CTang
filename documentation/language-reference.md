@@ -1368,8 +1368,7 @@ number and says so, because the text above points at these by number.
     `capacity` zero and still reports success. Every array here is created
     with the number of elements it is about to write directly into `data`, so
     `gta_computed_value_array_create_in_place` now checks the capacity it
-    asked for. That is a workaround for something cutil should say; it is
-    recorded in `notes/ctang/DIFFERENTIAL-FUZZING.md`.
+    asked for. That is a workaround for something cutil should say.
 
 35. **Fixed.** `[0, 1][10:65535:256]` read element 10 of a two-element array.
     A slice start past the far end is supposed to be clamped (4.9), and the
