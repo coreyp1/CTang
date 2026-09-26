@@ -19,7 +19,7 @@ print("\n");
 ## Library Concepts
 In order to understand the Library implementation, you must understand the problem that it is trying to solve.
 
-Remember that the use case for Tang is that a program may have *thousands* of templates.  Depending on the templates, the program may want some templates to have access to a library that is not available to other templates (for security reasons).  I implemented a 3-tiered approach.
+Remember that the use case for Tang is that a program may have *thousands* of templates.  Depending on the templates, the program may want some templates to have access to a library that is not available to other templates (for security reasons).  I implemented three scopes.
   1. **Language libraries** - There should be a standard set of libraries that are always available by default as part of the language itself, such as `math`.  There should, therefore, be a registry of libraries that are shared by all scripts/templates.  This is implemented on the Language object and is populated when the Language object is created.
   2. **Program libraries** - There should be a way to declare libraries which `program` objects may consult when a library load is requested, but that are not available to other Program objects.  These libraries are stored on the Program object itself.
   3. **Execution-specific libraries** - There must be a way to declare libraries on a particular program execution.  This is the most granular option, and these libraries are stored on the Execution Context object.

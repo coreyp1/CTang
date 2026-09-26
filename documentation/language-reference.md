@@ -1,4 +1,5 @@
-# The Tang language
+@page ctang_language Language
+
 
 **Status:** Specification of the language as implemented at this commit,
 with the intended behaviour stated where the implementation departs from it.
@@ -780,8 +781,7 @@ use random.global.next_int as n; // any depth
 
 ### 9.1 Resolution
 
-Libraries are looked up **by name at execution time**, in three tiers,
-innermost first:
+Libraries are looked up **by name at execution time**, innermost first:
 
 1. the execution context's library (`context->library`) - per run;
 2. the program's library (`program->library`) - per compiled program;
@@ -793,7 +793,7 @@ executed, through the callback the host registered
 (`gta_library_add_library_from_string(library, "name", callback)`), so an
 unused library costs nothing.
 
-A `use` of a name that no tier provides binds the variable to `null`. It is
+A `use` of a name that none of those provides binds the variable to `null`. It is
 not an error, and the program continues.
 
 **External variables are libraries.** A host that wants a template to see

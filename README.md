@@ -1,44 +1,42 @@
-# Tang
-Tang is a new **T**emplate L**ang**uage intended to be embedded into a host program and specifically targeted to generate HTML.
+# CTang
 
-Tang is a loosely-typed, garbage-collected scripting language that is compiled at runtime to binary using a JIT (currently only x86_64 is supported) and falls back to a Bytecode interpreter if the JIT compilation fails or is not available.
+Tang is a new <b>T</b>emplate l<b>ANG</b>uage intended to be embedded into a host program and specifically targeted to generate HTML.  It is loosely typed and garbage collected (under development).  A program is compiled at run time to x86-64 machine code, but can fall back to a bytecode interpreter when the JIT is unavailable or fails.  The two backends are required to agree.
 
-## State/Stability
-Tang is under active development.  It is unstable (in features, not in performance).  This is it's 3rd incarnation.
+The language is specified in [documentation/language-reference.md](documentation/language-reference.md), which also lists what is not implemented yet. The language is under active development and the feature set is unstable.
 
-The original author wrote the first incarnation in C++ with an AST tree walking interpreter and relied on C++ `shared_ptr` for memory management (i.e., only reference counting).
+## History
+
+I wrote the first incarnation in C++, implemented using an AST tree-walking interpreter, and relying on C++ `shared_ptr` for memory management (i.e., only reference counting).
 
 The second incarnation was written in C++ with a bytecode interpreter, but still relied on the `shared_ptr` for memory management.  It was done as part of a 100+ episode [YouTube series](https://www.youtube.com/playlist?list=PLZqirAnnqaCZ8lT8w7p2PUB7tqrId7d89).  It is boring.  It is live coding.  Nothing is scripted.  Watch it at your own risk.
 
 This is the third incarnation, written in C, with a JIT, bytecode VM fallback, proper garbage collection, etc.
 
-It is intended to be compiled into a shared library.  There is a command to do so in the `Makefile`, but only for Linux.
+## Before you call it
 
-## Syntax
-The language is specified in [documentation/language-reference.md](documentation/language-reference.md), which also lists what is not yet implemented.
+- Strings are graphemes. Indexing, slicing and `length` count graphemes (user-perceived characters). For example, the flag of Scotland is 28 bytes of UTF-8 (`\xF0\x9F\x8F\xB4\xF3\xA0\x81\xA7\xF3\xA0\x81\xA2\xF3\xA0\x81\xB3\xF3\xA0\x81\xA3\xF3\xA0\x81\xB4\xF3\xA0\x81\xBF`), which represents 7 Unicode code points, but they all combine to be exactly one grapheme; `length` is 1 and `byte_length` is 28.
+- The host decides what the template can touch. There is no file system, network or clock unless the host provides one through a library specifically written for Tang, resolved by name when the template runs. Limits can be set on memory and on execution time.
+- Output carries an encoding. HTML escaping is a property of the string the host applies when it renders, not a call the template has to remember.  
+- Code is interspersed with the literal template text. `{` and `}` mark a code block, `<% %>` the same, and `<%= %>` prints a value. Statements end with a semicolon. Tang has arrays, maps, and a slice operator.
 
-In Tang, code is interspersed into the literal template text (like PHP).  Quick print tags are supported.  Use `{` and `}` for code blocks.  I like semicolons, so they are here, too.  Tang has arrays, maps, a slice operator, etc.
+## Examples
 
-Examples are the most beneficial, so here are a few:
+### A value
 
-### Example 1
-Suppose a variable named `user` exists, and it is a string containg "Alice".
+Suppose `user` is the string `"Alice"`.
 
-If this is your template:
 ```
 Welcome, <%= user %>!
 ```
 
-Then this will be your output:
 ```
 Welcome, Alice!
 ```
 
-### Example 2
-Suppose a variable named `users` exists, and it is a list of names: "Alice",
-"Bob", "Carol", and "Frank".
+### A loop
 
-If this is your template:
+Suppose `users` is `"Alice"`, `"Bob"`, `"Carol"`, `"Frank"`.
+
 ```
 <ul>
 <%
@@ -51,7 +49,6 @@ for (name : users) {
 </ul>
 ```
 
-Then this will be your output:
 ```
 <ul>
   <li>Alice</li>
@@ -61,94 +58,135 @@ Then this will be your output:
 </ul>
 ```
 
-Alternatively, the following code could have been used as well, although it
-will include a few additional line breaks:
+The same loop can sit in the markup. That form keeps the line breaks of the
+template:
+
 ```
 <ul>
-<% for (name : names) { %>
+<% for (name : users) { %>
   <li><%= name %></li>
 <% } %>
 </ul>
 ```
 
-## Features: What makes this language different.
-
-### 1. Graphemes.
-Tang strings operate on **graphemes** by default.  Just about every other language operates on **bytes**.  If you're lucky, the language will support **Utf-8 encoding**, but that is still not enough.  The flag of Scotland requires **28 bytes** in UTF-8 encoding (`\xF0\x9F\x8F\xB4\xF3\xA0\x81\xA7\xF3\xA0\x81\xA2\xF3\xA0\x81\xB3\xF3\xA0\x81\xA3\xF3\xA0\x81\xB4\xF3\xA0\x81\xBF`) but it is only one grapheme.  Most languages get this very, very wrong and will mangle the text when performing a slice, substring, or string reversal.  I felt that being Grapheme-aware was imperative for a template language!
-
-### 2. Sandboxed Control.
-The use case of this language is so that designers can write code that will not adversely affect the host program.  Features are intentionally not included such as accessing the file system or network (although the plugin system does not prevent someone from allowing this behavior should it be required for a particular application).  Limits can be set on memory use or execution time.  Tang was meant to be a tool for the host program to provide freedom within practical and tunable bounds.
-
-## But... Why?
-That's like asking a woodworker why he didn't just go to IKEA.
-
-This is a fun project.  I actually like programming in C.  I find beauty in creating a system that has good unit test coverage, no memory leaks, and is intellectually stimulating to work on.
-
-## Technical Details.
-
-I'm still working on this part.  I use Ubuntu 22.04 (haven't upgraded to 24.04 yet).  Please just let me know if I've missed a step.
-
-Here's the broad plan:
-
-### Ghoti.io CUtil
-Tang makes use of another library of mine called CUtil.  Compile and intall it following the instructions [here](https://github.com/Ghoti-io/CUtil).
-
-I may move this project into the Ghoti.io group in the future and have it all as one big project.
-
-### Install packages
-First, the necessary packages must be installed.
 ```
-sudo apt install g++ make bison flex build-essential pkgconf libgtest-dev googletest
+<ul>
+
+  <li>Alice</li>
+
+  <li>Bob</li>
+
+  <li>Carol</li>
+
+  <li>Frank</li>
+
+</ul>
 ```
 
-Additional packages must be installed in order to create documentation and
-enhance the build experience.
-```
-sudo apt install doxygen graphviz texlive-latex-base texlive-latex-extra cloc inotify-tools valgrind gdb
+## Running it
+
+`make` builds the shared library and a `tang` binary.
+
+```bash
+tang -s -e 'print(1 + 2);'
 ```
 
-If you're working in the WSL, you can install the `wslu` package, so that you can view files (such as the documentation) using a cli command.
 ```
-sudo apt install wslu
-```
-
-Example use:
-```
-make docs
-wslview ./docs/html/index.html
+3
 ```
 
-### Compile source code
+```bash
+tang template.tang
 ```
+
+`-s` / `--script` treats the source as a script. Without it, the source is a
+template. `-e` / `--evaluate` takes the program on the command line; otherwise
+`tang` reads a file, or stdin.
+
+## Compile and link
+
+Once the library is installed, pkg-config carries the include path, the
+library, and its dependencies:
+
+```bash
+cc -o host host.c $(pkg-config --cflags --libs ghoti.io-tang-0)
+```
+
+The module name ends in the major version, `-0` for this release, so two
+majors can be installed side by side. A build made with `make BRANCH=-dev`
+installs `ghoti.io-tang-dev` instead.
+
+## Building the library
+
+[cutil](https://github.com/Ghoti-io/cutil) must already be installed where
+pkg-config can see it, and so must ICU (`icu-io`, `icu-i18n`, `icu-uc`),
+which the grapheme iterator is built on. A dependency pkg-config cannot find
+is a hard error naming the fix.
+
+```bash
+sudo apt install g++ make bison flex build-essential pkgconf libgtest-dev \
+    doxygen graphviz
+```
+
+`bison` and `flex` generate the parser. Google Test builds the tests. Doxygen
+and Graphviz build the manual.
+
+```bash
 make
+make test
 sudo make install
 ```
 
-For additional `make` commands/options, run:
-```
-make help
-```
+From the workspace:
 
-### For development.
-When developing, I have a script that watches for changes and, when I save a file, it automatically recompiles and runs the tests.
-```
-make test-watch
+```bash
+./bootstrap.sh
+export PKG_CONFIG_PATH="$PWD/.local/share/pkgconfig"
+make -C libs/ctang test PREFIX="$PWD/.local"
 ```
 
-## Next Steps
-There are so many things to flesh out, and I'm working on this in my spare time (although hopefully you can see that I *do* make progress on it over time).
+`make test` is the suite, under both backends. `make help` lists the rest.
 
-I would like to have help getting this running on Windows.  I have a few things already stubbed out, but nothing is tested yet.  I haven't done proper Windows development in a long time.  Have any insight?  Send me an email. `pennycuff.c` is the first part, and Gmail is my email provider.
+| Target | What it does |
+| --- | --- |
+| `make` | The library and the `tang` binary |
+| `make test-asan` | Rebuild with ASan and UBSan and run the tests |
+| `make jit-alignment-check` | Rebuild with the JIT stack-alignment check and run the tests |
+| `make docs` | The Doxygen manual, into `./docs` |
+| `make test-watch` | Recompile and run the tests when a file is saved |
 
-There's plenty of other things (non-Windows) that could be done, too, such as supporting other architectures for the JIT, additional built-in libraries (math, date), compiler optimizations, etc.  If you want to work on something, but don't know what, just send me an email and we can talk!
+## The API
 
-Update: look at the `TODO.md` file!!!
+`<ghoti.io/tang/tang.h>` is the umbrella: a program, a computed value, and
+the libraries a host installs for a template to call. The language reference
+describes what the template can see.
+
+The JIT is x86-64. On any other architecture the bytecode interpreter is the
+execution path.
+
+[Before you call it](#before-you-call-it) is what changes about a template
+before it runs.
+
+## Dependencies
+
+Found through pkg-config, and the installed `.pc` file names them, so a
+program that links `ghoti.io-tang-0` links these too.
+
+- [ghoti.io-cutil](https://github.com/Ghoti-io/cutil) — the allocator.
+- ICU (`icu-io`, `icu-i18n`, `icu-uc`) — the grapheme iterator strings are built on.
+
+## Documentation
+
+[documentation/language-reference.md](documentation/language-reference.md)
+is the language, including what is not implemented yet. `make docs` builds the manual.
+
+## Status
+
+Usable for the language the reference describes, and unstable past that: a feature can still change.
 
 ## License
 
-LGPL-3.0-only. See [COPYING.LESSER](COPYING.LESSER) for the license, and
-[COPYING](COPYING) for the GPL text it is written as additional permissions
-on top of.
+LGPL-3.0-only. See [COPYING.LESSER](COPYING.LESSER) for the license, and [COPYING](COPYING) for the GPL text it is written as additional permissions on top of.
 
 Contributions are not being accepted at this time; see
 [CONTRIBUTING.md](CONTRIBUTING.md) for what is useful instead.
