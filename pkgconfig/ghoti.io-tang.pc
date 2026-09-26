@@ -1,7 +1,7 @@
 Name: Ghoti.io Tang(BRANCH)
 Description: Tang scripting language parse and execution library
 Version: (VERSION)
-URL: https://github.com/Ghoti-io
+URL: https://github.com/Ghoti-io/ctang
 Libs: -L(LIB)/(SUITE) -l(SUITE)-(PROJECT)(BRANCH)
 CFlags: -I(INCLUDE)/(SUITE)/(PROJECT)(BRANCH)
 Requires: (REQUIRES)

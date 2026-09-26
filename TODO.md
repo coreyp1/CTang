@@ -80,7 +80,7 @@ We also need to come up with a representation of `+ infinity`, `- infinity`, and
   * ~~Request a custom generator with a specific seed (which will be a new `ComputedValue` type).~~
   * ~~Request the next random `float` or `int` from the generator (either global or custom).~~
   * ~~Request a `unit` random value (a `float` from `0` to `1`) from the generator (either global or custom).~~
-  * ~~The global generator will need Mutex protection.  See the [Ghoti.io/cutil](https://github.com/Ghoti-io/CUtil) library for a cross-platform mutex implementation.~~
+  * ~~The global generator will need Mutex protection.  See the [Ghoti.io/cutil](https://github.com/Ghoti-io/cutil) library for a cross-platform mutex implementation.~~
 
 ### `date`
 Date/time functions are going to take some research.  They are evil.  I can see at least 2 fundamental parts of a proper date library:
